@@ -3046,7 +3046,7 @@ List<TagItem> _seedTags() => [
       _tag('action_sword_swinging', '動作', '揮劍', 'sword swinging', 4),
       _tag('action_fencing', '動作', '擊劍', 'fencing', 4),
       _tag('action_running', '動作', '奔跑', 'running', 4),
-      _tag('action_jumping', '動作', '跳躍', 'jumping', 4),
+      _tag('action_jumping', '動態姿勢', '跳躍中', 'jumping', 4),
       _tag('action_dancing', '動作', '跳舞', 'dancing', 4),
       _tag('action_skating', '動作', '溜冰', 'ice skating', 4),
       _tag('action_swimming', '動作', '游泳', 'swimming', 4),
@@ -3259,10 +3259,10 @@ List<TagItem> _seedTags() => [
       _tag('act_masturbation_through_clothes', '性行為', '隔著衣物自慰（成年角色）',
           'masturbation through clothes', 7,
           adult: true, conflictGroup: 'masturbation_method'),
-      _tag('act_kissing', '性行為', '接吻', 'kissing', 7),
-      _tag('act_french_kiss', '性行為', '法式接吻（成年角色）', 'french kiss', 7,
+      _tag('act_kissing', '親吻動作', '接吻', 'kiss', 4),
+      _tag('act_french_kiss', '親吻動作', '法式接吻（成年角色）', 'french kiss', 4,
           adult: true),
-      _tag('act_grinding', '性行為', '磨蹭（成年角色）', 'grinding', 7, adult: true),
+      _tag('act_grinding', '性行為・動態', '貼身磨蹭中（成年角色）', 'grinding', 7, adult: true),
       _tag('act_table_humping', '性行為', '桌上磨蹭（成年角色）', 'table humping', 7,
           adult: true),
       _tag('act_pillow_humping', '性行為', '枕頭磨蹭（成年角色）', 'pillow humping', 7,
@@ -3702,7 +3702,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (expandedSexualActGroups.contains(group)) return 42;
     if (expandedSexualPoseGroups.contains(group)) return 43;
     if (expandedGeneralPoseGroups.contains(group)) {
-      return const {'身體動作', '多人互動', '角色姿勢'}.contains(group) ? 44 : 41;
+      return const {'動態姿勢', '身體動作', '親吻動作', '多人互動', '角色姿勢'}.contains(group)
+          ? 44
+          : 41;
     }
     if (expandedAdultToolGroups.contains(group)) return 46;
     return order[group] ?? 50;
@@ -9501,44 +9503,47 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             final isClothingCombination = _isClothingCombinationTags(tags);
             return Card(
               margin: const EdgeInsets.only(bottom: 10),
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(combination.name,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w700)),
-                        ),
-                        IconButton(
-                          tooltip: '\u7DE8\u8F2F\u7D44\u5408',
-                          onPressed: () =>
-                              _editCombination(existing: combination),
-                          icon: const Icon(Icons.edit_outlined),
-                        ),
-                        IconButton(
-                          tooltip: '\u522A\u9664\u7D44\u5408',
-                          onPressed: () => _deleteCombination(combination),
-                          icon: const Icon(Icons.delete_outline),
-                        ),
-                      ],
-                    ),
-                    if (isClothingCombination)
-                      const Padding(
-                        padding: EdgeInsets.only(bottom: 6),
-                        child: Text(
-                          '完整服裝配置・套用時會以此配置替換人物目前服裝',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
+              clipBehavior: Clip.antiAlias,
+              child: ExpansionTile(
+                key: PageStorageKey<String>(
+                    'prompt_combination_${combination.id}'),
+                title: Text(
+                  combination.name,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                children: [
+                  Row(
+                    children: [
+                      if (isClothingCombination)
+                        const Expanded(
+                          child: Text(
+                            '完整服裝配置・套用時會以此配置替換人物目前服裝',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
+                        )
+                      else
+                        const Spacer(),
+                      IconButton(
+                        tooltip: '\u7DE8\u8F2F\u7D44\u5408',
+                        onPressed: () =>
+                            _editCombination(existing: combination),
+                        icon: const Icon(Icons.edit_outlined),
                       ),
-                    if (preview.isNotEmpty)
-                      Wrap(
+                      IconButton(
+                        tooltip: '\u522A\u9664\u7D44\u5408',
+                        onPressed: () => _deleteCombination(combination),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    ],
+                  ),
+                  if (preview.isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Wrap(
                         spacing: 6,
                         runSpacing: 6,
                         children: preview
@@ -9548,14 +9553,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 ))
                             .toList(),
                       ),
-                    if (combination.extraPositive.trim().isNotEmpty)
-                      Padding(
+                    ),
+                  if (combination.extraPositive.trim().isNotEmpty)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Padding(
                         padding: const EdgeInsets.only(top: 6),
                         child: Text(
                             '\u984D\u5916\u6B63\u5411\uFF1A${_extraTags(combination.extraPositive).map(_positiveEnglishTag).join(', ')}'),
                       ),
-                    const SizedBox(height: 8),
-                    Wrap(
+                    ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: _personSlots.asMap().entries.map((entry) {
@@ -9579,8 +9590,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         );
                       }).toList(),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           }),
@@ -9886,8 +9897,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '手臂姿勢': Color(0xff60a5fa),
       '手部姿勢': Color(0xffa3e635),
       '腿部姿勢': Color(0xff34d399),
+      '動態姿勢': Color(0xffff8a4c),
       '動作': Color(0xfffb923c),
       '身體動作': Color(0xfff97316),
+      '親吻動作': Color(0xfff9a8d4),
       '多人互動': Color(0xfffacc15),
       '角色姿勢': Color(0xffc084fc),
       '物件': Color(0xff94a3b8),
@@ -9899,6 +9912,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '性姿勢・多人': Color(0xffe11d48),
       '束縛姿勢': Color(0xffdc2626),
       '性行為': Color(0xfff97316),
+      '性行為・動態': Color(0xfffb6a3d),
+      '性行為・親吻': Color(0xfff43f8c),
       'BDSM行為': Color(0xffb91c1c),
       '成人道具': Color(0xffe879f9),
       '成人道具・插入': Color(0xffd946ef),
