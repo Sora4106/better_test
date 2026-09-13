@@ -22,6 +22,13 @@ void main() {
     if (tag.en.toLowerCase().contains('lolita')) {
       throw StateError('Forbidden clothing term: ${tag.en}');
     }
+    if (RegExp(r'\b(cute|short|slim)\b', caseSensitive: false)
+            .hasMatch(tag.en) ||
+        RegExp(r'\b(school|student) uniform\b', caseSensitive: false)
+            .hasMatch(tag.en) ||
+        tag.en.toLowerCase() == 'serafuku') {
+      throw StateError('Age-sensitive clothing term: ${tag.en}');
+    }
     if (!const {'official', 'description'}.contains(tag.support)) {
       throw StateError('Unknown clothing support level: ${tag.id}');
     }
@@ -89,6 +96,19 @@ void main() {
     'floral pattern',
     'rose pattern',
     'cherry blossom pattern',
+    'school uniform',
+    'student uniform',
+    'serafuku',
+    'school shoes',
+    'school outfit',
+    'slim pants',
+    'slim fit',
+    'short shorts',
+    'short sleeves',
+    'short length',
+    'cute',
+    'sweet cute style',
+    'cute mood',
   };
   final obsolete = tags
       .where((tag) => obsoleteEnglish.contains(tag.en.toLowerCase()))

@@ -1,7 +1,14 @@
-const appVersion = '1.1.75';
-const appBuildNumber = 77;
-const appVersionLabel = '1.1.75+77';
+const appVersion = '1.1.76';
+const appBuildNumber = 78;
+const appVersionLabel = '1.1.76+78';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.76',
+    'build': '78',
+    'label': '1.1.76+78',
+    'date': '2026-09-14',
+    'notes': '移除年齡敏感服裝詞與學生制服詞；更新 30 套穿搭；舊記憶及額外標籤輸出時自動改為安全替代詞'
+  },
   {
     'version': '1.1.75',
     'build': '77',

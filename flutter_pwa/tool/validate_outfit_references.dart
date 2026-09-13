@@ -89,6 +89,16 @@ const _colors = <String>{
 
 void main() {
   final problems = <String>[];
+  final ageSensitive = RegExp(
+    r'\b(cute|short|slim)\b|\b(school|student) uniform\b|\bserafuku\b',
+    caseSensitive: false,
+  );
+  void validatePromptTerm(String context, String? value) {
+    if (value != null && ageSensitive.hasMatch(value)) {
+      problems.add('$context: age-sensitive prompt term "$value".');
+    }
+  }
+
   final ids = outfitReferencePresets.map((preset) => preset.id).toList();
   if (outfitReferencePresets.length != 30) {
     problems
@@ -107,6 +117,7 @@ void main() {
       problems.add('${preset.id}: no garment pieces.');
     }
     for (final piece in preset.pieces) {
+      validatePromptTerm('${preset.id} garment', piece.garment);
       final hasGarment = clothingTaxonomyTags.any((tag) =>
               tag.en == piece.garment &&
               tag.id.startsWith('taxonomy_${piece.scope}_')) ||
@@ -121,24 +132,28 @@ void main() {
         'length': piece.length,
       }.entries) {
         final value = entry.value;
+        validatePromptTerm('${preset.id} ${entry.key}', value);
         if (value != null && !hasDimension(piece.scope, entry.key, value)) {
           problems.add('${preset.id}: missing ${piece.scope} ${entry.key} '
               '"$value".');
         }
       }
       for (final value in piece.materials) {
+        validatePromptTerm('${preset.id} material', value);
         if (!hasDimension(piece.scope, 'material', value)) {
           problems.add('${preset.id}: missing ${piece.scope} material '
               '"$value".');
         }
       }
       for (final value in piece.details) {
+        validatePromptTerm('${preset.id} detail', value);
         if (!hasDimension(piece.scope, 'detail', value)) {
           problems.add('${preset.id}: missing ${piece.scope} detail '
               '"$value".');
         }
       }
       for (final value in piece.patterns) {
+        validatePromptTerm('${preset.id} pattern', value);
         if (!hasDimension(piece.scope, 'pattern', value)) {
           problems.add('${preset.id}: missing ${piece.scope} pattern '
               '"$value".');
@@ -163,6 +178,7 @@ void main() {
       '服裝・場合': preset.occasion,
     }.entries) {
       final value = entry.value;
+      validatePromptTerm('${preset.id} ${entry.key}', value);
       if (value != null &&
           !clothingOverallTags
               .any((tag) => tag.group == entry.key && tag.en == value)) {

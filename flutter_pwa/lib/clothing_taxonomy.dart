@@ -226,7 +226,6 @@ const _officialClothingDimensionEnglish = <String>{
   'one-shoulder',
   'halter neck',
   'sleeveless',
-  'short sleeves',
   'long sleeves',
   'puffy sleeves',
   'bell sleeves',
@@ -722,7 +721,7 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
   ]),
   ..._garments('褲子', 'pants', const [
     ('直筒褲', 'straight-leg pants'),
-    ('窄管褲', 'slim pants'),
+    ('窄管褲', 'narrow-leg pants'),
     ('緊身褲', 'skinny pants'),
     ('寬褲', 'wide-leg pants'),
     ('喇叭褲', 'flared pants'),
@@ -738,7 +737,7 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
   ]),
   ..._garments('短褲', 'shorts', const [
     ('短褲', 'shorts'),
-    ('熱褲', 'short shorts'),
+    ('熱褲', 'hot pants'),
     ('高腰短褲', 'high-waisted shorts'),
     ('丹寧短褲', 'denim shorts'),
     ('百慕達短褲', 'Bermuda shorts'),
@@ -788,8 +787,6 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('實驗袍', 'lab coat'),
   ]),
   ..._garments('特殊服裝', 'costume', const [
-    ('校服', 'school uniform'),
-    ('日式水手校服', 'serafuku'),
     ('女僕', 'maid'),
     ('護士服', 'nurse uniform'),
     ('警察制服', 'police uniform'),
@@ -807,6 +804,8 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
       '特殊服裝',
       'costume',
       const [
+        ('正式西裝外套套裝', 'formal blazer outfit'),
+        ('水手風套裝', 'sailor-style outfit'),
         ('運動制服', 'sports uniform'),
         ('弓道服', 'kyudo uniform'),
         ('忍者套裝', 'ninja outfit'),
@@ -901,7 +900,6 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('孟克鞋', 'monk strap shoes'),
     ('船鞋', 'boat shoes'),
     ('草編鞋', 'espadrilles'),
-    ('校園鞋', 'school shoes'),
     ('室內校園鞋', 'uwabaki'),
     // 高跟／厚底鞋型
     ('高跟鞋', 'high heels'),
@@ -989,7 +987,7 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
   ])
     ..._dimensions(scope, 'fit', const [
       ('貼身', 'fitted'),
-      ('修身', 'slim fit'),
+      ('修身剪裁', 'tailored fit'),
       ('合身', 'regular fit'),
       ('寬鬆', 'loose fit'),
       ('超寬鬆', 'oversized'),
@@ -1006,7 +1004,7 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
     ('單肩', 'one-shoulder'),
     ('繞頸', 'halter neck'),
     ('無袖', 'sleeveless'),
-    ('短袖', 'short sleeves'),
+    ('肘上袖', 'above-elbow sleeves'),
     ('長袖', 'long sleeves'),
     ('泡泡袖', 'puffy sleeves'),
     ('喇叭袖', 'bell sleeves'),
@@ -1058,7 +1056,7 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
   ]),
   ..._dimensions('shorts', 'length', const [
     ('極短', 'micro length'),
-    ('短版', 'short length'),
+    ('大腿上段長度', 'upper-thigh length'),
     ('百慕達長度', 'Bermuda length'),
   ]),
   for (final scope in const ['skirt', 'onepiece'])
@@ -1087,7 +1085,7 @@ final List<CatalogTagData> clothingOverallTags = <CatalogTagData>[
   ..._overall('outfit_main_style', '服裝・主要風格', const [
     ('休閒', 'casual'),
     ('女性化', 'feminine'),
-    ('可愛', 'cute'),
+    ('俏麗', 'charming'),
     ('優雅', 'elegant'),
     ('性感', 'sexy'),
     ('學院', 'preppy'),
@@ -1105,7 +1103,7 @@ final List<CatalogTagData> clothingOverallTags = <CatalogTagData>[
     ('輕鬆休閒', 'relaxed casual style'),
     ('正式休閒', 'smart casual style'),
     ('浪漫女性化', 'romantic feminine style'),
-    ('甜美可愛', 'sweet cute style'),
+    ('甜美女性化', 'sweet feminine style'),
     ('經典優雅', 'classic elegant style'),
     ('華麗性感', 'glamorous sexy style'),
     ('都市街頭', 'urban streetwear style'),
@@ -1123,7 +1121,7 @@ final List<CatalogTagData> clothingOverallTags = <CatalogTagData>[
     ('賽博龐克', 'cyberpunk style'),
   ]),
   ..._overall('outfit_mood', '服裝・氣質', const [
-    ('可愛氣質', 'cute mood'),
+    ('明快氣質', 'cheerful mood'),
     ('甜美氣質', 'sweet mood'),
     ('清純氣質', 'innocent mood'),
     ('優雅氣質', 'elegant mood'),
@@ -1148,7 +1146,7 @@ final List<CatalogTagData> clothingOverallTags = <CatalogTagData>[
     ('工作穿搭', 'work outfit'),
     ('辦公室穿搭', 'office outfit'),
     ('商務休閒', 'business casual outfit'),
-    ('校園穿搭', 'school outfit'),
+    ('日間正式穿搭', 'daytime formal outfit'),
     ('運動穿搭', 'sports outfit'),
     ('健身房穿搭', 'gym outfit'),
     ('戶外穿搭', 'outdoor outfit'),

@@ -128,11 +128,9 @@ const _officialHairStyleEnglish = <String>{
   'low ponytail',
   'side ponytail',
   'low side ponytail',
-  'short ponytail',
   'high side ponytail',
   'folded ponytail',
   'twintails',
-  'short twintails',
   'low twintails',
   'uneven twintails',
   'single braid',
@@ -165,7 +163,6 @@ const _officialHairStyleEnglish = <String>{
   'hime cut',
   'wolf cut',
   'jellyfish cut',
-  'short hair with long locks',
   'bowl cut',
   'inverted bob',
   'mullet',
@@ -189,7 +186,6 @@ const _officialHairStyleEnglish = <String>{
   'diagonal bangs',
   'fanged bangs',
   'long bangs',
-  'short bangs',
   'wispy bangs',
   'parted bangs',
   'middle part',
@@ -2259,7 +2255,31 @@ void _migrateClothingTaxonomyTagIds(Set<String> ids) {
     'catalog_taxonomy_onepiece_one_piece_dress':
         'catalog_taxonomy_onepiece_dress',
     'catalog_taxonomy_costume_sailor_uniform':
-        'catalog_taxonomy_costume_serafuku',
+        'catalog_taxonomy_costume_sailor_style_outfit',
+    'catalog_taxonomy_costume_serafuku':
+        'catalog_taxonomy_costume_sailor_style_outfit',
+    'catalog_taxonomy_costume_school_uniform':
+        'catalog_taxonomy_costume_formal_blazer_outfit',
+    'catalog_taxonomy_pants_slim_pants':
+        'catalog_taxonomy_pants_narrow_leg_pants',
+    'catalog_taxonomy_shorts_short_shorts': 'catalog_taxonomy_shorts_hot_pants',
+    'catalog_taxonomy_shoes_school_shoes': 'catalog_taxonomy_shoes_loafers',
+    'catalog_taxonomy_top_fit_slim_fit':
+        'catalog_taxonomy_top_fit_tailored_fit',
+    'catalog_taxonomy_pants_fit_slim_fit':
+        'catalog_taxonomy_pants_fit_tailored_fit',
+    'catalog_taxonomy_shorts_fit_slim_fit':
+        'catalog_taxonomy_shorts_fit_tailored_fit',
+    'catalog_taxonomy_skirt_fit_slim_fit':
+        'catalog_taxonomy_skirt_fit_tailored_fit',
+    'catalog_taxonomy_onepiece_fit_slim_fit':
+        'catalog_taxonomy_onepiece_fit_tailored_fit',
+    'catalog_taxonomy_outerwear_fit_slim_fit':
+        'catalog_taxonomy_outerwear_fit_tailored_fit',
+    'catalog_taxonomy_top_cut_short_sleeves':
+        'catalog_taxonomy_top_cut_above_elbow_sleeves',
+    'catalog_taxonomy_shorts_length_short_length':
+        'catalog_taxonomy_shorts_length_upper_thigh_length',
     'catalog_taxonomy_costume_maid_outfit': 'catalog_taxonomy_costume_maid',
     'catalog_taxonomy_costume_miko_outfit': 'catalog_taxonomy_costume_miko',
     'catalog_taxonomy_skirt_tutu_skirt': 'catalog_taxonomy_skirt_tutu',
@@ -2272,7 +2292,9 @@ void _migrateClothingTaxonomyTagIds(Set<String> ids) {
         'catalog_outfit_main_style_casual',
     'catalog_outfit_main_style_feminine_style':
         'catalog_outfit_main_style_feminine',
-    'catalog_outfit_main_style_cute_style': 'catalog_outfit_main_style_cute',
+    'catalog_outfit_main_style_cute_style':
+        'catalog_outfit_main_style_charming',
+    'catalog_outfit_main_style_cute': 'catalog_outfit_main_style_charming',
     'catalog_outfit_main_style_elegant_style':
         'catalog_outfit_main_style_elegant',
     'catalog_outfit_main_style_sexy_style': 'catalog_outfit_main_style_sexy',
@@ -2295,6 +2317,11 @@ void _migrateClothingTaxonomyTagIds(Set<String> ids) {
         'catalog_outfit_main_style_fantasy',
     'catalog_outfit_main_style_futuristic_style':
         'catalog_outfit_main_style_futuristic',
+    'catalog_outfit_sub_style_sweet_cute_style':
+        'catalog_outfit_sub_style_sweet_feminine_style',
+    'catalog_outfit_mood_cute_mood': 'catalog_outfit_mood_cheerful_mood',
+    'catalog_outfit_occasion_school_outfit':
+        'catalog_outfit_occasion_daytime_formal_outfit',
     'catalog_outfit_sub_style_y2k_style':
         'catalog_outfit_sub_style_y2k_fashion',
   };
@@ -3366,7 +3393,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['buzz_cut', '寸頭', 'buzz cut'],
     ['crew_cut', '平頭短髮', 'crew cut'],
     ['undercut', '底層剃短髮', 'undercut'],
-    ['short_hair_long_locks', '短髮配長髮束', 'short hair with long locks'],
+    ['short_hair_long_locks', '短髮配長髮束', 'cropped hair with long locks'],
     ['front_braid', '前額辮', 'front braid'],
     ['half_crown_braid', '半皇冠辮', 'half crown braid'],
     ['low_twin_braids', '低雙辮', 'low twin braids'],
@@ -3383,7 +3410,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['one_side_up', '單側束髮', 'one side up'],
     ['two_side_up', '雙側束髮', 'two side up'],
     ['folded_ponytail', '折疊馬尾', 'folded ponytail'],
-    ['short_ponytail', '短馬尾', 'short ponytail'],
+    ['short_ponytail', '短馬尾', 'bob-length ponytail'],
     ['high_side_ponytail', '高側馬尾', 'high side ponytail'],
     ['uneven_twintails', '不等長雙馬尾', 'uneven twintails'],
     ['beehive_hairdo', '蜂巢高髮髻', 'beehive hairdo'],
@@ -3414,7 +3441,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['feathered_hair', '羽毛剪', 'feathered hair'],
     ['shaggy_hair', '碎剪長髮', 'shaggy hair'],
     ['fluffy_long_hair', '蓬鬆長髮', 'fluffy long hair'],
-    ['fluffy_short_hair', '蓬鬆短髮', 'fluffy short hair'],
+    ['fluffy_short_hair', '蓬鬆短髮', 'fluffy bob cut'],
     ['side_parted_hair', '側分長髮', 'side-parted hair'],
     ['center_parted_hair', '中分長髮', 'center-parted hair'],
     ['slicked_back_hair', '後梳髮', 'hair slicked back'],
@@ -3442,7 +3469,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['hair_over_one_eye', '單側遮眼髮', 'hair over one eye'],
     ['hair_over_eyes', '遮雙眼瀏海', 'hair over eyes'],
     ['long_sidelocks', '長鬢角', 'long sidelocks'],
-    ['short_sidelocks', '短鬢角', 'short sidelocks'],
+    ['short_sidelocks', '短鬢角', 'cropped sidelocks'],
     ['antenna_hair', '天線髮', 'antenna hair'],
     ['two_ahoge', '雙呆毛', 'two ahoge'],
     ['flipped_out_hair', '外翹髮尾', 'flipped hair'],
@@ -3493,7 +3520,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['arched_bangs', '弧形瀏海', 'arched bangs'],
     ['asymmetrical_bangs', '不對稱瀏海', 'asymmetrical bangs'],
     ['long_bangs', '長瀏海', 'long bangs'],
-    ['short_bangs', '短瀏海', 'short bangs'],
+    ['short_bangs', '短瀏海', 'cropped bangs'],
     ['baby_bangs', '超短瀏海', 'baby bangs'],
     ['braided_headband', '辮子髮箍', 'braided headband'],
     ['milkmaid_braid', '牛奶女工辮', 'milkmaid braid'],
@@ -3547,7 +3574,7 @@ List<TagItem> _seedTags() => [
       // Appearance and body.
       _tag('trait_long_hair', '髮長', '長髮', 'long hair', 1,
           conflictGroup: 'hair_length'),
-      _tag('trait_short_hair', '髮長', '短髮', 'short hair', 1,
+      _tag('trait_short_hair', '髮長', '短髮', 'cropped hair', 1,
           conflictGroup: 'hair_length'),
       _tag('trait_hair_between_eyes', '髮型', '瀏海遮眼', 'hair between eyes', 1),
       _tag('trait_blonde_hair', '髮色', '金髮', 'blonde hair', 1,
@@ -3637,7 +3664,7 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'eye_type'),
       _tag('trait_tall', '身體特徵', '高挑身材', 'tall', 1),
       _tag('trait_curvy', '身體特徵', '曲線身材', 'curvy', 1),
-      _tag('trait_slim', '身體特徵', '纖細身材', 'slim', 1),
+      _tag('trait_slim', '身體特徵', '纖細體態', 'slender build', 1),
       _tag('trait_mature', '身體特徵', '成熟外貌（成年）', 'mature female', 1),
       _tag('trait_makeup', '額外特徵', '化妝', 'makeup', 1),
       _tag('trait_earrings', '額外特徵', '耳環', 'earrings', 1),
@@ -3646,7 +3673,7 @@ List<TagItem> _seedTags() => [
       _tag('trait_nail_polish', '額外特徵', '指甲油', 'nail polish', 1),
 
       // Hair length.
-      _tag('hair_very_short', '髮長', '極短髮', 'very short hair', 1,
+      _tag('hair_very_short', '髮長', '極短髮', 'close-cropped hair', 1,
           conflictGroup: 'hair_length'),
       _tag('hair_medium', '髮長', '中長髮', 'medium hair', 1,
           conflictGroup: 'hair_length'),
@@ -3682,7 +3709,7 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hair_style'),
       _tag('hair_twintails', '髮型', '雙馬尾', 'twintails', 1,
           conflictGroup: 'hair_style'),
-      _tag('hair_short_twintails', '髮型', '短雙馬尾', 'short twintails', 1,
+      _tag('hair_short_twintails', '髮型', '短雙馬尾', 'bob-length twintails', 1,
           conflictGroup: 'hair_style'),
       _tag('hair_low_twintails', '髮型', '低雙馬尾', 'low twintails', 1,
           conflictGroup: 'hair_style'),
@@ -3726,7 +3753,7 @@ List<TagItem> _seedTags() => [
       _tag('clothing_skirt', '裙子', '裙子', 'skirt', 2),
       _tag('clothing_miniskirt', '裙子', '迷你裙', 'miniskirt', 2),
       _tag('clothing_pleated_skirt', '下身風格', '百褶裙風格', 'pleated skirt', 2),
-      _tag('clothing_short_skirt', '裙子', '短裙', 'short skirt', 2),
+      _tag('clothing_short_skirt', '裙子', '膝上裙', 'above-knee skirt', 2),
       _tag('clothing_knee_length_skirt', '裙子', '及膝裙', 'knee-length skirt', 2),
       _tag('clothing_midi_skirt', '裙子', '中長裙', 'midi skirt', 2),
       _tag('clothing_maxi_skirt', '裙子', '超長裙', 'maxi skirt', 2),
@@ -3742,7 +3769,8 @@ List<TagItem> _seedTags() => [
       _tag('clothing_sundress', '服裝', '夏日洋裝', 'sundress', 2),
       _tag('clothing_evening_gown', '服裝', '晚禮服', 'evening gown', 2),
       _tag('clothing_outfit', '服裝', '套裝', 'outfit', 2),
-      _tag('clothing_school_uniform', '服裝', '校服', 'school uniform', 2),
+      _tag('clothing_school_uniform', '服裝', '正式西裝外套套裝', 'formal blazer outfit',
+          2),
       _tag('clothing_business_suit', '服裝', '商務套裝', 'business suit', 2),
       _tag('clothing_kimono', '服裝', '和服', 'kimono', 2),
       _tag('clothing_apron', '服裝', '圍裙', 'apron', 2),
@@ -5729,7 +5757,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final cleaned = value.trim();
     const replacements = <String, String>{
       'one-piece dress': 'dress',
-      'sailor uniform': 'serafuku',
+      'sailor uniform': 'sailor-style outfit',
+      'serafuku': 'sailor-style outfit',
+      'school uniform': 'formal blazer outfit',
+      'student uniform': 'formal blazer outfit',
+      'slim pants': 'narrow-leg pants',
+      'short shorts': 'hot pants',
+      'slim fit': 'tailored fit',
+      'short sleeves': 'above-elbow sleeves',
+      'short length': 'upper-thigh length',
+      'cute': 'charming',
+      'sweet cute style': 'sweet feminine style',
+      'cute mood': 'cheerful mood',
+      'school outfit': 'daytime formal outfit',
       'maid outfit': 'maid',
       'miko outfit': 'miko',
       'puff sleeves': 'puffy sleeves',
@@ -5784,7 +5824,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
         return 'outerwear';
       case 'costume':
-        if (value.contains('uniform') || value == 'serafuku') return 'uniform';
+        if (value.contains('uniform')) return 'uniform';
         if (value.contains('dress')) return 'dress';
         return value;
       case 'underwear':
@@ -5871,15 +5911,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (kind == 'length') {
       final english = switch ((scope, raw.toLowerCase())) {
         ('skirt', 'mini') => 'miniskirt',
-        ('skirt', 'above knee') => 'short skirt',
+        ('skirt', 'above knee') => 'above-knee skirt',
         ('skirt', 'knee length') => 'knee-length skirt',
         ('skirt', 'midi') => 'midi skirt',
         ('skirt', 'calf length') => 'midi skirt',
         ('skirt', 'ankle length') => 'long skirt',
         ('skirt', 'maxi') => 'long skirt',
         ('skirt', 'floor length') => 'long skirt',
-        ('onepiece', 'mini') => 'short dress',
-        ('onepiece', 'above knee') => 'short dress',
+        ('onepiece', 'mini') => 'mini dress',
+        ('onepiece', 'above knee') => 'above-knee dress',
         ('onepiece', 'knee length') => 'knee-length dress',
         ('onepiece', 'midi') => 'midi dress',
         ('onepiece', 'calf length') => 'midi dress',
@@ -6893,8 +6933,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .hasMatch(value)) {
       return '胸部';
     }
-    if (['slim', 'tall', 'curvy', 'muscular', 'petite', 'mature female']
-        .contains(value)) {
+    if ([
+      'slender build',
+      'tall',
+      'curvy',
+      'muscular',
+      'petite',
+      'mature female'
+    ].contains(value)) {
       return '身體特徵';
     }
     if (RegExp(
@@ -6963,11 +7009,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     final value = _cleanTag(trait.en);
     final lengthFirst = RegExp(
-      r'^(very short|very long|waist-length|long|medium|short)\s+(.+?)\s+hair$',
+      r'^(close-cropped|cropped|very short|very long|waist-length|long|medium|short)\s+(.+?)\s+hair$',
       caseSensitive: false,
     ).firstMatch(value);
     final colorFirst = RegExp(
-      r'^(.+?)\s+(very short|very long|waist-length|long|medium|short)\s+hair$',
+      r'^(.+?)\s+(close-cropped|cropped|very short|very long|waist-length|long|medium|short)\s+hair$',
       caseSensitive: false,
     ).firstMatch(value);
     if (lengthFirst == null && colorFirst == null) {
@@ -7044,17 +7090,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         RegExp(r'\b' + RegExp.escape(color) + r'\s+hair\b').hasMatch(value) ||
         RegExp(r'\b' +
                 RegExp.escape(color) +
-                r'\s+(?:very\s+short|very\s+long|waist-length|long|medium|short)\s+hair\b')
+                r'\s+(?:close-cropped|cropped|very\s+short|very\s+long|waist-length|long|medium|short)\s+hair\b')
             .hasMatch(value));
     if (hasHairColor) {
       groups.add('hair_color');
     }
     final hasHairLength = RegExp(
-            r'\b(very\s+short|very\s+long|waist-length|long|medium|short)\s+(?:[a-z-]+\s+)?hair\b')
+            r'\b(close-cropped|cropped|very\s+short|very\s+long|waist-length|long|medium|short)\s+(?:[a-z-]+\s+)?hair\b')
         .hasMatch(value);
     final hasColoredHairLength = _clothingColorNames.any((color) => RegExp(r'\b' +
             RegExp.escape(color) +
-            r'\s+(?:very\s+short|very\s+long|waist-length|long|medium|short)\s+hair\b')
+            r'\s+(?:close-cropped|cropped|very\s+short|very\s+long|waist-length|long|medium|short)\s+hair\b')
         .hasMatch(value));
     if (hasHairLength || hasColoredHairLength) {
       groups.add('hair_length');
@@ -7078,7 +7124,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .hasMatch(value)) {
       groups.add('eye_type');
     }
-    if (['slim', 'tall', 'curvy', 'muscular', 'petite'].contains(value)) {
+    if (['slender build', 'tall', 'curvy', 'muscular', 'petite']
+        .contains(value)) {
       groups.add('body_type');
     }
     if ([
@@ -7293,7 +7340,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final seen = used ?? <String>{};
     final result = <_GeneratedOutputTag>[];
     for (final tag in tags) {
-      final key = _cleanTag(tag.en).toLowerCase();
+      final key = _moderationSafePromptTag(tag.en).toLowerCase();
       if (key.isEmpty || !seen.add(key)) continue;
       result.add(tag);
     }
@@ -7400,7 +7447,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     const replacements = <String, String>{
       '超長髮': 'very long hair',
-      '極短髮': 'very short hair',
+      '極短髮': 'close-cropped hair',
       '粉紅色': 'pink',
       '藍色': 'blue',
       '黑色': 'black',
@@ -7414,13 +7461,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '銀色': 'silver',
       '金色': 'gold',
       '長髮': 'long hair',
-      '短髮': 'short hair',
+      '短髮': 'cropped hair',
       '蕾絲': 'lace',
       '花邊': 'frills',
       '哥德式': 'gothic',
       '晚禮服': 'evening gown',
       '長裙': 'long skirt',
-      '短裙': 'short skirt',
+      '短裙': 'above-knee skirt',
       '迷你裙': 'miniskirt',
       '泳裝': 'swimsuit',
       '運動服': 'sportswear',
@@ -7466,9 +7513,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     const replacements = <String, String>{
       'very long hair': '超長髮',
-      'very short hair': '極短髮',
+      'close-cropped hair': '極短髮',
       'long hair': '長髮',
-      'short hair': '短髮',
+      'cropped hair': '短髮',
       'blue': '藍色',
       'black': '黑色',
       'white': '白色',
@@ -7514,9 +7561,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _hairLengthTag(String value) {
     final normalized = _cleanTag(value).toLowerCase();
-    final match =
-        RegExp(r'^(very short|very long|waist-length|long|medium|short) hair$')
-            .firstMatch(normalized);
+    final match = RegExp(
+            r'^(close-cropped|cropped|very short|very long|waist-length|long|medium|short) hair$')
+        .firstMatch(normalized);
     return match?.group(0);
   }
 
@@ -7551,27 +7598,71 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (lengths.length != 1) return const <String>[];
     final result = <String>[];
     switch (lengths.first) {
+      case 'cropped hair':
       case 'short hair':
         result.add('long hair');
         break;
+      case 'close-cropped hair':
       case 'very short hair':
         result.add('long hair');
         break;
       case 'long hair':
       case 'very long hair':
-        result.add('short hair');
+        result.add('cropped hair');
         break;
       case 'medium hair':
-        result.addAll(['short hair', 'long hair']);
+        result.addAll(['cropped hair', 'long hair']);
         break;
     }
     final seen = <String>{};
     return result.where((tag) => seen.add(tag)).toList();
   }
 
+  String _moderationSafePromptTag(String value) {
+    var result = _cleanTag(value);
+    const phraseReplacements = <String, String>{
+      'very short hair': 'close-cropped hair',
+      'short hair with long locks': 'cropped hair with long locks',
+      'short ponytail': 'bob-length ponytail',
+      'short twintails': 'bob-length twintails',
+      'fluffy short hair': 'fluffy bob cut',
+      'short sidelocks': 'cropped sidelocks',
+      'short bangs': 'cropped bangs',
+      'short hair': 'cropped hair',
+      'school uniform': 'formal blazer outfit',
+      'student uniform': 'formal blazer outfit',
+      'serafuku': 'sailor-style outfit',
+      'school shoes': 'loafers',
+      'school outfit': 'daytime formal outfit',
+      'short sleeves': 'above-elbow sleeves',
+      'short shorts': 'hot pants',
+      'short skirt': 'above-knee skirt',
+      'short dress': 'above-knee dress',
+      'short length': 'upper-thigh length',
+      'slim pants': 'narrow-leg pants',
+      'slim fit': 'tailored fit',
+      'sweet cute style': 'sweet feminine style',
+      'cute mood': 'cheerful mood',
+    };
+    final phrases = phraseReplacements.entries.toList()
+      ..sort((a, b) => b.key.length.compareTo(a.key.length));
+    for (final entry in phrases) {
+      result = result.replaceAll(
+        RegExp(r'\b' + RegExp.escape(entry.key) + r'\b', caseSensitive: false),
+        entry.value,
+      );
+    }
+    result = result
+        .replaceAll(RegExp(r'\bcute\b', caseSensitive: false), 'charming')
+        .replaceAll(RegExp(r'\bslim\b', caseSensitive: false), 'slender')
+        .replaceAll(RegExp(r'\bshort\b', caseSensitive: false), 'compact');
+    return _cleanTag(result);
+  }
+
   List<String> get _negativeTokens {
     final seen = <String>{};
     return [..._extraTags(_negative.text), ..._hairGuardNegativeTags]
+        .map(_moderationSafePromptTag)
         .where((tag) => seen.add(tag.toLowerCase()))
         .toList();
   }
@@ -7586,21 +7677,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     tokens.addAll(_extraTags(_extraPositive.text).map(_positiveEnglishTag));
     tokens.addAll(_extraTags(_preprompt.text));
     final seen = <String>{};
-    return tokens.where((token) => seen.add(token.toLowerCase())).toList();
+    return tokens
+        .map(_moderationSafePromptTag)
+        .where((token) => seen.add(token.toLowerCase()))
+        .toList();
   }
 
-  List<String> get _sharedPositiveTokens => [
+  List<String> get _sharedPositiveTokens => <String>[
         ..._selectedTags.map((tag) => tag.en),
         ..._extraTags(_extraPositive.text).map(_positiveEnglishTag),
         ..._extraTags(_preprompt.text),
-      ];
+      ].map(_moderationSafePromptTag).toList();
 
   String _groupedPositiveText() {
     final output = <String>[];
     final used = <String>{};
     void addTokens(Iterable<String> values) {
       output.addAll(values
-          .where((value) => used.add(_cleanTag(value).toLowerCase()))
+          .map(_moderationSafePromptTag)
+          .where((value) => used.add(value.toLowerCase()))
           .map((value) => '$value.'));
     }
 
@@ -7611,7 +7706,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..._personScopedPromptTags(index),
       ], used: used);
       if (personal.isEmpty) continue;
-      output.add('(${personal.map((tag) => tag.en).join(', ')}:1.15).');
+      output.add(
+          '(${personal.map((tag) => _moderationSafePromptTag(tag.en)).join(', ')}:1.15).');
     }
     for (var index = 0; index < _personSlots.length; index++) {
       addTokens(_personFinalPromptTags(index).map((tag) => tag.en));
@@ -7714,8 +7810,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'early': '早期風格',
       'chromatic aberration': '色差',
       'artistic error': '藝術錯誤',
-      'short hair': '短髮',
-      'very short hair': '極短髮',
+      'cropped hair': '短髮',
+      'close-cropped hair': '極短髮',
       'long hair': '長髮',
       'very long hair': '超長髮',
       'medium hair': '中長髮',
@@ -9737,7 +9833,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           'medium': '中長髮',
           'short': '短髮',
         };
-        add(names[length] ?? length, '$length hair');
+        const safeEnglish = {
+          'very short': 'close-cropped hair',
+          'short': 'cropped hair',
+        };
+        add(names[length] ?? length, safeEnglish[length] ?? '$length hair');
       }
     }
     const eyeColors = {
@@ -9764,8 +9864,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'waist-length hair': {'zh': '及腰長髮', 'en': 'waist-length hair'},
       'long hair': {'zh': '長髮', 'en': 'long hair'},
       'medium hair': {'zh': '中長髮', 'en': 'medium hair'},
-      'short hair': {'zh': '短髮', 'en': 'short hair'},
-      'very short hair': {'zh': '極短髮', 'en': 'very short hair'},
+      'short hair': {'zh': '短髮', 'en': 'cropped hair'},
+      'very short hair': {'zh': '極短髮', 'en': 'close-cropped hair'},
       'bob cut': {'zh': '鮑伯頭', 'en': 'bob cut'},
       'pixie cut': {'zh': '精靈短髮', 'en': 'pixie cut'},
       'straight hair': {'zh': '直髮', 'en': 'straight hair'},
@@ -9783,7 +9883,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'elf ears': {'zh': '精靈耳', 'en': 'elf ears'},
       'pointed ears': {'zh': '尖耳朵', 'en': 'pointed ears'},
       'tail': {'zh': '尾巴', 'en': 'tail'},
-      'slim': {'zh': '纖細身材', 'en': 'slim'},
+      'slim': {'zh': '纖細體態', 'en': 'slender build'},
       'medium breasts': {'zh': '中等胸部', 'en': 'medium breasts'},
       'large breasts': {'zh': '豐滿胸部', 'en': 'large breasts'},
     };
@@ -12919,7 +13019,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Color _outfitReferenceTone(String category) => switch (category) {
-        '日常／學院' => const Color(0xff38bdf8),
+        '日常／正式' => const Color(0xff38bdf8),
         '優雅／正式' => const Color(0xffa78bfa),
         '甜美／浪漫' => const Color(0xfff472b6),
         '街頭／運動' => const Color(0xfffb923c),
@@ -13811,7 +13911,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           maxLines: 4,
           decoration: const InputDecoration(
               labelText: '標籤反推（貼上既有提示詞）',
-              hintText: '例如：1girl, pink hair, long hair, school uniform')),
+              hintText:
+                  '例如：1girl, pink hair, long hair, formal blazer outfit')),
       const SizedBox(height: 8),
       Align(
         alignment: Alignment.centerLeft,
@@ -13849,7 +13950,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _negativeTagPicker(),
       const SizedBox(height: 12),
       Text(
-          '自動髮長防衝突：角色為長髮時會在負面輸出加入 short hair；改選短髮後則加入 long hair。這些自動詞不會改寫上方可編輯欄位。',
+          '自動髮長防衝突：角色為長髮時會在負面輸出加入 cropped hair；改選短髮後則加入 long hair。這些自動詞不會改寫上方可編輯欄位。',
           style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant)),

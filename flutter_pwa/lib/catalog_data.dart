@@ -2037,7 +2037,11 @@ const catalogCharacters = <CatalogCharacter>[
           en: 'black heart-shaped tail',
           order: 1),
       CatalogTagData(
-          id: 'lala_slim', group: '角色標籤', zh: '纖細身材', en: 'slim', order: 1),
+          id: 'lala_slim',
+          group: '角色標籤',
+          zh: '纖細體態',
+          en: 'slender build',
+          order: 1),
       CatalogTagData(
           id: 'lala_medium_breasts',
           group: '角色標籤',
@@ -2095,8 +2099,8 @@ const catalogCharacters = <CatalogCharacter>[
         CatalogTagData(
             id: 'yui_uniform',
             group: '角色標籤',
-            zh: '校服',
-            en: 'school uniform',
+            zh: '正式西裝外套套裝',
+            en: 'formal blazer outfit',
             order: 1)
       ]),
   CatalogCharacter(
@@ -2155,7 +2159,11 @@ const catalogCharacters = <CatalogCharacter>[
             en: 'brown eyes',
             order: 1),
         CatalogTagData(
-            id: 'asuna_slim', group: '角色標籤', zh: '纖細身材', en: 'slim', order: 1)
+            id: 'asuna_slim',
+            group: '角色標籤',
+            zh: '纖細體態',
+            en: 'slender build',
+            order: 1)
       ]),
   CatalogCharacter(
       id: 're_zero_rem',
@@ -2494,7 +2502,7 @@ const catalogCharacters = <CatalogCharacter>[
             id: 'rei_short_hair',
             group: '角色標籤',
             zh: '短髮',
-            en: 'short hair',
+            en: 'cropped hair',
             order: 1)
       ]),
   CatalogCharacter(
