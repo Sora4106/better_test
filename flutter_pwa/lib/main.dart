@@ -2322,11 +2322,17 @@ void _migrateClothingTaxonomyTagIds(Set<String> ids) {
     'catalog_outfit_mood_cute_mood': 'catalog_outfit_mood_cheerful_mood',
     'catalog_outfit_occasion_school_outfit':
         'catalog_outfit_occasion_daytime_formal_outfit',
+    'hair_style_baby_bangs': 'hair_style_micro_bangs',
+    'catalog_character_pose_baby_carry': 'catalog_character_pose_cradle_carry',
+    'catalog_character_pose_child_carry': 'catalog_character_pose_side_carry',
     'catalog_outfit_sub_style_y2k_style':
         'catalog_outfit_sub_style_y2k_fashion',
   };
   for (final oldId in ids.toList()) {
     var newId = replacements[oldId];
+    if (newId == null && oldId.endsWith('_baby_blue')) {
+      newId = oldId.replaceFirst(RegExp(r'baby_blue$'), 'pastel_blue');
+    }
     if (newId == null && oldId.contains('_pattern_floral_pattern')) {
       newId =
           oldId.replaceAll('_pattern_floral_pattern', '_pattern_floral_print');
@@ -2884,7 +2890,7 @@ const _clothingColorShades = <List<String>>[
   ['dark_blue', '\u6DF1\u85CD\u8272', 'dark blue'],
   ['navy', '\u6D77\u8ECD\u85CD', 'navy'],
   ['sky_blue', '\u5929\u85CD\u8272', 'sky blue'],
-  ['baby_blue', '\u5B30\u5152\u85CD', 'baby blue'],
+  ['pastel_blue', '\u7C89\u5F69\u85CD', 'pastel blue'],
   ['royal_blue', '\u5BF6\u85CD\u8272', 'royal blue'],
   ['azure', '\u851A\u85CD\u8272', 'azure'],
   ['cobalt_blue', '\u9264\u85CD\u8272', 'cobalt blue'],
@@ -2988,7 +2994,7 @@ const _promptColorFamilies = <String, String>{
   'dark blue': 'blue',
   'navy': 'blue',
   'sky blue': 'blue',
-  'baby blue': 'blue',
+  'pastel blue': 'blue',
   'royal blue': 'blue',
   'azure': 'blue',
   'cobalt blue': 'blue',
@@ -3075,7 +3081,7 @@ const _promptColorChinese = <String, String>{
   'dark blue': '\u6DF1\u85CD\u8272',
   'navy': '\u6D77\u8ECD\u85CD',
   'sky blue': '\u5929\u85CD\u8272',
-  'baby blue': '\u5B30\u5152\u85CD',
+  'pastel blue': '\u7C89\u5F69\u85CD',
   'royal blue': '\u5BF6\u85CD\u8272',
   'azure': '\u851A\u85CD\u8272',
   'cobalt blue': '\u9264\u85CD\u8272',
@@ -3161,7 +3167,7 @@ const _promptColorValues = <String, Color>{
   'dark blue': Color(0xff1d4ed8),
   'navy': Color(0xff1e3a8a),
   'sky blue': Color(0xff38bdf8),
-  'baby blue': Color(0xff93c5fd),
+  'pastel blue': Color(0xff93c5fd),
   'royal blue': Color(0xff4169e1),
   'azure': Color(0xff007fff),
   'cobalt blue': Color(0xff0047ab),
@@ -3521,7 +3527,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['asymmetrical_bangs', '不對稱瀏海', 'asymmetrical bangs'],
     ['long_bangs', '長瀏海', 'long bangs'],
     ['short_bangs', '短瀏海', 'cropped bangs'],
-    ['baby_bangs', '超短瀏海', 'baby bangs'],
+    ['micro_bangs', '超短瀏海', 'micro bangs'],
     ['braided_headband', '辮子髮箍', 'braided headband'],
     ['milkmaid_braid', '牛奶女工辮', 'milkmaid braid'],
     ['gibson_tuck', '吉布森盤髮', 'Gibson tuck'],
@@ -5456,7 +5462,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     'powder blue',
     'royal blue',
     'steel blue',
-    'baby blue',
+    'pastel blue',
     'sky blue',
     'light blue',
     'dark blue',
@@ -7621,6 +7627,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _moderationSafePromptTag(String value) {
     var result = _cleanTag(value);
     const phraseReplacements = <String, String>{
+      'baby blue': 'pastel blue',
+      'baby bangs': 'micro bangs',
+      'baby carry': 'cradle carry',
+      'child carry': 'side carry',
       'very short hair': 'close-cropped hair',
       'short hair with long locks': 'cropped hair with long locks',
       'short ponytail': 'bob-length ponytail',
@@ -7656,6 +7666,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .replaceAll(RegExp(r'\bcute\b', caseSensitive: false), 'charming')
         .replaceAll(RegExp(r'\bslim\b', caseSensitive: false), 'slender')
         .replaceAll(RegExp(r'\bshort\b', caseSensitive: false), 'compact');
+    if (RegExp(
+      r'\b(baby|child|children|kid|kids|teen|teenage|minor|underage|loli|shota)\b',
+      caseSensitive: false,
+    ).hasMatch(result)) {
+      return '';
+    }
     return _cleanTag(result);
   }
 
@@ -7663,7 +7679,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final seen = <String>{};
     return [..._extraTags(_negative.text), ..._hairGuardNegativeTags]
         .map(_moderationSafePromptTag)
-        .where((tag) => seen.add(tag.toLowerCase()))
+        .where((tag) => tag.isNotEmpty && seen.add(tag.toLowerCase()))
         .toList();
   }
 
@@ -7679,7 +7695,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final seen = <String>{};
     return tokens
         .map(_moderationSafePromptTag)
-        .where((token) => seen.add(token.toLowerCase()))
+        .where((token) => token.isNotEmpty && seen.add(token.toLowerCase()))
         .toList();
   }
 
@@ -7687,7 +7703,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..._selectedTags.map((tag) => tag.en),
         ..._extraTags(_extraPositive.text).map(_positiveEnglishTag),
         ..._extraTags(_preprompt.text),
-      ].map(_moderationSafePromptTag).toList();
+      ].map(_moderationSafePromptTag).where((tag) => tag.isNotEmpty).toList();
 
   String _groupedPositiveText() {
     final output = <String>[];
@@ -7695,7 +7711,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     void addTokens(Iterable<String> values) {
       output.addAll(values
           .map(_moderationSafePromptTag)
-          .where((value) => used.add(value.toLowerCase()))
+          .where((value) => value.isNotEmpty && used.add(value.toLowerCase()))
           .map((value) => '$value.'));
     }
 

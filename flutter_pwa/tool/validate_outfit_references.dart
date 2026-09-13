@@ -21,7 +21,7 @@ const _colors = <String>{
   'dark blue',
   'navy',
   'sky blue',
-  'baby blue',
+  'pastel blue',
   'royal blue',
   'azure',
   'cobalt blue',
@@ -90,7 +90,7 @@ const _colors = <String>{
 void main() {
   final problems = <String>[];
   final ageSensitive = RegExp(
-    r'\b(cute|short|slim)\b|\b(school|student) uniform\b|\bserafuku\b',
+    r'\b(cute|short|slim|baby|child|children|kid|kids|teen|teenage|minor|underage|loli|shota)\b|\b(school|student) uniform\b|\bserafuku\b',
     caseSensitive: false,
   );
   void validatePromptTerm(String context, String? value) {
