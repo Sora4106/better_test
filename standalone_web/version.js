@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.69",
-  "build": 71,
-  "label": "1.1.69+71",
+  "version": "1.1.70",
+  "build": 72,
+  "label": "1.1.70+72",
   "history": [
+    {
+      "version": "1.1.70",
+      "build": 72,
+      "label": "1.1.70+72",
+      "date": "2026-09-13",
+      "notes": "自動偵測：feat: 新增貓咪嘴與多種嘴型標籤"
+    },
     {
       "version": "1.1.69",
       "build": 71,
