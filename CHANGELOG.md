@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.73+75 - 2026-09-13
+
+- 組合標籤預設折疊；新增親吻互動、動態姿勢與成人動態標籤
+
+
 ## 1.1.72+74 - 2026-09-13
 
 - 自動偵測：feat: add 50 adult pose packages and reorder character traits

@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.72",
-  "build": 74,
-  "label": "1.1.72+74",
+  "version": "1.1.73",
+  "build": 75,
+  "label": "1.1.73+75",
   "history": [
+    {
+      "version": "1.1.73",
+      "build": 75,
+      "label": "1.1.73+75",
+      "date": "2026-09-13",
+      "notes": "組合標籤預設折疊；新增親吻互動、動態姿勢與成人動態標籤"
+    },
     {
       "version": "1.1.72",
       "build": 74,

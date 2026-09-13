@@ -1,7 +1,8 @@
-const appVersion = '1.1.72';
-const appBuildNumber = 74;
-const appVersionLabel = '1.1.72+74';
+const appVersion = '1.1.73';
+const appBuildNumber = 75;
+const appVersionLabel = '1.1.73+75';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.73', 'build': '75', 'label': '1.1.73+75', 'date': '2026-09-13', 'notes': '組合標籤預設折疊；新增親吻互動、動態姿勢與成人動態標籤'},
   {'version': '1.1.72', 'build': '74', 'label': '1.1.72+74', 'date': '2026-09-13', 'notes': '自動偵測：feat: add 50 adult pose packages and reorder character traits'},
   {'version': '1.1.71', 'build': '73', 'label': '1.1.71+73', 'date': '2026-09-13', 'notes': '自動偵測：feat: add adult pose packs and sync clothing presets'},
   {'version': '1.1.70', 'build': '72', 'label': '1.1.70+72', 'date': '2026-09-13', 'notes': '自動偵測：feat: 新增貓咪嘴與多種嘴型標籤'},
