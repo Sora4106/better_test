@@ -42,7 +42,7 @@ Set-Content -LiteralPath (Join-Path $projectRoot 'standalone_web/version.js') -V
 
 $dartHistory = ($history | ForEach-Object {
   $safeNotes = $_.notes.Replace([string][char]39, ([string][char]92 + [string][char]39))
-  "  {'version': '${($_.version)}', 'build': '${($_.build)}', 'label': '${($_.label)}', 'date': '${($_.date)}', 'notes': '$safeNotes'},"
+  "  {'version': '$($_.version)', 'build': '$($_.build)', 'label': '$($_.label)', 'date': '$($_.date)', 'notes': '$safeNotes'},"
 }) -join "`n"
 $dart = @(
   "const appVersion = '$Version';"

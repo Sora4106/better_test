@@ -2,11 +2,11 @@ const appVersion = '1.1.67';
 const appBuildNumber = 69;
 const appVersionLabel = '1.1.67+69';
 const appVersionHistory = <Map<String, String>>[
-  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add direct person removal and optimize tag loading'},
-  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: rebuild clothing taxonomy and visual layers'},
-  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: reorganize pose and clothing tag pickers'},
-  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: refine mouth expressions'},
-  {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：feat: add kyudo prompt catalog'},
+  {'version': '1.1.67', 'build': '69', 'label': '1.1.67+69', 'date': '2026-09-12', 'notes': '自動偵測：feat: add direct person removal and optimize tag loading'},
+  {'version': '1.1.66', 'build': '68', 'label': '1.1.66+68', 'date': '2026-09-12', 'notes': '自動偵測：feat: rebuild clothing taxonomy and visual layers'},
+  {'version': '1.1.65', 'build': '67', 'label': '1.1.65+67', 'date': '2026-09-12', 'notes': '自動偵測：feat: reorganize pose and clothing tag pickers'},
+  {'version': '1.1.64', 'build': '66', 'label': '1.1.64+66', 'date': '2026-09-12', 'notes': '自動偵測：feat: refine mouth expressions'},
+  {'version': '1.1.63', 'build': '65', 'label': '1.1.63+65', 'date': '2026-09-11', 'notes': '自動偵測：feat: add kyudo prompt catalog'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': 'feat: expand hair length and hairstyle catalog; add partial clothing and pose clearing'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': 'feat: save unregistered extra positive tags; fix: allow composable clothing and pose tags'},
   {'version': '', 'build': '', 'label': '', 'date': '', 'notes': '自動偵測：fix: allow composable camera framing tags'},

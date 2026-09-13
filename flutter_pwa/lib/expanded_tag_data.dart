@@ -28,7 +28,9 @@ List<CatalogTagData> _expandedTags({
         .toList();
 
 const expandedGeneralPoseGroups = <String>{
-  '基礎姿勢',
+  '站立與蹲姿',
+  '坐姿與跪姿',
+  '躺臥姿勢',
   '全身姿勢',
   '軀幹姿勢',
   '頭部姿勢',
@@ -90,14 +92,20 @@ const expandedPickerTagGroups = <String>{
 };
 
 const expandedTagPickerSections = <String, List<String>>{
-  '基本姿態': ['姿勢', '基礎姿勢'],
-  '全身與軀幹': ['全身姿勢', '軀幹姿勢'],
+  '站立／蹲姿': ['站立與蹲姿'],
+  '坐姿／跪姿': ['坐姿與跪姿'],
+  '躺臥姿勢': ['躺臥姿勢'],
+  '全身特殊姿勢': ['全身姿勢'],
+  '軀幹與重心': ['軀幹姿勢'],
   '頭部姿勢': ['頭部姿勢'],
-  '手臂與手勢': ['手臂姿勢', '手部姿勢'],
+  '手臂姿勢': ['手臂姿勢'],
+  '手勢與手部': ['手部姿勢'],
   '腿部與腳部': ['腿部姿勢'],
   '動態與運動': ['動作', '身體動作'],
   '多人互動': ['多人互動'],
-  '物件與角色姿勢': ['物件', '角色姿勢'],
+  '角色特色姿勢': ['角色姿勢'],
+  '物件與道具': ['物件'],
+  '其他姿勢': ['姿勢'],
   '成人性姿勢': [
     '性姿勢',
     '性姿勢・一般',
@@ -126,15 +134,13 @@ const expandedTagPickerSections = <String, List<String>>{
 final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
   ..._expandedTags(
     prefix: 'basic_pose',
-    group: '基礎姿勢',
+    group: '坐姿與跪姿',
     order: 4,
     adult: false,
     defaultConflictGroup: 'basic_pose',
     rows: const [
       ['單膝跪地', 'on one knee'],
       ['交叉腿', 'crossed legs'],
-      ['仰躺', 'on back'],
-      ['趴躺', 'on stomach'],
       ['蝴蝶坐姿', 'butterfly sitting'],
       ['四字腿坐姿', 'figure four sitting'],
       ['盤腿坐姿', 'indian style'],
@@ -151,6 +157,17 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['跨坐大腿', 'thigh straddling'],
       ['女坐姿', 'wariza'],
       ['橫坐', 'yokozuwari'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'basic_pose',
+    group: '躺臥姿勢',
+    order: 4,
+    adult: false,
+    defaultConflictGroup: 'basic_pose',
+    rows: const [
+      ['仰躺', 'on back'],
+      ['趴躺', 'on stomach'],
     ],
   ),
   ..._expandedTags(

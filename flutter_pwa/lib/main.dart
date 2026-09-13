@@ -114,6 +114,7 @@ class _GeneratedOutputTag {
     this.personIndex,
     this.characterTag = false,
     this.combinationId,
+    this.personPoseExtraValue,
   });
 
   final String zh;
@@ -123,6 +124,7 @@ class _GeneratedOutputTag {
   final int? personIndex;
   final bool characterTag;
   final String? combinationId;
+  final String? personPoseExtraValue;
 }
 
 class Preset {
@@ -187,6 +189,7 @@ class PersonSlot {
   String originalCharacterEn = '';
   String originalCharacterTag = '';
   String originalTraits = '';
+  String poseExtraPositive = '';
 
   Map<String, dynamic> toJson() => {
         'gender': gender,
@@ -205,6 +208,7 @@ class PersonSlot {
         'originalCharacterEn': originalCharacterEn,
         'originalCharacterTag': originalCharacterTag,
         'originalTraits': originalTraits,
+        'poseExtraPositive': poseExtraPositive,
       };
 
   factory PersonSlot.fromJson(Map<String, dynamic> json) => PersonSlot(
@@ -224,7 +228,8 @@ class PersonSlot {
         ..originalCharacterZh = '${json['originalCharacterZh'] ?? ''}'
         ..originalCharacterEn = '${json['originalCharacterEn'] ?? ''}'
         ..originalCharacterTag = '${json['originalCharacterTag'] ?? ''}'
-        ..originalTraits = '${json['originalTraits'] ?? ''}';
+        ..originalTraits = '${json['originalTraits'] ?? ''}'
+        ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}';
 }
 
 class _RemoteAnime {
@@ -2183,103 +2188,105 @@ List<TagItem> _seedTags() => [
           adult: true, conflictGroup: 'expression_mood'),
 
       // Pose/action.
-      _tag('pose_standing', '姿勢', '站立', 'standing', 4),
-      _tag('pose_sitting', '姿勢', '坐著', 'sitting', 4),
-      _tag('pose_kneeling', '姿勢', '跪姿', 'kneeling', 4),
-      _tag('pose_lying', '姿勢', '躺著', 'lying', 4),
-      _tag('pose_lying_on_side', '姿勢', '側躺', 'lying on side', 4),
-      _tag('pose_lying_on_back', '姿勢', '仰躺', 'lying on back', 4),
-      _tag('pose_squatting', '姿勢', '蹲姿', 'squatting', 4),
-      _tag('pose_knees_bent', '姿勢', '膝蓋微蹲', 'knees bent', 4,
+      _tag('pose_standing', '站立與蹲姿', '站立', 'standing', 4),
+      _tag('pose_sitting', '坐姿與跪姿', '坐著', 'sitting', 4),
+      _tag('pose_kneeling', '坐姿與跪姿', '跪姿', 'kneeling', 4),
+      _tag('pose_lying', '躺臥姿勢', '躺著', 'lying', 4),
+      _tag('pose_lying_on_side', '躺臥姿勢', '側躺', 'lying on side', 4),
+      _tag('pose_lying_on_back', '躺臥姿勢', '仰躺', 'lying on back', 4),
+      _tag('pose_squatting', '站立與蹲姿', '蹲姿', 'squatting', 4),
+      _tag('pose_knees_bent', '站立與蹲姿', '膝蓋微蹲', 'knees bent', 4,
           conflictGroup: 'leg_detail'),
-      _tag('pose_arms_up', '姿勢', '雙手舉起', 'arms up', 4),
-      _tag('pose_hand_on_hip', '姿勢', '手放在腰上', 'hand on hip', 4),
-      _tag('pose_leaning', '姿勢', '倚靠', 'leaning', 4),
-      _tag('pose_bent_over', '姿勢', '彎腰', 'bent over', 4, adult: true),
-      _tag('pose_presenting', '姿勢', '展示姿勢（成年角色）', 'presenting', 4, adult: true),
-      _tag('pose_ass_up', '姿勢', '臀部抬起（成年角色）', 'ass up', 4, adult: true),
-      _tag('pose_from_behind', '姿勢', '從後方視角', 'from behind', 4),
+      _tag('pose_arms_up', '手臂姿勢', '雙手舉起', 'arms up', 4),
+      _tag('pose_hand_on_hip', '手部姿勢', '手放在腰上', 'hand on hip', 4),
+      _tag('pose_leaning', '軀幹姿勢', '倚靠', 'leaning', 4),
+      _tag('pose_bent_over', '軀幹姿勢', '彎腰', 'bent over', 4, adult: true),
+      _tag('pose_presenting', '全身姿勢', '展示姿勢（成年角色）', 'presenting', 4,
+          adult: true),
+      _tag('pose_ass_up', '全身姿勢', '臀部抬起（成年角色）', 'ass up', 4, adult: true),
+      _tag('pose_from_behind', '畫面', '從後方視角', 'from behind', 10),
       _tag('pose_selfie', '畫面', '自拍姿勢', 'selfie', 10),
-      _tag('pose_sitting_chair', '姿勢', '坐在椅子上', 'sitting on chair', 4,
+      _tag('pose_sitting_chair', '坐姿與跪姿', '坐在椅子上', 'sitting on chair', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_sitting_bed', '姿勢', '坐在床上', 'sitting on bed', 4,
+      _tag('pose_sitting_bed', '坐姿與跪姿', '坐在床上', 'sitting on bed', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_sitting_floor', '姿勢', '坐在地上', 'sitting on floor', 4,
+      _tag('pose_sitting_floor', '坐姿與跪姿', '坐在地上', 'sitting on floor', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_sitting_sofa', '姿勢', '坐在沙發上', 'sitting on sofa', 4,
+      _tag('pose_sitting_sofa', '坐姿與跪姿', '坐在沙發上', 'sitting on sofa', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_sitting_bench', '姿勢', '坐在長椅上', 'sitting on bench', 4,
+      _tag('pose_sitting_bench', '坐姿與跪姿', '坐在長椅上', 'sitting on bench', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_standing_straight', '姿勢', '立正站立', 'standing straight', 4,
+      _tag('pose_standing_straight', '站立與蹲姿', '立正站立', 'standing straight', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_standing_one_leg', '姿勢', '單腳站立', 'standing on one leg', 4,
+      _tag('pose_standing_one_leg', '站立與蹲姿', '單腳站立', 'standing on one leg', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_standing_crossed_legs', '姿勢', '交叉腿站立',
+      _tag('pose_standing_crossed_legs', '站立與蹲姿', '交叉腿站立',
           'standing with crossed legs', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_standing_legs_apart', '姿勢', '分腿站立', 'standing with legs apart',
-          4,
+      _tag('pose_standing_legs_apart', '站立與蹲姿', '分腿站立',
+          'standing with legs apart', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_legs_spread', '姿勢', '雙腿張開（成年角色）', 'legs spread', 4,
+      _tag('pose_legs_spread', '腿部姿勢', '雙腿張開（成年角色）', 'legs spread', 4,
           adult: true, conflictGroup: 'leg_spread'),
-      _tag('pose_standing_tiptoes', '姿勢', '踮腳站立', 'standing on tiptoes', 4,
+      _tag('pose_standing_tiptoes', '站立與蹲姿', '踮腳站立', 'standing on tiptoes', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_lying_stomach', '姿勢', '趴躺', 'lying on stomach', 4,
+      _tag('pose_lying_stomach', '躺臥姿勢', '趴躺', 'lying on stomach', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_lying_bed', '姿勢', '躺在床上', 'lying on bed', 4,
+      _tag('pose_lying_bed', '躺臥姿勢', '躺在床上', 'lying on bed', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_lying_floor', '姿勢', '躺在地上', 'lying on floor', 4,
+      _tag('pose_lying_floor', '躺臥姿勢', '躺在地上', 'lying on floor', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_lying_table', '姿勢', '躺在桌上', 'lying on the table', 4,
+      _tag('pose_lying_table', '躺臥姿勢', '躺在桌上', 'lying on the table', 4,
           conflictGroup: 'basic_pose'),
-      _tag('pose_lift_skirt', '姿勢', '掀起裙子', 'lift up the skirt', 4,
+      _tag('pose_lift_skirt', '動作', '掀起裙子', 'lift up the skirt', 4,
           adult: true, conflictGroup: 'independent_pose_detail'),
-      _tag('pose_one_leg_up', '姿勢', '抬起單腳', 'one leg raised', 4,
+      _tag('pose_one_leg_up', '腿部姿勢', '抬起單腳', 'one leg raised', 4,
           conflictGroup: 'leg_raise'),
-      _tag('pose_left_leg_up', '姿勢', '抬起左腳', 'left leg raised', 4,
+      _tag('pose_left_leg_up', '腿部姿勢', '抬起左腳', 'left leg raised', 4,
           conflictGroup: 'left_leg_raise'),
-      _tag('pose_right_leg_up', '姿勢', '抬起右腳', 'right leg raised', 4,
+      _tag('pose_right_leg_up', '腿部姿勢', '抬起右腳', 'right leg raised', 4,
           conflictGroup: 'right_leg_raise'),
-      _tag('pose_both_legs_up', '姿勢', '抬起雙腳', 'both legs raised', 4,
+      _tag('pose_both_legs_up', '腿部姿勢', '抬起雙腳', 'both legs raised', 4,
           conflictGroup: 'leg_raise'),
-      _tag('pose_thigh_raised', '姿勢', '抬起大腿', 'raised thigh', 4,
+      _tag('pose_thigh_raised', '腿部姿勢', '抬起大腿', 'raised thigh', 4,
           conflictGroup: 'leg_detail'),
-      _tag('pose_lower_leg_raised', '姿勢', '抬起小腿', 'raised lower leg', 4,
+      _tag('pose_lower_leg_raised', '腿部姿勢', '抬起小腿', 'raised lower leg', 4,
           conflictGroup: 'leg_detail'),
-      _tag('pose_bent_leg', '姿勢', '彎曲腿部', 'bent leg', 4,
+      _tag('pose_bent_leg', '腿部姿勢', '彎曲腿部', 'bent leg', 4,
           conflictGroup: 'leg_detail'),
-      _tag('pose_left_hand_up', '姿勢', '抬起左手', 'left hand raised', 4,
+      _tag('pose_left_hand_up', '手臂姿勢', '抬起左手', 'left hand raised', 4,
           conflictGroup: 'left_arm_pose'),
-      _tag('pose_right_hand_up', '姿勢', '抬起右手', 'right hand raised', 4,
+      _tag('pose_right_hand_up', '手臂姿勢', '抬起右手', 'right hand raised', 4,
           conflictGroup: 'right_arm_pose'),
-      _tag('pose_one_hand_up', '姿勢', '抬起單手', 'one hand raised', 4,
+      _tag('pose_one_hand_up', '手臂姿勢', '抬起單手', 'one hand raised', 4,
           conflictGroup: 'arm_pose'),
-      _tag('pose_both_hands_up', '姿勢', '抬起雙手', 'both hands raised', 4,
+      _tag('pose_both_hands_up', '手臂姿勢', '抬起雙手', 'both hands raised', 4,
           conflictGroup: 'arm_pose'),
-      _tag('pose_waving', '姿勢', '揮手', 'waving', 4,
+      _tag('pose_waving', '手部姿勢', '揮手', 'waving', 4,
           conflictGroup: 'hand_gesture'),
-      _tag('pose_hands_together', '姿勢', '雙手合十', 'hands together', 4,
+      _tag('pose_hands_together', '手部姿勢', '雙手合十', 'hands together', 4,
           conflictGroup: 'hand_gesture'),
-      _tag('pose_fist', '姿勢', '握拳手勢', 'fist', 4, conflictGroup: 'hand_gesture'),
-      _tag('pose_hands_behind_back', '姿勢', '雙手放在背後', 'hands behind back', 4,
+      _tag('pose_fist', '手部姿勢', '握拳手勢', 'fist', 4,
           conflictGroup: 'hand_gesture'),
-      _tag('pose_hand_on_head', '姿勢', '手放在頭上', 'hand on head', 4,
+      _tag('pose_hands_behind_back', '手臂姿勢', '雙手放在背後', 'hands behind back', 4,
           conflictGroup: 'hand_gesture'),
-      _tag('pose_peace_sign', '姿勢', '比出和平手勢', 'peace sign', 4,
+      _tag('pose_hand_on_head', '手部姿勢', '手放在頭上', 'hand on head', 4,
           conflictGroup: 'hand_gesture'),
-      _tag('pose_pointing', '姿勢', '指向前方', 'pointing', 4,
+      _tag('pose_peace_sign', '手部姿勢', '比出和平手勢', 'peace sign', 4,
           conflictGroup: 'hand_gesture'),
-      _tag('pose_head_up', '姿勢', '抬頭', 'looking up', 4,
+      _tag('pose_pointing', '手部姿勢', '指向前方', 'pointing', 4,
+          conflictGroup: 'hand_gesture'),
+      _tag('pose_head_up', '頭部姿勢', '抬頭', 'looking up', 4,
           conflictGroup: 'head_vertical'),
-      _tag('pose_head_down', '姿勢', '低頭', 'looking down', 4,
+      _tag('pose_head_down', '頭部姿勢', '低頭', 'looking down', 4,
           conflictGroup: 'head_vertical'),
-      _tag('pose_head_tilt_left', '姿勢', '頭向左歪', 'head tilt left', 4,
+      _tag('pose_head_tilt_left', '頭部姿勢', '頭向左歪', 'head tilt left', 4,
           conflictGroup: 'head_tilt'),
-      _tag('pose_head_tilt_right', '姿勢', '頭向右歪', 'head tilt right', 4,
+      _tag('pose_head_tilt_right', '頭部姿勢', '頭向右歪', 'head tilt right', 4,
           conflictGroup: 'head_tilt'),
-      _tag('pose_head_turn_left', '姿勢', '頭轉向左側', 'head turned left', 4,
+      _tag('pose_head_turn_left', '頭部姿勢', '頭轉向左側', 'head turned left', 4,
           conflictGroup: 'head_direction'),
-      _tag('pose_head_turn_right', '姿勢', '頭轉向右側', 'head turned right', 4,
+      _tag('pose_head_turn_right', '頭部姿勢', '頭轉向右側', 'head turned right', 4,
           conflictGroup: 'head_direction'),
 
       // Dynamic actions and sports poses.
@@ -2736,6 +2743,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     text: 'masterpiece, best quality, newest, absurdres, highres',
   );
   Timer? _searchDebounce;
+  Timer? _poseExtraDebounce;
 
   String _activeGroup = '全部';
   String _gender = '女性';
@@ -2748,7 +2756,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _stepIndex = 0;
   bool _showAdult = false;
   bool _groupPeoplePrompt = true;
-  bool _showInfo = true;
 
   List<TagItem> get _allTags {
     final cached = _allTagsCache;
@@ -4289,6 +4296,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  List<String> _poseExtraPrompts(String value) => value
+      .split(RegExp(r'[。.;\n\r]+'))
+      .map(_cleanTag)
+      .where((item) => item.isNotEmpty)
+      .toList();
+
+  List<_GeneratedOutputTag> _poseExtraOutputTagsForPerson(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const <_GeneratedOutputTag>[];
+    }
+    final slot = _personSlots[personIndex];
+    if (!slot.detailed) return const <_GeneratedOutputTag>[];
+    return _poseExtraPrompts(slot.poseExtraPositive)
+        .map((value) => _GeneratedOutputTag(
+              zh: _positiveChineseTag(value),
+              en: _positiveEnglishTag(value),
+              personIndex: personIndex,
+              personPoseExtraValue: value,
+            ))
+        .toList();
+  }
+
   List<_GeneratedOutputTag> _personPromptTags(int index) {
     final selected = _selectedTagsForPerson(index);
     final clothing = _clothingOutputTagsForPerson(index);
@@ -4296,6 +4325,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final extra = _extraFeatureOutputTagsForPerson(index);
     final objectInteractions = _objectInteractionOutputTagsForPerson(index);
     final combinationExtra = _combinationExtraOutputTagsForPerson(index);
+    final poseExtra = _poseExtraOutputTagsForPerson(index);
     final covered = {
       ...clothing.expand((tag) => tag.tagIds),
       ...hair.expand((tag) => tag.tagIds),
@@ -4333,6 +4363,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...clothing,
       ...afterClothing,
       ...objectInteractions,
+      ...poseExtra,
       ...combinationExtra,
     ];
   }
@@ -4380,7 +4411,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       setState(() {});
-      _scrollToStep(_stepIndex);
+      unawaited(_scrollToStep(_stepIndex));
     });
   }
 
@@ -4388,6 +4419,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 160), () {
       if (mounted) setState(() {});
+    });
+  }
+
+  void _updatePersonPoseExtra(int personIndex, String value) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    _personSlots[personIndex].poseExtraPositive = value;
+    _poseExtraDebounce?.cancel();
+    _poseExtraDebounce = Timer(const Duration(milliseconds: 180), () {
+      if (!mounted) return;
+      _collectUnknownExtraPositiveTags();
+      _persist();
+      setState(() {});
     });
   }
 
@@ -4401,7 +4444,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
   }
 
+  String _briefVersionNote(Map<String, String> release) {
+    final notes = (release['notes'] ?? '').trim();
+    final normalized = notes.toLowerCase();
+    if (normalized.contains('direct person removal') &&
+        normalized.contains('tag loading')) {
+      return '人物卡片可直接刪除，並改善標籤載入效能。';
+    }
+    if (normalized.contains('rebuild clothing taxonomy')) {
+      return '重建服裝分類架構與視覺分層。';
+    }
+    if (normalized.contains('reorganize pose and clothing tag pickers')) {
+      return '整理姿勢與服裝標籤選擇介面。';
+    }
+    if (normalized.contains('refine mouth expressions')) {
+      return '補充並整理嘴部表情標籤。';
+    }
+    if (normalized.contains('add kyudo prompt catalog')) {
+      return '新增弓道服裝、姿勢、場景與道具標籤。';
+    }
+    if (normalized.contains('pose') && normalized.contains('footwear')) {
+      return '重整姿勢分類與配色，並擴充鞋子種類。';
+    }
+    return notes
+        .replaceFirst(RegExp(r'^自動偵測：'), '')
+        .replaceFirst(RegExp(r'^(feat|fix|chore):\s*'), '');
+  }
+
   void _showVersionHistory([String? previousVersion]) {
+    final latestReleases = appVersionHistory.take(5).toList();
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -4409,7 +4480,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           children: [
             const Icon(Icons.new_releases_outlined),
             const SizedBox(width: 8),
-            Text('版本更新 $appVersionLabel'),
+            Expanded(child: Text('最近 5 次改版 · $appVersionLabel')),
           ],
         ),
         content: SizedBox(
@@ -4423,7 +4494,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Text('已從 $previousVersion 更新到 $appVersionLabel。'),
                   ),
-                ...appVersionHistory.map(
+                ...latestReleases.map(
                   (release) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Column(
@@ -4434,7 +4505,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 3),
-                        Text(release['notes'] ?? ''),
+                        Text(_briefVersionNote(release)),
                       ],
                     ),
                   ),
@@ -4456,6 +4527,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   @override
   void dispose() {
     _searchDebounce?.cancel();
+    _poseExtraDebounce?.cancel();
+    _collectUnknownExtraPositiveTags();
+    _persist();
     _search.removeListener(_scheduleSearchRefresh);
     _search.dispose();
     _extraPositive.dispose();
@@ -5097,6 +5171,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         personIndex: previous.personIndex,
         characterTag: previous.characterTag,
         combinationId: previous.combinationId,
+        personPoseExtraValue:
+            previous.personPoseExtraValue ?? tag.personPoseExtraValue,
       );
     }
     return result;
@@ -5127,6 +5203,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (outputTag.combinationId != null && outputTag.personIndex != null) {
         _personCombinationIds[outputTag.personIndex!]
             ?.remove(outputTag.combinationId);
+      } else if (outputTag.personPoseExtraValue != null &&
+          outputTag.personIndex != null) {
+        final personIndex = outputTag.personIndex!;
+        final prompts = _poseExtraPrompts(
+          _personSlots[personIndex].poseExtraPositive,
+        );
+        final target = _cleanTag(outputTag.personPoseExtraValue!).toLowerCase();
+        prompts.removeWhere(
+          (value) => _cleanTag(value).toLowerCase() == target,
+        );
+        final updated = prompts.join('\n');
+        _personSlots[personIndex].poseExtraPositive = updated;
+        final controller =
+            _personSearchControllers['$personIndex:pose-extra-positive'];
+        if (controller != null) controller.text = updated;
       } else if (outputTag.characterTag) {
         if (outputTag.personIndex != null) {
           _removedCharacterTagSet(outputTag.personIndex!)
@@ -5180,7 +5271,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _collectUnknownExtraPositiveTags() {
-    for (final token in _extraTags(_extraPositive.text)) {
+    final candidates = <String>[
+      ..._extraTags(_extraPositive.text),
+      ..._personSlots.expand(
+        (slot) => _poseExtraPrompts(slot.poseExtraPositive),
+      ),
+    ];
+    for (final token in candidates) {
       if (_isRegisteredPositiveTag(token)) continue;
       final key = _unknownPositiveKey(token);
       if (key.isEmpty) continue;
@@ -5633,7 +5730,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _isPoseCompositionTag(TagItem tag) =>
-      const {'姿勢', '性姿勢', '性行為', 'pose', 'sex_position'}.contains(tag.group);
+      const {'姿勢', '性姿勢', '性行為', '動作', 'pose', 'sex_position'}
+          .contains(tag.group) ||
+      expandedGeneralPoseGroups.contains(tag.group) ||
+      expandedSexualPoseGroups.contains(tag.group) ||
+      expandedSexualActGroups.contains(tag.group);
 
   bool _isUnrestrictedCompositionTag(TagItem tag) =>
       _isClothingGroup(tag.group) || _isPoseCompositionTag(tag);
@@ -6718,7 +6819,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
     ScaffoldMessenger.of(context)
         .showSnackBar(const SnackBar(content: Text('目前組合已清除')));
-    _scrollToStep(0);
+    unawaited(_scrollToStep(0));
   }
 
   Future<void> _clearStepTags(int index) async {
@@ -6855,6 +6956,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           removePersonTags((group) =>
               poseGroups.contains(group) ||
               expandedPickerTagGroups.contains(group));
+          for (var personIndex = 0;
+              personIndex < _personSlots.length;
+              personIndex++) {
+            _personSlots[personIndex].poseExtraPositive = '';
+            _clearPersonSearchController(
+              personIndex,
+              'pose-extra-positive',
+            );
+          }
           break;
         case 6:
           _extraPositive.clear();
@@ -8011,7 +8121,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _search.clear();
       _persist();
     });
-    _scrollToStep(nextStep);
+    unawaited(_scrollToStep(nextStep));
   }
 
   bool _isCombinationCandidate(TagItem tag) =>
@@ -8838,6 +8948,47 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Color _pickerLayerTone(String group) {
+    const poseTones = <String, Color>{
+      '姿勢': Color(0xffa78bfa),
+      '站立與蹲姿': Color(0xfffbbf24),
+      '坐姿與跪姿': Color(0xff22d3ee),
+      '躺臥姿勢': Color(0xff818cf8),
+      '全身姿勢': Color(0xffe879f9),
+      '軀幹姿勢': Color(0xff2dd4bf),
+      '頭部姿勢': Color(0xfff472b6),
+      '手臂姿勢': Color(0xff60a5fa),
+      '手部姿勢': Color(0xffa3e635),
+      '腿部姿勢': Color(0xff34d399),
+      '動作': Color(0xfffb923c),
+      '身體動作': Color(0xfff97316),
+      '多人互動': Color(0xfffacc15),
+      '角色姿勢': Color(0xffc084fc),
+      '物件': Color(0xff94a3b8),
+      '性姿勢': Color(0xfffb7185),
+      '性姿勢・一般': Color(0xfffb7185),
+      '性姿勢・後入': Color(0xfff43f5e),
+      '性姿勢・女上位': Color(0xffec4899),
+      '性姿勢・男上位': Color(0xffef4444),
+      '性姿勢・多人': Color(0xffe11d48),
+      '束縛姿勢': Color(0xffdc2626),
+      '性行為': Color(0xfff97316),
+      'BDSM行為': Color(0xffb91c1c),
+      '成人道具': Color(0xffe879f9),
+      '成人道具・插入': Color(0xffd946ef),
+      '成人道具・振動': Color(0xffc026d3),
+      'BDSM器具': Color(0xffbe123c),
+      '情趣用品': Color(0xffdb2777),
+      '情趣內衣': Color(0xffe879f9),
+      'BDSM服裝': Color(0xffbe123c),
+      '暴露服裝': Color(0xfffb7185),
+      '體液': Color(0xff38bdf8),
+      '公開與窺視': Color(0xfff59e0b),
+    };
+    final poseTone = poseTones[group];
+    if (poseTone != null) return poseTone;
+    if (expandedSexualActGroups.contains(group)) {
+      return const Color(0xfff97316);
+    }
     final kind = _scopedClothingKind(group);
     if (_isClothingBaseGroup(group) || group == _cosplayGroup) {
       return const Color(0xffffb454);
@@ -9487,6 +9638,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ? storedSection
                   : sectionNames.first;
           final currentGroups = sections[currentSection]!;
+          final selectedCountsByGroup = <String, int>{};
+          for (final id in _personTagIds(index)) {
+            final group = _tagsById[id]?.group;
+            if (group != null) {
+              selectedCountsByGroup.update(
+                group,
+                (count) => count + 1,
+                ifAbsent: () => 1,
+              );
+            }
+          }
           return Card(
             margin: const EdgeInsets.only(bottom: 10),
             color:
@@ -9532,11 +9694,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         final selected = section == currentSection;
                         final sectionGroups =
                             sections[section] ?? const <String>[];
-                        final selectedCount = _allTags
-                            .where((tag) =>
-                                _personTagIds(index).contains(tag.id) &&
-                                sectionGroups.contains(tag.group))
-                            .length;
+                        final tone = _pickerLayerTone(sectionGroups.first);
+                        final selectedCount = sectionGroups.fold<int>(
+                          0,
+                          (total, group) =>
+                              total + (selectedCountsByGroup[group] ?? 0),
+                        );
                         final width = _wizardGroupChipWidth(
                               section,
                               constraints.maxWidth,
@@ -9556,19 +9719,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 maxLines: 2,
                                 overflow: TextOverflow.clip,
                                 style: TextStyle(
-                                  color: selected
-                                      ? _buttonSelectedText
-                                      : Colors.white,
+                                  color: _pickerLayerText(tone,
+                                      selected: selected),
                                   fontWeight: FontWeight.w700,
                                 ),
                               ),
                               selected: selected,
-                              backgroundColor: _buttonSurface,
-                              selectedColor: _buttonSelectedSurface,
+                              backgroundColor:
+                                  _pickerLayerSurface(tone, selected: false),
+                              selectedColor:
+                                  _pickerLayerSurface(tone, selected: true),
                               side: BorderSide(
-                                color: selected
-                                    ? const Color(0xfff0eaff)
-                                    : _buttonBorder,
+                                color: selected ? tone : tone.withOpacity(.72),
                               ),
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 12),
@@ -9589,6 +9751,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     personIndex: index,
                     showNext: false,
                     showGroupClear: true,
+                  ),
+                  const SizedBox(height: 14),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _personSearchController(
+                      index,
+                      'pose-extra-positive',
+                      slot.poseExtraPositive,
+                    ),
+                    minLines: 2,
+                    maxLines: 4,
+                    onChanged: (value) => _updatePersonPoseExtra(index, value),
+                    decoration: const InputDecoration(
+                      labelText: '自行加入姿勢正向標籤／自然敘述',
+                      hintText:
+                          '例如：swinging a sword in a wide arc while stepping forward',
+                      helperText: '內容只套用到此人物；每行或句點分隔一段。英文會原樣保留，中文會依內建對照轉成英文。',
+                      prefixIcon: Icon(Icons.edit_note_outlined),
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                 ],
               ),
@@ -10035,18 +10218,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   GlobalKey _stepKey(int index) =>
       _stepKeys.putIfAbsent(index, () => GlobalKey(debugLabel: 'step-$index'));
 
-  void _scrollToStep(int index) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      final target = _stepKey(index).currentContext;
-      if (target == null) return;
-      Scrollable.ensureVisible(
-        target,
-        alignment: 0,
-        duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-      );
-    });
+  Future<void> _scrollToStep(int index) async {
+    // Wait until the selected card has expanded and the previously selected
+    // card has collapsed. This makes the final offset reliable whether the
+    // user starts at the top, middle, or bottom of the page.
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted) return;
+    final target = _stepKey(index).currentContext;
+    if (target == null) return;
+    await Scrollable.ensureVisible(
+      target,
+      alignment: 0,
+      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+      duration: const Duration(milliseconds: 360),
+      curve: Curves.easeOutCubic,
+    );
   }
 
   void _scrollToOutput() {
@@ -10068,7 +10254,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _stepIndex = index;
       _persist();
     });
-    _scrollToStep(index);
+    // Expansion is committed first; _scrollToStep waits for that frame before
+    // positioning the card title at the top of the viewport.
+    unawaited(_scrollToStep(index));
   }
 
   Widget _stepHeader(int index, String title, String summary, IconData icon,
@@ -11251,56 +11439,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
-  Widget _infoPanel() {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: ExpansionTile(
-        initiallyExpanded: _showInfo,
-        onExpansionChanged: (value) => setState(() => _showInfo = value),
-        leading: const Icon(Icons.rule),
-        title: const Text('Amanatsu / BetterWaifu 使用提示'),
-        childrenPadding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
-        children: [
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Row(
-              children: [
-                const Icon(Icons.info_outline, size: 17),
-                const SizedBox(width: 6),
-                Text('目前版本：$appVersionLabel'),
-                const SizedBox(width: 10),
-                TextButton(
-                  onPressed: _showVersionHistory,
-                  child: const Text('查看版本歷程'),
-                ),
-              ],
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
+  void _showUsageTips() {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.tips_and_updates_outlined),
+            SizedBox(width: 8),
+            Expanded(child: Text('Amanatsu / BetterWaifu 使用提示')),
+          ],
+        ),
+        content: const SizedBox(
+          width: 620,
+          child: SingleChildScrollView(
             child: Text(
-              '• 模型、Sampler、Steps、CFG、Clip skip 與 seed 請在 AI 生成網站設定；本工具專注產生提示標籤。',
+              '• 模型、Sampler、Steps、CFG、Clip skip 與 seed 請在 AI 生成網站設定；本工具專注產生提示標籤。\n\n'
+              '• 本工具使用 Danbooru-style tag，英文標籤會整理成可直接貼上的單行文字。\n\n'
+              '• BetterWaifu 提示詞可使用逗號分隔、括號強調及獨立 negative prompt；額外欄位可補充系統尚未收錄的詞語。\n\n'
+              '• 品質前綴可以自由編輯，避免將未核實的格式當成固定模型規則。\n\n'
+              '• 18+ 分類預設隱藏；開啟後請只使用成年角色，並遵守網站內容規範。',
             ),
           ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text('• 這個工具使用 Danbooru-style tag，英文標籤會整理成可直接貼上的單行文字。'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _showVersionHistory();
+            },
+            child: Text('版本 $appVersionLabel'),
           ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '• BetterWaifu 公開文件建議使用逗號分隔、可用括號強調、另設 negative prompt；本工具保留自由輸入欄位。',
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              '• Amanatsu 1.1 的專屬公開格式沒有可核實的完整規格，因此品質前綴是可編輯的，不假裝是固定官方規則。',
-            ),
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: Text('• 18+ 分類預設隱藏；打開後請只使用成年角色，並遵守 BetterWaifu 的內容規範。'),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('關閉'),
           ),
         ],
       ),
@@ -11309,6 +11481,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   @override
   Widget build(BuildContext context) {
+    final showSideStepNames = MediaQuery.sizeOf(context).width >= 900;
+    final sideStepRailWidth = showSideStepNames ? 126.0 : 46.0;
+    final contentLeftPadding = max(sideStepRailWidth + 14, 72.0);
+    const sideStepNames = <String>[
+      '場景',
+      '角色',
+      '組合',
+      '特徵',
+      '服裝',
+      '姿勢',
+      '品質',
+    ];
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 22,
@@ -11346,7 +11530,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       body: Stack(
         children: [
           ListView(
-            padding: const EdgeInsets.fromLTRB(58, 16, 16, 38),
+            padding: EdgeInsets.fromLTRB(contentLeftPadding, 16, 16, 38),
             children: [
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1120),
@@ -11363,11 +11547,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 constraints: const BoxConstraints(maxWidth: 1120),
                 child: _memoryPanel(),
               ),
-              const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
-                child: _infoPanel(),
-              ),
             ],
           ),
           Positioned(
@@ -11375,7 +11554,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             top: 112,
             child: SafeArea(
               child: SizedBox(
-                width: 42,
+                width: sideStepRailWidth,
                 child: Card(
                   margin: EdgeInsets.zero,
                   child: Padding(
@@ -11386,31 +11565,86 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         ...List.generate(7, (index) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 3),
-                            child: IconButton.filled(
-                              constraints: const BoxConstraints.tightFor(
-                                  width: 32, height: 30),
-                              padding: EdgeInsets.zero,
-                              visualDensity: VisualDensity.compact,
-                              tooltip: '前往第 ${index + 1} 項',
-                              onPressed: () => _openStep(index),
-                              icon: Text('${index + 1}',
-                                  style: const TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800)),
-                            ),
+                            child: showSideStepNames
+                                ? SizedBox(
+                                    width: 114,
+                                    height: 34,
+                                    child: FilledButton(
+                                      style: FilledButton.styleFrom(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 9),
+                                        backgroundColor: _stepIndex == index
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .primaryContainer
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .surfaceContainerHighest,
+                                        foregroundColor: _stepIndex == index
+                                            ? Theme.of(context)
+                                                .colorScheme
+                                                .onPrimaryContainer
+                                            : Theme.of(context)
+                                                .colorScheme
+                                                .onSurfaceVariant,
+                                      ),
+                                      onPressed: () => _openStep(index),
+                                      child: Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          '${index + 1}  ${sideStepNames[index]}',
+                                          maxLines: 1,
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800),
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : IconButton.filled(
+                                    constraints: const BoxConstraints.tightFor(
+                                        width: 34, height: 32),
+                                    padding: EdgeInsets.zero,
+                                    visualDensity: VisualDensity.compact,
+                                    tooltip:
+                                        '${index + 1} ${sideStepNames[index]}',
+                                    onPressed: () => _openStep(index),
+                                    icon: Text('${index + 1}',
+                                        style: const TextStyle(
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.w800)),
+                                  ),
                           );
                         }),
                         const Divider(height: 8),
-                        IconButton.filled(
-                          constraints: const BoxConstraints.tightFor(
-                              width: 32, height: 30),
-                          padding: EdgeInsets.zero,
-                          visualDensity: VisualDensity.compact,
-                          tooltip: '前往中英文提示詞輸出',
-                          onPressed: _scrollToOutput,
-                          icon:
-                              const Icon(Icons.vertical_align_bottom, size: 16),
-                        ),
+                        showSideStepNames
+                            ? SizedBox(
+                                width: 114,
+                                height: 34,
+                                child: FilledButton.tonalIcon(
+                                  style: FilledButton.styleFrom(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 9),
+                                  ),
+                                  onPressed: _scrollToOutput,
+                                  icon: const Icon(Icons.vertical_align_bottom,
+                                      size: 16),
+                                  label: const Text('提示詞',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w800)),
+                                ),
+                              )
+                            : IconButton.filled(
+                                constraints: const BoxConstraints.tightFor(
+                                    width: 34, height: 32),
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                                tooltip: '前往中英文提示詞輸出',
+                                onPressed: _scrollToOutput,
+                                icon: const Icon(Icons.vertical_align_bottom,
+                                    size: 17),
+                              ),
                       ],
                     ),
                   ),
@@ -11419,11 +11653,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
           ),
           Positioned(
+            left: 8,
+            bottom: 154,
+            child: SafeArea(
+              child: IconButton.filledTonal(
+                constraints:
+                    const BoxConstraints.tightFor(width: 42, height: 38),
+                tooltip: '使用提示',
+                onPressed: _showUsageTips,
+                icon: const Icon(Icons.help_outline, size: 19),
+              ),
+            ),
+          ),
+          Positioned(
             left: 6,
             bottom: 12,
             child: SafeArea(
               child: SizedBox(
-                width: 42,
+                width: 56,
                 child: Card(
                   margin: EdgeInsets.zero,
                   child: Padding(
@@ -11433,11 +11680,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       children: [
                         const Text('複製',
                             style: TextStyle(
-                                fontSize: 9, fontWeight: FontWeight.w700)),
+                                fontSize: 10, fontWeight: FontWeight.w700)),
                         const SizedBox(height: 6),
                         IconButton.filled(
                             constraints: const BoxConstraints.tightFor(
-                                width: 32, height: 32),
+                                width: 44, height: 42),
                             padding: EdgeInsets.zero,
                             visualDensity: VisualDensity.compact,
                             iconSize: 16,
@@ -11445,12 +11692,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             onPressed: () => _copy(_positiveText, '正向英文標籤'),
                             icon: const Text('正',
                                 style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w800))),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 6),
                         IconButton.filled(
                             constraints: const BoxConstraints.tightFor(
-                                width: 32, height: 32),
+                                width: 44, height: 42),
                             padding: EdgeInsets.zero,
                             visualDensity: VisualDensity.compact,
                             iconSize: 16,
@@ -11458,7 +11705,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             onPressed: () => _copy(_negativeText, '負面英文標籤'),
                             icon: const Text('負',
                                 style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 15,
                                     fontWeight: FontWeight.w800))),
                       ],
                     ),
