@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.71",
-  "build": 73,
-  "label": "1.1.71+73",
+  "version": "1.1.72",
+  "build": 74,
+  "label": "1.1.72+74",
   "history": [
+    {
+      "version": "1.1.72",
+      "build": 74,
+      "label": "1.1.72+74",
+      "date": "2026-09-13",
+      "notes": "自動偵測：feat: add 50 adult pose packages and reorder character traits"
+    },
     {
       "version": "1.1.71",
       "build": 73,

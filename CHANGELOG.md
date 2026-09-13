@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.72+74 - 2026-09-13
+
+- 自動偵測：feat: add 50 adult pose packages and reorder character traits
+
+
 ## 1.1.71+73 - 2026-09-13
 
 - 自動偵測：feat: add adult pose packs and sync clothing presets
