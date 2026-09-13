@@ -1,8 +1,15 @@
 {
-  "version": "1.1.67",
-  "build": 69,
-  "label": "1.1.67+69",
+  "version": "1.1.68",
+  "build": 70,
+  "label": "1.1.68+70",
   "history": [
+    {
+      "version": "1.1.68",
+      "build": 70,
+      "label": "1.1.68+70",
+      "date": "2026-09-13",
+      "notes": "自動偵測：feat: reorganize pose tools and expand footwear navigation"
+    },
     {
       "version": "1.1.67",
       "build": 69,

@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.68+70 - 2026-09-13
+
+- 自動偵測：feat: reorganize pose tools and expand footwear navigation
+
+
 ## 1.1.67+69 - 2026-09-12
 
 - 自動偵測：feat: add direct person removal and optimize tag loading
