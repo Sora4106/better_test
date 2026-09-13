@@ -2025,7 +2025,7 @@ const catalogCharacters = <CatalogCharacter>[
           order: 1),
       CatalogTagData(
           id: 'lala_heart_tail',
-          group: '角色標籤',
+          group: '身體特徵',
           zh: '黑色心型尾巴',
           en: 'black heart-shaped tail',
           order: 1),
