@@ -2142,6 +2142,44 @@ List<TagItem> _seedTags() => [
       _tag('expr_exhaling', '表情', '呼氣', 'exhaling', 3),
       _tag('expr_clenched_teeth', '表情', '咬緊牙關', 'clenched teeth', 3,
           conflictGroup: 'expression_mouth'),
+      _tag('expr_cat_mouth', '表情', '貓咪嘴（笑）', ':3', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_cat_frown_mouth', '表情', '貓咪嘴（不高興）', '3:', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_round_mouth', '表情', '圓形嘴', 'round mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_wavy_mouth', '表情', '波浪狀嘴', 'wavy mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_triangle_mouth', '表情', '三角形嘴', 'triangle mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_upwards_triangle_mouth', '表情', '上尖三角嘴',
+          'upwards triangle mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_downwards_triangle_mouth', '表情', '下尖三角嘴',
+          'downwards triangle mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_diamond_mouth', '表情', '菱形嘴', 'diamond mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_chestnut_mouth', '表情', '栗子形嘴', 'chestnut mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_dot_mouth', '表情', '點狀小嘴', 'dot mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_peanut_mouth', '表情', '花生形嘴', 'peanut mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_rectangular_mouth', '表情', '長方形嘴', 'rectangular mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_sideways_mouth', '表情', '側臉外移嘴型', 'sideways mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_snake_mouth', '表情', '蛇形彎曲嘴', 'snake mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_heart_shaped_mouth', '表情', '愛心形嘴', 'heart-shaped mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_hollow_mouth', '表情', '黑色空洞嘴', 'hollow mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
+      _tag('expr_no_mouth', '表情', '無嘴表現', 'no mouth', 3,
+          conflictGroup: 'expression_mouth_absence'),
+      _tag('expr_x_mouth', '表情', 'X 形閉嘴', 'x mouth', 3,
+          conflictGroup: 'expression_mouth_shape'),
       _tag('expr_one_eye_closed', '表情', '單眼閉起', 'one eye closed', 3,
           conflictGroup: 'expression_eyes'),
       _tag('expr_half_closed_eyes', '表情', '半閉眼', 'half-closed eyes', 3,
@@ -3053,7 +3091,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (const {'eyes', 'expression_eyes'}.contains(conflict)) {
       return _expressionEyesGroup;
     }
-    if (const {'mouth', 'expression_mouth'}.contains(conflict)) {
+    if (const {
+      'mouth',
+      'expression_mouth',
+      'mouth_shape',
+      'expression_mouth_shape',
+      'expression_mouth_absence',
+    }.contains(conflict)) {
       return _expressionMouthGroup;
     }
 
@@ -5819,6 +5863,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     final firstGroup = _conflictGroup(first);
     final secondGroup = _conflictGroup(second);
+    if ((first.en == 'no mouth' &&
+            _expressionSubgroupForTag(second) == _expressionMouthGroup) ||
+        (second.en == 'no mouth' &&
+            _expressionSubgroupForTag(first) == _expressionMouthGroup)) {
+      return true;
+    }
     if (firstGroup != null && firstGroup == secondGroup) {
       if (firstGroup == 'top_style' || firstGroup == 'bottom_style') {
         return false;
