@@ -1,7 +1,8 @@
-const appVersion = '1.1.68';
-const appBuildNumber = 70;
-const appVersionLabel = '1.1.68+70';
+const appVersion = '1.1.69';
+const appBuildNumber = 71;
+const appVersionLabel = '1.1.69+71';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.69', 'build': '71', 'label': '1.1.69+71', 'date': '2026-09-13', 'notes': '自動偵測：fix: 修正頁面底端左側導覽捲動'},
   {'version': '1.1.68', 'build': '70', 'label': '1.1.68+70', 'date': '2026-09-13', 'notes': '自動偵測：feat: reorganize pose tools and expand footwear navigation'},
   {'version': '1.1.67', 'build': '69', 'label': '1.1.67+69', 'date': '2026-09-12', 'notes': '自動偵測：feat: add direct person removal and optimize tag loading'},
   {'version': '1.1.66', 'build': '68', 'label': '1.1.66+68', 'date': '2026-09-12', 'notes': '自動偵測：feat: rebuild clothing taxonomy and visual layers'},

@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.69+71 - 2026-09-13
+
+- 自動偵測：fix: 修正頁面底端左側導覽捲動
+
+
 ## 1.1.68+70 - 2026-09-13
 
 - 自動偵測：feat: reorganize pose tools and expand footwear navigation
