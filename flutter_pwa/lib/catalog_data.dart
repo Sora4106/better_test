@@ -7,6 +7,7 @@ class CatalogTagData {
     required this.order,
     this.adult = false,
     this.conflictGroup,
+    this.support = 'standard',
   });
 
   final String id;
@@ -17,6 +18,10 @@ class CatalogTagData {
   final bool adult;
   final String? conflictGroup;
 
+  /// `official` means an exact Danbooru-style tag, while `description` is a
+  /// natural-language helper that may still work with the target model.
+  final String support;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'group': group,
@@ -25,6 +30,7 @@ class CatalogTagData {
         'order': order,
         'adult': adult,
         'conflictGroup': conflictGroup,
+        'support': support,
       };
 
   factory CatalogTagData.fromJson(Map<String, dynamic> json) => CatalogTagData(
@@ -35,6 +41,7 @@ class CatalogTagData {
         order: (json['order'] as num?)?.toInt() ?? 1,
         adult: json['adult'] == true,
         conflictGroup: json['conflictGroup'] as String?,
+        support: '${json['support'] ?? 'standard'}',
       );
 }
 

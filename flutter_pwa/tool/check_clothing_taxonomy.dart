@@ -22,6 +22,9 @@ void main() {
     if (tag.en.toLowerCase().contains('lolita')) {
       throw StateError('Forbidden clothing term: ${tag.en}');
     }
+    if (!const {'official', 'description'}.contains(tag.support)) {
+      throw StateError('Unknown clothing support level: ${tag.id}');
+    }
     groups.update(tag.group, (count) => count + 1, ifAbsent: () => 1);
   }
 
@@ -72,6 +75,37 @@ void main() {
   if (missingDimensions.isNotEmpty) {
     throw StateError(
         'Missing clothing dimensions: ${missingDimensions.join(', ')}');
+  }
+
+  const obsoleteEnglish = {
+    'one-piece dress',
+    'sailor uniform',
+    'maid outfit',
+    'miko outfit',
+    'puff sleeves',
+    'tutu skirt',
+    'knee-high boots',
+    'zori',
+    'floral pattern',
+    'rose pattern',
+    'cherry blossom pattern',
+  };
+  final obsolete = tags
+      .where((tag) => obsoleteEnglish.contains(tag.en.toLowerCase()))
+      .map((tag) => tag.en)
+      .toSet();
+  if (obsolete.isNotEmpty) {
+    throw StateError('Obsolete clothing terms: ${obsolete.join(', ')}');
+  }
+  if (groups.containsKey('clothing_scope_socks_length')) {
+    throw StateError('Legwear height must be a garment type, not a length.');
+  }
+  final invalidCashmereUnderlayers = tags.where((tag) =>
+      const {'underwear', 'bra', 'panties', 'socks', 'shoes'}
+          .any((scope) => tag.group == 'clothing_scope_${scope}_material') &&
+      tag.en == 'cashmere');
+  if (invalidCashmereUnderlayers.isNotEmpty) {
+    throw StateError('Cashmere leaked into an incompatible clothing slot.');
   }
 
   print(

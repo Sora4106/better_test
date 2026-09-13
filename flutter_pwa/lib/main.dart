@@ -72,6 +72,7 @@ class TagItem {
     this.adult = false,
     this.builtIn = true,
     this.conflictGroup,
+    this.support = 'standard',
   });
 
   final String id;
@@ -82,6 +83,7 @@ class TagItem {
   final bool adult;
   final bool builtIn;
   final String? conflictGroup;
+  final String support;
 
   Map<String, dynamic> toJson() => {
         'id': id,
@@ -92,6 +94,7 @@ class TagItem {
         'adult': adult,
         'builtIn': builtIn,
         'conflictGroup': conflictGroup,
+        'support': support,
       };
 
   factory TagItem.fromJson(Map<String, dynamic> json) => TagItem(
@@ -103,6 +106,7 @@ class TagItem {
         adult: json['adult'] == true,
         builtIn: false,
         conflictGroup: json['conflictGroup'] as String?,
+        support: '${json['support'] ?? 'standard'}',
       );
 }
 
@@ -1969,6 +1973,7 @@ TagItem _catalogTag(CatalogTagData data, {String prefix = 'catalog'}) =>
       order: data.order,
       adult: data.adult,
       conflictGroup: data.conflictGroup,
+      support: data.support,
     );
 
 TagItem _characterTag(String id, String zh, String en) => TagItem(
@@ -2010,6 +2015,20 @@ const _clothingGroupPanties = '\u5167\u8932';
 const _clothingGroupSocks = '\u896A\u5B50';
 const _clothingGroupShoes = '\u978B\u5B50';
 const _clothingGroupAccessory = '\u914D\u4EF6';
+const _clothingGroupHeadAccessory = '配件・頭部';
+const _clothingGroupFaceAccessory = '配件・臉耳';
+const _clothingGroupNeckAccessory = '配件・頸肩';
+const _clothingGroupHandAccessory = '配件・手臂';
+const _clothingGroupWaistAccessory = '配件・腰部';
+const _clothingGroupOtherAccessory = '配件・其他';
+const _clothingAccessoryPickerGroups = <String>{
+  _clothingGroupHeadAccessory,
+  _clothingGroupFaceAccessory,
+  _clothingGroupNeckAccessory,
+  _clothingGroupHandAccessory,
+  _clothingGroupWaistAccessory,
+  _clothingGroupOtherAccessory,
+};
 const _cosplayGroup = '角色扮演';
 const _legacyClothingDetailGroup = '\u670D\u88DD\u7D30\u7BC0';
 const _legacyClothingMaterialGroup = '\u670D\u88DD\u6750\u8CEA';
@@ -2119,6 +2138,30 @@ String _clothingScopedKindLabel(String kind) =>
     }[kind] ??
     kind;
 
+String _clothingAccessoryPickerGroup(TagItem tag) {
+  final english = tag.en.toLowerCase();
+  if (RegExp(r'\b(hat|cap|beret|headband|hair|tiara|veil|crown)\b')
+      .hasMatch(english)) {
+    return _clothingGroupHeadAccessory;
+  }
+  if (RegExp(r'\b(glasses|mask|earring|ear cuff|eyewear)\b')
+      .hasMatch(english)) {
+    return _clothingGroupFaceAccessory;
+  }
+  if (RegExp(r'\b(choker|necklace|necktie|neck ribbon|scarf|shawl|collar)\b')
+      .hasMatch(english)) {
+    return _clothingGroupNeckAccessory;
+  }
+  if (RegExp(r'\b(glove|arm guard|bracelet|wrist|sleeve)\b')
+      .hasMatch(english)) {
+    return _clothingGroupHandAccessory;
+  }
+  if (RegExp(r'\b(belt|sash|waist|garter)\b').hasMatch(english)) {
+    return _clothingGroupWaistAccessory;
+  }
+  return _clothingGroupOtherAccessory;
+}
+
 void _migrateConsolidatedWearTagIds(Set<String> ids) {
   const replacementsBySlot = <String, Map<String, String>>{
     'top': {
@@ -2208,6 +2251,70 @@ void _migrateConsolidatedWearTagIds(Set<String> ids) {
   };
   for (final replacement in legacySpecificReplacements.entries) {
     if (ids.remove(replacement.key)) ids.add(replacement.value);
+  }
+}
+
+void _migrateClothingTaxonomyTagIds(Set<String> ids) {
+  const replacements = <String, String>{
+    'catalog_taxonomy_onepiece_one_piece_dress':
+        'catalog_taxonomy_onepiece_dress',
+    'catalog_taxonomy_costume_sailor_uniform':
+        'catalog_taxonomy_costume_serafuku',
+    'catalog_taxonomy_costume_maid_outfit': 'catalog_taxonomy_costume_maid',
+    'catalog_taxonomy_costume_miko_outfit': 'catalog_taxonomy_costume_miko',
+    'catalog_taxonomy_skirt_tutu_skirt': 'catalog_taxonomy_skirt_tutu',
+    'catalog_taxonomy_shoes_knee_high_boots':
+        'catalog_taxonomy_shoes_knee_boots',
+    'catalog_taxonomy_shoes_zori': 'catalog_taxonomy_shoes_zouri',
+    'catalog_taxonomy_top_cut_puff_sleeves':
+        'catalog_taxonomy_top_cut_puffy_sleeves',
+    'catalog_outfit_main_style_casual_style':
+        'catalog_outfit_main_style_casual',
+    'catalog_outfit_main_style_feminine_style':
+        'catalog_outfit_main_style_feminine',
+    'catalog_outfit_main_style_cute_style': 'catalog_outfit_main_style_cute',
+    'catalog_outfit_main_style_elegant_style':
+        'catalog_outfit_main_style_elegant',
+    'catalog_outfit_main_style_sexy_style': 'catalog_outfit_main_style_sexy',
+    'catalog_outfit_main_style_preppy_style':
+        'catalog_outfit_main_style_preppy',
+    'catalog_outfit_main_style_streetwear_style':
+        'catalog_outfit_main_style_streetwear',
+    'catalog_outfit_main_style_sporty_style':
+        'catalog_outfit_main_style_sportswear',
+    'catalog_outfit_main_style_gothic_style':
+        'catalog_outfit_main_style_goth_fashion',
+    'catalog_outfit_main_style_punk_style': 'catalog_outfit_main_style_punk',
+    'catalog_outfit_main_style_vintage_style':
+        'catalog_outfit_main_style_vintage',
+    'catalog_outfit_main_style_minimalist_style':
+        'catalog_outfit_main_style_minimalist',
+    'catalog_outfit_main_style_bohemian_style':
+        'catalog_outfit_main_style_bohemian',
+    'catalog_outfit_main_style_fantasy_style':
+        'catalog_outfit_main_style_fantasy',
+    'catalog_outfit_main_style_futuristic_style':
+        'catalog_outfit_main_style_futuristic',
+    'catalog_outfit_sub_style_y2k_style':
+        'catalog_outfit_sub_style_y2k_fashion',
+  };
+  for (final oldId in ids.toList()) {
+    var newId = replacements[oldId];
+    if (newId == null && oldId.contains('_pattern_floral_pattern')) {
+      newId =
+          oldId.replaceAll('_pattern_floral_pattern', '_pattern_floral_print');
+    }
+    if (newId == null && oldId.contains('_pattern_rose_pattern')) {
+      newId = oldId.replaceAll('_pattern_rose_pattern', '_pattern_rose_print');
+    }
+    if (newId == null && oldId.contains('_pattern_cherry_blossom_pattern')) {
+      newId = oldId.replaceAll(
+          '_pattern_cherry_blossom_pattern', '_pattern_cherry_blossom_print');
+    }
+    if (newId == null || newId == oldId) continue;
+    ids
+      ..remove(oldId)
+      ..add(newId);
   }
 }
 
@@ -4571,7 +4678,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         clothingByDisplayGroup
             .putIfAbsent(displayGroup, () => <TagItem>[])
             .add(tag);
-        if (!tag.id.startsWith('taxonomy_')) {
+        if (!tag.id.startsWith('catalog_taxonomy_')) {
           legacyClothingKeys.add('$displayGroup:$englishKey');
         }
       }
@@ -4621,6 +4728,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _tagsForPickerGroup(String group) {
     _allTags;
+    if (_clothingAccessoryPickerGroups.contains(group)) {
+      return (_clothingBasesByDisplayGroupCache![_clothingGroupAccessory] ??
+              const <TagItem>[])
+          .where((tag) => _clothingAccessoryPickerGroup(tag) == group)
+          .toList();
+    }
     const clothingBaseGroups = {
       _clothingGroupTop,
       _clothingGroupPants,
@@ -5470,28 +5583,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _clothingColorWord(tag) ?? '';
   }
 
-  String _clothingColorChinese(TagItem tag) {
-    const colors = <String, String>{
-      'multicolored': '多彩',
-      'black': '黑色',
-      'white': '白色',
-      'red': '紅色',
-      'blue': '藍色',
-      'aqua': '水藍色',
-      'pink': '粉紅色',
-      'purple': '紫色',
-      'green': '綠色',
-      'yellow': '黃色',
-      'brown': '棕色',
-      'gray': '灰色',
-      'gold': '金色',
-      'silver': '銀色',
-      'orange': '橘色',
-    };
-    final word = _clothingColorWord(tag);
-    return _promptColorChinese[word] ?? colors[word] ?? tag.zh;
-  }
-
   String _clothingColorChinesePrefix(TagItem tag) {
     const colors = <String, String>{
       'multicolored': '多彩',
@@ -5515,38 +5606,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return words
         .map((word) => _promptColorChinese[word] ?? colors[word] ?? word)
         .join('與');
-  }
-
-  String _clothingCombinedChineseColorPrefix(Iterable<TagItem> colors) {
-    final values = colors
-        .map(_clothingColorChinesePrefix)
-        .where((value) => value.trim().isNotEmpty)
-        .toList();
-    if (values.isEmpty) return '';
-    if (values.length == 1) return values.first;
-    final leading = values
-        .take(values.length - 1)
-        .map((value) => value.replaceFirst(RegExp(r'色$'), ''))
-        .join();
-    return '$leading${values.last}';
-  }
-
-  String _clothingSecondaryColorChinese(TagItem tag) {
-    final color = _clothingColorChinesePrefix(tag).trim();
-    if (color.isEmpty) return '';
-    final withoutColorSuffix =
-        color.endsWith('色') ? color.substring(0, color.length - 1) : color;
-    return '${withoutColorSuffix}邊';
-  }
-
-  String _clothingChineseColorPrefixWithSecondary(
-      TagItem? mainColor, String? secondaryColor) {
-    final parts = <String>[
-      if (mainColor != null) _clothingColorChinesePrefix(mainColor),
-      if (secondaryColor != null && secondaryColor.trim().isNotEmpty)
-        secondaryColor,
-    ];
-    return parts.join();
   }
 
   String _clothingModifierEnglish(TagItem tag) {
@@ -5666,6 +5725,192 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return value;
   }
 
+  String _canonicalClothingEnglish(String value) {
+    final cleaned = value.trim();
+    const replacements = <String, String>{
+      'one-piece dress': 'dress',
+      'sailor uniform': 'serafuku',
+      'maid outfit': 'maid',
+      'miko outfit': 'miko',
+      'puff sleeves': 'puffy sleeves',
+      'thigh-high stockings': 'thighhighs',
+      'over-knee socks': 'over-kneehighs',
+      'knee-high boots': 'knee boots',
+      'tutu skirt': 'tutu',
+      'floral pattern': 'floral print',
+      'rose pattern': 'rose print',
+      'cherry blossom pattern': 'cherry blossom print',
+      'gothic style': 'goth fashion',
+      'sporty style': 'sportswear',
+      'Y2K style': 'Y2K fashion',
+    };
+    return replacements[cleaned] ??
+        replacements[cleaned.toLowerCase()] ??
+        cleaned;
+  }
+
+  String _clothingPromptNoun(String scope, TagItem base) {
+    final value = _canonicalClothingEnglish(base.en).toLowerCase();
+    switch (scope) {
+      case 'top':
+        if (value.contains('shirt') ||
+            value == 'blouse' ||
+            value == 't-shirt') {
+          return 'shirt';
+        }
+        if (value.contains('jersey')) return 'shirt';
+        if (value.contains('sweater')) return 'sweater';
+        if (value.contains('cardigan')) return 'cardigan';
+        if (value.contains('hoodie')) return 'hoodie';
+        if (value.contains('vest')) return 'vest';
+        return 'top';
+      case 'pants':
+        if (value == 'jeans') return 'jeans';
+        if (value == 'leggings') return 'leggings';
+        return 'pants';
+      case 'shorts':
+        return value == 'bloomers' ? 'bloomers' : 'shorts';
+      case 'skirt':
+        return 'skirt';
+      case 'onepiece':
+        if (value.contains('gown')) return 'gown';
+        if (value == 'jumpsuit' || value == 'romper') return value;
+        return 'dress';
+      case 'outerwear':
+        if (value.contains('coat')) return 'coat';
+        if (value.contains('jacket') || value == 'blazer') return 'jacket';
+        if (value == 'cape' || value == 'shawl' || value == 'raincoat') {
+          return value;
+        }
+        return 'outerwear';
+      case 'costume':
+        if (value.contains('uniform') || value == 'serafuku') return 'uniform';
+        if (value.contains('dress')) return 'dress';
+        return value;
+      case 'underwear':
+        return value;
+      case 'bra':
+        return 'bra';
+      case 'panties':
+        return value == 'thong' || value == 'g-string' ? value : 'panties';
+      case 'socks':
+        return value;
+      case 'shoes':
+        if (value.contains('boot')) return 'boots';
+        if (value.contains('sandal')) return 'sandals';
+        if (value == 'sneakers') return 'sneakers';
+        return 'shoes';
+      case 'accessory':
+        return value;
+      default:
+        return _clothingScopeNoun(scope);
+    }
+  }
+
+  String _clothingPromptNounChinese(String scope, TagItem base) =>
+      switch (scope) {
+        'top' => '上衣',
+        'pants' => '褲子',
+        'shorts' => '短褲',
+        'skirt' => '裙子',
+        'onepiece' => '洋裝',
+        'outerwear' => '外套',
+        'costume' => '制服／特殊服裝',
+        'underwear' => '內衣',
+        'bra' => '胸罩',
+        'panties' => '內褲',
+        'socks' => '襪子',
+        'shoes' => '鞋子',
+        'accessory' => base.zh,
+        _ => base.zh,
+      };
+
+  (String, String) _clothingDimensionPromptPiece(
+    String scope,
+    String kind,
+    TagItem tag,
+    String noun,
+    String nounZh, {
+    String? detailColor,
+    String? detailColorZh,
+  }) {
+    final raw = _canonicalClothingEnglish(_clothingModifierEnglish(tag));
+    final zh = _clothingModifierChinese(tag);
+    final color = detailColor == null || detailColor.isEmpty
+        ? ''
+        : '${detailColor.trim()} ';
+    final colorZh = detailColorZh ?? '';
+
+    if (kind == 'detail') {
+      final english = switch (raw.toLowerCase()) {
+        'lace trim' => '${color}lace-trimmed $noun',
+        'frills' => '${color}frilled $noun',
+        'ruffles' => '${color}ruffled $noun',
+        'pleats' => '${color}pleated $noun',
+        'bow' => '${color}$noun bow',
+        'ribbon' => '${color}$noun ribbon',
+        'fur trim' => '${color}fur-trimmed $noun',
+        'feather trim' => '${color}feather-trimmed $noun',
+        'embroidery' => '${color}embroidered $noun',
+        'floral embroidery' => '${color}floral embroidery on $noun',
+        'buttons' => '${color}buttoned $noun',
+        'piping' => '${color}piping on $noun',
+        _ => '$color$raw on $noun',
+      };
+      return ('$colorZh$zh$nounZh', english.trim());
+    }
+
+    if (kind == 'pattern') {
+      return ('$zh$nounZh', '$raw $noun');
+    }
+
+    if (kind == 'material') {
+      return ('$zh$nounZh', '$raw $noun');
+    }
+
+    if (kind == 'length') {
+      final english = switch ((scope, raw.toLowerCase())) {
+        ('skirt', 'mini') => 'miniskirt',
+        ('skirt', 'above knee') => 'short skirt',
+        ('skirt', 'knee length') => 'knee-length skirt',
+        ('skirt', 'midi') => 'midi skirt',
+        ('skirt', 'calf length') => 'midi skirt',
+        ('skirt', 'ankle length') => 'long skirt',
+        ('skirt', 'maxi') => 'long skirt',
+        ('skirt', 'floor length') => 'long skirt',
+        ('onepiece', 'mini') => 'short dress',
+        ('onepiece', 'above knee') => 'short dress',
+        ('onepiece', 'knee length') => 'knee-length dress',
+        ('onepiece', 'midi') => 'midi dress',
+        ('onepiece', 'calf length') => 'midi dress',
+        ('onepiece', 'ankle length') => 'long dress',
+        ('onepiece', 'maxi') => 'long dress',
+        ('onepiece', 'floor length') => 'floor-length dress',
+        _ => '$raw $noun',
+      };
+      return ('$zh$nounZh', english);
+    }
+
+    if (kind == 'cut') {
+      final english = switch (raw.toLowerCase()) {
+        'off-shoulder' => 'off-shoulder $noun',
+        'one-shoulder' => 'one-shoulder $noun',
+        'halter neck' => 'halter $noun',
+        'strapless' => 'strapless $noun',
+        'backless' => 'backless $noun',
+        'high-waisted' => 'high-waist $noun',
+        'low-waisted' => 'low-waist $noun',
+        'natural waist' => 'natural-waist $noun',
+        'empire waist' => 'empire-waist $noun',
+        'drop waist' => 'drop-waist $noun',
+        _ => raw,
+      };
+      return ('$zh$nounZh', english);
+    }
+
+    return ('$zh$nounZh', '$raw $noun');
+  }
+
   List<_GeneratedOutputTag> _clothingOutputTagsFromSelection(
     Iterable<TagItem> source, {
     int? personIndex,
@@ -5753,138 +5998,111 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final effectiveDetailColor = scopedDetailColor ??
           legacyDetailColor ??
           (details.isNotEmpty ? secondaryColor : null);
-      if (effectiveDetailColor != null && details.isNotEmpty) {
+      if (effectiveDetailColor != null) {
         related.add(effectiveDetailColor);
       }
 
-      final baseLower = base.en.toLowerCase();
+      final ids = related.map((tag) => tag.id).toSet().toList();
+      consumed.addAll(ids);
+      final noun = _clothingPromptNoun(scope, base);
+      final nounZh = _clothingPromptNounChinese(scope, base);
+      final pieces = <(String, String)>[];
+      final pieceKeys = <String>{};
+      void addPiece(String zh, String en) {
+        final cleanedEnglish = _cleanTag(en);
+        if (cleanedEnglish.isEmpty ||
+            !pieceKeys.add(cleanedEnglish.toLowerCase())) {
+          return;
+        }
+        pieces.add((zh.trim().ifEmpty(cleanedEnglish), cleanedEnglish));
+      }
+
+      final canonicalBase = _canonicalClothingEnglish(
+        _scopedClothingKind(base.group) == 'style'
+            ? _clothingModifierEnglish(base)
+            : base.en,
+      );
       final colorPrefix =
-          mainColor == null ? null : _clothingColorPrefix(mainColor);
+          mainColor == null ? '' : _clothingColorPrefix(mainColor);
+      final colorChinese =
+          mainColor == null ? '' : _clothingColorChinesePrefix(mainColor);
+      if (colorPrefix.isNotEmpty) {
+        addPiece('$colorChinese$nounZh', '$colorPrefix $noun');
+        if (_englishTagKey(canonicalBase) != _englishTagKey(noun)) {
+          addPiece(base.zh, canonicalBase);
+        }
+      } else {
+        addPiece(base.zh, canonicalBase);
+      }
+
+      for (final style in legacyStyles) {
+        final english = _canonicalClothingEnglish(
+          _clothingStyleModifierEnglish(style,
+              stripEmbeddedColor: mainColor != null),
+        );
+        final chinese = _clothingStyleModifierChinese(style,
+            stripEmbeddedColor: mainColor != null);
+        if (_englishTagKey(english) != _englishTagKey(canonicalBase)) {
+          addPiece(chinese, english);
+        }
+      }
+
+      for (final entry in <(String, Iterable<TagItem>)>[
+        ('cut', cuts),
+        ('fit', fits),
+        ('length', lengths),
+        ('material', materials),
+        ('pattern', patterns),
+      ]) {
+        for (final tag in entry.$2) {
+          final piece =
+              _clothingDimensionPromptPiece(scope, entry.$1, tag, noun, nounZh);
+          addPiece(piece.$1, piece.$2);
+        }
+      }
+
       final detailColorPrefix = effectiveDetailColor == null
           ? null
           : _clothingColorPrefix(effectiveDetailColor);
-      final secondaryEnglish = secondaryColor == null
+      final detailColorChinese = effectiveDetailColor == null
           ? null
-          : _betterWaifuTrimEnglish(secondaryColor);
-      final secondaryChinese = secondaryColor == null
-          ? null
-          : _clothingSecondaryColorChinese(secondaryColor);
-      final accessoryPositionEnglish = accessoryPosition?.en.trim();
-      final stripEmbeddedStyleColor = mainColor != null;
-      final effectiveColor = colorPrefix != null &&
-              colorPrefix.isNotEmpty &&
-              !baseLower.startsWith('$colorPrefix ')
-          ? colorPrefix
-          : null;
-      final enStyleModifiers = legacyStyles
-          .map((tag) => _clothingStyleModifierEnglish(tag,
-              stripEmbeddedColor: stripEmbeddedStyleColor))
-          .where((part) => part.trim().isNotEmpty)
-          .toList();
-      List<String> englishModifiers(Iterable<TagItem> tags) => tags
-          .map(_clothingModifierEnglish)
-          .where((part) => part.trim().isNotEmpty)
-          .toList();
+          : _clothingColorChinesePrefix(effectiveDetailColor);
+      for (final detail in details) {
+        final piece = _clothingDimensionPromptPiece(
+          scope,
+          'detail',
+          detail,
+          noun,
+          nounZh,
+          detailColor: detailColorPrefix,
+          detailColorZh: detailColorChinese,
+        );
+        addPiece(piece.$1, piece.$2);
+      }
 
-      final enDetailModifiers = details
-          .map((tag) {
-            final modifier = _clothingModifierEnglish(tag);
-            final prefixes = <String>[];
-            if (detailColorPrefix != null &&
-                detailColorPrefix.isNotEmpty &&
-                !prefixes.contains(detailColorPrefix)) {
-              prefixes.add(detailColorPrefix);
-            }
-            return [...prefixes, modifier]
-                .where((part) => part.trim().isNotEmpty)
-                .join(' ');
-          })
-          .where((part) => part.trim().isNotEmpty)
-          .toList();
-      final zhStyleModifiers = legacyStyles
-          .map((tag) => _clothingStyleModifierChinese(tag,
-              stripEmbeddedColor: stripEmbeddedStyleColor))
-          .where((part) => part.trim().isNotEmpty)
-          .toList();
-      List<String> chineseModifiers(Iterable<TagItem> tags) => tags
-          .map(_clothingModifierChinese)
-          .where((part) => part.trim().isNotEmpty)
-          .toList();
+      final detailUsesSecondary = details.isNotEmpty &&
+          effectiveDetailColor != null &&
+          secondaryColor != null &&
+          effectiveDetailColor.id == secondaryColor.id;
+      if (secondaryColor != null && !detailUsesSecondary) {
+        final secondaryEnglish = _betterWaifuTrimEnglish(secondaryColor);
+        addPiece('雙色$nounZh', 'two-tone $noun');
+        addPiece(
+          '${_clothingColorChinesePrefix(secondaryColor)}邊線$nounZh',
+          '$secondaryEnglish on $noun',
+        );
+      }
+      if (accessoryPosition != null) {
+        addPiece('${accessoryPosition.zh}${base.zh}',
+            '${base.en} ${accessoryPosition.en}');
+      }
 
-      final zhDetailModifiers = details
-          .map((tag) {
-            final modifier = _clothingModifierChinese(tag);
-            final prefixes = <String>[];
-            if (effectiveDetailColor != null) {
-              final detailPrefix =
-                  _clothingColorChinesePrefix(effectiveDetailColor);
-              if (!prefixes.contains(detailPrefix)) prefixes.add(detailPrefix);
-            }
-            return '${prefixes.join()}$modifier';
-          })
-          .where((part) => part.trim().isNotEmpty)
-          .toList();
-      final secondaryUsedByDetail = details.isNotEmpty &&
-          scopedDetailColor == null &&
-          legacyDetailColor == null &&
-          secondaryColor != null;
-      final zhColorPrefix = _clothingChineseColorPrefixWithSecondary(
-        effectiveColor != null && mainColor != null ? mainColor : null,
-        secondaryUsedByDetail ? null : secondaryChinese,
-      );
-      final englishBaseCoveredByStyle = baseLower.isNotEmpty &&
-          enStyleModifiers.any((part) => RegExp(
-                r'(^|\s)' + RegExp.escape(baseLower) + r'(\s|$)',
-                caseSensitive: false,
-              ).hasMatch(part));
-      final chineseBaseCoveredByStyle = base.zh.isNotEmpty &&
-          zhStyleModifiers.any((part) => part.contains(base.zh));
-      final cosplayCoversOnePiece = legacyStyles.any(_isCosplayTag);
-      final baseChinese = _scopedClothingKind(base.group) == 'style'
-          ? _clothingModifierChinese(base)
-          : base.zh;
-      final baseEnglish = _scopedClothingKind(base.group) == 'style'
-          ? _clothingModifierEnglish(base)
-          : base.en;
-      final detailUsesSecondary = effectiveDetailColor == secondaryColor;
-      final enParts = <String>[
-        if (effectiveColor != null) effectiveColor,
-        ...englishModifiers(cuts),
-        ...englishModifiers(fits),
-        ...englishModifiers(lengths),
-        ...englishModifiers(materials),
-        ...enStyleModifiers,
-        if (!englishBaseCoveredByStyle && !cosplayCoversOnePiece) baseEnglish,
-        ...enDetailModifiers,
-        ...englishModifiers(patterns),
-        if (secondaryEnglish != null &&
-            secondaryEnglish.isNotEmpty &&
-            !detailUsesSecondary)
-          'with $secondaryEnglish',
-        if (accessoryPositionEnglish != null &&
-            accessoryPositionEnglish.isNotEmpty)
-          accessoryPositionEnglish,
-      ];
-      final zhParts = <String>[
-        if (zhColorPrefix.isNotEmpty) zhColorPrefix,
-        ...chineseModifiers(cuts),
-        ...chineseModifiers(fits),
-        ...chineseModifiers(lengths),
-        ...chineseModifiers(materials),
-        ...zhStyleModifiers,
-        if (!chineseBaseCoveredByStyle && !cosplayCoversOnePiece) baseChinese,
-        ...zhDetailModifiers,
-        ...chineseModifiers(patterns),
-        if (accessoryPosition != null) accessoryPosition.zh,
-      ];
-      final ids = related.map((tag) => tag.id).toSet().toList();
-      consumed.addAll(ids);
-      result.add(_GeneratedOutputTag(
-        zh: zhParts.join(),
-        en: enParts.where((part) => part.trim().isNotEmpty).join(' '),
-        tagIds: ids,
-        personIndex: personIndex,
-      ));
+      result.addAll(pieces.map((piece) => _GeneratedOutputTag(
+            zh: piece.$1,
+            en: piece.$2,
+            tagIds: ids,
+            personIndex: personIndex,
+          )));
     }
 
     const overallGroups = {
@@ -6473,8 +6691,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
       }
       _migrateConsolidatedWearTagIds(_selectedIds);
+      _migrateClothingTaxonomyTagIds(_selectedIds);
       for (final ids in _personSelectedIds.values) {
         _migrateConsolidatedWearTagIds(ids);
+        _migrateClothingTaxonomyTagIds(ids);
+      }
+      for (final combination in _combinations) {
+        final migrated = combination.tagIds.toSet();
+        _migrateClothingTaxonomyTagIds(migrated);
+        combination.tagIds
+          ..clear()
+          ..addAll(migrated);
       }
       final personCombinations = data['personCombinationIds'] as Map?;
       if (personCombinations != null) {
@@ -9046,6 +9273,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               int.parse('${entry.key}'):
                   (entry.value as List? ?? []).map((id) => '$id').toSet(),
         });
+      _migrateClothingTaxonomyTagIds(_selectedIds);
+      for (final ids in _personSelectedIds.values) {
+        _migrateClothingTaxonomyTagIds(ids);
+      }
       _personCombinationIds
         ..clear()
         ..addAll({
@@ -11182,7 +11413,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return const Color(0xfff97316);
     }
     final kind = _scopedClothingKind(group);
-    if (_isClothingBaseGroup(group) || group == _cosplayGroup) {
+    if (_isClothingBaseGroup(group) ||
+        _clothingAccessoryPickerGroups.contains(group) ||
+        group == _cosplayGroup) {
       return const Color(0xffffb454);
     }
     if (kind == 'cut') return const Color(0xff60a5fa);
@@ -11236,11 +11469,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final isHairStyle = tag.group == '髮型';
     final officialHairStyle =
         isHairStyle ? _isOfficialHairStyleTag(tag) : false;
+    final isClothing = _isClothingGroup(tag.group);
+    final clothingSupport = isClothing
+        ? tag.support == 'official'
+            ? '官方｜'
+            : tag.support == 'description'
+                ? '描述｜'
+                : '既有｜'
+        : '';
     final labelPrefix = isHairStyle
         ? officialHairStyle
             ? '官方｜'
             : '描述｜'
-        : '';
+        : clothingSupport;
     return ConstrainedBox(
       constraints: BoxConstraints(
         minWidth: _adaptiveChipLabelWidth(context) + (tag.adult ? 28 : 14),
@@ -11261,15 +11502,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 color: selected
                     ? _pickerLayerText(tone, selected: true)
                     : const Color(0xffffa7b7))
-            : isHairStyle
+            : isHairStyle || isClothing
                 ? Icon(
-                    officialHairStyle
+                    (isHairStyle && officialHairStyle) ||
+                            (isClothing && tag.support == 'official')
                         ? Icons.verified_outlined
                         : Icons.auto_awesome_outlined,
                     size: 16,
                     color: selected
                         ? _pickerLayerText(tone, selected: true)
-                        : officialHairStyle
+                        : (isHairStyle && officialHairStyle) ||
+                                (isClothing && tag.support == 'official')
                             ? const Color(0xff4ade80)
                             : const Color(0xfffbbf24),
                   )
@@ -11425,10 +11668,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _clothingGroupSocks,
         _clothingGroupShoes,
         _clothingGroupAccessory,
+        ..._clothingAccessoryPickerGroups,
       }.contains(activeGroup);
-      final clothingBaseDisplayMatch = usesClothingBaseDisplayGroup &&
+      final virtualAccessoryMatch = activeGroup != null &&
+          _clothingAccessoryPickerGroups.contains(activeGroup) &&
           _isClothingBaseTag(tag) &&
-          _clothingBaseDisplayGroup(tag) == activeGroup;
+          _clothingBaseDisplayGroup(tag) == _clothingGroupAccessory &&
+          _clothingAccessoryPickerGroup(tag) == activeGroup;
+      final clothingBaseDisplayMatch = virtualAccessoryMatch ||
+          (usesClothingBaseDisplayGroup &&
+              _isClothingBaseTag(tag) &&
+              _clothingBaseDisplayGroup(tag) == activeGroup);
       final directActiveGroupMatch = usesClothingBaseDisplayGroup
           ? clothingBaseDisplayMatch
           : tag.group == activeGroup;
@@ -12421,20 +12671,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '襪子' => 'socks',
       '鞋子' => 'shoes',
       '配件' => 'accessory',
+      _clothingGroupHeadAccessory ||
+      _clothingGroupFaceAccessory ||
+      _clothingGroupNeckAccessory ||
+      _clothingGroupHandAccessory ||
+      _clothingGroupWaistAccessory ||
+      _clothingGroupOtherAccessory =>
+        'accessory',
       _ => null,
     };
-    return bases
-        .where((base) =>
-            _clothingBaseDisplayGroup(base) == activeGroup ||
-            (activeScope != null && _clothingScopeForBase(base) == activeScope))
-        .toList();
+    final virtualAccessory =
+        _clothingAccessoryPickerGroups.contains(activeGroup);
+    return bases.where((base) {
+      if (virtualAccessory) {
+        return _clothingBaseDisplayGroup(base) == _clothingGroupAccessory &&
+            _clothingAccessoryPickerGroup(base) == activeGroup;
+      }
+      return _clothingBaseDisplayGroup(base) == activeGroup ||
+          (activeScope != null && _clothingScopeForBase(base) == activeScope);
+    }).toList();
   }
 
   List<String> _clothingDetailGroups(int personIndex, {String? activeGroup}) {
     final bases = _clothingBasesForActiveGroup(personIndex, activeGroup);
+    final selected = _selectedTagsForPerson(personIndex);
     return bases
         .expand(_clothingDetailGroupsForBase)
         .toSet()
+        .where((group) {
+          if (_scopedClothingKind(group) != 'detail_color') return true;
+          final scope = _scopedClothingSlot(group);
+          return selected.any((tag) =>
+              tag.group == _scopedClothingGroup(scope ?? '', 'detail'));
+        })
         .where((group) => (_tagsByGroup[group] ?? const <TagItem>[]).isNotEmpty)
         .toList();
   }
@@ -12553,6 +12822,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Widget _clothingLayerLegend() {
     const layers = <(String, Color)>[
+      ('官方精準', Color(0xff4ade80)),
+      ('描述補充', Color(0xfffbbf24)),
       ('衣種', Color(0xffffb454)),
       ('剪裁', Color(0xff60a5fa)),
       ('版型', Color(0xff2dd4bf)),
@@ -12824,19 +13095,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Widget _stepClothing() {
     const garmentGroups = [
+      _clothingGroupHeadAccessory,
+      _clothingGroupFaceAccessory,
+      _clothingGroupNeckAccessory,
+      '外套',
       '上衣',
+      '服裝',
+      '特殊服裝',
       '褲子',
       '短褲',
       '裙子',
-      '服裝',
-      '外套',
       '內衣',
       '胸罩',
       '內褲',
+      _clothingGroupHandAccessory,
+      _clothingGroupWaistAccessory,
       '襪子',
       '鞋子',
-      '特殊服裝',
-      '配件',
+      _clothingGroupOtherAccessory,
     ];
     const overallGroups = [
       _outfitMainStyleGroup,
@@ -12847,7 +13123,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('服裝已改為多維度設計：先選衣種，再分別控制剪裁、版型、長度、材質、裝飾、圖案與顏色。每位人物的服裝會分開保存。'),
+        const Text(
+            '服裝依頭部到腳部排列；先選衣種，再控制該部位可用的剪裁、版型、長度、材質、裝飾、圖案與顏色。官方標籤會優先輸出，描述詞則保留作進階補充。'),
         const SizedBox(height: 8),
         _clothingLayerLegend(),
         const SizedBox(height: 12),
@@ -12913,7 +13190,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     icon: Icons.checkroom_outlined,
                     tone: const Color(0xffffb454),
                     title: '1. 選擇服裝部位與款式',
-                    description: '切換部位只會隱藏其他設定，已選標籤會保留；可同時搭配外衣與內搭。',
+                    description: '依頭到腳切換部位；切換只隱藏其他部位，已選標籤仍會保留。',
                     child: _stepTagPicker(
                       garmentGroups,
                       nextLabel: '下一步',
@@ -12927,7 +13204,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       icon: Icons.palette_outlined,
                       tone: const Color(0xff60a5fa),
                       title: '2. $activeClothingLabel：多維度設計',
-                      description: '剪裁、版型、長度、材質、細節、裝飾色、圖案、主色與次色彼此獨立；只顯示目前部位。',
+                      description:
+                          '只列出適用於目前衣種的選項；有精準官方標籤時優先使用，進階色名與自然敘述會標示為描述。',
                       child: _stepTagPicker(
                         adaptiveDetails,
                         nextLabel: '下一步',
