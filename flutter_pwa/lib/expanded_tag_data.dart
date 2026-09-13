@@ -826,6 +826,10 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     rows: const [
       ['骨盆前後推動', 'pelvic thrust'],
       ['腰胯磨蹭中', 'humping'],
+      ['男性腰部左右擺動', 'male hips swaying from side to side'],
+      ['陰莖反覆抽插', 'penis thrusting in and out'],
+      ['女性呻吟', 'moaning'],
+      ['女性全身顫抖', 'trembling'],
     ],
   ),
   ..._expandedTags(

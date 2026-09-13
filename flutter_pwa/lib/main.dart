@@ -9,6 +9,7 @@ import 'app_version.dart';
 import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'expanded_tag_data.dart';
+import 'outfit_reference_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
@@ -105,6 +106,116 @@ class TagItem {
       );
 }
 
+/// Exact, active names listed by Danbooru's official Hair Styles tag group or
+/// confirmed through its tag API. Other hairstyle entries remain available as
+/// natural-language hints because Amanatsu may still understand some of them,
+/// but the UI labels them separately instead of implying official support.
+const _officialHairStyleEnglish = <String>{
+  'hair between eyes',
+  'bob cut',
+  'pixie cut',
+  'straight hair',
+  'wavy hair',
+  'curly hair',
+  'messy hair',
+  'spiked hair',
+  'ponytail',
+  'high ponytail',
+  'low ponytail',
+  'side ponytail',
+  'low side ponytail',
+  'short ponytail',
+  'high side ponytail',
+  'folded ponytail',
+  'twintails',
+  'short twintails',
+  'low twintails',
+  'uneven twintails',
+  'single braid',
+  'twin braids',
+  'low twin braids',
+  'side braid',
+  'front braid',
+  'half crown braid',
+  'braided ponytail',
+  'braided twintails',
+  'crown braid',
+  'rope braid',
+  'braided bun',
+  'braided bangs',
+  'multiple braids',
+  'cornrows',
+  'dreadlocks',
+  'box braids',
+  'half up braid',
+  'half up half down braid',
+  'hair bun',
+  'single hair bun',
+  'double bun',
+  'very low bun',
+  'heart hair bun',
+  'hair rings',
+  'half updo',
+  'one side up',
+  'two side up',
+  'hime cut',
+  'wolf cut',
+  'jellyfish cut',
+  'short hair with long locks',
+  'bowl cut',
+  'inverted bob',
+  'mullet',
+  'butterfly cut',
+  'feathered hair',
+  'fluffy hair',
+  'flipped hair',
+  'drill hair',
+  'twin drills',
+  'ringlets',
+  'afro',
+  'beehive hairdo',
+  'pompadour',
+  'quiff',
+  'victory rolls',
+  'wet hair',
+  'arched bangs',
+  'asymmetrical bangs',
+  'blunt bangs',
+  'choppy bangs',
+  'diagonal bangs',
+  'fanged bangs',
+  'long bangs',
+  'short bangs',
+  'wispy bangs',
+  'parted bangs',
+  'middle part',
+  'curtained hair',
+  'swept bangs',
+  'hair over one eye',
+  'hair over eyes',
+  'sidelocks',
+  'long sidelocks',
+  'asymmetrical sidelocks',
+  'drill sidelocks',
+  'antenna hair',
+  'heart ahoge',
+  'huge ahoge',
+  'hair pulled back',
+  'hair slicked back',
+  'alternate hairstyle',
+  'hair down',
+  'hair up',
+  'asymmetrical hair',
+  'sidecut',
+  'blunt ends',
+  'bow-shaped hair',
+  'chignon',
+};
+
+bool _isOfficialHairStyleTag(TagItem tag) =>
+    tag.group == '髮型' &&
+    _officialHairStyleEnglish.contains(tag.en.trim().toLowerCase());
+
 class _GeneratedOutputTag {
   const _GeneratedOutputTag({
     required this.zh,
@@ -168,6 +279,16 @@ class PromptCombination {
         tagIds: (json['tagIds'] as List? ?? []).map((id) => '$id').toList(),
         extraPositive: '${json['extraPositive'] ?? ''}',
       );
+}
+
+class _OutfitReferenceResolution {
+  const _OutfitReferenceResolution({
+    required this.tags,
+    required this.missing,
+  });
+
+  final List<TagItem> tags;
+  final List<String> missing;
 }
 
 class _AdultPosePackage {
@@ -440,6 +561,8 @@ final _adultPosePackages = <_AdultPosePackage>[
     frameTags: ['side view', 'full body'],
   ),
   ..._additionalAdultPosePackages,
+  ..._groupAdultPosePackages,
+  ..._shijuhatteAdultPosePackages,
 ];
 
 final _additionalAdultPosePackages = <_AdultPosePackage>[
@@ -773,7 +896,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_spitroast_side',
     '前後同時口交・側面',
     '三人前後配置，同時包含口部與後方互動',
-    '多人',
+    '多人・2男1女',
     ['group sex', 'threesome', 'spitroast', 'oral', 'vaginal', 'kneeling'],
     ['side view', 'full body'],
     femaleCount: 1,
@@ -783,7 +906,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_reverse_spitroast_side',
     '反向前後同時口交・側面',
     '反向三人前後配置，側面完整呈現',
-    '多人',
+    '多人・2男1女',
     ['group sex', 'threesome', 'reverse spitroast', 'oral', 'vaginal'],
     ['side view', 'full body'],
     femaleCount: 1,
@@ -793,7 +916,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_double_penetration_rear',
     '雙重插入・背面',
     '三人雙重插入配置，以背面全身構圖呈現',
-    '多人',
+    '多人・2男1女',
     ['group sex', 'threesome', 'double penetration', 'vaginal', 'anal'],
     ['rear view', 'full body'],
     femaleCount: 1,
@@ -803,7 +926,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_double_vaginal_front',
     '雙重陰道插入・正面',
     '三人雙重陰道插入配置，正面全身構圖',
-    '多人',
+    '多人・2男1女',
     ['group sex', 'threesome', 'double vaginal', 'lying on back', 'legs apart'],
     ['front view', 'full body'],
     femaleCount: 1,
@@ -813,7 +936,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_double_anal_rear',
     '雙重肛門插入・背面',
     '三人雙重肛門插入配置，背面全身構圖',
-    '多人',
+    '多人・2男1女',
     ['group sex', 'threesome', 'double anal', 'all fours'],
     ['rear view', 'full body'],
     femaleCount: 1,
@@ -823,7 +946,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_oral_sandwich_side',
     '口交夾擊・側面',
     '兩位女性與一位男性的口部夾擊配置',
-    '多人',
+    '多人・1男2女',
     ['group sex', 'threesome', 'oral sandwich', 'oral', 'lying'],
     ['side view', 'full body'],
     femaleCount: 2,
@@ -833,7 +956,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_cooperative_fellatio_group_front',
     '雙人協力口交・正面',
     '兩位女性跪姿協力進行口交，正面構圖',
-    '多人',
+    '多人・1男2女',
     ['group sex', 'threesome', 'cooperative fellatio', 'fellatio', 'kneeling'],
     ['front view', 'full body'],
     femaleCount: 2,
@@ -843,7 +966,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_double_handjob_group_front',
     '雙人手交・正面',
     '兩位女性共同進行手部互動，正面膝上構圖',
-    '多人',
+    '多人・1男2女',
     ['group sex', 'threesome', 'double handjob', 'sitting'],
     ['front view', 'cowboy shot'],
     femaleCount: 2,
@@ -853,7 +976,7 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_daisy_chain_above',
     '連環口交・俯視',
     '三人依序排列的連環口部互動，由上方呈現',
-    '多人',
+    '多人・1男2女',
     ['group sex', 'threesome', 'daisy chain', 'oral', 'lying'],
     ['from above', 'full body'],
     femaleCount: 2,
@@ -863,11 +986,868 @@ final _additionalAdultPosePackages = <_AdultPosePackage>[
     'extra_threesome_teamwork_above',
     '三人協作姿勢・俯視',
     '三人協作的綜合互動姿勢，由上方呈現',
-    '多人',
+    '多人・1男2女',
     ['group sex', 'threesome', 'teamwork', 'lying'],
     ['from above', 'full body'],
     femaleCount: 2,
     maleCount: 1,
+  ),
+];
+
+/// 依目前人物卡片的男女數量顯示；套件本身只描述畫面中的主要互動，
+/// 各角色的外觀、服裝與其他個別動作仍由人物卡片維持。
+final _groupAdultPosePackages = <_AdultPosePackage>[
+  _adultPosePack(
+    'multi_2m1f_gangbang_spitroast',
+    '前後夾擊・口交與陰道',
+    '一位女性位於兩位男性之間，前方口交、後方陰道交合',
+    '多人・2男1女',
+    ['group sex', 'threesome', 'gangbang', 'spitroast', 'fellatio', 'vaginal'],
+    ['side view', 'full body'],
+    femaleCount: 1,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m1f_oral_anal_spitroast',
+    '前後夾擊・口交與肛交',
+    '一位女性前方口交並同時接受後方肛交，以背面呈現',
+    '多人・2男1女',
+    ['group sex', 'threesome', 'spitroast', 'fellatio', 'anal', 'doggystyle'],
+    ['rear view', 'full body'],
+    femaleCount: 1,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m1f_multiple_fellatio',
+    '雙男性口交・正面',
+    '一位女性跪姿同時為兩位男性進行口交',
+    '多人・2男1女',
+    ['group sex', 'threesome', 'multiple penis fellatio', 'kneeling'],
+    ['front view', 'full body'],
+    femaleCount: 1,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m1f_double_handjob',
+    '雙男性手交・正面',
+    '一位女性同時以雙手為兩位男性進行手交',
+    '多人・2男1女',
+    ['group sex', 'threesome', 'double handjob', 'kneeling'],
+    ['front view', 'cowboy shot'],
+    femaleCount: 1,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m1f_paizuri_fellatio',
+    '乳交與口交協作',
+    '一位女性以乳交與口交同時和兩位男性互動',
+    '多人・2男1女',
+    ['group sex', 'threesome', 'paizuri', 'fellatio', 'teamwork', 'kneeling'],
+    ['front view', 'cowboy shot'],
+    femaleCount: 1,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_1m2f_cowgirl_kiss',
+    '女上位與親吻協作',
+    '一位女性騎乘男性，另一位女性在旁親吻互動',
+    '多人・1男2女',
+    [
+      'group sex',
+      'threesome',
+      'cowgirl position',
+      'girl on top',
+      'kiss',
+      'teamwork'
+    ],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 1,
+  ),
+  _adultPosePack(
+    'multi_1m2f_oral_chain',
+    '雙女性口部連環互動',
+    '兩位女性與一位男性形成口交與舔陰的連環配置',
+    '多人・1男2女',
+    ['group sex', 'threesome', 'oral', '69', 'cunnilingus', 'fellatio'],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 1,
+  ),
+  _adultPosePack(
+    'multi_1m2f_facesitting_handjob',
+    '顏面騎乘與手交',
+    '一位女性顏面騎乘，另一位女性同時進行手交',
+    '多人・1男2女',
+    ['group sex', 'threesome', 'facesitting', 'handjob', 'girl on top'],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 1,
+  ),
+  _adultPosePack(
+    'multi_1m2f_paizuri_handjob',
+    '乳交與手交協作',
+    '兩位女性分別進行乳交與手交，以正面膝上構圖呈現',
+    '多人・1男2女',
+    ['group sex', 'threesome', 'paizuri', 'handjob', 'teamwork'],
+    ['front view', 'cowboy shot'],
+    femaleCount: 2,
+    maleCount: 1,
+  ),
+  _adultPosePack(
+    'multi_1m2f_double_footjob',
+    '雙女性足交・俯視',
+    '兩位女性共同以足部和一位男性互動',
+    '多人・1男2女',
+    ['group sex', 'threesome', 'double footjob', 'teamwork', 'sitting'],
+    ['from above', 'full body'],
+    femaleCount: 2,
+    maleCount: 1,
+  ),
+  _adultPosePack(
+    'multi_3m1f_triple_penetration',
+    '三重插入・背面',
+    '一位女性與三位男性的三重插入配置，以背面全身呈現',
+    '多人・3男1女',
+    [
+      'group sex',
+      'foursome',
+      'gangbang',
+      'triple penetration',
+      'vaginal',
+      'anal'
+    ],
+    ['rear view', 'full body'],
+    femaleCount: 1,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m1f_triple_vaginal',
+    '三重陰道插入・正面',
+    '一位女性仰躺展腿，與三位男性形成三重陰道插入配置',
+    '多人・3男1女',
+    [
+      'group sex',
+      'foursome',
+      'gangbang',
+      'triple vaginal',
+      'lying on back',
+      'legs apart'
+    ],
+    ['front view', 'full body'],
+    femaleCount: 1,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m1f_double_penetration_fellatio',
+    '雙重插入加口交・側面',
+    '一位女性同時接受雙重插入並為第三位男性口交',
+    '多人・3男1女',
+    [
+      'group sex',
+      'foursome',
+      'gangbang',
+      'double penetration',
+      'fellatio',
+      'spitroast'
+    ],
+    ['side view', 'full body'],
+    femaleCount: 1,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m1f_double_vaginal_fellatio',
+    '雙重陰道插入加口交',
+    '一位女性接受雙重陰道插入並同時為第三位男性口交',
+    '多人・3男1女',
+    ['group sex', 'foursome', 'gangbang', 'double vaginal', 'fellatio'],
+    ['front view', 'full body'],
+    femaleCount: 1,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m1f_double_anal_fellatio',
+    '雙重肛交加口交',
+    '一位女性接受雙重肛交並同時為第三位男性口交',
+    '多人・3男1女',
+    ['group sex', 'foursome', 'gangbang', 'double anal', 'fellatio'],
+    ['rear view', 'full body'],
+    femaleCount: 1,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m1f_multiple_fellatio',
+    '三男性多人式口交',
+    '一位女性跪姿與三位男性進行多人式口交',
+    '多人・3男1女',
+    ['group sex', 'foursome', 'multiple penis fellatio', 'kneeling'],
+    ['front view', 'full body'],
+    femaleCount: 1,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m1f_handjob_fellatio',
+    '雙手交加口交',
+    '一位女性以雙手交與口交同時和三位男性互動',
+    '多人・3男1女',
+    ['group sex', 'foursome', 'double handjob', 'fellatio', 'kneeling'],
+    ['front view', 'cowboy shot'],
+    femaleCount: 1,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m1f_all_fours_gangbang',
+    '四足姿勢多人性交',
+    '一位女性維持四足姿勢，由三位男性共同互動',
+    '多人・3男1女',
+    ['group sex', 'foursome', 'gangbang', 'teamwork', 'all fours'],
+    ['rear view', 'full body'],
+    femaleCount: 1,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_2m2f_paired_missionary',
+    '雙組傳教士體位・俯視',
+    '兩男兩女形成兩組傳教士體位，由上方呈現',
+    '多人・2男2女',
+    [
+      'group sex',
+      'foursome',
+      'vaginal',
+      'missionary',
+      'teamwork',
+      'lying on back'
+    ],
+    ['from above', 'full body'],
+    femaleCount: 2,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m2f_paired_doggy',
+    '雙組後入式・背面',
+    '兩男兩女形成兩組四足後入姿勢，以背面呈現',
+    '多人・2男2女',
+    [
+      'group sex',
+      'foursome',
+      'vaginal',
+      'doggystyle',
+      'sex from behind',
+      'all fours'
+    ],
+    ['rear view', 'full body'],
+    femaleCount: 2,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m2f_paired_cowgirl',
+    '雙組女上位・正面',
+    '兩位女性分別騎乘一位男性，以正面全身呈現',
+    '多人・2男2女',
+    [
+      'group sex',
+      'foursome',
+      'vaginal',
+      'cowgirl position',
+      'girl on top',
+      'straddling'
+    ],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m2f_mixed_cowgirl',
+    '正反女上位組合',
+    '一組正向女上位、一組反向女上位，以側面呈現',
+    '多人・2男2女',
+    [
+      'group sex',
+      'foursome',
+      'vaginal',
+      'cowgirl position',
+      'reverse cowgirl position',
+      'teamwork'
+    ],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m2f_love_train',
+    '四人性愛列車・側面',
+    '兩男兩女形成站立連續隊列，以側面全身呈現',
+    '多人・2男2女',
+    ['group sex', 'foursome', 'love train', 'standing sex', 'sex from behind'],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m2f_oral_teamwork',
+    '四人口部協作',
+    '兩男兩女形成口交與舔陰的協作配置',
+    '多人・2男2女',
+    [
+      'group sex',
+      'foursome',
+      'oral sandwich',
+      'cunnilingus',
+      'fellatio',
+      'kneeling'
+    ],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m2f_penetration_oral',
+    '雙重插入與口交協作',
+    '一組雙重插入並由另一位女性加入口部互動',
+    '多人・2男2女',
+    ['group sex', 'foursome', 'double penetration', 'fellatio', 'teamwork'],
+    ['from above', 'full body'],
+    femaleCount: 2,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_2m2f_side_teamwork',
+    '四人側臥協作・俯視',
+    '兩男兩女以側臥相連方式進行多人互動',
+    '多人・2男2女',
+    ['group sex', 'foursome', 'spooning', 'on side', 'teamwork'],
+    ['from above', 'full body'],
+    femaleCount: 2,
+    maleCount: 2,
+  ),
+  _adultPosePack(
+    'multi_3m2f_double_penetration_gangbang',
+    '五人雙重插入夾擊',
+    '三男兩女的五人配置，以雙重插入為主要動作',
+    '多人・3男2女',
+    ['group sex', 'fivesome', 'gangbang', 'double penetration', 'teamwork'],
+    ['rear view', 'full body'],
+    femaleCount: 2,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m2f_triple_penetration',
+    '五人三重插入協作',
+    '三男兩女的五人配置，以三重插入與協作互動為主',
+    '多人・3男2女',
+    ['group sex', 'fivesome', 'gangbang', 'triple penetration', 'teamwork'],
+    ['from above', 'full body'],
+    femaleCount: 2,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m2f_double_vaginal_oral',
+    '雙重陰道插入與口交',
+    '一位女性接受雙重陰道插入，另一位女性加入口交',
+    '多人・3男2女',
+    [
+      'group sex',
+      'fivesome',
+      'gangbang',
+      'double vaginal',
+      'fellatio',
+      'teamwork'
+    ],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m2f_double_anal_oral',
+    '雙重肛交與口交',
+    '一位女性接受雙重肛交，另一位女性加入口交',
+    '多人・3男2女',
+    [
+      'group sex',
+      'fivesome',
+      'gangbang',
+      'double anal',
+      'fellatio',
+      'teamwork'
+    ],
+    ['rear view', 'full body'],
+    femaleCount: 2,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m2f_oral_circle',
+    '五人口部協作',
+    '三男兩女形成多人式口交與舔陰配置',
+    '多人・3男2女',
+    [
+      'group sex',
+      'fivesome',
+      'multiple penis fellatio',
+      'cunnilingus',
+      'oral sandwich',
+      'kneeling'
+    ],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m2f_love_train',
+    '五人性愛列車・側面',
+    '三男兩女形成站立連續隊列，以側面呈現',
+    '多人・3男2女',
+    ['group sex', 'fivesome', 'love train', 'standing sex', 'sex from behind'],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m2f_cowgirl_rear_mix',
+    '女上位與後入混合',
+    '一位女性女上位、另一位女性後入，第三位男性加入協作',
+    '多人・3男2女',
+    [
+      'group sex',
+      'fivesome',
+      'cowgirl position',
+      'doggystyle',
+      'sex from behind',
+      'teamwork'
+    ],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 3,
+  ),
+  _adultPosePack(
+    'multi_3m2f_orgy_teamwork',
+    '五人綜合群交・俯視',
+    '三男兩女的綜合群交配置，由上方呈現所有人物',
+    '多人・3男2女',
+    ['group sex', 'fivesome', 'orgy', 'teamwork', 'lying'],
+    ['from above', 'full body'],
+    femaleCount: 2,
+    maleCount: 3,
+  ),
+];
+
+/// 江戶四十八手沒有一套能直接交給模型的標準英文標籤。
+/// 這裡保留傳統名稱，並用現有 Danbooru／Illustrious 標籤描述最接近的
+/// 身體配置。部分同屬正常位或交差位的招式，會以腿部、身體方向與鏡頭
+/// 標籤補足差異。
+final _shijuhatteAdultPosePackages = <_AdultPosePackage>[
+  _adultPosePack(
+    'shijuhatte_01_ajiro_honte',
+    '01 網代本手｜正常位',
+    '傳統正常位；男方在上、女方仰躺，以正面全身呈現',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'missionary', 'boy on top', 'lying on back'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_02_ageha_honte',
+    '02 揚羽本手｜交纏正常位',
+    '正常位中雙腿交纏並相擁，以側面呈現',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'missionary', 'leg lock', 'hugging'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_03_ikada_honte',
+    '03 筏本手｜展腿正常位',
+    '女方仰躺展腿的正常位，由上方呈現身體配置',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'missionary', 'lying on back', 'legs apart'],
+    ['from above', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_04_sekirei_honte',
+    '04 鶺鴒本手｜動態正常位',
+    '以腰部動作強調傳統正常位，採正面膝上構圖',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'missionary', 'pelvic thrust', 'lying on back'],
+    ['front view', 'cowboy shot'],
+  ),
+  _adultPosePack(
+    'shijuhatte_05_kotobuki_honte',
+    '05 壽本手｜相擁正常位',
+    '面對面相擁的正常位，以側面全身呈現',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'missionary', 'face-to-face', 'hugging'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_06_horairi_honte',
+    '06 洞入本手｜抬腿正常位',
+    '變形正常位；女方仰躺抬腿，以側面呈現',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'missionary', 'lying on back', 'legs up'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_07_kasafune_honte',
+    '07 笠舟本手｜屈膝貼胸',
+    '雙膝收向胸前的折疊正常位，以側面呈現',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'missionary', 'folded', 'knees to chest'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_08_miyama_honte',
+    '08 深山本手｜壓腿正常位',
+    '以膝蓋貼胸的壓腿正常位近似，由上方呈現',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'mating press', 'knees to chest', 'legs up'],
+    ['from above', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_09_irifune_honte',
+    '09 入船本手｜正面座位',
+    '男方坐姿、雙方面對面直立跨坐，以側面呈現',
+    '四十八手・正常位',
+    ['sex', 'vaginal', 'upright straddle', 'face-to-face', 'sitting'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_10_karakusa_ichausu',
+    '10 唐草居茶臼｜面對面座位',
+    '雙方面對面坐姿跨坐，以正面全身呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'upright straddle', 'face-to-face', 'straddling'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_11_shinobi_ichausu',
+    '11 忍居茶臼｜相擁座位',
+    '在對方腿上相擁跨坐，以側面全身呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'upright straddle', 'sitting on lap', 'hugging'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_12_hamachidori',
+    '12 濱千鳥｜半側正常位',
+    '女方仰躺、男方半側身的正常位，以側面呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'missionary', 'on side', 'lying on side'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_13_yokobue',
+    '13 横笛｜面對面側位',
+    '雙方面對面側臥，以側面全身呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'on side', 'lying on side', 'face-to-face'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_14_kobore_matsuba',
+    '14 零松葉｜交纏側位',
+    '側臥並交纏腿部的交差式側位，由上方呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'on side', 'lying on side', 'leg lock'],
+    ['from above', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_15_kiku_ichimonji',
+    '15 菊一文字｜展腿側位',
+    '側臥展腿的交差式側位，以正面全身呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'on side', 'lying on side', 'legs apart'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_16_ukihashi',
+    '16 浮橋｜側臥相擁',
+    '兩人同向側臥相擁，以側面全身呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'spooning', 'on side', 'lying on side'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_17_yaetsubaki',
+    '17 八重椿｜面對面交差位',
+    '面對面側臥並交纏腿部，由上方呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'on side', 'face-to-face', 'leg lock'],
+    ['from above', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_18_tsubame_gaeshi',
+    '18 燕返｜背向交差位',
+    '側臥背向交差配置，以背面全身呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'sex from behind', 'on side', 'leg lock'],
+    ['rear view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_19_manji_kuzushi',
+    '19 卍崩｜扭身交差位',
+    '側臥交差並扭轉上身，以俯視呈現',
+    '四十八手・座位與側位',
+    ['sex', 'vaginal', 'on side', 'twisted torso', 'crossed legs'],
+    ['from above', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_20_defune_ushirodori',
+    '20 出船後取｜四足後入',
+    '四足姿勢的後背位，以背面全身呈現',
+    '四十八手・後背位',
+    ['sex', 'vaginal', 'doggystyle', 'sex from behind', 'all fours'],
+    ['rear view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_21_tsubushi_komagake',
+    '21 潰駒掛｜低身後入',
+    '身體壓低並跪姿後入，以背面全身呈現',
+    '四十八手・後背位',
+    ['sex', 'vaginal', 'sex from behind', 'kneeling', 'leaning forward'],
+    ['rear view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_22_hon_komagake',
+    '22 本駒掛｜背向座位',
+    '男方坐姿、女方背向直立跨坐，以背面呈現',
+    '四十八手・後背位',
+    [
+      'sex',
+      'vaginal',
+      'sex from behind',
+      'reverse upright straddle',
+      'sitting'
+    ],
+    ['rear view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_23_shimekomi_nishiki',
+    '23 〆込錦｜膝上後背座位',
+    '女方背向坐在對方腿上，以側面全身呈現',
+    '四十八手・後背位',
+    [
+      'sex',
+      'vaginal',
+      'sex from behind',
+      'reverse upright straddle',
+      'sitting on lap'
+    ],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_24_shimekomi_chidori',
+    '24 〆込千鳥｜仰躺背向騎乘',
+    '男方仰躺、女方背向騎乘，以側面呈現',
+    '四十八手・後背位',
+    [
+      'sex',
+      'vaginal',
+      'reverse cowgirl position',
+      'girl on top',
+      'lying on back'
+    ],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_25_ushiro_yagura',
+    '25 後櫓｜站立後入',
+    '站立俯身的後背位，以背面全身呈現',
+    '四十八手・後背位',
+    ['sex', 'vaginal', 'standing sex', 'sex from behind', 'bent over'],
+    ['rear view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_26_midare_botan',
+    '26 亂牡丹｜背面座位',
+    '背向坐姿騎乘，以背面全身呈現',
+    '四十八手・後背位',
+    [
+      'sex',
+      'vaginal',
+      'reverse cowgirl position',
+      'sitting on lap',
+      'straddling'
+    ],
+    ['rear view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_27_hon_chausu',
+    '27 本茶臼｜密著座位',
+    '面對面緊密相擁的直立跨坐，以正面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'upright straddle', 'face-to-face', 'hugging'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_28_ikada_chausu',
+    '28 筏茶臼｜前傾騎乘',
+    '女方在上並向前伸展貼近，以側面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'cowgirl position', 'girl on top', 'leaning forward'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_29_shigure_chausu',
+    '29 時雨茶臼｜女上位',
+    '標準女上位跨坐，以正面全身呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'cowgirl position', 'girl on top', 'straddling'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_30_hataori_chausu',
+    '30 機織茶臼｜蹲式女上位',
+    '女方蹲姿騎乘，以正面全身呈現',
+    '四十八手・騎乘與交差位',
+    [
+      'sex',
+      'vaginal',
+      'squatting cowgirl position',
+      'girl on top',
+      'squatting'
+    ],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_31_gosho_guruma',
+    '31 御所車｜交腿交差位',
+    '側臥並交叉腿部的變形交差位，由上方呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'on side', 'leg lock', 'crossed legs'],
+    ['from above', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_32_tsukimi_chausu',
+    '32 月見茶臼｜變形背向騎乘',
+    '背向坐姿的變形女上位，以背面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'reverse cowgirl position', 'girl on top', 'sitting'],
+    ['rear view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_33_takarabune',
+    '33 寶船｜相向交差位',
+    '面對面側臥並交叉腿部，以側面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'on side', 'face-to-face', 'crossed legs'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_34_karatake_wari',
+    '34 唐竹割｜展腿伸長位',
+    '仰躺展腿的伸長位，以正面全身呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'missionary', 'lying on back', 'spread legs'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_35_shigarami',
+    '35 笧｜過頭伸長位',
+    '仰躺並將雙腿越過頭部，以側面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'missionary', 'legs over head', 'folded'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_36_ikada_kuzushi',
+    '36 筏崩｜單腿伸長位',
+    '仰躺並伸出單腿的變形伸長位，以側面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'missionary', 'lying on back', 'outstretched leg'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_37_kuruwa_tsunagi',
+    '37 廓繋｜相擁交差位',
+    '側臥、相擁並交纏腿部，以側面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'on side', 'leg lock', 'hugging'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_38_kagerou',
+    '38 蜉蝣｜變形女上位',
+    '由女方主導的非常規騎乘姿勢，以正面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'amazon position', 'girl on top'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_39_kinuta',
+    '39 砧｜臀部相貼',
+    '兩人臀部方向相貼的特殊坐姿，以側面呈現',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'ass-to-ass', 'sitting'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_40_kurui_jishi',
+    '40 狂獅子｜相向展腿',
+    '雙方面對面展腿，使身體結合位置清楚可見',
+    '四十八手・騎乘與交差位',
+    ['sex', 'vaginal', 'face-to-face', 'sitting', 'legs apart'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_41_hanabishi_zeme',
+    '41 花菱責｜舔陰',
+    '女方仰躺展腿接受舔陰，以正面呈現',
+    '四十八手・口部與手部',
+    ['oral', 'cunnilingus', 'lying on back', 'legs apart'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_42_shakuhachi',
+    '42 尺八｜跪姿口交',
+    '跪姿進行陰莖口交，以側面全身呈現',
+    '四十八手・口部與手部',
+    ['oral', 'fellatio', 'kneeling'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_43_mukudori',
+    '43 椋鳥｜男上六九式',
+    '男方在上的六九式，以側面全身呈現',
+    '四十八手・口部與手部',
+    ['oral', '69', 'boy on top', 'lying'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_44_byakko_nishiki',
+    '44 白光錦｜陰道指交',
+    '女方仰躺展腿接受陰道指交，以正面呈現',
+    '四十八手・口部與手部',
+    ['fingering', 'vaginal fingering', 'lying on back', 'legs apart'],
+    ['front view', 'cowboy shot'],
+  ),
+  _adultPosePack(
+    'shijuhatte_45_sakasa_mukudori',
+    '45 逆椋鳥｜女上六九式',
+    '女方在上的六九式，以側面全身呈現',
+    '四十八手・口部與手部',
+    ['oral', '69', 'girl on top', 'lying'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_46_futatsu_domoe',
+    '46 二巴｜側臥六九式',
+    '雙方側臥進行六九式，以側面全身呈現',
+    '四十八手・口部與手部',
+    ['oral', '69', 'on side', 'lying on side'],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_47_tachi_kanae',
+    '47 立鼎｜面對面站立',
+    '雙方面對面站立交合，以正面全身呈現',
+    '四十八手・立位與懸空',
+    ['sex', 'vaginal', 'standing sex', 'standing', 'face-to-face'],
+    ['front view', 'full body'],
+  ),
+  _adultPosePack(
+    'shijuhatte_48_yagura_dachi',
+    '48 櫓立｜懸空抱持',
+    '站立抱起對方進行懸空交合，以側面全身呈現',
+    '四十八手・立位與懸空',
+    ['sex', 'vaginal', 'suspended congress', 'standing', 'carrying'],
+    ['side view', 'full body'],
   ),
 ];
 
@@ -2276,6 +3256,51 @@ List<TagItem> _expandedHairStyleTags() {
     ['hime_cut', '公主切', 'hime cut'],
     ['wolf_cut', '狼尾剪', 'wolf cut'],
     ['jellyfish_cut', '水母頭', 'jellyfish cut'],
+    ['buzz_cut', '寸頭', 'buzz cut'],
+    ['crew_cut', '平頭短髮', 'crew cut'],
+    ['undercut', '底層剃短髮', 'undercut'],
+    ['short_hair_long_locks', '短髮配長髮束', 'short hair with long locks'],
+    ['front_braid', '前額辮', 'front braid'],
+    ['half_crown_braid', '半皇冠辮', 'half crown braid'],
+    ['low_twin_braids', '低雙辮', 'low twin braids'],
+    ['cornrows', '貼頭辮', 'cornrows'],
+    ['dreadlocks', '雷鬼辮', 'dreadlocks'],
+    ['box_braids', '方格辮', 'box braids'],
+    ['half_up_braid', '半扎辮髮', 'half up braid'],
+    ['half_up_half_down_braid', '半扎半放辮髮', 'half up half down braid'],
+    ['single_hair_bun', '單髮髻', 'single hair bun'],
+    ['very_low_bun', '超低髮髻', 'very low bun'],
+    ['heart_hair_bun', '愛心髮髻', 'heart hair bun'],
+    ['hair_rings', '環狀髮髻', 'hair rings'],
+    ['half_updo', '半盤髮', 'half updo'],
+    ['one_side_up', '單側束髮', 'one side up'],
+    ['two_side_up', '雙側束髮', 'two side up'],
+    ['folded_ponytail', '折疊馬尾', 'folded ponytail'],
+    ['short_ponytail', '短馬尾', 'short ponytail'],
+    ['high_side_ponytail', '高側馬尾', 'high side ponytail'],
+    ['uneven_twintails', '不等長雙馬尾', 'uneven twintails'],
+    ['beehive_hairdo', '蜂巢高髮髻', 'beehive hairdo'],
+    ['quiff', '前額高梳髮', 'quiff'],
+    ['fluffy_hair', '蓬鬆髮', 'fluffy hair'],
+    ['choppy_bangs', '碎剪瀏海', 'choppy bangs'],
+    ['diagonal_bangs', '斜瀏海', 'diagonal bangs'],
+    ['fanged_bangs', '尖牙狀瀏海', 'fanged bangs'],
+    ['parted_bangs', '分線瀏海', 'parted bangs'],
+    ['middle_part', '中分', 'middle part'],
+    ['curtained_hair', '窗簾式分髮', 'curtained hair'],
+    ['swept_bangs', '側掃瀏海', 'swept bangs'],
+    ['sidelocks', '鬢髮', 'sidelocks'],
+    ['asymmetrical_sidelocks', '不對稱鬢髮', 'asymmetrical sidelocks'],
+    ['drill_sidelocks', '鑽頭捲鬢髮', 'drill sidelocks'],
+    ['heart_ahoge', '愛心呆毛', 'heart ahoge'],
+    ['huge_ahoge', '大型呆毛', 'huge ahoge'],
+    ['hair_pulled_back', '頭髮向後束起', 'hair pulled back'],
+    ['alternate_hairstyle', '替代髮型', 'alternate hairstyle'],
+    ['hair_down', '頭髮放下', 'hair down'],
+    ['hair_up', '頭髮盤起', 'hair up'],
+    ['asymmetrical_hair', '不對稱髮型', 'asymmetrical hair'],
+    ['sidecut', '側邊剃髮', 'sidecut'],
+    ['blunt_ends', '髮尾齊切', 'blunt ends'],
     ['asymmetrical_bob', '不對稱短髮', 'asymmetrical bob'],
     ['blunt_bob', '齊切短髮', 'blunt bob'],
     ['layered_long_hair', '層次長髮', 'layered long hair'],
@@ -2285,7 +3310,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['fluffy_short_hair', '蓬鬆短髮', 'fluffy short hair'],
     ['side_parted_hair', '側分長髮', 'side-parted hair'],
     ['center_parted_hair', '中分長髮', 'center-parted hair'],
-    ['slicked_back_hair', '後梳髮', 'slicked-back hair'],
+    ['slicked_back_hair', '後梳髮', 'hair slicked back'],
     ['half_up_hair', '半扎髮', 'half-up hair'],
     ['half_up_bun', '半丸子頭', 'half-up bun'],
     ['half_ponytail', '半馬尾', 'half ponytail'],
@@ -2313,7 +3338,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['short_sidelocks', '短鬢角', 'short sidelocks'],
     ['antenna_hair', '天線髮', 'antenna hair'],
     ['two_ahoge', '雙呆毛', 'two ahoge'],
-    ['flipped_out_hair', '外翹髮尾', 'flipped-out hair'],
+    ['flipped_out_hair', '外翹髮尾', 'flipped hair'],
     ['inward_curled_hair', '內彎髮尾', 'inward curled hair'],
     ['big_wavy_hair', '大波浪長髮', 'big wavy hair'],
     ['spiral_curls', '螺旋捲長髮', 'spiral curls'],
@@ -2340,7 +3365,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['u_cut_hair', 'U字長髮', 'U-cut hair'],
     ['princess_hair', '公主長髮', 'princess hair'],
     ['bouffant_hair', '高蓬髮型', 'bouffant hair'],
-    ['beehive_hair', '蜂巢高髮髻', 'beehive hair'],
+    ['beehive_hair', '蜂巢高髮髻（舊描述）', 'beehive hair'],
     ['pompadour', '龐巴度髮型', 'pompadour'],
     ['victory_rolls', '復古勝利捲', 'victory rolls'],
     ['finger_waves', '手指波浪捲', 'finger waves'],
@@ -2371,7 +3396,7 @@ List<TagItem> _expandedHairStyleTags() {
     ['side_chignon', '側邊盤髮', 'side chignon'],
     ['messy_bun', '凌亂丸子頭', 'messy bun'],
     ['space_buns', '雙太空包頭', 'space buns'],
-    ['heart_shaped_buns', '愛心雙髮髻', 'heart-shaped buns'],
+    ['heart_shaped_buns', '愛心雙髮髻（描述）', 'heart-shaped buns'],
     ['bow_shaped_hair', '蝴蝶結髮型', 'bow-shaped hair'],
     ['looped_ponytail', '環狀馬尾', 'looped ponytail'],
     ['looped_twintails', '環狀雙馬尾', 'looped twintails'],
@@ -2520,6 +3545,8 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hair_length'),
       _tag('hair_very_long', '髮長', '超長髮', 'very long hair', 1,
           conflictGroup: 'hair_length'),
+      _tag('hair_absurdly_long', '髮長', '極端超長髮', 'absurdly long hair', 1,
+          conflictGroup: 'hair_length'),
       _tag('hair_waist_length', '髮長', '及腰長髮', 'waist-length hair', 1,
           conflictGroup: 'hair_length'),
 
@@ -2536,7 +3563,7 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hair_style'),
       _tag('hair_messy', '髮型', '凌亂髮', 'messy hair', 1,
           conflictGroup: 'hair_style'),
-      _tag('hair_spiky', '髮型', '刺蝟頭', 'spiky hair', 1,
+      _tag('hair_spiky', '髮型', '尖刺髮', 'spiked hair', 1,
           conflictGroup: 'hair_style'),
       _tag('hair_ponytail', '髮型', '馬尾', 'ponytail', 1,
           conflictGroup: 'hair_style'),
@@ -3364,6 +4391,7 @@ List<TagItem> _seedTags() => [
       _tag('scene_simple_background', '場景', '簡單背景', 'simple background', 9),
       _tag('scene_evening_light', '畫面', '黃昏光線', 'evening light', 10,
           conflictGroup: 'lighting'),
+      _tag('frame_japanese_text', '畫面', '日文文字', 'japanese text', 10),
       _tag('camera_portrait', '畫面', '肖像構圖', 'portrait', 10),
       _tag('camera_full_body', '畫面', '全身', 'full body', 10),
       _tag('camera_upper_body', '畫面', '上半身', 'upper body', 10),
@@ -3467,6 +4495,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<Preset> _presets = <Preset>[];
   final List<PromptCombination> _combinations = <PromptCombination>[];
   final Map<int, Set<String>> _personCombinationIds = <int, Set<String>>{};
+  final Map<String, _OutfitReferenceResolution> _outfitReferenceCache =
+      <String, _OutfitReferenceResolution>{};
   final Map<String, TextEditingController> _personSearchControllers =
       <String, TextEditingController>{};
   final Map<int, GlobalKey> _stepKeys = <int, GlobalKey>{};
@@ -3512,8 +4542,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // The same prompt word (for example "black trim") is valid for every
       // clothing slot, so color groups must not be deduplicated together.
       final preserveClothingColorGroup = _isClothingColorGroup(tag.group);
-      final preserveTaxonomyGarment =
-          tag.id.startsWith('taxonomy_') && _isClothingBaseGroup(tag.group);
+      final preserveTaxonomyGarment = tag.id.startsWith('catalog_taxonomy_') &&
+          _isClothingBaseGroup(tag.group);
       final key = englishKey.isEmpty
           ? 'id:${tag.id}'
           : (_isScopedClothingGroup(tag.group) ||
@@ -3559,7 +4589,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _allClothingWearTagsCache = allWear;
     _hiddenTaxonomyDuplicateIdsCache = tags
         .where((tag) =>
-            tag.id.startsWith('taxonomy_') &&
+            tag.id.startsWith('catalog_taxonomy_') &&
             _isClothingBaseTag(tag) &&
             legacyClothingKeys.contains(
                 '${_clothingBaseDisplayGroup(tag)}:${_englishTagKey(tag.en)}'))
@@ -3576,6 +4606,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _clothingBasesByDisplayGroupCache = null;
     _hiddenTaxonomyDuplicateIdsCache = null;
     _allClothingWearTagsCache = null;
+    _outfitReferenceCache.clear();
   }
 
   Map<String, TagItem> get _tagsById {
@@ -9025,6 +10056,219 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         values.every((tag) => _isClothingGroup(tag.group));
   }
 
+  TagItem? _outfitReferenceExactTag(
+    Iterable<TagItem> candidates,
+    String value,
+  ) {
+    final key = _englishTagKey(value);
+    for (final tag in candidates) {
+      if (_englishTagKey(tag.en) == key) return tag;
+    }
+    return null;
+  }
+
+  _OutfitReferenceResolution _resolveOutfitReference(
+      OutfitReferencePresetData preset) {
+    final cached = _outfitReferenceCache[preset.id];
+    if (cached != null) return cached;
+
+    final tags = <TagItem>[];
+    final ids = <String>{};
+    final missing = <String>[];
+
+    void addTag(TagItem? tag, String label) {
+      if (tag == null) {
+        missing.add(label);
+        return;
+      }
+      if (ids.add(tag.id)) tags.add(tag);
+    }
+
+    for (final piece in preset.pieces) {
+      final baseCandidates = _allTags
+          .where(_isClothingBaseTag)
+          .where((tag) => _clothingScopeForBase(tag) == piece.scope)
+          .toList()
+        ..sort((a, b) {
+          final aTaxonomy = a.id.startsWith('catalog_taxonomy_') ? 0 : 1;
+          final bTaxonomy = b.id.startsWith('catalog_taxonomy_') ? 0 : 1;
+          return aTaxonomy.compareTo(bTaxonomy);
+        });
+      final base = _outfitReferenceExactTag(baseCandidates, piece.garment);
+      addTag(base, '${piece.garment}（服裝主體）');
+      if (base == null) continue;
+
+      TagItem? dimension(String kind, String value) => _outfitReferenceExactTag(
+            _tagsByGroup[_scopedClothingGroup(piece.scope, kind)] ??
+                const <TagItem>[],
+            value,
+          );
+
+      if (piece.cut != null) {
+        addTag(dimension('cut', piece.cut!), '${piece.garment}／${piece.cut}');
+      }
+      if (piece.fit != null) {
+        addTag(dimension('fit', piece.fit!), '${piece.garment}／${piece.fit}');
+      }
+      if (piece.length != null) {
+        addTag(dimension('length', piece.length!),
+            '${piece.garment}／${piece.length}');
+      }
+      for (final value in piece.materials) {
+        addTag(dimension('material', value), '${piece.garment}／$value');
+      }
+      for (final value in piece.details) {
+        addTag(dimension('detail', value), '${piece.garment}／$value');
+      }
+      for (final value in piece.patterns) {
+        addTag(dimension('pattern', value), '${piece.garment}／$value');
+      }
+      for (final value in piece.styles) {
+        final styleCandidates = _allTags.where((tag) {
+          if (_clothingScopeForTag(tag) != piece.scope) return false;
+          return _scopedClothingKind(tag.group) == 'style' ||
+              _isLegacyClothingStyleTag(tag);
+        });
+        addTag(_outfitReferenceExactTag(styleCandidates, value),
+            '${piece.garment}／$value');
+      }
+
+      if (piece.mainColor != null) {
+        final group = _clothingColorGroupForBase(base);
+        final color = group == null
+            ? null
+            : (_tagsByGroup[group] ?? const <TagItem>[])
+                .cast<TagItem?>()
+                .firstWhere(
+                  (tag) =>
+                      tag != null && _clothingColorWord(tag) == piece.mainColor,
+                  orElse: () => null,
+                );
+        addTag(color, '${piece.garment}／主色 ${piece.mainColor}');
+      }
+      if (piece.secondaryColor != null) {
+        final group = _clothingTrimColorGroupForBase(base);
+        final color = group == null
+            ? null
+            : (_tagsByGroup[group] ?? const <TagItem>[])
+                .cast<TagItem?>()
+                .firstWhere(
+                  (tag) =>
+                      tag != null &&
+                      _clothingColorWord(tag) == piece.secondaryColor,
+                  orElse: () => null,
+                );
+        addTag(color, '${piece.garment}／次色 ${piece.secondaryColor}');
+      }
+    }
+
+    void addOverall(String group, String? value) {
+      if (value == null) return;
+      addTag(
+        _outfitReferenceExactTag(
+            _tagsByGroup[group] ?? const <TagItem>[], value),
+        value,
+      );
+    }
+
+    addOverall(_outfitMainStyleGroup, preset.mainStyle);
+    addOverall(_outfitSubStyleGroup, preset.subStyle);
+    addOverall(_outfitMoodGroup, preset.mood);
+    addOverall(_outfitOccasionGroup, preset.occasion);
+    tags.sort(_compareOutputTags);
+    final resolution = _OutfitReferenceResolution(
+      tags: List<TagItem>.unmodifiable(tags),
+      missing: List<String>.unmodifiable(missing),
+    );
+    _outfitReferenceCache[preset.id] = resolution;
+    return resolution;
+  }
+
+  PromptCombination _outfitReferenceCombination(
+      OutfitReferencePresetData preset) {
+    final resolved = _resolveOutfitReference(preset);
+    return PromptCombination(
+      id: preset.combinationId,
+      name: preset.name,
+      tagIds: resolved.tags.map((tag) => tag.id).toList(),
+      extraPositive: '',
+    );
+  }
+
+  Future<void> _applyOutfitReference(
+      OutfitReferencePresetData preset, int personIndex) async {
+    final resolution = _resolveOutfitReference(preset);
+    if (resolution.missing.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('「${preset.name}」尚缺少：${resolution.missing.join('、')}'),
+      ));
+      return;
+    }
+    await _applyCombination(_outfitReferenceCombination(preset), personIndex);
+  }
+
+  Future<void> _showOutfitReferencePreview(
+      OutfitReferencePresetData preset, int personIndex) async {
+    final resolution = _resolveOutfitReference(preset);
+    final preview = _combinationPreviewTags(resolution.tags);
+    final apply = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(preset.name),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620, maxHeight: 560),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(preset.description),
+                const SizedBox(height: 8),
+                Text('配色：${preset.palette}',
+                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 14),
+                const Text('中文組合預覽',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                SelectableText(preview.map((tag) => tag.zh).join('。')),
+                const SizedBox(height: 14),
+                const Text('英文組合預覽',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                SelectableText(preview.map((tag) => '${tag.en}.').join(' ')),
+                if (resolution.missing.isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  Text(
+                    '尚缺少：${resolution.missing.join('、')}',
+                    style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('關閉'),
+          ),
+          FilledButton.icon(
+            onPressed: resolution.missing.isEmpty
+                ? () => Navigator.pop(dialogContext, true)
+                : null,
+            icon: const Icon(Icons.checkroom_outlined),
+            label: Text('套用到人物 ${personIndex + 1}'),
+          ),
+        ],
+      ),
+    );
+    if (apply == true && mounted) {
+      await _applyOutfitReference(preset, personIndex);
+    }
+  }
+
   List<_GeneratedOutputTag> _combinationPreviewTags(Iterable<TagItem> source) {
     final tags = source.toList()..sort(_compareOutputTags);
     final clothing = _clothingOutputTagsFromSelection(tags);
@@ -9444,7 +10688,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final clothingCombinationIds = _combinations
           .where((item) => _isClothingCombinationTags(_combinationTags(item)))
           .map((item) => item.id)
-          .toSet();
+          .toSet()
+        ..addAll(outfitReferencePresets.map((preset) => preset.combinationId));
       _personCombinationIds[personIndex]
           ?.removeWhere(clothingCombinationIds.contains);
     }
@@ -9867,7 +11112,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
 
       int rank(TagItem tag) {
-        if (activeGroup == '髮型' && tag.group == '髮色') return 1;
+        if (activeGroup == '髮型') {
+          if (tag.group == '髮色') return 2;
+          if (tag.group == '髮型') {
+            return _isOfficialHairStyleTag(tag) ? 0 : 1;
+          }
+        }
         if (activeGroup == '眼睛') return _isColorPickerTag(tag) ? 0 : 1;
         return 0;
       }
@@ -9983,6 +11233,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return _colorTagChip(tag, personIndex: personIndex, selected: selected);
     }
     final tone = _pickerLayerTone(tag.group);
+    final isHairStyle = tag.group == '髮型';
+    final officialHairStyle =
+        isHairStyle ? _isOfficialHairStyleTag(tag) : false;
+    final labelPrefix = isHairStyle
+        ? officialHairStyle
+            ? '官方｜'
+            : '描述｜'
+        : '';
     return ConstrainedBox(
       constraints: BoxConstraints(
         minWidth: _adaptiveChipLabelWidth(context) + (tag.adult ? 28 : 14),
@@ -9990,7 +11248,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       child: FilterChip(
         selected: selected,
         label: Text(
-          '${tag.zh}  ·  ${tag.en}',
+          '$labelPrefix${tag.zh}  ·  ${tag.en}',
           softWrap: true,
           style: TextStyle(
             color: _pickerLayerText(tone, selected: selected),
@@ -10003,7 +11261,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 color: selected
                     ? _pickerLayerText(tone, selected: true)
                     : const Color(0xffffa7b7))
-            : null,
+            : isHairStyle
+                ? Icon(
+                    officialHairStyle
+                        ? Icons.verified_outlined
+                        : Icons.auto_awesome_outlined,
+                    size: 16,
+                    color: selected
+                        ? _pickerLayerText(tone, selected: true)
+                        : officialHairStyle
+                            ? const Color(0xff4ade80)
+                            : const Color(0xfffbbf24),
+                  )
+                : null,
         padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
         labelPadding: EdgeInsets.zero,
         visualDensity: VisualDensity.standard,
@@ -10360,7 +11630,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         (tag) => Tooltip(
                           message: tag.en,
                           child: InputChip(
-                            label: Text(tag.zh),
+                            label: Text(tag.group == '髮型'
+                                ? '${_isOfficialHairStyleTag(tag) ? '官方' : '描述'}｜${tag.zh}'
+                                : tag.zh),
                             visualDensity: VisualDensity.compact,
                             backgroundColor: _pickerLayerSurface(
                               _pickerLayerTone(currentGroup),
@@ -10381,6 +11653,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ],
           ),
         ),
+        if (currentGroup == '髮型') ...[
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xff1f3b34),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: const Color(0xff4ade80)),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.verified_outlined,
+                    size: 19, color: Color(0xff4ade80)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '「官方」是 Danbooru Hair Styles 群組中的精確標籤，通常較容易被 Amanatsu 辨識；「描述」是髮廊名稱或自然語句，效果依模型而異，建議再搭配官方髮型、髮長與髮色。',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
         const SizedBox(height: 10),
         TextField(
           controller: personIndex == null ? _search : null,
@@ -10855,24 +12153,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: grouped.entries.expand((entry) {
-                    return <Widget>[
-                      Padding(
-                        padding: const EdgeInsets.only(top: 8, bottom: 7),
-                        child: Text(
+                  children: grouped.entries.map((entry) {
+                    return Theme(
+                      data: Theme.of(context).copyWith(
+                        dividerColor: Colors.transparent,
+                      ),
+                      child: ExpansionTile(
+                        key: PageStorageKey<String>(
+                          'adult-pose-package-${entry.key}',
+                        ),
+                        tilePadding: const EdgeInsets.symmetric(horizontal: 4),
+                        childrenPadding: const EdgeInsets.only(bottom: 10),
+                        title: Text(
                           '${entry.key}（${entry.value.length}）',
                           style: const TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w800,
                           ),
                         ),
+                        subtitle: const Text(
+                          '點一下展開姿勢套件',
+                          style: TextStyle(fontSize: 11),
+                        ),
+                        children: [
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: entry.value.map(packageChip).toList(),
+                            ),
+                          ),
+                        ],
                       ),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: entry.value.map(packageChip).toList(),
-                      ),
-                    ];
+                    );
                   }).toList(),
                 );
               },
@@ -11333,6 +12647,181 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Color _outfitReferenceTone(String category) => switch (category) {
+        '日常／學院' => const Color(0xff38bdf8),
+        '優雅／正式' => const Color(0xffa78bfa),
+        '甜美／浪漫' => const Color(0xfff472b6),
+        '街頭／運動' => const Color(0xfffb923c),
+        '奇幻／特色' => const Color(0xff818cf8),
+        _ => const Color(0xff94a3b8),
+      };
+
+  Widget _outfitReferencePicker(int personIndex) {
+    final categories = outfitReferencePresets
+        .map((preset) => preset.category)
+        .toSet()
+        .toList();
+    final stateKey = 'outfit-reference:$personIndex';
+    final stored = _personActiveGroups[stateKey];
+    final activeCategory = stored != null && categories.contains(stored)
+        ? stored
+        : categories.first;
+    final visible = outfitReferencePresets
+        .where((preset) => preset.category == activeCategory)
+        .toList();
+    final tone = _outfitReferenceTone(activeCategory);
+
+    return Card(
+      margin: const EdgeInsets.only(top: 8, bottom: 12),
+      clipBehavior: Clip.antiAlias,
+      color: tone.withOpacity(.08),
+      child: ExpansionTile(
+        key: PageStorageKey<String>('outfit-reference-$personIndex'),
+        leading: Icon(Icons.auto_awesome, color: tone),
+        title: Text(
+          '女子服裝靈感套裝（${outfitReferencePresets.length} 套）',
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: const Text('依類型查看與預覽；套用時只替換此人物目前的服裝設定'),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: categories.map((category) {
+                final selected = category == activeCategory;
+                final categoryTone = _outfitReferenceTone(category);
+                return ChoiceChip(
+                  avatar: Icon(
+                    selected ? Icons.check_circle : Icons.checkroom_outlined,
+                    size: 18,
+                    color: selected ? const Color(0xff171326) : categoryTone,
+                  ),
+                  label: Text(category),
+                  selected: selected,
+                  selectedColor: categoryTone,
+                  labelStyle: TextStyle(
+                    color: selected ? const Color(0xff171326) : Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  onSelected: (_) {
+                    setState(() => _personActiveGroups[stateKey] = category);
+                  },
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 720;
+              final cardWidth = compact
+                  ? constraints.maxWidth
+                  : (constraints.maxWidth - 12) / 2;
+              return Wrap(
+                spacing: 12,
+                runSpacing: 12,
+                children: visible.map((preset) {
+                  final resolution = _resolveOutfitReference(preset);
+                  final applied = _personCombinationIds[personIndex]
+                          ?.contains(preset.combinationId) ==
+                      true;
+                  return SizedBox(
+                    width: cardWidth,
+                    child: Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: applied
+                            ? tone.withOpacity(.24)
+                            : Theme.of(context)
+                                .colorScheme
+                                .surfaceVariant
+                                .withOpacity(.38),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: applied ? tone : tone.withOpacity(.48),
+                          width: applied ? 2 : 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  preset.name,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 15),
+                                ),
+                              ),
+                              if (applied)
+                                Icon(Icons.check_circle, color: tone, size: 20),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            preset.palette,
+                            style: TextStyle(
+                              color: tone,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(preset.description),
+                          if (resolution.missing.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              '缺少 ${resolution.missing.length} 個設定',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: 10),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: () => _showOutfitReferencePreview(
+                                    preset, personIndex),
+                                icon: const Icon(Icons.visibility_outlined,
+                                    size: 18),
+                                label: const Text('預覽'),
+                              ),
+                              FilledButton.icon(
+                                onPressed: resolution.missing.isEmpty
+                                    ? () => _applyOutfitReference(
+                                        preset, personIndex)
+                                    : null,
+                                icon: Icon(
+                                  applied
+                                      ? Icons.check
+                                      : Icons.checkroom_outlined,
+                                  size: 18,
+                                ),
+                                label: Text(applied ? '已套用' : '套用'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _stepClothing() {
     const garmentGroups = [
       '上衣',
@@ -11419,6 +12908,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       label: const Text('\u52A0\u5165\u7D44\u5408\u6A19\u7C64'),
                     ),
                   ),
+                  _outfitReferencePicker(index),
                   _pickerStage(
                     icon: Icons.checkroom_outlined,
                     tone: const Color(0xffffb454),
