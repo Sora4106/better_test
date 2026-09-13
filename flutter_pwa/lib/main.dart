@@ -170,6 +170,254 @@ class PromptCombination {
       );
 }
 
+class _AdultPosePackage {
+  const _AdultPosePackage({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.femaleCount,
+    required this.maleCount,
+    required this.personTags,
+    required this.frameTags,
+  });
+
+  final String id;
+  final String name;
+  final String description;
+  final int femaleCount;
+  final int maleCount;
+  final List<String> personTags;
+  final List<String> frameTags;
+}
+
+const _adultPosePackages = <_AdultPosePackage>[
+  _AdultPosePackage(
+    id: 'solo_fingering_seated_front',
+    name: '坐姿手指自慰・正面',
+    description: '坐姿、分腿，正面膝上構圖',
+    femaleCount: 1,
+    maleCount: 0,
+    personTags: [
+      'female masturbation',
+      'vaginal fingering',
+      'sitting',
+      'legs apart'
+    ],
+    frameTags: ['front view', 'cowboy shot'],
+  ),
+  _AdultPosePackage(
+    id: 'solo_fingering_lying_above',
+    name: '仰躺手指自慰・俯視',
+    description: '仰躺、抬腿，由上方拍攝全身',
+    femaleCount: 1,
+    maleCount: 0,
+    personTags: [
+      'female masturbation',
+      'vaginal fingering',
+      'lying on back',
+      'legs up',
+    ],
+    frameTags: ['from above', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'solo_clothed_rubbing_side',
+    name: '隔衣摩擦自慰・側面',
+    description: '隔著衣物摩擦，坐姿側面全身',
+    femaleCount: 1,
+    maleCount: 0,
+    personTags: [
+      'female masturbation',
+      'masturbation through clothes',
+      'crotch rub',
+      'sitting',
+    ],
+    frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'solo_pillow_humping_above',
+    name: '枕頭磨蹭・俯視',
+    description: '跪姿前傾，從上方呈現動作',
+    femaleCount: 1,
+    maleCount: 0,
+    personTags: [
+      'female masturbation',
+      'pillow humping',
+      'kneeling',
+      'leaning forward',
+    ],
+    frameTags: ['from above', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'solo_table_humping_side',
+    name: '桌緣磨蹭・側面',
+    description: '身體前傾靠近桌緣，側面構圖',
+    femaleCount: 1,
+    maleCount: 0,
+    personTags: [
+      'female masturbation',
+      'table humping',
+      'standing',
+      'leaning forward',
+    ],
+    frameTags: ['side view', 'cowboy shot'],
+  ),
+  _AdultPosePackage(
+    id: 'solo_vibrator_lying_low',
+    name: '按摩器仰躺・低角度',
+    description: '仰躺使用手持按摩器，低角度全身',
+    femaleCount: 1,
+    maleCount: 0,
+    personTags: [
+      'female masturbation',
+      'sex toy use',
+      'handheld vibrator',
+      'lying on back',
+    ],
+    frameTags: ['low-angle view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'solo_dildo_riding_front',
+    name: '假陽具騎乘・正面',
+    description: '直立跨坐騎乘，正面全身構圖',
+    femaleCount: 1,
+    maleCount: 0,
+    personTags: [
+      'female masturbation',
+      'dildo riding',
+      'upright straddle',
+    ],
+    frameTags: ['front view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_missionary_side',
+    name: '傳教士體位・側面',
+    description: '男方在上、女方仰躺，側面全身',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: ['sex', 'vaginal', 'missionary', 'boy on top', 'lying on back'],
+    frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_mating_press_above',
+    name: '交合壓腿式・俯視',
+    description: '膝蓋貼胸、雙腿抬起，由上方拍攝',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'mating press',
+      'knees to chest',
+      'legs up',
+    ],
+    frameTags: ['from above', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_cowgirl_low',
+    name: '女上位・低角度',
+    description: '女方跨坐在上，低角度全身',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'cowgirl position',
+      'girl on top',
+      'straddling'
+    ],
+    frameTags: ['low-angle view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_reverse_cowgirl_rear',
+    name: '背向女上位・背面',
+    description: '女方背向跨坐，背面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'reverse cowgirl',
+      'reverse upright straddle',
+    ],
+    frameTags: ['rear view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_doggy_rear',
+    name: '後入式・背面',
+    description: '四足姿勢後入，背面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'doggystyle',
+      'sex from behind',
+      'all fours'
+    ],
+    frameTags: ['rear view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_anal_doggy_rear',
+    name: '肛交後入式・背面',
+    description: '四足姿勢肛交，背面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: ['sex', 'anal', 'doggystyle', 'sex from behind', 'all fours'],
+    frameTags: ['rear view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_prone_bone_side',
+    name: '俯臥後入・側面',
+    description: '女方俯臥的後入姿勢，側面全身',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: ['sex', 'vaginal', 'prone bone', 'lying on stomach'],
+    frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_spooning_side',
+    name: '側臥相擁式・側面',
+    description: '兩人側臥相擁，側面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: ['sex', 'vaginal', 'spooning', 'on side', 'lying on side'],
+    frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_standing_side',
+    name: '站立性交・側面',
+    description: '雙方站立，側面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: ['sex', 'vaginal', 'standing sex', 'standing'],
+    frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_upright_straddle_front',
+    name: '正面直立跨坐',
+    description: '面對面直立跨坐，正面全身',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'upright straddle',
+      'face-to-face',
+      'straddling',
+    ],
+    frameTags: ['front view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_sixty_nine_side',
+    name: '六九式・側面',
+    description: '雙人口部互動，側面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: ['oral', '69', 'lying'],
+    frameTags: ['side view', 'full body'],
+  ),
+];
+
 class PersonSlot {
   PersonSlot({this.gender = '女性'});
 
@@ -3408,6 +3656,52 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         : <String>[_scopedClothingGroup(scope, 'wear')];
   }
 
+  Set<String> _clothingDependentGroupsForBase(TagItem base) => <String>{
+        ..._clothingStyleGroupsForBase(base),
+        ..._clothingDetailGroupsForBase(base),
+        ..._clothingWearGroupsForBase(base),
+        if (_clothingScopeForBase(base) == 'accessory') '配件位置',
+      };
+
+  void _removeOrphanedClothingConfiguration(
+    Set<String> selectedIds,
+    TagItem removedBase,
+  ) {
+    if (!_isClothingBaseTag(removedBase)) return;
+    final removedScope = _clothingScopeForBase(removedBase);
+    if (removedScope == null) return;
+
+    final remainingBases = selectedIds
+        .map((id) => _tagsById[id])
+        .whereType<TagItem>()
+        .where(_isClothingBaseTag)
+        .toList();
+    if (remainingBases
+        .any((base) => _clothingScopeForBase(base) == removedScope)) {
+      return;
+    }
+
+    final groupsToRemove = _clothingDependentGroupsForBase(removedBase);
+    final groupsStillUsed =
+        remainingBases.expand(_clothingDependentGroupsForBase).toSet();
+    groupsToRemove.removeAll(groupsStillUsed);
+    if (remainingBases.isEmpty) {
+      groupsToRemove.addAll(const {
+        _legacyClothingDetailGroup,
+        _legacyClothingMaterialGroup,
+        _legacyClothingWearGroup,
+        _outfitMainStyleGroup,
+        _outfitSubStyleGroup,
+        _outfitMoodGroup,
+        _outfitOccasionGroup,
+      });
+    }
+    selectedIds.removeWhere((id) {
+      final selected = _tagsById[id];
+      return selected != null && groupsToRemove.contains(selected.group);
+    });
+  }
+
   String? _clothingColorGroup(String group) {
     final scopedSlot = _scopedClothingSlot(group);
     if (scopedSlot != null) {
@@ -3885,10 +4179,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return value;
   }
 
-  List<_GeneratedOutputTag> _clothingOutputTagsForPerson(int personIndex) {
-    final selected = _selectedTagsForPerson(personIndex)
-        .where((tag) => _isClothingGroup(tag.group))
-        .toList();
+  List<_GeneratedOutputTag> _clothingOutputTagsFromSelection(
+    Iterable<TagItem> source, {
+    int? personIndex,
+  }) {
+    final selected =
+        source.where((tag) => _isClothingGroup(tag.group)).toList();
     final bases = _clothingDesignBases(selected);
     final consumed = <String>{};
     final result = <_GeneratedOutputTag>[];
@@ -4159,6 +4455,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     return result;
   }
+
+  List<_GeneratedOutputTag> _clothingOutputTagsForPerson(int personIndex) =>
+      _clothingOutputTagsFromSelection(
+        _selectedTagsForPerson(personIndex),
+        personIndex: personIndex,
+      );
 
   String? _hairColorWord(TagItem tag) {
     final value = _cleanTag(tag.en).toLowerCase();
@@ -6314,6 +6616,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (targetIds.contains(tag.id)) {
       setState(() {
         targetIds.remove(tag.id);
+        if (personIndex != null) {
+          _removeOrphanedClothingConfiguration(targetIds, tag);
+        }
         if (personIndex != null && _isCurrentCharacterTrait(personIndex, tag)) {
           final character = _characterForNew(_personSlots[personIndex]);
           for (final trait in character?.traits ?? const <CatalogTagData>[]) {
@@ -7006,6 +7311,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           removePersonTags(_isClothingGroup);
           break;
         case 5:
+          _removeAdultPosePackageTags();
           removePersonTags((group) =>
               poseGroups.contains(group) ||
               expandedPickerTagGroups.contains(group));
@@ -7247,6 +7553,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   void _setPeopleCount(int count) {
     setState(() {
+      if (count != _personSlots.length) {
+        _removeAdultPosePackageTags();
+      }
       while (_personSlots.length < count) _personSlots.add(PersonSlot());
       while (_personSlots.length > count) _personSlots.removeLast();
       _personSelectedIds.removeWhere((index, _) => index >= count);
@@ -7303,6 +7612,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
 
     setState(() {
+      _removeAdultPosePackageTags();
       _personSlots.removeAt(index);
       shiftMap(_personSelectedIds);
       shiftMap(_personCombinationIds);
@@ -8205,6 +8515,43 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return options;
   }
 
+  List<TagItem> _combinationTags(PromptCombination combination) {
+    final tags = combination.tagIds
+        .map((id) => _tagsById[id])
+        .whereType<TagItem>()
+        .toList();
+    tags.sort(_compareOutputTags);
+    return tags;
+  }
+
+  bool _isClothingCombinationTags(Iterable<TagItem> tags) {
+    final values = tags.toList();
+    return values.isNotEmpty &&
+        values.every((tag) => _isClothingGroup(tag.group));
+  }
+
+  List<_GeneratedOutputTag> _combinationPreviewTags(Iterable<TagItem> source) {
+    final tags = source.toList()..sort(_compareOutputTags);
+    final clothing = _clothingOutputTagsFromSelection(tags);
+    final covered = clothing.expand((tag) => tag.tagIds).toSet();
+    final other = tags
+        .where((tag) => !covered.contains(tag.id))
+        .map((tag) => _GeneratedOutputTag(
+              zh: tag.zh,
+              en: tag.en,
+              tagId: tag.id,
+              tagIds: [tag.id],
+            ));
+    return [...clothing, ...other];
+  }
+
+  void _removeCurrentClothingForCombination(Set<String> selectedIds) {
+    selectedIds.removeWhere((id) {
+      final tag = _tagsById[id];
+      return tag != null && _isClothingGroup(tag.group);
+    });
+  }
+
   Future<void> _saveClothingCombinationFromPerson(int personIndex) async {
     final clothingTags = _selectedTagsForPerson(personIndex)
         .where((tag) => _isClothingGroup(tag.group))
@@ -8215,6 +8562,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               '\u8ACB\u5148\u70BA\u6B64\u4EBA\u7269\u9078\u64C7\u670D\u88DD\u6A23\u5F0F')));
       return;
     }
+    final preview = _clothingOutputTagsFromSelection(clothingTags);
 
     final nameController = TextEditingController();
     final name = await showDialog<String>(
@@ -8228,15 +8576,36 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                  '\u5C07\u5132\u5B58\u4EBA\u7269 ${personIndex + 1} \u76EE\u524D\u7684\u670D\u88DD\u3001\u6A23\u5F0F\u3001\u984F\u8272\u3001\u7D30\u7BC0\u8207\u7A7F\u812B\u72C0\u614B\uFF08${clothingTags.length} \u500B\u6A19\u7C64\uFF09\u3002'),
+                  '將儲存人物 ${personIndex + 1} 目前的完整服裝配置（${clothingTags.length} 個設定，合成為 ${preview.length} 個輸出標籤）。'),
+              const SizedBox(height: 8),
+              const Text('新版服裝輸出預覽：',
+                  style: TextStyle(fontWeight: FontWeight.w700)),
+              const SizedBox(height: 6),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 220),
+                child: SingleChildScrollView(
+                  child: Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: preview
+                        .map((tag) => Chip(
+                              label: Text('${tag.zh} · ${tag.en}'),
+                              visualDensity: VisualDensity.compact,
+                            ))
+                        .toList(),
+                  ),
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: nameController,
                 autofocus: true,
                 textInputAction: TextInputAction.done,
-                decoration: const InputDecoration(
-                  labelText: '\u7D44\u5408\u4E2D\u6587\u540D\u7A31',
-                  hintText: '\u4F8B\u5982\u767D\u8272\u857E\u7D72\u6D0B\u88DD',
+                decoration: InputDecoration(
+                  labelText: '組合中文名稱',
+                  hintText: preview.isEmpty
+                      ? '例如白色蕾絲洋裝'
+                      : preview.map((tag) => tag.zh).join('、'),
                 ),
                 onSubmitted: (value) =>
                     Navigator.pop(dialogContext, value.trim()),
@@ -8543,15 +8912,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       PromptCombination combination, int personIndex) async {
     if (personIndex < 0 || personIndex >= _personSlots.length) return;
     final target = _personTagIds(personIndex);
-    final tags = combination.tagIds
-        .map((id) => _allTags.cast<TagItem?>().firstWhere(
-              (tag) => tag?.id == id,
-              orElse: () => null,
-            ))
-        .whereType<TagItem>()
-        .where((tag) => _showAdult || !tag.adult)
-        .toList();
-    final skippedAdult = combination.tagIds.length > tags.length;
+    final storedTags = _combinationTags(combination);
+    final tags = storedTags.where((tag) => _showAdult || !tag.adult).toList();
+    final skippedAdult = storedTags.length > tags.length;
+    final replacesClothing =
+        !skippedAdult && _isClothingCombinationTags(storedTags);
     final conflicts = <String, TagItem>{};
     for (final tag in tags) {
       for (final current in _selectedTagsForPerson(personIndex)) {
@@ -8578,6 +8943,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ),
       );
       if (replace != true) return;
+    }
+    if (replacesClothing) {
+      _removeCurrentClothingForCombination(target);
+      final clothingCombinationIds = _combinations
+          .where((item) => _isClothingCombinationTags(_combinationTags(item)))
+          .map((item) => item.id)
+          .toSet();
+      _personCombinationIds[personIndex]
+          ?.removeWhere(clothingCombinationIds.contains);
     }
     var added = 0;
     for (final tag in tags) {
@@ -8629,13 +9003,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               '\u5C1A\u7121\u7D44\u5408\u3002\u53EF\u5EFA\u7ACB\u5982\u300C\u5750\u5728\u6905\u5B50\u4E0A\u300D\u3001\u300C\u904B\u52D5\u59FF\u52E2\u300D\u7B49\u5FEB\u901F\u5957\u7528\u3002')
         else
           ..._combinations.map((combination) {
-            final tags = combination.tagIds
-                .map((id) => _allTags.cast<TagItem?>().firstWhere(
-                      (tag) => tag?.id == id,
-                      orElse: () => null,
-                    ))
-                .whereType<TagItem>()
-                .toList();
+            final tags = _combinationTags(combination);
+            final preview = _combinationPreviewTags(tags);
+            final isClothingCombination = _isClothingCombinationTags(tags);
             return Card(
               margin: const EdgeInsets.only(bottom: 10),
               child: Padding(
@@ -8663,13 +9033,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         ),
                       ],
                     ),
-                    if (tags.isNotEmpty)
+                    if (isClothingCombination)
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 6),
+                        child: Text(
+                          '完整服裝配置・套用時會以此配置替換人物目前服裝',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    if (preview.isNotEmpty)
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
-                        children: tags
+                        children: preview
                             .map((tag) => Chip(
-                                  label: Text(tag.en),
+                                  label: Text('${tag.zh} · ${tag.en}'),
                                   visualDensity: VisualDensity.compact,
                                 ))
                             .toList(),
@@ -9645,6 +10026,328 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  List<_AdultPosePackage> _matchingAdultPosePackages() {
+    final femaleCount =
+        _personSlots.where((slot) => slot.gender == '女性').length;
+    final maleCount = _personSlots.where((slot) => slot.gender == '男性').length;
+    final otherCount = _personSlots.length - femaleCount - maleCount;
+    return _adultPosePackages
+        .where((package) =>
+            package.femaleCount == femaleCount &&
+            package.maleCount == maleCount &&
+            otherCount == 0)
+        .toList();
+  }
+
+  int? _adultPosePackageAnchor(_AdultPosePackage package) {
+    if (package.femaleCount > 0) {
+      final index = _personSlots.indexWhere((slot) => slot.gender == '女性');
+      if (index >= 0) return index;
+    }
+    if (package.maleCount > 0) {
+      final index = _personSlots.indexWhere((slot) => slot.gender == '男性');
+      if (index >= 0) return index;
+    }
+    return _personSlots.isEmpty ? null : 0;
+  }
+
+  List<TagItem> _adultPosePackageTags(Iterable<String> englishTags) {
+    final seen = <String>{};
+    return englishTags
+        .map(_tagByEnglish)
+        .whereType<TagItem>()
+        .where((tag) => seen.add(tag.id))
+        .toList();
+  }
+
+  Set<String> get _adultPosePackagePersonTagIds => _adultPosePackageTags(
+        _adultPosePackages.expand((package) => package.personTags),
+      ).map((tag) => tag.id).toSet();
+
+  Set<String> get _adultPosePackageFrameTagIds => _adultPosePackageTags(
+        _adultPosePackages.expand((package) => package.frameTags),
+      ).map((tag) => tag.id).toSet();
+
+  List<TagItem> _selectedAdultPosePackageTags() {
+    final personIds = _adultPosePackagePersonTagIds;
+    final frameIds = _adultPosePackageFrameTagIds;
+    final ids = <String>{
+      ..._personSelectedIds.values
+          .expand((selected) => selected)
+          .where(personIds.contains),
+      ..._selectedIds.where(frameIds.contains),
+    };
+    return ids.map((id) => _tagsById[id]).whereType<TagItem>().toList()
+      ..sort(_compareOutputTags);
+  }
+
+  bool _adultPosePackageIsSelected(_AdultPosePackage package) {
+    final anchor = _adultPosePackageAnchor(package);
+    if (anchor == null) return false;
+    final personIds =
+        _adultPosePackageTags(package.personTags).map((tag) => tag.id).toSet();
+    final frameIds =
+        _adultPosePackageTags(package.frameTags).map((tag) => tag.id).toSet();
+    return personIds.isNotEmpty &&
+        _personTagIds(anchor).containsAll(personIds) &&
+        _selectedIds.containsAll(frameIds);
+  }
+
+  void _removeAdultPosePackageTags() {
+    final personIds = _adultPosePackagePersonTagIds;
+    final frameIds = _adultPosePackageFrameTagIds;
+    for (final selected in _personSelectedIds.values) {
+      selected.removeWhere(personIds.contains);
+    }
+    _personSelectedIds.removeWhere((_, ids) => ids.isEmpty);
+    _selectedIds.removeWhere(frameIds.contains);
+  }
+
+  Future<void> _clearAdultPosePackageTags() async {
+    final selected = _selectedAdultPosePackageTags();
+    if (selected.isEmpty) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('清除成人姿勢套件？'),
+        content: Text(
+          '會移除套件使用的 ${selected.length} 個姿勢、行為與鏡頭標籤；你另外加入且不屬於套件的標籤會保留。',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('確定清除'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    setState(() {
+      _removeAdultPosePackageTags();
+      _persist();
+    });
+  }
+
+  Future<void> _applyAdultPosePackage(_AdultPosePackage package) async {
+    if (!_showAdult) return;
+    final anchor = _adultPosePackageAnchor(package);
+    if (anchor == null || !_matchingAdultPosePackages().contains(package)) {
+      return;
+    }
+    final personTags = _adultPosePackageTags(package.personTags);
+    final frameTags = _adultPosePackageTags(package.frameTags);
+    final resolvedEnglish = {
+      ...personTags.map((tag) => _englishTagKey(tag.en)),
+      ...frameTags.map((tag) => _englishTagKey(tag.en)),
+    };
+    final missing = [...package.personTags, ...package.frameTags]
+        .where((tag) => !resolvedEnglish.contains(_englishTagKey(tag)))
+        .toList();
+    if (missing.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('套件缺少系統標籤：${missing.join(', ')}'),
+      ));
+      return;
+    }
+
+    final existing = _selectedAdultPosePackageTags();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('套用「${package.name}」？'),
+        content: SizedBox(
+          width: 620,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '此功能僅供所有登場人物皆為 18 歲以上的成年角色使用。請確認人物設定符合此條件。',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 10),
+                Text('目前人物組成：${_peopleZhNew()}'),
+                const SizedBox(height: 8),
+                Text(package.description),
+                const SizedBox(height: 10),
+                const Text('將套用：',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [...personTags, ...frameTags]
+                      .map((tag) => Chip(label: Text('${tag.zh} · ${tag.en}')))
+                      .toList(),
+                ),
+                if (existing.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    '目前其他套件使用的 ${existing.length} 個標籤會先移除；手動加入且不屬於套件的標籤會保留。',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('取消'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: const Text('確認成年並套用'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() {
+      _removeAdultPosePackageTags();
+      _personTagIds(anchor).addAll(personTags.map((tag) => tag.id));
+      _selectedIds.addAll(frameTags.map((tag) => tag.id));
+      _persist();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(
+        '已套用「${package.name}」：${personTags.length + frameTags.length} 個標籤',
+      ),
+    ));
+  }
+
+  Widget _adultPosePackagePanel() {
+    final packages = _matchingAdultPosePackages();
+    final selected = _selectedAdultPosePackageTags();
+    const tone = Color(0xffe8792e);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Color.alphaBlend(
+          tone.withValues(alpha: .12),
+          Theme.of(context).colorScheme.surface,
+        ),
+        border: Border.all(color: tone.withValues(alpha: .72)),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.local_fire_department_outlined, color: tone),
+              const SizedBox(width: 8),
+              const Expanded(
+                child: Text(
+                  '成人姿勢套件（限成年角色）',
+                  style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
+              ),
+              if (selected.isNotEmpty)
+                TextButton.icon(
+                  onPressed: _clearAdultPosePackageTags,
+                  icon: const Icon(Icons.clear_all, size: 18),
+                  label: const Text('清除套件'),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '目前：${_peopleZhNew()}。選擇套件會一次加入行為、體位、基本姿勢與鏡頭；更換套件時會替換其他套件標籤。',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (packages.isEmpty)
+            const Text('目前人物組成尚無預設套件；仍可在下方逐項選擇成人姿勢與行為。')
+          else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final columns = constraints.maxWidth >= 900
+                    ? 3
+                    : constraints.maxWidth >= 560
+                        ? 2
+                        : 1;
+                final width =
+                    (constraints.maxWidth - (columns - 1) * 8) / columns;
+                return Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: packages.map((package) {
+                    final active = _adultPosePackageIsSelected(package);
+                    final english = [
+                      ...package.personTags,
+                      ...package.frameTags,
+                    ].join(', ');
+                    return SizedBox(
+                      width: width,
+                      child: Tooltip(
+                        message: english,
+                        child: ChoiceChip(
+                          selected: active,
+                          onSelected: (value) {
+                            if (value) {
+                              unawaited(_applyAdultPosePackage(package));
+                            } else {
+                              unawaited(_clearAdultPosePackageTags());
+                            }
+                          },
+                          avatar: Icon(
+                            active
+                                ? Icons.check_circle
+                                : Icons.auto_awesome_outlined,
+                            size: 18,
+                          ),
+                          label: SizedBox(
+                            width: double.infinity,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  package.name,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  package.description,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                          labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 7,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
   Widget _stepCategorizedPersonTagPicker(
     Map<String, List<String>> sections, {
     required String nextLabel,
@@ -9667,6 +10370,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }),
         ),
         const SizedBox(height: 8),
+        if (_showAdult) _adultPosePackagePanel(),
         ..._personSlots.asMap().entries.map((entry) {
           final index = entry.key;
           final slot = entry.value;
@@ -10508,6 +11212,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                         value: value, child: Text(value)))
                                     .toList(),
                                 onChanged: (value) => setState(() {
+                                      if (value != null &&
+                                          value != slot.gender) {
+                                        _removeAdultPosePackageTags();
+                                      }
                                       slot.gender = value ?? slot.gender;
                                       _persist();
                                     }))),
