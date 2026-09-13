@@ -1,8 +1,15 @@
 window.BETTERWAIFU_VERSION = Object.freeze({
-  "version": "1.1.70",
-  "build": 72,
-  "label": "1.1.70+72",
+  "version": "1.1.71",
+  "build": 73,
+  "label": "1.1.71+73",
   "history": [
+    {
+      "version": "1.1.71",
+      "build": 73,
+      "label": "1.1.71+73",
+      "date": "2026-09-13",
+      "notes": "自動偵測：feat: add adult pose packs and sync clothing presets"
+    },
     {
       "version": "1.1.70",
       "build": 72,

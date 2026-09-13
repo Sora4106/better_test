@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.71+73 - 2026-09-13
+
+- 自動偵測：feat: add adult pose packs and sync clothing presets
+
+
 ## 1.1.70+72 - 2026-09-13
 
 - 自動偵測：feat: 新增貓咪嘴與多種嘴型標籤

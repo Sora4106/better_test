@@ -1,7 +1,7 @@
 name: betterwaifu_prompt_builder
 description: Local-first BetterWaifu Amanatsu prompt tag builder.
 publish_to: "none"
-version: 1.1.70+72
+version: 1.1.71+73
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -17,6 +17,7 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+
 
 
 
