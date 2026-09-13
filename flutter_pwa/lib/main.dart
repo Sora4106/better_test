@@ -2731,7 +2731,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Map<String, TextEditingController> _personSearchControllers =
       <String, TextEditingController>{};
   final Map<int, GlobalKey> _stepKeys = <int, GlobalKey>{};
+  final GlobalKey _pageScrollKey = GlobalKey(debugLabel: 'page-scroll');
   final GlobalKey _outputKey = GlobalKey(debugLabel: 'prompt-output');
+  final ScrollController _pageScrollController = ScrollController();
   final TextEditingController _search = TextEditingController();
   final TextEditingController _extraPositive = TextEditingController();
   final TextEditingController _reversePrompt = TextEditingController();
@@ -4536,6 +4538,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _reversePrompt.dispose();
     _negative.dispose();
     _preprompt.dispose();
+    _pageScrollController.dispose();
     for (final controller in _personSearchControllers.values) {
       controller.dispose();
     }
@@ -10224,29 +10227,55 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     // user starts at the top, middle, or bottom of the page.
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted) return;
-    final target = _stepKey(index).currentContext;
-    if (target == null) return;
-    await Scrollable.ensureVisible(
-      target,
-      alignment: 0,
-      alignmentPolicy: ScrollPositionAlignmentPolicy.explicit,
+    await _scrollKeyToTop(
+      _stepKey(index),
       duration: const Duration(milliseconds: 360),
-      curve: Curves.easeOutCubic,
     );
   }
 
   void _scrollToOutput() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final target = _outputKey.currentContext;
-      if (target == null) return;
-      Scrollable.ensureVisible(
-        target,
-        alignment: 0,
+      unawaited(_scrollKeyToTop(
+        _outputKey,
         duration: const Duration(milliseconds: 280),
-        curve: Curves.easeOutCubic,
-      );
+      ));
     });
+  }
+
+  Future<void> _scrollKeyToTop(
+    GlobalKey targetKey, {
+    required Duration duration,
+  }) async {
+    if (!_pageScrollController.hasClients) return;
+    final targetContext = targetKey.currentContext;
+    final scrollContext = _pageScrollKey.currentContext;
+    final targetBox = targetContext?.findRenderObject();
+    final scrollBox = scrollContext?.findRenderObject();
+    if (targetBox is! RenderBox || scrollBox is! RenderBox) return;
+
+    double destination() {
+      final targetTop = targetBox.localToGlobal(Offset.zero).dy;
+      final viewportTop = scrollBox.localToGlobal(Offset.zero).dy;
+      final position = _pageScrollController.position;
+      return (position.pixels + targetTop - viewportTop)
+          .clamp(position.minScrollExtent, position.maxScrollExtent)
+          .toDouble();
+    }
+
+    await _pageScrollController.animateTo(
+      destination(),
+      duration: duration,
+      curve: Curves.easeOutCubic,
+    );
+    if (!mounted || !_pageScrollController.hasClients) return;
+
+    // A large card can change the page extent while another card collapses.
+    // Recalculate after the animation so its header still lands at the top.
+    final corrected = destination();
+    if ((_pageScrollController.offset - corrected).abs() > 1) {
+      _pageScrollController.jumpTo(corrected);
+    }
   }
 
   void _openStep(int index) {
@@ -11530,6 +11559,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       body: Stack(
         children: [
           ListView(
+            key: _pageScrollKey,
+            controller: _pageScrollController,
             padding: EdgeInsets.fromLTRB(contentLeftPadding, 16, 16, 38),
             children: [
               ConstrainedBox(
