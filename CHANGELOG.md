@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.82+84 - 2026-09-14
+
+- 自動偵測：merge: sync remote version metadata
+
+
 ## 1.1.81+83 - 2026-09-14
 
 - 自動偵測：fix: complete base clothing color mappings
