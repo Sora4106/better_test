@@ -1,7 +1,14 @@
-const appVersion = '1.1.80';
-const appBuildNumber = 82;
-const appVersionLabel = '1.1.80+82';
+const appVersion = '1.1.81';
+const appBuildNumber = 83;
+const appVersionLabel = '1.1.81+83';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.81',
+    'build': '83',
+    'label': '1.1.81+83',
+    'date': '2026-09-14',
+    'notes': '補齊通用服裝、上衣、下身與配件的基本色映射；修正藍色旅行穿搭缺少灰色上衣設定'
+  },
   {
     'version': '1.1.80',
     'build': '82',

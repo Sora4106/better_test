@@ -3254,6 +3254,31 @@ List<TagItem> _clothingColorTags(
       .toList();
 }
 
+List<TagItem> _missingLegacyClothingColorTags() {
+  const existingColors = <String>{
+    'black',
+    'white',
+    'red',
+    'blue',
+    'pink',
+    'purple',
+    'green',
+    'yellow',
+    'multicolored',
+  };
+  return _clothingColors
+      .where((color) => !existingColors.contains(color[0]))
+      .map((color) => _tag(
+            'clothing_color_${color[0]}',
+            '服裝顏色',
+            '${color[1]}服裝',
+            '${color[0]} clothing',
+            2,
+            conflictGroup: 'clothing_color',
+          ))
+      .toList();
+}
+
 List<TagItem> _eyeColorTags() {
   const legacyIds = <String, String>{
     'green': 'trait_green_eyes',
@@ -3817,33 +3842,8 @@ List<TagItem> _seedTags() => [
       _tag('clothing_choker', '配件', '頸圈', 'choker', 2),
       _tag('clothing_hat', '配件', '帽子', 'hat', 2),
       _tag('clothing_glasses', '配件', '眼鏡', 'glasses', 2),
-      _tag('accessory_color_black', '配件顏色', '黑色配件', 'black accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_white', '配件顏色', '白色配件', 'white accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_red', '配件顏色', '紅色配件', 'red accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_blue', '配件顏色', '藍色配件', 'blue accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_pink', '配件顏色', '粉紅色配件', 'pink accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_purple', '配件顏色', '紫色配件', 'purple accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_green', '配件顏色', '綠色配件', 'green accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_yellow', '配件顏色', '黃色配件', 'yellow accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_brown', '配件顏色', '棕色配件', 'brown accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_gold', '配件顏色', '金色配件', 'gold accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_silver', '配件顏色', '銀色配件', 'silver accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_orange', '配件顏色', '橘色配件', 'orange accessory', 2,
-          conflictGroup: 'accessory_color'),
-      _tag('accessory_color_multicolored', '配件顏色', '多彩配件',
-          'multicolored accessory', 2,
-          conflictGroup: 'accessory_color'),
+      ..._clothingColorTags(
+          'accessory_color', '配件顏色', '配件', 'accessory', 'accessory_color'),
 
       // Additional underwear, sock and footwear styles.
       _tag('bra_underwire', '胸罩', '鋼圈胸罩', 'underwire bra', 2,
@@ -3904,6 +3904,10 @@ List<TagItem> _seedTags() => [
       _tag('geta', '鞋子', '木屐', 'geta', 2, conflictGroup: 'footwear'),
       _tag('roller_skates', '鞋子', '溜冰鞋', 'roller skates', 2,
           conflictGroup: 'footwear'),
+      ..._missingLegacyClothingColorTags(),
+      ..._clothingColorTags('top_color', '上衣顏色', '上衣', 'top', 'top_color'),
+      ..._clothingColorTags(
+          'bottom_color', '下身顏色', '下身', 'bottoms', 'bottom_color'),
       ..._clothingColorTags(
           'underwear_color', '內衣顏色', '內衣', 'underwear', 'underwear_top_color',
           adult: true),
