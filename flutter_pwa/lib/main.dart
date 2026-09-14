@@ -9,7 +9,7 @@ import 'app_version.dart';
 import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'expanded_tag_data.dart';
-import 'outfit_reference_data.dart';
+import 'outfit_reference_catalog.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
@@ -11503,6 +11503,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '頭部姿勢': Color(0xfff472b6),
       '手臂姿勢': Color(0xff60a5fa),
       '手部姿勢': Color(0xffa3e635),
+      '手指・指向方向': Color(0xfffacc15),
+      '手指・手勢形狀': Color(0xffa3e635),
+      '手指・嘴臉互動': Color(0xfff472b6),
+      '手指・細節動作': Color(0xff2dd4bf),
       '腿部姿勢': Color(0xff34d399),
       '動態姿勢': Color(0xffff8a4c),
       '動作': Color(0xfffb923c),
@@ -13045,6 +13049,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Color _outfitReferenceTone(String category) => switch (category) {
+        '藍色系列' => const Color(0xff38bdf8),
         '日常／正式' => const Color(0xff38bdf8),
         '優雅／正式' => const Color(0xffa78bfa),
         '甜美／浪漫' => const Color(0xfff472b6),

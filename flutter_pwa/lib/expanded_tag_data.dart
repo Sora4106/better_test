@@ -1,4 +1,5 @@
 import 'catalog_data.dart';
+import 'finger_gesture_data.dart';
 import 'single_person_pose_data.dart';
 
 String _expandedTagSlug(String value) => value
@@ -38,6 +39,7 @@ const expandedGeneralPoseGroups = <String>{
   '頭部姿勢',
   '手臂姿勢',
   '手部姿勢',
+  ...fingerGestureGroups,
   '腿部姿勢',
   '動態姿勢',
   '身體動作',
@@ -111,6 +113,10 @@ const expandedTagPickerSections = <String, List<String>>{
   '頭部姿勢': ['頭部姿勢'],
   '手臂姿勢': ['手臂姿勢'],
   '手勢與手部': ['手部姿勢'],
+  '手指指向': ['手指・指向方向'],
+  '手指手勢': ['手指・手勢形狀'],
+  '手指與嘴臉': ['手指・嘴臉互動'],
+  '手指細節動作': ['手指・細節動作'],
   '腿部與腳部': ['腿部姿勢'],
   '動態與運動': ['動態姿勢', '動作', '身體動作'],
   '親吻互動': ['親吻動作'],
@@ -147,6 +153,7 @@ const expandedTagPickerSections = <String, List<String>>{
 
 final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
   ...singlePersonPoseTags,
+  ...fingerGestureTags,
   ..._expandedTags(
     prefix: 'basic_pose',
     group: '坐姿與跪姿',

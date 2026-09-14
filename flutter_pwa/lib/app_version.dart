@@ -1,7 +1,21 @@
-const appVersion = '1.1.78';
-const appBuildNumber = 80;
-const appVersionLabel = '1.1.78+80';
+const appVersion = '1.1.80';
+const appBuildNumber = 82;
+const appVersionLabel = '1.1.80+82';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.80',
+    'build': '82',
+    'label': '1.1.80+82',
+    'date': '2026-09-14',
+    'notes': '新增 60 種手指動作；細分指向方向、手勢形狀、嘴臉互動與細節動作，並區分官方標籤及自然描述'
+  },
+  {
+    'version': '1.1.79',
+    'build': '81',
+    'label': '1.1.79+81',
+    'date': '2026-09-14',
+    'notes': '新增 38 套藍色系列服裝組合；涵蓋日常、正式、禮服、運動、街頭、傳統與奇幻穿搭'
+  },
   {
     'version': '1.1.78',
     'build': '80',

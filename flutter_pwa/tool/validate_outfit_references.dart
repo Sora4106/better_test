@@ -1,5 +1,6 @@
 import '../lib/clothing_taxonomy.dart';
-import '../lib/outfit_reference_data.dart';
+import '../lib/blue_outfit_reference_data.dart';
+import '../lib/outfit_reference_catalog.dart';
 
 const _colors = <String>{
   'black',
@@ -100,9 +101,13 @@ void main() {
   }
 
   final ids = outfitReferencePresets.map((preset) => preset.id).toList();
-  if (outfitReferencePresets.length != 30) {
+  if (outfitReferencePresets.length != 68) {
     problems
-        .add('Expected 30 presets, found ${outfitReferencePresets.length}.');
+        .add('Expected 68 presets, found ${outfitReferencePresets.length}.');
+  }
+  if (blueOutfitReferencePresets.length != 38) {
+    problems.add(
+        'Expected 38 blue presets, found ${blueOutfitReferencePresets.length}.');
   }
   if (ids.toSet().length != ids.length) {
     problems.add('Preset IDs are not unique.');
