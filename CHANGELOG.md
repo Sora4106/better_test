@@ -1,4 +1,9 @@
-﻿# 更新紀錄
+# 更新紀錄
+
+## 1.1.81+83 - 2026-09-14
+
+- 自動偵測：fix: complete base clothing color mappings
+
 
 ## 1.1.80+82 - 2026-09-14
 
