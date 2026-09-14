@@ -1,7 +1,14 @@
-const appVersion = '1.1.81';
-const appBuildNumber = 83;
-const appVersionLabel = '1.1.81+83';
+const appVersion = '1.1.82';
+const appBuildNumber = 84;
+const appVersionLabel = '1.1.82+84';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.82',
+    'build': '84',
+    'label': '1.1.82+84',
+    'date': '2026-09-14',
+    'notes': '移除表情與臉部特徵的互斥限制；眼睛、嘴巴、臉部細節與情緒可自由複數搭配'
+  },
   {
     'version': '1.1.81',
     'build': '83',

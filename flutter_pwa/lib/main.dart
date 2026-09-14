@@ -7955,7 +7955,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       expandedSexualActGroups.contains(tag.group);
 
   bool _isUnrestrictedCompositionTag(TagItem tag) =>
-      _isClothingGroup(tag.group) || _isPoseCompositionTag(tag);
+      _isClothingGroup(tag.group) ||
+      _isPoseCompositionTag(tag) ||
+      _isFaceExpressionTag(tag);
 
   String? _conflictGroup(TagItem tag) {
     if (_isOnePieceStyleTag(tag)) return 'onepiece_style';
@@ -8034,12 +8036,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     final firstGroup = _conflictGroup(first);
     final secondGroup = _conflictGroup(second);
-    if ((first.en == 'no mouth' &&
-            _expressionSubgroupForTag(second) == _expressionMouthGroup) ||
-        (second.en == 'no mouth' &&
-            _expressionSubgroupForTag(first) == _expressionMouthGroup)) {
-      return true;
-    }
     if (firstGroup != null && firstGroup == secondGroup) {
       if (firstGroup == 'top_style' || firstGroup == 'bottom_style') {
         return false;
