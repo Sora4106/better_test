@@ -21,14 +21,14 @@ const appVersionHistory = <Map<String, String>>[
     'build': '84',
     'label': '1.1.82+84',
     'date': '2026-09-14',
-    'notes': '移除表情與臉部特徵的互斥限制；眼睛、嘴巴、臉部細節與情緒可自由複數搭配'
+    'notes': '自動偵測：merge: sync remote version metadata'
   },
   {
     'version': '1.1.81',
     'build': '83',
     'label': '1.1.81+83',
     'date': '2026-09-14',
-    'notes': '補齊通用服裝、上衣、下身與配件的基本色映射；修正藍色旅行穿搭缺少灰色上衣設定'
+    'notes': '自動偵測：fix: complete base clothing color mappings'
   },
   {
     'version': '1.1.80',
