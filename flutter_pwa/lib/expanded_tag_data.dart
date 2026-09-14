@@ -1,4 +1,5 @@
 import 'catalog_data.dart';
+import 'single_person_pose_data.dart';
 
 String _expandedTagSlug(String value) => value
     .toLowerCase()
@@ -28,6 +29,7 @@ List<CatalogTagData> _expandedTags({
         .toList();
 
 const expandedGeneralPoseGroups = <String>{
+  ...singlePersonPoseGroups,
   '站立與蹲姿',
   '坐姿與跪姿',
   '躺臥姿勢',
@@ -96,6 +98,11 @@ const expandedPickerTagGroups = <String>{
 };
 
 const expandedTagPickerSections = <String, List<String>>{
+  '單人站姿／牆邊': ['單人・站姿', '單人・靠牆姿勢'],
+  '椅子／桌面': ['單人・椅子坐姿', '單人・桌邊姿勢'],
+  '地板／床上坐姿': ['單人・地板坐姿', '單人・床上坐姿'],
+  '仰躺／側躺': ['單人・仰躺姿勢', '單人・側躺姿勢'],
+  '俯臥／跪蹲': ['單人・俯臥姿勢', '單人・跪蹲姿勢'],
   '站立／蹲姿': ['站立與蹲姿'],
   '坐姿／跪姿': ['坐姿與跪姿'],
   '躺臥姿勢': ['躺臥姿勢'],
@@ -139,6 +146,7 @@ const expandedTagPickerSections = <String, List<String>>{
 };
 
 final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
+  ...singlePersonPoseTags,
   ..._expandedTags(
     prefix: 'basic_pose',
     group: '坐姿與跪姿',
