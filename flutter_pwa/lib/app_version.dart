@@ -1,7 +1,21 @@
-const appVersion = '1.1.82';
-const appBuildNumber = 84;
-const appVersionLabel = '1.1.82+84';
+const appVersion = '1.1.84';
+const appBuildNumber = 86;
+const appVersionLabel = '1.1.84+86';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.84',
+    'build': '86',
+    'label': '1.1.84+86',
+    'date': '2026-09-14',
+    'notes': '角色基本特徵與整套服裝分段加權；涵蓋髮色、髮長、身體、體型與角色替換後特徵，表情姿勢維持一般權重'
+  },
+  {
+    'version': '1.1.83',
+    'build': '85',
+    'label': '1.1.83+85',
+    'date': '2026-09-14',
+    'notes': '新增單手高舉蛋包飯、單手指愛心、站立與單腳向後翹起的俏皮姿勢組合'
+  },
   {
     'version': '1.1.82',
     'build': '84',

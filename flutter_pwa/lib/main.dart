@@ -4153,6 +4153,8 @@ List<TagItem> _seedTags() => [
           adult: true, conflictGroup: 'independent_pose_detail'),
       _tag('pose_one_leg_up', '腿部姿勢', '抬起單腳', 'one leg raised', 4,
           conflictGroup: 'leg_raise'),
+      _tag('pose_one_leg_kicked_back', '腿部姿勢', '單腳向後翹起',
+          'one leg raised behind', 4),
       _tag('pose_left_leg_up', '腿部姿勢', '抬起左腳', 'left leg raised', 4,
           conflictGroup: 'left_leg_raise'),
       _tag('pose_right_leg_up', '腿部姿勢', '抬起右腳', 'right leg raised', 4,
@@ -4247,6 +4249,9 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'object_interaction_mode'),
       _tag('action_holding_object', '動作', '拿著物件', 'holding object', 4,
           conflictGroup: 'object_interaction_mode'),
+      _tag('action_holding_object_overhead', '動作', '高舉物件',
+          'holding object overhead', 4,
+          conflictGroup: 'object_interaction_mode'),
       _tag('action_holding_staff', '動作', '手持法杖', 'holding staff', 4,
           conflictGroup: 'object_interaction_mode'),
       _tag('action_holding_magic_wand', '動作', '手持魔法棒', 'holding magic wand', 4,
@@ -4291,6 +4296,7 @@ List<TagItem> _seedTags() => [
       _tag('object_cup', '物件', '杯子', 'cup', 4),
       _tag('object_mug', '物件', '馬克杯', 'mug', 4),
       _tag('object_plate', '物件', '盤子', 'plate', 4),
+      _tag('object_omelet_rice', '物件', '蛋包飯', 'omelet rice', 4),
       _tag('object_fork', '物件', '叉子', 'fork', 4),
       _tag('object_spoon', '物件', '湯匙', 'spoon', 4),
       _tag('object_chopsticks', '物件', '筷子', 'chopsticks', 4),
@@ -6331,6 +6337,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return 'riding ${object.en}';
         case 'action_holding_object':
           return 'holding ${object.en}';
+        case 'action_holding_object_overhead':
+          return 'holding ${object.en} overhead';
         case 'action_holding_staff':
           return 'holding ${object.en}';
         case 'action_holding_magic_wand':
@@ -6356,6 +6364,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return '騎著${object.zh}';
         case 'action_holding_object':
           return '拿著${object.zh}';
+        case 'action_holding_object_overhead':
+          return '高舉${object.zh}';
         case 'action_holding_staff':
           return '手持${object.zh}';
         case 'action_holding_magic_wand':
@@ -6489,6 +6499,50 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _personPromptTags(personIndex)
           .where((tag) => _isFinalPersonOutputTag(personIndex, tag))
           .toList();
+
+  static const _characterWeightGroups = <String>{
+    '角色類型',
+    '角色標籤',
+    '自訂角色',
+    '自訂特徵',
+    '身體特徵',
+    '眼睛',
+    '胸部',
+    '裸露',
+    '髮色',
+    '髮長',
+    '髮型',
+    '額外特徵',
+    '額外特徵位置',
+    '額外特徵顏色',
+  };
+
+  bool _isCharacterWeightOutputTag(_GeneratedOutputTag output) {
+    if (output.characterTag) return true;
+    return output.tagIds.any((id) {
+      final tag = _tagsById[id];
+      return tag != null && _characterWeightGroups.contains(tag.group);
+    });
+  }
+
+  bool _isClothingWeightOutputTag(_GeneratedOutputTag output) {
+    return output.tagIds.any((id) {
+      final tag = _tagsById[id];
+      return tag != null && _isClothingGroup(tag.group);
+    });
+  }
+
+  String _weightedPromptBlock(
+    Iterable<_GeneratedOutputTag> tags, {
+    double weight = 1.15,
+  }) {
+    final values = tags
+        .map((tag) => _moderationSafePromptTag(tag.en))
+        .where((value) => value.isNotEmpty)
+        .toList();
+    if (values.isEmpty) return '';
+    return '(${values.join(', ')}:${weight.toStringAsFixed(2)}).';
+  }
 
   int get _personSelectedCount =>
       _personSelectedIds.values.fold(0, (total, ids) => total + ids.length);
@@ -7713,10 +7767,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final output = <String>[];
     final used = <String>{};
     void addTokens(Iterable<String> values) {
-      output.addAll(values
-          .map(_moderationSafePromptTag)
-          .where((value) => value.isNotEmpty && used.add(value.toLowerCase()))
-          .map((value) => '$value.'));
+      for (final value in values.map(_moderationSafePromptTag)) {
+        if (value.isNotEmpty && used.add(value.toLowerCase())) {
+          output.add('$value.');
+        }
+      }
+    }
+
+    void addWeightedTags(Iterable<_GeneratedOutputTag> values,
+        {required double weight}) {
+      final tags = <_GeneratedOutputTag>[];
+      final local = <String>{};
+      for (final tag in values) {
+        final value = _moderationSafePromptTag(tag.en);
+        if (value.isEmpty || !local.add(value.toLowerCase())) continue;
+        tags.add(tag);
+      }
+      final block = _weightedPromptBlock(tags, weight: weight);
+      if (block.isEmpty) return;
+      output.add(block);
+      for (final tag in tags) {
+        used.add(_moderationSafePromptTag(tag.en).toLowerCase());
+      }
     }
 
     addTokens(_peopleTokensNew());
@@ -7724,10 +7796,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final personal = _deduplicatePromptOutputTags([
         ..._characterOutputTagsForSlot(_personSlots[index], index),
         ..._personScopedPromptTags(index),
-      ], used: used);
+      ]);
       if (personal.isEmpty) continue;
-      output.add(
-          '(${personal.map((tag) => _moderationSafePromptTag(tag.en)).join(', ')}:1.15).');
+      addWeightedTags(
+        personal.where(_isCharacterWeightOutputTag),
+        weight: 1.15,
+      );
+      addWeightedTags(
+        personal.where(_isClothingWeightOutputTag),
+        weight: 1.15,
+      );
+      addTokens(personal
+          .where((tag) =>
+              !_isCharacterWeightOutputTag(tag) &&
+              !_isClothingWeightOutputTag(tag))
+          .map((tag) => tag.en));
     }
     for (var index = 0; index < _personSlots.length; index++) {
       addTokens(_personFinalPromptTags(index).map((tag) => tag.en));
@@ -7736,9 +7819,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return output.join(' ');
   }
 
-  String get _positiveText => _groupPeoplePrompt && _personSlots.length > 1
-      ? _groupedPositiveText()
-      : _positiveTokens.map((tag) => '$tag.').join(' ');
+  String get _positiveText {
+    final hasDetailedPerson = _personSlots.any((slot) => slot.detailed);
+    final usePersonWeights =
+        hasDetailedPerson && (_personSlots.length == 1 || _groupPeoplePrompt);
+    return usePersonWeights
+        ? _groupedPositiveText()
+        : _positiveTokens.map((tag) => '$tag.').join(' ');
+  }
 
   String get _positiveZh {
     final tokens = <String>[_peopleZhNew()];
@@ -13922,7 +14010,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           onChanged: (_) => setState(() {}),
           decoration: const InputDecoration(
               labelText: 'Amanatsu 品質前綴（可修改）',
-              helperText: '一般英文標籤會以英文句點分隔；多人分組加強會用括號區塊輸出。')),
+              helperText: '角色基本特徵與整套服裝會分別使用括號權重；表情、姿勢、動作與場景維持一般權重。')),
       const SizedBox(height: 10),
       TextField(
           controller: _extraPositive,
@@ -13998,9 +14086,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       SwitchListTile.adaptive(
           contentPadding: EdgeInsets.zero,
           value: _groupPeoplePrompt,
-          title: const Text('多人角色分組加強（括號權重）'),
+          title: const Text('人物特徵／服裝分段加強（括號權重）'),
           subtitle: const Text(
-              '兩人以上時，會將每位人物的角色、特徵、服裝、表情與一般動作分成獨立的 (…:1.15) 區塊；性行為、性姿勢、場景、視角與共同標籤會統一放在最後。'),
+              '每位人物的基本角色特徵與整套服裝會各自形成獨立的 (…:1.15) 區塊；表情、姿勢、動作、場景與共同標籤維持一般權重。'),
           onChanged: (value) => setState(() {
                 _groupPeoplePrompt = value;
                 _persist();
