@@ -7292,6 +7292,45 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
   }
 
+  Set<String> _exclusiveTraitOverrideGroups(String english) =>
+      _traitOverrideGroups(english).intersection(const {
+        'hair_color',
+        'hair_length',
+        'eye_color',
+        'body_type',
+        'breast_size',
+      });
+
+  bool _hasExplicitCharacterTraitOverride(
+      int index, CatalogCharacter character, Set<String> groups) {
+    if (groups.isEmpty) return false;
+    final originalIds = character.traits
+        .expand(_characterTraitOptions)
+        .map((tag) => tag.id)
+        .toSet();
+    return _selectedTagsForPerson(index).any((tag) =>
+        !originalIds.contains(tag.id) &&
+        _exclusiveTraitOverrideGroups(tag.en).intersection(groups).isNotEmpty);
+  }
+
+  void _removeOriginalCharacterTraitsForOverride(int index, TagItem tag) {
+    if (index < 0 || index >= _personSlots.length) return;
+    final character = _characterForNew(_personSlots[index]);
+    final groups = _exclusiveTraitOverrideGroups(tag.en);
+    if (character == null || groups.isEmpty) return;
+
+    final ids = _personTagIds(index);
+    for (final trait in character.traits) {
+      if (_exclusiveTraitOverrideGroups(trait.en)
+          .intersection(groups)
+          .isEmpty) {
+        continue;
+      }
+      _removedCharacterTagSet(index).add(_cleanTag(trait.en).toLowerCase());
+      ids.removeAll(_characterTraitOptions(trait).map((option) => option.id));
+    }
+  }
+
   void _resetCharacterFeatureSelections(
       int index, CatalogCharacter? previousCharacter) {
     if (index < 0 || index >= _personSlots.length) return;
@@ -7316,6 +7355,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final ids = _personTagIds(index);
     for (final trait in character.traits) {
       if (_isRemovedCharacterTag(index, trait.en)) continue;
+      final groups = _exclusiveTraitOverrideGroups(trait.en);
+      if (_hasExplicitCharacterTraitOverride(index, character, groups)) {
+        continue;
+      }
       ids.addAll(_characterTraitOptions(trait).map((tag) => tag.id));
     }
   }
@@ -8766,8 +8809,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           await _confirmCharacterOverride(tag, personIndex);
       if (!characterOverrideConfirmed) return;
     }
-    final conflicts =
-        currentTags.where((item) => _tagsConflict(item, tag)).toList();
+    final exclusiveGroups = _exclusiveTraitOverrideGroups(tag.en);
+    final conflicts = currentTags
+        .where((item) =>
+            _tagsConflict(item, tag) ||
+            (exclusiveGroups.isNotEmpty &&
+                _exclusiveTraitOverrideGroups(item.en)
+                    .intersection(exclusiveGroups)
+                    .isNotEmpty))
+        .toList();
     final onlyOriginalCharacterConflicts = personIndex != null &&
         characterOverrideConfirmed &&
         conflicts.isNotEmpty &&
@@ -8792,6 +8842,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (replace != true) return;
     }
     setState(() {
+      if (personIndex != null) {
+        _removeOriginalCharacterTraitsForOverride(personIndex, tag);
+      }
       for (final conflict in conflicts) {
         targetIds.remove(conflict.id);
       }

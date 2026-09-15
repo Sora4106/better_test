@@ -886,6 +886,7 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('光環', 'halo'),
     ('髮帶', 'headband'),
     ('蝴蝶結髮飾', 'hair bow'),
+    ('大蝴蝶結髮飾', 'large hair bow'),
     ('髮夾', 'hairclip'),
     ('髮飾', 'hair ornament'),
     ('髮帶蝴蝶結', 'hair ribbon'),
