@@ -2011,14 +2011,20 @@ const _clothingGroupPanties = '\u5167\u8932';
 const _clothingGroupSocks = '\u896A\u5B50';
 const _clothingGroupShoes = '\u978B\u5B50';
 const _clothingGroupAccessory = '\u914D\u4EF6';
+const _clothingGroupHat = '配件・帽子';
 const _clothingGroupHeadAccessory = '配件・頭部';
+const _clothingGroupHairAccessory = '配件・髮飾';
+const _clothingGroupEyewear = '配件・眼鏡';
 const _clothingGroupFaceAccessory = '配件・臉耳';
 const _clothingGroupNeckAccessory = '配件・頸肩';
 const _clothingGroupHandAccessory = '配件・手臂';
 const _clothingGroupWaistAccessory = '配件・腰部';
 const _clothingGroupOtherAccessory = '配件・其他';
 const _clothingAccessoryPickerGroups = <String>{
+  _clothingGroupHat,
   _clothingGroupHeadAccessory,
+  _clothingGroupHairAccessory,
+  _clothingGroupEyewear,
   _clothingGroupFaceAccessory,
   _clothingGroupNeckAccessory,
   _clothingGroupHandAccessory,
@@ -2038,7 +2044,10 @@ const _outfitMoodGroup = '服裝・氣質';
 const _outfitOccasionGroup = '服裝・場合';
 
 const _clothingGarmentPickerGroups = <String>[
+  _clothingGroupHat,
   _clothingGroupHeadAccessory,
+  _clothingGroupHairAccessory,
+  _clothingGroupEyewear,
   _clothingGroupFaceAccessory,
   _clothingGroupNeckAccessory,
   _clothingGroupOuterwear,
@@ -2157,12 +2166,22 @@ String _clothingScopedKindLabel(String kind) =>
 
 String _clothingAccessoryPickerGroup(TagItem tag) {
   final english = tag.en.toLowerCase();
-  if (RegExp(r'\b(hat|cap|beret|headband|hair|tiara|veil|crown)\b')
+  if (RegExp(r'\b(hair|hairband|hairclip|hairpin|barrette|headband)\b')
+      .hasMatch(english)) {
+    return _clothingGroupHairAccessory;
+  }
+  if (RegExp(r'\b(tiara|veil|crown|headdress|wreath|halo|headpiece|fascinator)\b')
       .hasMatch(english)) {
     return _clothingGroupHeadAccessory;
   }
-  if (RegExp(r'\b(glasses|mask|earring|ear cuff|eyewear)\b')
+  if (RegExp(r'\b(hat|cap|beret|helmet|hood)\b').hasMatch(english)) {
+    return _clothingGroupHat;
+  }
+  if (RegExp(r'\b(glasses|sunglasses|goggles|monocle|eyepatch|eyewear)\b')
       .hasMatch(english)) {
+    return _clothingGroupEyewear;
+  }
+  if (RegExp(r'\b(mask|earring|ear cuff)\b').hasMatch(english)) {
     return _clothingGroupFaceAccessory;
   }
   if (RegExp(r'\b(choker|necklace|necktie|neck ribbon|scarf|shawl|collar)\b')
@@ -3865,6 +3884,9 @@ List<TagItem> _seedTags() => [
       _tag('clothing_glasses', '配件', '眼鏡', 'glasses', 2),
       ..._clothingColorTags(
           'accessory_color', '配件顏色', '配件', 'accessory', 'accessory_color'),
+      ..._clothingColorTags('hat_color', '帽子顏色', '帽子', 'hat', 'hat_color'),
+      ..._clothingColorTags(
+          'eyewear_color', '眼鏡顏色', '眼鏡', 'eyewear', 'eyewear_color'),
 
       // Additional underwear, sock and footwear styles.
       _tag('bra_underwire', '胸罩', '鋼圈胸罩', 'underwire bra', 2,
@@ -3994,6 +4016,10 @@ List<TagItem> _seedTags() => [
           'outerwear_trim_color', '外套邊線色', '邊線', 'outerwear_trim_color'),
       ..._clothingTrimColorTags(
           'accessory_trim_color', '配件邊線色', '邊線', 'accessory_trim_color'),
+      ..._clothingTrimColorTags(
+          'hat_trim_color', '帽子邊線色', '邊線', 'hat_trim_color'),
+      ..._clothingTrimColorTags(
+          'eyewear_trim_color', '眼鏡邊線色', '邊線', 'eyewear_trim_color'),
       ..._extraFeaturePositionTags(),
       ..._extraFeatureColorTags(),
       ..._accessoryPositionTags(),
@@ -4866,67 +4892,93 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   int _outputGroupOrder(String group) {
     const order = <String, int>{
-      '身體特徵': 11,
-      '眼睛': 12,
-      '臉部特徵': 12,
-      '額外特徵': 13,
-      '角色標籤': 13,
-      '胸部': 14,
-      '裸露': 15,
-      '髮色': 16,
-      '髮長': 17,
-      '髮型': 18,
-      '服裝': 20,
-      '角色扮演': 21,
-      '服裝顏色': 22,
-      '上衣': 23,
-      '上衣風格': 24,
-      '上衣顏色': 25,
-      '褲子': 26,
-      '短褲': 26,
-      '裙子': 26,
-      '下身風格': 27,
-      '下身顏色': 28,
-      '內衣': 30,
-      '內衣顏色': 31,
-      '胸罩': 31,
-      '胸罩顏色': 32,
-      '內褲': 32,
-      '內褲顏色': 33,
-      '襪子': 33,
-      '襪子顏色': 34,
-      '鞋子': 34,
-      '鞋子顏色': 35,
-      '配件': 35,
-      '配件顏色': 36,
-      '外套': 29,
-      '外套顏色': 30,
-      '特殊服裝': 21,
-      _outfitMainStyleGroup: 37,
-      _outfitSubStyleGroup: 37,
-      _outfitMoodGroup: 38,
-      _outfitOccasionGroup: 39,
-      '服裝細節': 37,
-      '服裝細節顏色': 38,
-      '服裝材質': 38,
-      '穿脫狀態': 39,
-      '表情': 40,
-      '姿勢': 41,
-      '性行為': 42,
-      '性姿勢': 43,
-      '動作': 44,
-      '物件': 45,
-      '成人道具': 46,
-      '場景': 60,
-      '畫面': 61,
+      // 人物：由頭部、臉部一路排到身體，再進入服裝。
+      '角色類型': 8,
+      '角色標籤': 9,
+      '髮色': 10,
+      '髮長': 11,
+      '髮型': 12,
+      '眼睛': 13,
+      '臉部特徵': 14,
+      '表情': 14,
+      '額外特徵': 15,
+      '額外特徵位置': 16,
+      '額外特徵顏色': 17,
+      '身體特徵': 18,
+      '胸部': 19,
+      '裸露': 19,
+      // 服裝與配件：頭部 → 軀幹 → 下身 → 腿部 → 腳部。
+      '配件': 20,
+      '配件顏色': 21,
+      '服裝': 22,
+      '角色扮演': 23,
+      '外套': 24,
+      '外套顏色': 25,
+      '上衣': 26,
+      '上衣風格': 27,
+      '上衣顏色': 28,
+      '褲子': 29,
+      '短褲': 29,
+      '裙子': 29,
+      '下身風格': 30,
+      '下身顏色': 31,
+      '內衣': 32,
+      '內衣顏色': 33,
+      '胸罩': 33,
+      '胸罩顏色': 34,
+      '內褲': 34,
+      '內褲顏色': 35,
+      '襪子': 36,
+      '襪子顏色': 37,
+      '鞋子': 38,
+      '鞋子顏色': 39,
+      _outfitMainStyleGroup: 40,
+      _outfitSubStyleGroup: 40,
+      _outfitMoodGroup: 41,
+      _outfitOccasionGroup: 42,
+      '服裝細節': 40,
+      '服裝細節顏色': 41,
+      '服裝材質': 41,
+      '穿脫狀態': 42,
+      '姿勢': 43,
+      '性行為': 55,
+      '性姿勢': 56,
+      '動作': 50,
+      '物件': 51,
+      '成人道具': 57,
+      '場景': 70,
+      '畫面': 71,
     };
     if (expandedAdultClothingGroups.contains(group)) return 36;
     if (expandedSexualActGroups.contains(group)) return 42;
     if (expandedSexualPoseGroups.contains(group)) return 43;
     if (expandedGeneralPoseGroups.contains(group)) {
-      return const {'動態姿勢', '身體動作', '親吻動作', '多人互動', '角色姿勢'}.contains(group)
-          ? 44
-          : 41;
+      return switch (group) {
+        '頭部姿勢' => 43,
+        '手臂姿勢' => 44,
+        '手部姿勢' || '手指・指向方向' || '手指・手勢形狀' || '手指・嘴臉互動' || '手指・細節動作' => 45,
+        '軀幹姿勢' => 46,
+        '腿部姿勢' => 47,
+        '單人・站姿' ||
+        '單人・靠牆姿勢' ||
+        '站立與蹲姿' ||
+        '單人・椅子坐姿' ||
+        '單人・桌邊姿勢' ||
+        '單人・地板坐姿' ||
+        '單人・床上坐姿' ||
+        '坐姿與跪姿' ||
+        '單人・仰躺姿勢' ||
+        '單人・側躺姿勢' ||
+        '單人・俯臥姿勢' ||
+        '單人・跪蹲姿勢' ||
+        '躺臥姿勢' =>
+          48,
+        '全身姿勢' => 49,
+        '動態姿勢' || '動作' || '身體動作' => 50,
+        '物件' => 51,
+        '親吻動作' || '多人互動' || '角色姿勢' => 52,
+        _ => 53,
+      };
     }
     if (expandedAdultToolGroups.contains(group)) return 46;
     return order[group] ?? 50;
@@ -4971,6 +5023,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '配件',
         '配件位置',
         '配件顏色',
+        '帽子顏色',
+        '眼鏡顏色',
         '內衣顏色',
         '胸罩顏色',
         '內褲顏色',
@@ -5092,6 +5146,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '鞋子顏色',
         '外套顏色',
         '配件顏色',
+        '帽子顏色',
+        '眼鏡顏色',
         '服裝細節顏色',
       }.contains(group) ||
       group.endsWith('邊線色') ||
@@ -5261,7 +5317,46 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return scope != null &&
           !bases.any((base) => _clothingScopeForBase(base) == scope);
     }).toList();
-    return [...bases, ...fallbackStyles]..sort(_compareOutputTags);
+    return [...bases, ...fallbackStyles]..sort(_compareClothingBasesForOutput);
+  }
+
+  int _clothingBaseHeadToFootOrder(TagItem tag) {
+    final scope = _clothingScopeForBase(tag);
+    if (scope == 'accessory') {
+      return switch (_clothingAccessoryPickerGroup(tag)) {
+        _clothingGroupHat => 0,
+        _clothingGroupHeadAccessory => 1,
+        _clothingGroupHairAccessory => 2,
+        _clothingGroupEyewear => 3,
+        _clothingGroupFaceAccessory => 4,
+        _clothingGroupNeckAccessory => 5,
+        _clothingGroupHandAccessory => 6,
+        _clothingGroupWaistAccessory => 7,
+        _clothingGroupOtherAccessory => 8,
+        _ => 9,
+      };
+    }
+    return switch (scope) {
+      'outerwear' => 10,
+      'top' => 11,
+      'onepiece' || 'costume' => 12,
+      'pants' => 13,
+      'shorts' => 14,
+      'skirt' => 15,
+      'underwear' => 16,
+      'bra' => 17,
+      'panties' => 18,
+      'socks' => 19,
+      'shoes' => 20,
+      _ => 99,
+    };
+  }
+
+  int _compareClothingBasesForOutput(TagItem a, TagItem b) {
+    final headToFoot = _clothingBaseHeadToFootOrder(a)
+        .compareTo(_clothingBaseHeadToFootOrder(b));
+    if (headToFoot != 0) return headToFoot;
+    return _compareOutputTags(a, b);
   }
 
   String? _clothingScopeForTag(TagItem tag) {
@@ -5461,7 +5556,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'panties' => '內褲顏色',
         'socks' => '襪子顏色',
         'shoes' => '鞋子顏色',
-        'accessory' => '配件顏色',
+        'accessory' => switch (_clothingAccessoryPickerGroup(base)) {
+            _clothingGroupHat => '帽子顏色',
+            _clothingGroupEyewear => '眼鏡顏色',
+            _ => '配件顏色',
+          },
         _ => _clothingColorGroup(base.group),
       };
 
@@ -5476,7 +5575,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'panties' => '內褲邊線色',
         'socks' => '襪子邊線色',
         'shoes' => '鞋子邊線色',
-        'accessory' => '配件邊線色',
+        'accessory' => switch (_clothingAccessoryPickerGroup(base)) {
+            _clothingGroupHat => '帽子邊線色',
+            _clothingGroupEyewear => '眼鏡邊線色',
+            _ => '配件邊線色',
+          },
         _ => _clothingTrimColorGroup(base.group),
       };
 
@@ -9377,7 +9480,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '內褲' || '內褲顏色' || '內褲邊線色' => 'panties',
       '襪子' || '襪子顏色' || '襪子邊線色' => 'socks',
       '鞋子' || '鞋子顏色' || '鞋子邊線色' => 'shoes',
-      '配件' || '配件顏色' || '配件邊線色' || '配件位置' => 'accessory',
+      _clothingGroupHat ||
+      _clothingGroupHeadAccessory ||
+      _clothingGroupHairAccessory ||
+      _clothingGroupEyewear ||
+      _clothingGroupFaceAccessory ||
+      _clothingGroupNeckAccessory ||
+      _clothingGroupHandAccessory ||
+      _clothingGroupWaistAccessory ||
+      _clothingGroupOtherAccessory ||
+      '配件' ||
+      '配件顏色' ||
+      '帽子顏色' ||
+      '眼鏡顏色' ||
+      '配件邊線色' ||
+      '帽子邊線色' ||
+      '眼鏡邊線色' ||
+      '配件位置' =>
+        'accessory',
       _ => null,
     };
   }
@@ -9401,6 +9521,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝',
       _cosplayGroup,
       '配件',
+      ..._clothingAccessoryPickerGroups,
     }.contains(group);
     final tags = selected.where((tag) {
       if (_isExpressionPickerGroup(group)) {
@@ -9411,6 +9532,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             tag.group == _legacyClothingWearGroup;
       }
       if (isClothingBase && clothingScope != null) {
+        if (_clothingAccessoryPickerGroups.contains(group)) {
+          return _clothingBaseDisplayGroup(tag) == _clothingGroupAccessory &&
+              _clothingAccessoryPickerGroup(tag) == group;
+        }
         final tagScope = _clothingScopeForTag(tag) ??
             _clothingScopeForPickerGroup(tag.group);
         return tagScope == clothingScope;
@@ -11427,6 +11552,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     _cosplayGroup,
                     '配件',
                     '配件顏色',
+                    '帽子顏色',
+                    '眼鏡顏色',
                     '內衣顏色',
                     '胸罩顏色',
                     '內褲顏色',
@@ -11446,6 +11573,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '襪子邊線色',
                     '鞋子邊線色',
                     '配件邊線色',
+                    '帽子邊線色',
+                    '眼鏡邊線色',
                     '配件位置',
                     '服裝細節',
                     '服裝材質',
@@ -11537,6 +11666,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     _cosplayGroup,
                     '配件',
                     '配件顏色',
+                    '帽子顏色',
+                    '眼鏡顏色',
                     '上衣風格',
                     '下身風格',
                     '上衣顏色',
@@ -11551,6 +11682,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '襪子邊線色',
                     '鞋子邊線色',
                     '配件邊線色',
+                    '帽子邊線色',
+                    '眼鏡邊線色',
                     '服裝細節',
                     '服裝細節顏色',
                     '服裝材質',
@@ -11727,6 +11860,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (expandedSexualActGroups.contains(group)) {
       return const Color(0xfff97316);
     }
+    const accessoryTones = <String, Color>{
+      _clothingGroupHat: Color(0xffffb454),
+      _clothingGroupHeadAccessory: Color(0xfff59e0b),
+      _clothingGroupHairAccessory: Color(0xfff472b6),
+      _clothingGroupEyewear: Color(0xff60a5fa),
+      _clothingGroupFaceAccessory: Color(0xfffb7185),
+      _clothingGroupNeckAccessory: Color(0xffc084fc),
+      _clothingGroupHandAccessory: Color(0xff38bdf8),
+      _clothingGroupWaistAccessory: Color(0xfffacc15),
+      _clothingGroupOtherAccessory: Color(0xff94a3b8),
+    };
+    final accessoryTone = accessoryTones[group];
+    if (accessoryTone != null) return accessoryTone;
     final kind = _scopedClothingKind(group);
     if (_isClothingBaseGroup(group) ||
         _clothingAccessoryPickerGroups.contains(group) ||
@@ -11910,6 +12056,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '鞋子顏色': '鞋子主色',
       '外套顏色': '外套主色',
       '配件顏色': '配件主色',
+      '帽子顏色': '帽子主色',
+      '眼鏡顏色': '眼鏡主色',
       '服裝邊線色': '連身裝次色',
       '上衣邊線色': '上衣次色',
       '下身邊線色': '下身次色',
@@ -11920,11 +12068,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '鞋子邊線色': '鞋子次色',
       '外套邊線色': '外套次色',
       '配件邊線色': '配件次色',
+      '帽子邊線色': '帽子次色',
+      '眼鏡邊線色': '眼鏡次色',
     };
     final clothingColorLabel = clothingColorLabels[group];
     if (clothingColorLabel != null) return clothingColorLabel;
     if (group == _allClothingWearGroup) return '\u7A7F\u812B\u72C0\u614B';
     if (group == _cosplayGroup) return 'Cosplay／角色扮演';
+    if (group == _clothingGroupHat) return '帽子／頭戴';
+    if (group == _clothingGroupHairAccessory) return '髮飾';
+    if (group == _clothingGroupEyewear) return '眼鏡／眼罩';
+    if (group == _clothingGroupHeadAccessory) return '其他頭部配件';
     if (group == '褲子') return '下身／褲子';
     if (group == '短褲') return '下身／短褲';
     if (group == '服裝') return '連身裙／洋裝';
@@ -13021,7 +13175,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '襪子' => 'socks',
       '鞋子' => 'shoes',
       '配件' => 'accessory',
+      _clothingGroupHat ||
       _clothingGroupHeadAccessory ||
+      _clothingGroupHairAccessory ||
+      _clothingGroupEyewear ||
       _clothingGroupFaceAccessory ||
       _clothingGroupNeckAccessory ||
       _clothingGroupHandAccessory ||
@@ -14277,22 +14434,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .ifEmpty('尚未選擇'),
           Icons.face_retouching_natural,
           _stepPersonTagPicker([
-            '身體特徵',
-            '眼睛',
-            '額外特徵',
-            '額外特徵位置',
-            '額外特徵顏色',
             '髮長',
             '髮型',
             _expressionEyesGroup,
             _expressionMouthGroup,
             _expressionOtherGroup,
+            '眼睛',
+            '額外特徵',
+            '額外特徵位置',
+            '額外特徵顏色',
+            '身體特徵',
             '胸部',
             '裸露',
           ],
               nextLabel: '下一步：服裝',
               instruction:
-                  '請在每位人物自己的區塊內設定身體、眼睛、髮長、髮型、額外特徵，以及表情中的眼睛、嘴巴或其他臉部細節；髮色會在髮長與髮型分類中置於下方。'),
+                  '請依頭部到身體的順序設定每位人物：髮長、髮型、眼睛與臉部表情，再設定額外特徵、身體特徵、胸部與裸露；髮色會在髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
       _stepCard(
           4,
@@ -14312,11 +14469,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '服裝',
                     _cosplayGroup,
                     '配件',
+                    '配件顏色',
+                    '帽子顏色',
+                    '眼鏡顏色',
                     '上衣風格',
                     '下身風格',
                     '上衣顏色',
                     '下身顏色',
                     '服裝顏色',
+                    '帽子邊線色',
+                    '眼鏡邊線色',
                     '服裝細節',
                     '服裝細節顏色',
                     '服裝材質',
