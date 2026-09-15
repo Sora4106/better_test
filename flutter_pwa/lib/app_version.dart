@@ -1,7 +1,14 @@
-const appVersion = '1.1.88';
-const appBuildNumber = 90;
-const appVersionLabel = '1.1.88+90';
+const appVersion = '1.1.89';
+const appBuildNumber = 91;
+const appVersionLabel = '1.1.89+91';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.89',
+    'build': '91',
+    'label': '1.1.89+91',
+    'date': '2026-09-15',
+    'notes': '移除單機版與部署副路徑，儲存庫及 GitHub Pages 僅保留 Flutter Web PWA'
+  },
   {
     'version': '1.1.88',
     'build': '90',

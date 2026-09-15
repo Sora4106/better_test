@@ -37,9 +37,6 @@ $newData = [ordered]@{
 $json = $newData | ConvertTo-Json -Depth 8
 Set-Content -LiteralPath $versionPath -Value $json -Encoding UTF8
 
-$versionJs = 'window.BETTERWAIFU_VERSION = Object.freeze(' + $json + ');' + [Environment]::NewLine
-Set-Content -LiteralPath (Join-Path $projectRoot 'standalone_web/version.js') -Value $versionJs -Encoding UTF8
-
 $dartHistory = ($history | ForEach-Object {
   $safeNotes = $_.notes.Replace([string][char]39, ([string][char]92 + [string][char]39))
   "  {'version': '$($_.version)', 'build': '$($_.build)', 'label': '$($_.label)', 'date': '$($_.date)', 'notes': '$safeNotes'},"

@@ -1,4 +1,4 @@
-name: Build and deploy Prompt Atelier
+name: Build and deploy BetterWaifu PWA
 
 on:
   push:
@@ -43,7 +43,7 @@ jobs:
           pwsh -NoProfile -File tools/update-version.ps1 -Notes $note
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add version.json CHANGELOG.md standalone_web/version.js flutter_pwa/lib/app_version.dart flutter_pwa/pubspec.yaml
+          git add version.json CHANGELOG.md flutter_pwa/lib/app_version.dart flutter_pwa/pubspec.yaml
           git commit -m 'chore: auto append version [skip ci]'
           git push
 
@@ -61,9 +61,8 @@ jobs:
 
       - name: Assemble Pages site
         run: |
-          mkdir -p _site/standalone
+          mkdir -p _site
           cp -R flutter_pwa/build/web/. _site/
-          cp -R standalone_web/. _site/standalone/
 
       - name: Configure Pages
         uses: actions/configure-pages@v5
