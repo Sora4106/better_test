@@ -1539,7 +1539,7 @@ const blueOutfitReferencePresets = <OutfitReferencePresetData>[
       ),
       OutfitPiecePresetData(
         scope: 'top',
-        garment: 'collared blouse',
+        garment: 'button-up shirt',
         mainColor: 'light blue',
         secondaryColor: 'white',
         cut: 'long sleeves',

@@ -10959,6 +10959,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             value,
           );
 
+      TagItem? colorForGroup(String? group, String color) {
+        if (group == null) return null;
+        final expected = _englishTagKey(color);
+        return (_tagsByGroup[group] ?? const <TagItem>[])
+            .cast<TagItem?>()
+            .firstWhere(
+              (tag) {
+                if (tag == null) return false;
+                final tagColor = _clothingColorWord(tag);
+                if (tagColor == color) return true;
+                final tagKey = _englishTagKey(tag.en);
+                return tagKey == expected || tagKey.startsWith('$expected ');
+              },
+              orElse: () => null,
+            );
+      }
+
       if (piece.cut != null) {
         addTag(dimension('cut', piece.cut!), '${piece.garment}／${piece.cut}');
       }
@@ -10989,34 +11006,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
 
       if (piece.mainColor != null) {
-        final group = _clothingColorGroupForBase(base);
-        final color = group == null
-            ? null
-            : (_tagsByGroup[group] ?? const <TagItem>[])
-                .cast<TagItem?>()
-                .firstWhere(
-                  (tag) =>
-                      tag != null && _clothingColorWord(tag) == piece.mainColor,
-                  orElse: () => null,
-                );
+        final color = colorForGroup(
+          _clothingColorGroupForBase(base),
+          piece.mainColor!,
+        );
         addTag(color, '${piece.garment}／主色 ${piece.mainColor}');
       }
       if (piece.secondaryColor != null) {
-        final group = _clothingTrimColorGroupForBase(base);
-        final color = group == null
-            ? null
-            : (_tagsByGroup[group] ?? const <TagItem>[])
-                .cast<TagItem?>()
-                .firstWhere(
-                  (tag) =>
-                      tag != null &&
-                      _clothingColorWord(tag) == piece.secondaryColor,
-                  orElse: () => null,
-                );
+        final color = colorForGroup(
+          _clothingTrimColorGroupForBase(base),
+          piece.secondaryColor!,
+        );
         addTag(color, '${piece.garment}／次色 ${piece.secondaryColor}');
       }
       if (piece.detailColor != null) {
-        final color = dimension('detail_color', piece.detailColor!);
+        final color = colorForGroup(
+          _scopedClothingGroup(piece.scope, 'detail_color'),
+          piece.detailColor!,
+        );
         addTag(color, '${piece.garment}／細節色 ${piece.detailColor}');
       }
     }
