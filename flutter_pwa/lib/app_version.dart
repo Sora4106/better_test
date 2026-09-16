@@ -1,8 +1,8 @@
-﻿const appVersion = '1.1.91';
+const appVersion = '1.1.91';
 const appBuildNumber = 93;
 const appVersionLabel = '1.1.91+93';
 const appVersionHistory = <Map<String, String>>[
-  {'version': '1.1.91', 'build': '93', 'label': '1.1.91+93', 'date': '2026-09-16', 'notes': '模板套用改為可修改副本；同部位顏色、款式、剪裁與長度可取代；修正隱藏上衣未勾選與次色 trim trim；重做深藍白色分層裙裝'},
+  {'version': '1.1.91', 'build': '93', 'label': '1.1.91+93', 'date': '2026-09-16', 'notes': '自動偵測：fix: make outfit templates editable'},
   {'version': '1.1.90', 'build': '92', 'label': '1.1.90+92', 'date': '2026-09-16', 'notes': '修正髮色替換時多色累積，角色原始髮色會被新髮色完整覆蓋；新增大蝴蝶結髮飾'},
   {'version': '1.1.89', 'build': '91', 'label': '1.1.89+91', 'date': '2026-09-15', 'notes': '移除單機版與部署副路徑，儲存庫及 GitHub Pages 僅保留 Flutter Web PWA'},
   {'version': '1.1.88', 'build': '90', 'label': '1.1.88+90', 'date': '2026-09-15', 'notes': '新增帽子與眼鏡獨立分類及 34 種樣式；帽子與眼鏡各自提供主色與次色，不會互相覆蓋；角色特徵、服裝配件與一般姿勢依頭到腳順序重整，並以分類色彩強化辨識'},
