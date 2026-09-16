@@ -4728,6 +4728,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _stepIndex = 0;
   bool _showAdult = false;
   bool _groupPeoplePrompt = true;
+  static const double _minimumPromptWeight = 0.50;
+  static const double _maximumPromptWeight = 1.50;
+  static const double _defaultPromptWeight = 1.15;
+  double _characterPromptWeight = _defaultPromptWeight;
+  double _clothingPromptWeight = _defaultPromptWeight;
 
   List<TagItem> get _allTags {
     final cached = _allTagsCache;
@@ -5473,6 +5478,75 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final selected = _tagsById[id];
       return selected != null && groupsToRemove.contains(selected.group);
     });
+  }
+
+  /// Clothing selections are generally composable, but these fields describe
+  /// one concrete value for one garment slot.  Treating them as replacements
+  /// lets an applied outfit reference act as a one-time starting point: the
+  /// user can immediately change a shirt's colour/cut/style without retaining
+  /// the reference's previous value.
+  String? _editableClothingSelectionKey(TagItem tag) {
+    if (!_isClothingGroup(tag.group)) return null;
+
+    final scope = _clothingScopeForTag(tag);
+    final kind = _scopedClothingKind(tag.group);
+    if (scope != null &&
+        const {'style', 'cut', 'fit', 'length', 'detail_color'}
+            .contains(kind)) {
+      return '$scope:$kind';
+    }
+
+    if (_isClothingBaseTag(tag)) {
+      final baseScope = _clothingScopeForBase(tag);
+      return baseScope == null ? null : '$baseScope:base';
+    }
+
+    // Legacy colour/style groups remain in saved prompts and older custom
+    // combinations.  Their conflict key is the stable way to replace only
+    // the matching component (for example top_color or shoes_trim_color).
+    final conflict = _conflictGroup(tag);
+    if (conflict == null) return null;
+    if (conflict == 'clothing_color' ||
+        conflict.endsWith('_color') ||
+        conflict.endsWith('_trim_color') ||
+        conflict.endsWith('_detail_color') ||
+        conflict.endsWith('_style')) {
+      return 'legacy:$conflict';
+    }
+    return null;
+  }
+
+  List<TagItem> _clothingEditingReplacements(
+    TagItem incoming,
+    Iterable<TagItem> current,
+  ) {
+    final key = _editableClothingSelectionKey(incoming);
+    if (key == null) return const <TagItem>[];
+
+    final incomingBaseScope =
+        _isClothingBaseTag(incoming) ? _clothingScopeForBase(incoming) : null;
+    return current.where((existing) {
+      if (existing.id == incoming.id) return false;
+      if (incomingBaseScope != null &&
+          incomingBaseScope != 'accessory' &&
+          _isClothingBaseTag(existing) &&
+          _clothingScopeForBase(existing) == incomingBaseScope) {
+        return true;
+      }
+      return _editableClothingSelectionKey(existing) == key;
+    }).toList();
+  }
+
+  bool _isClothingCombinationId(String combinationId) =>
+      outfitReferencePresets
+          .any((preset) => preset.combinationId == combinationId) ||
+      _combinations.any((combination) =>
+          combination.id == combinationId &&
+          _isClothingCombinationTags(_combinationTags(combination)));
+
+  void _markClothingTemplateCustomized(int personIndex) {
+    _personCombinationIds[personIndex]
+        ?.removeWhere(_isClothingCombinationId);
   }
 
   String? _clothingColorGroup(String group) {
@@ -6242,7 +6316,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           : _clothingColorChinesePrefix(secondaryColor);
       final combinedEnglish = secondaryEnglish == null || detailUsesSecondary
           ? mainEnglish
-          : '$mainEnglish with $secondaryEnglish trim';
+          : '$mainEnglish with $secondaryEnglish';
       final combinedChinese = secondaryChinese == null || detailUsesSecondary
           ? mainChinese
           : '$mainChinese（${secondaryChinese}邊線）';
@@ -6677,16 +6751,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  double _boundedPromptWeight(Object? value,
+      {double fallback = _defaultPromptWeight}) {
+    final parsed = switch (value) {
+      num number => number.toDouble(),
+      String text => double.tryParse(text),
+      _ => null,
+    };
+    return (parsed ?? fallback)
+        .clamp(_minimumPromptWeight, _maximumPromptWeight)
+        .toDouble();
+  }
+
   String _weightedPromptBlock(
     Iterable<_GeneratedOutputTag> tags, {
-    double weight = 1.15,
+    required double weight,
   }) {
     final values = tags
         .map((tag) => _moderationSafePromptTag(tag.en))
         .where((value) => value.isNotEmpty)
         .toList();
     if (values.isEmpty) return '';
-    return '(${values.join(', ')}:${weight.toStringAsFixed(2)}).';
+    return '(${values.join(', ')}:${_boundedPromptWeight(weight).toStringAsFixed(2)}).';
   }
 
   int get _personSelectedCount =>
@@ -7024,6 +7110,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clipSkip = '${data['clipSkip'] ?? '2'}';
       _showAdult = data['showAdult'] == true;
       _groupPeoplePrompt = data['groupPeoplePrompt'] != false;
+      _characterPromptWeight = _boundedPromptWeight(
+        data['characterPromptWeight'],
+      );
+      _clothingPromptWeight = _boundedPromptWeight(
+        data['clothingPromptWeight'],
+      );
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _unregisteredPositiveTags
         ..clear()
@@ -7078,6 +7170,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'clipSkip': _clipSkip,
         'showAdult': _showAdult,
         'groupPeoplePrompt': _groupPeoplePrompt,
+        'characterPromptWeight': _characterPromptWeight,
+        'clothingPromptWeight': _clothingPromptWeight,
         'extraPositive': _extraPositive.text,
         'unregisteredPositiveTags': _unregisteredPositiveTags.toList(),
         'reversePrompt': _reversePrompt.text,
@@ -8016,11 +8110,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (personal.isEmpty) continue;
       addWeightedTags(
         personal.where(_isCharacterWeightOutputTag),
-        weight: 1.15,
+        weight: _characterPromptWeight,
       );
       addWeightedTags(
         personal.where(_isClothingWeightOutputTag),
-        weight: 1.15,
+        weight: _clothingPromptWeight,
       );
       addTokens(personal
           .where((tag) =>
@@ -8787,6 +8881,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         targetIds.remove(tag.id);
         if (personIndex != null) {
           _removeOrphanedClothingConfiguration(targetIds, tag);
+          if (_isClothingGroup(tag.group)) {
+            _markClothingTemplateCustomized(personIndex);
+          }
         }
         if (personIndex != null && _isCurrentCharacterTrait(personIndex, tag)) {
           final character = _characterForNew(_personSlots[personIndex]);
@@ -8818,6 +8915,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     .intersection(exclusiveGroups)
                     .isNotEmpty))
         .toList();
+    final clothingReplacements = personIndex == null
+        ? const <TagItem>[]
+        : _clothingEditingReplacements(tag, currentTags);
     final onlyOriginalCharacterConflicts = personIndex != null &&
         characterOverrideConfirmed &&
         conflicts.isNotEmpty &&
@@ -8848,8 +8948,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       for (final conflict in conflicts) {
         targetIds.remove(conflict.id);
       }
+      for (final replacement in clothingReplacements) {
+        targetIds.remove(replacement.id);
+      }
+      // Replacing a garment noun (for example, a template's shirt with a
+      // blouse) also resets the old garment's dependent configuration.  The
+      // incoming garment is added afterwards, so its new settings can be
+      // selected normally.
+      for (final replacement in clothingReplacements) {
+        _removeOrphanedClothingConfiguration(targetIds, replacement);
+      }
       targetIds.add(tag.id);
       if (personIndex != null) {
+        if (_isClothingGroup(tag.group)) {
+          _markClothingTemplateCustomized(personIndex);
+        }
         final character = _characterForNew(_personSlots[personIndex]);
         for (final trait in character?.traits ?? const <CatalogTagData>[]) {
           if (_characterTraitUsesTag(trait, tag.id)) {
@@ -10768,11 +10881,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
 
     for (final piece in preset.pieces) {
+      final hiddenTaxonomyIds =
+          _hiddenTaxonomyDuplicateIdsCache ?? const <String>{};
       final baseCandidates = _allTags
           .where(_isClothingBaseTag)
           .where((tag) => _clothingScopeForBase(tag) == piece.scope)
           .toList()
         ..sort((a, b) {
+          // The picker hides taxonomy tags that duplicate a visible legacy
+          // tag. Prefer that visible equivalent so a template's base garment
+          // remains visibly checked after applying the template.
+          final aHidden = hiddenTaxonomyIds.contains(a.id);
+          final bHidden = hiddenTaxonomyIds.contains(b.id);
+          if (aHidden != bHidden) return aHidden ? 1 : -1;
           final aTaxonomy = a.id.startsWith('catalog_taxonomy_') ? 0 : 1;
           final bTaxonomy = b.id.startsWith('catalog_taxonomy_') ? 0 : 1;
           return aTaxonomy.compareTo(bTaxonomy);
@@ -11473,7 +11594,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       if (isClothingCombination)
                         const Expanded(
                           child: Text(
-                            '完整服裝配置・套用時會以此配置替換人物目前服裝',
+                            '完整服裝配置・套用後可自由調整；原始組合不會變更',
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
@@ -13514,7 +13635,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           '女子服裝靈感套裝（${outfitReferencePresets.length} 套）',
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
-        subtitle: const Text('依類型查看與預覽；套用時只替換此人物目前的服裝設定'),
+        subtitle: const Text('套用為一次性副本；之後可改顏色、款式與細節，原始模板不會變更'),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
         children: [
           Align(
@@ -13637,7 +13758,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                       : Icons.checkroom_outlined,
                                   size: 18,
                                 ),
-                                label: Text(applied ? '已套用' : '套用'),
+                                label: Text(applied ? '已套用・可修改' : '套用'),
                               ),
                             ],
                           ),
@@ -14324,6 +14445,62 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _promptWeightControl({
+    required String title,
+    required String description,
+    required IconData icon,
+    required double value,
+    required ValueChanged<double> onChanged,
+  }) {
+    final boundedValue = _boundedPromptWeight(value);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 6),
+      decoration: BoxDecoration(
+        color: const Color(0xff1f2948),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xff818cf8).withOpacity(.72)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 18, color: const Color(0xffc4b5fd)),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
+              ),
+              Text('${boundedValue.toStringAsFixed(2)} 倍',
+                  style: const TextStyle(
+                      color: Color(0xffddd6fe), fontWeight: FontWeight.w800)),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(description, style: const TextStyle(fontSize: 12)),
+          Slider(
+            min: _minimumPromptWeight,
+            max: _maximumPromptWeight,
+            divisions: 20,
+            value: boundedValue,
+            label: boundedValue.toStringAsFixed(2),
+            onChanged: onChanged,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: const [
+              Text('最低 0.50', style: TextStyle(fontSize: 11)),
+              Text('1.00 為一般強度', style: TextStyle(fontSize: 11)),
+              Text('最高 1.50', style: TextStyle(fontSize: 11)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _stepFinal() {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       TextField(
@@ -14409,12 +14586,56 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           contentPadding: EdgeInsets.zero,
           value: _groupPeoplePrompt,
           title: const Text('人物特徵／服裝分段加強（括號權重）'),
-          subtitle: const Text(
-              '每位人物的基本角色特徵與整套服裝會各自形成獨立的 (…:1.15) 區塊；表情、姿勢、動作、場景與共同標籤維持一般權重。'),
+          subtitle:
+              const Text('角色基本特徵與整套服裝會各自形成可設定權重的區塊；表情、姿勢、動作、場景與共同標籤維持一般權重。'),
           onChanged: (value) => setState(() {
                 _groupPeoplePrompt = value;
                 _persist();
               })),
+      if (_groupPeoplePrompt) ...[
+        const SizedBox(height: 4),
+        Row(
+          children: [
+            const Expanded(
+              child:
+                  Text('分段權重設定', style: TextStyle(fontWeight: FontWeight.w800)),
+            ),
+            TextButton.icon(
+              onPressed: () => setState(() {
+                _characterPromptWeight = _defaultPromptWeight;
+                _clothingPromptWeight = _defaultPromptWeight;
+                _persist();
+              }),
+              icon: const Icon(Icons.restart_alt, size: 18),
+              label: const Text('還原 1.15'),
+            ),
+          ],
+        ),
+        const Text(
+          'BetterWaifu 尚未公布 Amanatsu 的硬性數值上限；本工具依官方範例採用 0.50–1.50 的保護範圍，避免過度加權。',
+          style: TextStyle(fontSize: 12),
+        ),
+        _promptWeightControl(
+          title: '角色裸體基本特徵權重',
+          description: '角色名稱、髮色、髮長、髮型、眼睛、身體、體型與原生特徵。',
+          icon: Icons.person_outline,
+          value: _characterPromptWeight,
+          onChanged: (value) => setState(() {
+            _characterPromptWeight = _boundedPromptWeight(value);
+            _persist();
+          }),
+        ),
+        _promptWeightControl(
+          title: '整套服裝權重',
+          description: '各服飾部位、顏色、次色、材質、細節、穿脫狀態與配件。',
+          icon: Icons.checkroom_outlined,
+          value: _clothingPromptWeight,
+          onChanged: (value) => setState(() {
+            _clothingPromptWeight = _boundedPromptWeight(value);
+            _persist();
+          }),
+        ),
+      ],
     ]);
   }
 
