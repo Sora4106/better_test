@@ -1871,6 +1871,8 @@ class PersonSlot {
   String originalCharacterTag = '';
   String originalTraits = '';
   String poseExtraPositive = '';
+  bool hairColorWeightEnabled = false;
+  double hairColorWeight = 1.15;
 
   Map<String, dynamic> toJson() => {
         'gender': gender,
@@ -1890,6 +1892,8 @@ class PersonSlot {
         'originalCharacterTag': originalCharacterTag,
         'originalTraits': originalTraits,
         'poseExtraPositive': poseExtraPositive,
+        'hairColorWeightEnabled': hairColorWeightEnabled,
+        'hairColorWeight': hairColorWeight,
       };
 
   factory PersonSlot.fromJson(Map<String, dynamic> json) => PersonSlot(
@@ -1910,7 +1914,13 @@ class PersonSlot {
         ..originalCharacterEn = '${json['originalCharacterEn'] ?? ''}'
         ..originalCharacterTag = '${json['originalCharacterTag'] ?? ''}'
         ..originalTraits = '${json['originalTraits'] ?? ''}'
-        ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}';
+        ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}'
+        ..hairColorWeightEnabled = json['hairColorWeightEnabled'] == true
+        ..hairColorWeight = (double.tryParse(
+                    '${json['hairColorWeight'] ?? 1.15}') ??
+                1.15)
+            .clamp(0.50, 1.50)
+            .toDouble();
 }
 
 class _RemoteAnime {
@@ -6744,6 +6754,38 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  List<TagItem> _selectedHairColorTags(int personIndex) =>
+      _selectedTagsForPerson(personIndex)
+          .where((tag) => _hairColorWord(tag) != null)
+          .toList();
+
+  /// Hair colour is normally part of the character-trait block. When the
+  /// per-character override is enabled, keep its composed hair description
+  /// (colour + length/style) together and emit that single description in a
+  /// dedicated weighted block.
+  bool _isSelectedHairColorOutputTag(
+      int personIndex, _GeneratedOutputTag output) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return false;
+    final slot = _personSlots[personIndex];
+    if (!slot.hairColorWeightEnabled) return false;
+    final colors = _selectedHairColorTags(personIndex);
+    if (colors.isEmpty) return false;
+
+    final colorIds = colors.map((tag) => tag.id).toSet();
+    if (output.tagIds.any(colorIds.contains) ||
+        (output.tagId != null && colorIds.contains(output.tagId))) {
+      return true;
+    }
+
+    final outputValue = _cleanTag(output.en).toLowerCase();
+    return colors
+        .map(_hairColorWord)
+        .whereType<String>()
+        .map((color) => color.toLowerCase())
+        .any((color) =>
+            outputValue == '$color hair' || outputValue.startsWith('$color '));
+  }
+
   bool _isClothingWeightOutputTag(_GeneratedOutputTag output) {
     return output.tagIds.any((id) {
       final tag = _tagsById[id];
@@ -8108,9 +8150,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..._personScopedPromptTags(index),
       ]);
       if (personal.isEmpty) continue;
+      final emphasizeHairColor =
+          personal.where((tag) => _isSelectedHairColorOutputTag(index, tag));
       addWeightedTags(
-        personal.where(_isCharacterWeightOutputTag),
+        personal.where((tag) =>
+            _isCharacterWeightOutputTag(tag) &&
+            !_isSelectedHairColorOutputTag(index, tag)),
         weight: _characterPromptWeight,
+      );
+      addWeightedTags(
+        emphasizeHairColor,
+        weight: _personSlots[index].hairColorWeight,
       );
       addWeightedTags(
         personal.where(_isClothingWeightOutputTag),
@@ -12378,6 +12428,113 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _sortPickerTags(tags, pickerGroup);
   }
 
+  Widget _hairColorWeightControl(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const SizedBox.shrink();
+    }
+    final slot = _personSlots[personIndex];
+    final colors = _selectedHairColorTags(personIndex);
+    final hasColor = colors.isNotEmpty;
+    final value = _boundedPromptWeight(slot.hairColorWeight);
+    final colorLabel = hasColor
+        ? colors.map((tag) => tag.zh).join('、')
+        : '請先在上方選擇一種髮色';
+
+    void updateEnabled(bool enabled) {
+      setState(() {
+        slot.hairColorWeightEnabled = enabled;
+        _persist();
+      });
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 9, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xff153047),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xff38bdf8).withOpacity(.75)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: slot.hairColorWeightEnabled,
+            onChanged: hasColor
+                ? updateEnabled
+                : (enabled) {
+                    if (!enabled) updateEnabled(false);
+                  },
+            title: const Text('髮色單獨加強',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+            subtitle: Text(
+              hasColor
+                  ? '目前髮色：$colorLabel。勾選後會將完整髮部描述獨立加權。'
+                  : colorLabel,
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
+          if (slot.hairColorWeightEnabled && hasColor) ...[
+            const SizedBox(height: 3),
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('髮色權重',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                ),
+                SizedBox(
+                  width: 92,
+                  child: TextFormField(
+                    key: ValueKey<String>(
+                        'hair-color-weight-$personIndex-${value.toStringAsFixed(2)}'),
+                    initialValue: value.toStringAsFixed(2),
+                    keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true),
+                    textAlign: TextAlign.center,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      suffixText: 'x',
+                    ),
+                    onChanged: (input) {
+                      final parsed = double.tryParse(input.trim());
+                      if (parsed == null) return;
+                      slot.hairColorWeight = _boundedPromptWeight(parsed);
+                      _persist();
+                    },
+                    onFieldSubmitted: (input) {
+                      final parsed = double.tryParse(input.trim());
+                      if (parsed == null) return;
+                      setState(() {
+                        slot.hairColorWeight = _boundedPromptWeight(parsed);
+                        _persist();
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            Slider(
+              min: _minimumPromptWeight,
+              max: _maximumPromptWeight,
+              divisions: 20,
+              value: value,
+              label: value.toStringAsFixed(2),
+              onChanged: (next) => setState(() {
+                slot.hairColorWeight = _boundedPromptWeight(next);
+                _persist();
+              }),
+            ),
+            const Text(
+              '可輸入或拖曳設定 0.50–1.50；未勾選時髮色會維持在角色基本特徵權重區塊。',
+              style: TextStyle(fontSize: 11),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _stepTagPicker(List<String> groups,
       {required String nextLabel,
       int? personIndex,
@@ -12594,6 +12751,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ],
             ),
           ),
+        ],
+        if (currentGroup == '髮型' && personIndex != null) ...[
+          const SizedBox(height: 10),
+          _hairColorWeightControl(personIndex),
         ],
         const SizedBox(height: 10),
         TextField(
