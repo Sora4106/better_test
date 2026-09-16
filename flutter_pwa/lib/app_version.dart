@@ -1,7 +1,8 @@
-const appVersion = '1.1.92';
-const appBuildNumber = 94;
-const appVersionLabel = '1.1.92+94';
+const appVersion = '1.1.93';
+const appBuildNumber = 95;
+const appVersionLabel = '1.1.93+95';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.93', 'build': '95', 'label': '1.1.93+95', 'date': '2026-09-16', 'notes': '將臉部特徵納入角色基本特徵權重；呆毛等角色外觀細節會和角色本體共同輸出'},
   {'version': '1.1.92', 'build': '94', 'label': '1.1.92+94', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.92'},
   {'version': '1.1.91', 'build': '93', 'label': '1.1.91+93', 'date': '2026-09-16', 'notes': '自動偵測：fix: make outfit templates editable'},
   {'version': '1.1.90', 'build': '92', 'label': '1.1.90+92', 'date': '2026-09-16', 'notes': '修正髮色替換時多色累積，角色原始髮色會被新髮色完整覆蓋；新增大蝴蝶結髮飾'},
