@@ -1,7 +1,8 @@
-const appVersion = '1.1.94';
-const appBuildNumber = 96;
-const appVersionLabel = '1.1.94+96';
+const appVersion = '1.1.95';
+const appBuildNumber = 97;
+const appVersionLabel = '1.1.95+97';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.95', 'build': '97', 'label': '1.1.95+97', 'date': '2026-09-16', 'notes': '修正服裝套裝主色、次色與細節色的解析；午夜藍等細分色可正確套用到帽子、上衣與其他服飾，深藍白色分層裙裝改用可解析的鈕扣襯衫'},
   {'version': '1.1.94', 'build': '96', 'label': '1.1.94+96', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.94'},
   {'version': '1.1.93', 'build': '95', 'label': '1.1.93+95', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.93'},
   {'version': '1.1.92', 'build': '94', 'label': '1.1.92+94', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.92'},
