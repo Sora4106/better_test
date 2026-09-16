@@ -11015,6 +11015,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 );
         addTag(color, '${piece.garment}／次色 ${piece.secondaryColor}');
       }
+      if (piece.detailColor != null) {
+        final color = dimension('detail_color', piece.detailColor!);
+        addTag(color, '${piece.garment}／細節色 ${piece.detailColor}');
+      }
     }
 
     void addOverall(String group, String? value) {

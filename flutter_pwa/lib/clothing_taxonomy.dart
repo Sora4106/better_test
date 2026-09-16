@@ -705,6 +705,7 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('鈕扣襯衫', 'button-up shirt'),
     ('牛津襯衫', 'Oxford shirt'),
     ('女式襯衫', 'blouse'),
+    ('翻領女式襯衫', 'collared blouse'),
     ('背心', 'tank top'),
     ('細肩帶上衣', 'camisole'),
     ('短版上衣', 'crop top'),

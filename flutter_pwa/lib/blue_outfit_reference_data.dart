@@ -1525,7 +1525,7 @@ const blueOutfitReferencePresets = <OutfitReferencePresetData>[
     category: '藍色系列',
     name: '深藍白色分層裙裝',
     palette: '深藍 × 白色 × 淺藍',
-    description: '淺藍長袖女式襯衫搭配白色分層中長裙，以深藍大蝴蝶結、項鍊、腰帶與踝靴收束配色。',
+    description: '淺藍合身翻領排扣襯衫，搭配白色荷葉與蕾絲前襟、深藍領結及白色分層中長裙。',
     pieces: [
       OutfitPiecePresetData(
         scope: 'accessory',
@@ -1534,19 +1534,20 @@ const blueOutfitReferencePresets = <OutfitReferencePresetData>[
       ),
       OutfitPiecePresetData(
         scope: 'accessory',
-        garment: 'necklace',
+        garment: 'neck ribbon',
         mainColor: 'dark blue',
       ),
       OutfitPiecePresetData(
         scope: 'top',
-        garment: 'blouse',
+        garment: 'collared blouse',
         mainColor: 'light blue',
         secondaryColor: 'white',
         cut: 'long sleeves',
-        fit: 'regular fit',
+        fit: 'fitted',
         length: 'waist length',
         materials: ['cotton'],
-        details: ['buttons', 'ribbon'],
+        details: ['buttons', 'lace trim', 'ruffles'],
+        detailColor: 'white',
       ),
       OutfitPiecePresetData(
         scope: 'accessory',

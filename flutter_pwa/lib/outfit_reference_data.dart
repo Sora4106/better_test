@@ -12,6 +12,7 @@ class OutfitPiecePresetData {
     required this.garment,
     this.mainColor,
     this.secondaryColor,
+    this.detailColor,
     this.cut,
     this.fit,
     this.length,
@@ -25,6 +26,7 @@ class OutfitPiecePresetData {
   final String garment;
   final String? mainColor;
   final String? secondaryColor;
+  final String? detailColor;
   final String? cut;
   final String? fit;
   final String? length;
