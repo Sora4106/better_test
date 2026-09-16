@@ -2,7 +2,7 @@ const appVersion = '1.1.92';
 const appBuildNumber = 94;
 const appVersionLabel = '1.1.92+94';
 const appVersionHistory = <Map<String, String>>[
-  {'version': '1.1.92', 'build': '94', 'label': '1.1.92+94', 'date': '2026-09-16', 'notes': '每位角色的髮色可單獨啟用加強權重，支援 0.50–1.50 輸入與滑桿；完整髮色、髮長與髮型組合會維持為同一個加權提示詞'},
+  {'version': '1.1.92', 'build': '94', 'label': '1.1.92+94', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.92'},
   {'version': '1.1.91', 'build': '93', 'label': '1.1.91+93', 'date': '2026-09-16', 'notes': '自動偵測：fix: make outfit templates editable'},
   {'version': '1.1.90', 'build': '92', 'label': '1.1.90+92', 'date': '2026-09-16', 'notes': '修正髮色替換時多色累積，角色原始髮色會被新髮色完整覆蓋；新增大蝴蝶結髮飾'},
   {'version': '1.1.89', 'build': '91', 'label': '1.1.89+91', 'date': '2026-09-15', 'notes': '移除單機版與部署副路徑，儲存庫及 GitHub Pages 僅保留 Flutter Web PWA'},

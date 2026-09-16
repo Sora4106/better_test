@@ -1,5 +1,10 @@
 # 更新紀錄
 
+## 1.1.92+94 - 2026-09-16
+
+- 自動偵測：chore: release pwa 1.1.92
+
+
 ## 1.1.91+93 - 2026-09-16
 
 - 自動偵測：fix: make outfit templates editable
