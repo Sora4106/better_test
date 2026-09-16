@@ -1,7 +1,8 @@
-const appVersion = '1.1.93';
-const appBuildNumber = 95;
-const appVersionLabel = '1.1.93+95';
+const appVersion = '1.1.94';
+const appBuildNumber = 96;
+const appVersionLabel = '1.1.94+96';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.94', 'build': '96', 'label': '1.1.94+96', 'date': '2026-09-16', 'notes': '重做深藍白色分層裙裝的上衣為淺藍翻領排扣女式襯衫；加入白色荷葉與蕾絲前襟、深藍領結，並支援套裝模板指定服裝細節色'},
   {'version': '1.1.93', 'build': '95', 'label': '1.1.93+95', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.93'},
   {'version': '1.1.92', 'build': '94', 'label': '1.1.92+94', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.92'},
   {'version': '1.1.91', 'build': '93', 'label': '1.1.91+93', 'date': '2026-09-16', 'notes': '自動偵測：fix: make outfit templates editable'},
