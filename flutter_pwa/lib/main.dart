@@ -6734,6 +6734,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     '角色標籤',
     '自訂角色',
     '自訂特徵',
+    '臉部特徵',
     '身體特徵',
     '眼睛',
     '胸部',
