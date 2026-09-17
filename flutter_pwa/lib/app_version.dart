@@ -2,7 +2,7 @@ const appVersion = '1.1.96';
 const appBuildNumber = 98;
 const appVersionLabel = '1.1.96+98';
 const appVersionHistory = <Map<String, String>>[
-  {'version': '1.1.96', 'build': '98', 'label': '1.1.96+98', 'date': '2026-09-17', 'notes': '新增 83 個中英場景（含賽馬場）、一般姿勢與臉部表情各 100 套快速套裝，並加入粉白馬術風分層裙裝'},
+  {'version': '1.1.96', 'build': '98', 'label': '1.1.96+98', 'date': '2026-09-17', 'notes': '自動偵測：chore: release pwa 1.1.96'},
   {'version': '1.1.95', 'build': '97', 'label': '1.1.95+97', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.95'},
   {'version': '1.1.94', 'build': '96', 'label': '1.1.94+96', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.94'},
   {'version': '1.1.93', 'build': '95', 'label': '1.1.93+95', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.93'},
