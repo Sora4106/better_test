@@ -10,6 +10,7 @@ import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'expanded_tag_data.dart';
 import 'outfit_reference_catalog.dart';
+import 'prompt_package_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
@@ -13280,6 +13281,179 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  List<TagItem> _promptPackageTags(PromptPackageData package) {
+    final seen = <String>{};
+    return package.tags
+        .map(_tagByEnglish)
+        .whereType<TagItem>()
+        .where((tag) => seen.add(tag.id))
+        .toList();
+  }
+
+  bool _promptPackageIsSelected(PromptPackageData package, int personIndex) {
+    final tags = _promptPackageTags(package);
+    return tags.isNotEmpty &&
+        _personTagIds(personIndex).containsAll(tags.map((tag) => tag.id));
+  }
+
+  void _removePromptPackage(PromptPackageData package, int personIndex) {
+    final tagIds = _promptPackageTags(package).map((tag) => tag.id);
+    setState(() {
+      _personTagIds(personIndex).removeAll(tagIds);
+      _persist();
+    });
+  }
+
+  void _applyPromptPackage(PromptPackageData package, int personIndex) {
+    final tags = _promptPackageTags(package);
+    final resolved = tags.map((tag) => _englishTagKey(tag.en)).toSet();
+    final missing = package.tags
+        .where((tag) => !resolved.contains(_englishTagKey(tag)))
+        .toList();
+    if (missing.isNotEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('套裝缺少系統標籤：${missing.join(', ')}'),
+      ));
+      return;
+    }
+    setState(() {
+      _personTagIds(personIndex).addAll(tags.map((tag) => tag.id));
+      _persist();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('已套用「${package.name}」；下方仍可個別調整標籤。'),
+    ));
+  }
+
+  Widget _promptPackagePanel({
+    required int personIndex,
+    required String panelId,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color tone,
+    required List<PromptPackageData> packages,
+  }) {
+    final categories = packages.map((package) => package.category).toSet().toList();
+    final stateKey = 'quick-package:$panelId:$personIndex';
+    final stored = _personActiveGroups[stateKey];
+    final activeCategory =
+        stored != null && categories.contains(stored) ? stored : categories.first;
+    final visible = packages
+        .where((package) => package.category == activeCategory)
+        .toList();
+    return Card(
+      margin: const EdgeInsets.only(top: 10),
+      color: tone.withOpacity(.08),
+      child: ExpansionTile(
+        key: PageStorageKey<String>('quick-package-$panelId-$personIndex'),
+        leading: Icon(icon, color: tone),
+        title: Text('$title（${packages.length} 組）',
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: categories.map((category) {
+                final selected = category == activeCategory;
+                return ChoiceChip(
+                  label: Text(category),
+                  selected: selected,
+                  selectedColor: tone,
+                  labelStyle: TextStyle(
+                    color: selected ? const Color(0xff171326) : Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  onSelected: (_) => setState(
+                    () => _personActiveGroups[stateKey] = category,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 900
+                  ? 3
+                  : constraints.maxWidth >= 560
+                      ? 2
+                      : 1;
+              final width =
+                  (constraints.maxWidth - (columns - 1) * 8) / columns;
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: visible.map((package) {
+                  final applied =
+                      _promptPackageIsSelected(package, personIndex);
+                  final english = package.tags.join(', ');
+                  return SizedBox(
+                    width: width,
+                    child: Tooltip(
+                      message: english,
+                      child: ChoiceChip(
+                        selected: applied,
+                        selectedColor: tone,
+                        avatar: Icon(
+                          applied
+                              ? Icons.check_circle
+                              : Icons.auto_awesome_outlined,
+                          size: 18,
+                          color: applied ? const Color(0xff171326) : tone,
+                        ),
+                        label: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(package.name,
+                                  style: TextStyle(
+                                    color: applied
+                                        ? const Color(0xff171326)
+                                        : Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  )),
+                              const SizedBox(height: 2),
+                              Text(
+                                package.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: applied
+                                      ? const Color(0xff171326)
+                                      : Colors.white70,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 7),
+                        onSelected: (selected) {
+                          if (selected) {
+                            _applyPromptPackage(package, personIndex);
+                          } else {
+                            _removePromptPackage(package, personIndex);
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _stepCategorizedPersonTagPicker(
     Map<String, List<String>> sections, {
     required String nextLabel,
@@ -13364,6 +13538,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         icon: const Icon(Icons.shuffle),
                       ),
                     ],
+                  ),
+                  _promptPackagePanel(
+                    personIndex: index,
+                    panelId: 'pose',
+                    title: '一般姿勢套裝',
+                    subtitle: '非露骨單人姿勢；每一類提供 10 組可直接套用。',
+                    icon: Icons.accessibility_new,
+                    tone: const Color(0xff38bdf8),
+                    packages: generalPosePackages,
+                  ),
+                  _promptPackagePanel(
+                    personIndex: index,
+                    panelId: 'face',
+                    title: '臉部表情套裝',
+                    subtitle: '眼神／情緒與嘴部細節的組合；套用後仍可修改。',
+                    icon: Icons.face_retouching_natural,
+                    tone: const Color(0xfff472b6),
+                    packages: facialExpressionPackages,
                   ),
                   const SizedBox(height: 10),
                   Text(
