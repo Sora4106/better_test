@@ -17,13 +17,14 @@ const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
 const _stepLayoutVersion = 3;
 const _expressionEyesGroup = '表情・眼睛';
 const _expressionMouthGroup = '表情・嘴巴';
+const _expressionTeasingGroup = '表情・挑逗';
 const _expressionOtherGroup = '表情・其他臉部';
 const _indoorSceneGroup = '室內場景';
 const _outdoorSceneGroup = '戶外場景';
 const _outdoorTimeGroup = '戶外時段';
 const _cameraFramingGroup = '鏡頭・取景範圍';
 const _cameraFaceFocusGroup = '鏡頭・臉部（眼睛／嘴巴／表情）';
-const _cameraFocusGroup = '鏡頭・局部聚焦';
+const _cameraFocusGroup = '鏡頭・身體聚焦（頭到腳）';
 const _cameraCropGroup = '鏡頭・裁切構圖';
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
@@ -4289,6 +4290,14 @@ List<TagItem> _seedTags() => [
           adult: true, conflictGroup: 'expression_mood'),
       _tag('expr_seductive_smile', '表情', '誘惑微笑', 'seductive smile', 3,
           adult: true, conflictGroup: 'expression_mood'),
+      // Verified Danbooru expression tags. Keep teasing cues in their own
+      // picker so they are easy to combine with the eye and mouth details.
+      _tag('expr_naughty_face', '表情', '調皮挑逗表情', 'naughty face', 3),
+      _tag('expr_licking_lips', '表情', '舔嘴唇', 'licking lips', 3),
+      _tag('expr_light_smile', '表情', '淡淡微笑', 'light smile', 3),
+      _tag('expr_raised_eyebrow', '表情', '挑眉', 'raised eyebrow', 3),
+      _tag('expr_squinting', '表情', '瞇起眼', 'squinting', 3),
+      _tag('expr_staring', '表情', '凝視', 'staring', 3),
 
       // Pose/action.
       _tag('pose_standing', '站立與蹲姿', '站立', 'standing', 4),
@@ -4754,16 +4763,50 @@ List<TagItem> _seedTags() => [
       _tag('camera_head_out_of_frame', _cameraFramingGroup, '頸部以下（頭出框）', 'head out of frame', 10),
       _tag('camera_eyes_out_of_frame', _cameraFramingGroup, '鼻部以下（眼睛出框）', 'eyes out of frame', 10),
 
-      // Official face-focus tags for eyes, mouth, and the full expression.
+      // Face focus from the head through the neck.
+      _tag('camera_head_focus', _cameraFaceFocusGroup, '頭部聚焦', 'head focus', 10),
       _tag('camera_face_focus', _cameraFaceFocusGroup, '臉部／表情聚焦', 'face focus', 10),
+      _tag('camera_forehead_focus', _cameraFaceFocusGroup, '額頭聚焦', 'forehead focus', 10),
+      _tag('camera_eyebrow_focus', _cameraFaceFocusGroup, '眉毛聚焦', 'eyebrow focus', 10),
       _tag('camera_eye_focus', _cameraFaceFocusGroup, '眼睛聚焦', 'eye focus', 10),
+      _tag('camera_nose_focus', _cameraFaceFocusGroup, '鼻子聚焦', 'nose focus', 10),
       _tag('camera_mouth_focus', _cameraFaceFocusGroup, '嘴巴聚焦', 'mouth focus', 10),
+      _tag('camera_lips_focus', _cameraFaceFocusGroup, '嘴唇聚焦', 'lips focus', 10),
+      _tag('camera_chin_focus', _cameraFaceFocusGroup, '下巴聚焦', 'chin focus', 10),
+      _tag('camera_ear_focus', _cameraFaceFocusGroup, '耳朵聚焦', 'ear focus', 10),
+      _tag('camera_neck_focus', _cameraFaceFocusGroup, '頸部聚焦', 'neck focus', 10),
 
-      // Official focus tags keep a selected body detail near the camera.
+      // Body focus from the hair and shoulders down to the toes. These remain
+      // composable with framing and angle tags, so the user can target more
+      // than one detail when a scene needs it.
       _tag('camera_hair_focus', _cameraFocusGroup, '髮型聚焦', 'hair focus', 10),
+      _tag('camera_shoulder_focus', _cameraFocusGroup, '肩膀聚焦', 'shoulder focus', 10),
+      _tag('camera_collarbone_focus', _cameraFocusGroup, '鎖骨聚焦', 'collarbone focus', 10),
+      _tag('camera_upper_arm_focus', _cameraFocusGroup, '上手臂聚焦', 'upper arm focus', 10),
+      _tag('camera_elbow_focus', _cameraFocusGroup, '手肘聚焦', 'elbow focus', 10),
+      _tag('camera_forearm_focus', _cameraFocusGroup, '前臂聚焦', 'forearm focus', 10),
+      _tag('camera_wrist_focus', _cameraFocusGroup, '手腕聚焦', 'wrist focus', 10),
       _tag('camera_hand_focus', _cameraFocusGroup, '手部聚焦', 'hand focus', 10),
+      _tag('camera_finger_focus', _cameraFocusGroup, '手指聚焦', 'finger focus', 10),
+      _tag('camera_chest_focus', _cameraFocusGroup, '胸口聚焦', 'chest focus', 10),
+      _tag('camera_breast_focus', _cameraFocusGroup, '胸部聚焦（成年角色）', 'breast focus', 10,
+          adult: true),
+      _tag('camera_torso_focus', _cameraFocusGroup, '軀幹聚焦', 'torso focus', 10),
+      _tag('camera_stomach_focus', _cameraFocusGroup, '腹部聚焦', 'stomach focus', 10),
+      _tag('camera_navel_focus', _cameraFocusGroup, '肚臍聚焦', 'navel focus', 10),
+      _tag('camera_waist_focus', _cameraFocusGroup, '腰部聚焦', 'waist focus', 10),
+      _tag('camera_hip_focus', _cameraFocusGroup, '臀／髖部聚焦', 'hip focus', 10),
+      _tag('camera_butt_focus', _cameraFocusGroup, '臀部聚焦（成年角色）', 'butt focus', 10,
+          adult: true),
+      _tag('camera_crotch_focus', _cameraFocusGroup, '胯部聚焦（成年角色）', 'crotch focus', 10,
+          adult: true),
+      _tag('camera_thigh_focus', _cameraFocusGroup, '大腿聚焦', 'thigh focus', 10),
+      _tag('camera_knee_focus', _cameraFocusGroup, '膝蓋聚焦', 'knee focus', 10),
       _tag('camera_leg_focus', _cameraFocusGroup, '腿部聚焦', 'leg focus', 10),
+      _tag('camera_calf_focus', _cameraFocusGroup, '小腿聚焦', 'calf focus', 10),
+      _tag('camera_ankle_focus', _cameraFocusGroup, '腳踝聚焦', 'ankle focus', 10),
       _tag('camera_foot_focus', _cameraFocusGroup, '腳部聚焦', 'foot focus', 10),
+      _tag('camera_toe_focus', _cameraFocusGroup, '腳趾聚焦', 'toe focus', 10),
 
       // Cropped tags describe a body part being intentionally cut by the frame.
       _tag('camera_cropped_head', _cameraCropGroup, '頭部裁切', 'cropped head', 10),
@@ -5257,11 +5300,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isExpressionPickerGroup(String group) => const {
         _expressionEyesGroup,
         _expressionMouthGroup,
+        _expressionTeasingGroup,
         _expressionOtherGroup,
       }.contains(group);
 
   String? _expressionSubgroupForTag(TagItem tag) {
     if (!_isFaceExpressionTag(tag)) return null;
+
+    final english = tag.en.toLowerCase();
+    const teasingExpressions = <String>{
+      'seductive expression',
+      'seductive smile',
+      'naughty face',
+      'licking lips',
+      'smug',
+      'smirk',
+      'evil smile',
+    };
+    if (teasingExpressions.contains(english)) {
+      return _expressionTeasingGroup;
+    }
 
     final conflict = tag.conflictGroup;
     if (const {'eyes', 'expression_eyes'}.contains(conflict)) {
@@ -5279,7 +5337,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     // Some imported/custom tags do not carry a conflict group.  Keep the
     // classification stable by using the English Danbooru-style tag name.
-    final english = tag.en.toLowerCase();
     const mouthTerms = <String>[
       'mouth',
       'smile',
@@ -7092,6 +7149,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .toSet(),
         _expressionEyesGroup,
         _expressionMouthGroup,
+        _expressionTeasingGroup,
         _expressionOtherGroup,
       ];
 
@@ -8943,6 +9001,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (groupSet.contains(_expressionMouthGroup)) {
       addRandomFromExpressionGroup(_expressionMouthGroup, max: 4);
     }
+    if (groupSet.contains(_expressionTeasingGroup)) {
+      addRandomFromExpressionGroup(_expressionTeasingGroup, max: 3);
+    }
     if (groupSet.contains(_expressionOtherGroup)) {
       addRandomFromExpressionGroup(_expressionOtherGroup, max: 3);
     }
@@ -8984,6 +9045,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '表情',
       _expressionEyesGroup,
       _expressionMouthGroup,
+      _expressionTeasingGroup,
       _expressionOtherGroup,
       '胸部',
       '裸露',
@@ -12700,7 +12762,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _outdoorTimeGroup) return '戶外時段';
     if (group == _cameraFramingGroup) return '鏡頭・取景範圍';
     if (group == _cameraFaceFocusGroup) return '鏡頭・臉部（眼睛／嘴巴／表情）';
-    if (group == _cameraFocusGroup) return '鏡頭・局部聚焦';
+    if (group == _cameraFocusGroup) return '鏡頭・身體聚焦（頭到腳）';
     if (group == _cameraCropGroup) return '鏡頭・裁切構圖';
     if (group == _clothingGroupHat) return '帽子／頭戴';
     if (group == _clothingGroupHairAccessory) return '髮飾';
@@ -15536,6 +15598,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '髮型',
             _expressionEyesGroup,
             _expressionMouthGroup,
+            _expressionTeasingGroup,
             _expressionOtherGroup,
             '眼睛',
             '額外特徵',
