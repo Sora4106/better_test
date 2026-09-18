@@ -2,7 +2,7 @@ const appVersion = '1.1.97';
 const appBuildNumber = 99;
 const appVersionLabel = '1.1.97+99';
 const appVersionHistory = <Map<String, String>>[
-  {'version': '1.1.97', 'build': '99', 'label': '1.1.97+99', 'date': '2026-09-18', 'notes': '場景分為室內與戶外，戶外新增日出、黃昏、夜晚時段，並加入銳利眼神標籤'},
+  {'version': '1.1.97', 'build': '99', 'label': '1.1.97+99', 'date': '2026-09-18', 'notes': '自動偵測：chore: release pwa 1.1.97'},
   {'version': '1.1.96', 'build': '98', 'label': '1.1.96+98', 'date': '2026-09-17', 'notes': '自動偵測：chore: release pwa 1.1.96'},
   {'version': '1.1.95', 'build': '97', 'label': '1.1.95+97', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.95'},
   {'version': '1.1.94', 'build': '96', 'label': '1.1.94+96', 'date': '2026-09-16', 'notes': '自動偵測：chore: release pwa 1.1.94'},

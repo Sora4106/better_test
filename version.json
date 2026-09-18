@@ -1,8 +1,15 @@
 {
-  "version": "1.1.96",
-  "build": 98,
-  "label": "1.1.96+98",
+  "version": "1.1.97",
+  "build": 99,
+  "label": "1.1.97+99",
   "history": [
+    {
+      "version": "1.1.97",
+      "build": 99,
+      "label": "1.1.97+99",
+      "date": "2026-09-18",
+      "notes": "自動偵測：chore: release pwa 1.1.97"
+    },
     {
       "version": "1.1.96",
       "build": 98,
