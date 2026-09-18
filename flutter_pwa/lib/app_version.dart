@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.98';
-const appBuildNumber = 100;
-const appVersionLabel = '1.1.98+100';
+const appVersion = '1.1.99';
+const appBuildNumber = 101;
+const appVersionLabel = '1.1.99+101';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.99', 'build': '101', 'label': '1.1.99+101', 'date': '2026-09-18', 'notes': 'feat: group individual character actions and add shared multi-character actions'},
   {'version': '1.1.98', 'build': '100', 'label': '1.1.98+100', 'date': '2026-09-18', 'notes': 'feat: group garment prompt blocks; categorize scenes and camera tags; simplify face packages'},
   {'version': '1.1.97', 'build': '99', 'label': '1.1.97+99', 'date': '2026-09-18', 'notes': 'release: PWA scene and camera organization'},
   {'version': '1.1.96', 'build': '98', 'label': '1.1.96+98', 'date': '2026-09-17', 'notes': '自動偵測：chore: release pwa 1.1.96'},

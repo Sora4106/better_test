@@ -126,10 +126,25 @@ bool _isCameraGroup(String group) =>
       '畫面',
     }.contains(group);
 
+/// Shared actions describe what multiple characters do together. They are
+/// selected globally and are intentionally rendered after every character's
+/// own pose/action block, without parentheses or a character weight.
+bool _isSharedActionGroup(String group) =>
+    const {
+      '\u89aa\u543b\u52d5\u4f5c',
+      '\u591a\u4eba\u4e92\u52d5',
+      '\u89d2\u8272\u59ff\u52e2',
+      '\u6027\u884c\u70ba',
+      '\u6027\u59ff\u52e2',
+    }.contains(group) ||
+    expandedSexualPoseGroups.contains(group) ||
+    expandedSexualActGroups.contains(group);
+
 bool _isGlobalPromptGroup(String group) =>
     _isScenePickerGroup(group) ||
     group == _outdoorTimeGroup ||
     _isCameraGroup(group) ||
+    _isSharedActionGroup(group) ||
     const {'品質', '其他'}.contains(group);
 
 String _catalogPickerGroup(CatalogTagData data) {
@@ -5055,6 +5070,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return tags;
   }
 
+  List<String> get _sharedActionPickerGroups => <String>[
+        '\u89aa\u543b\u52d5\u4f5c',
+        '\u591a\u4eba\u4e92\u52d5',
+        '\u89d2\u8272\u59ff\u52e2',
+        '\u6027\u884c\u70ba',
+        '\u6027\u59ff\u52e2',
+        ...expandedSexualPoseGroups,
+        ...expandedSexualActGroups,
+      ].toSet().toList();
+
   int _outputGroupOrder(String group) {
     const order = <String, int>{
       // 人物：由頭部、臉部一路排到身體，再進入服裝。
@@ -6878,12 +6903,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _isFinalPersonOutputTag(int personIndex, _GeneratedOutputTag output) {
+    // With a single character, even adult actions remain that character's
+    // own action and should stay in its unweighted action block.
+    if (_personSlots.length <= 1) return false;
     const finalGroups = {'性行為', '性姿勢'};
     final selected = _selectedTagsForPerson(personIndex);
     return output.tagIds.any((id) => selected.any((tag) =>
         tag.id == id &&
         (finalGroups.contains(tag.group) ||
-            expandedSharedFinalGroups.contains(tag.group))));
+            expandedSharedFinalGroups.contains(tag.group) ||
+            _isSharedActionGroup(tag.group))));
   }
 
   List<_GeneratedOutputTag> _personScopedPromptTags(int personIndex) =>
@@ -6895,6 +6924,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _personPromptTags(personIndex)
           .where((tag) => _isFinalPersonOutputTag(personIndex, tag))
           .toList();
+
+  /// A person-selected pose, gesture, movement, object interaction, or custom
+  /// pose sentence belongs to that character. It is rendered as an unweighted
+  /// parenthesized block immediately after the character's outfit.
+  bool _isIndividualActionOutputTag(
+    int personIndex,
+    _GeneratedOutputTag output,
+  ) {
+    if (output.personPoseExtraValue != null) return true;
+    if (_isFinalPersonOutputTag(personIndex, output)) return false;
+    return output.tagIds.any((id) {
+      final tag = _tagsById[id];
+      if (tag == null) return false;
+      return tag.group == '\u59ff\u52e2' ||
+          tag.group == '\u52d5\u4f5c' ||
+          expandedGeneralPoseGroups.contains(tag.group) ||
+          expandedAdultToolGroups.contains(tag.group) ||
+          (_personSlots.length <= 1 && _isSharedActionGroup(tag.group));
+    });
+  }
 
   static const _characterWeightGroups = <String>{
     '角色類型',
@@ -8314,9 +8363,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       tokens.addAll(_characterTokensForSlot(_personSlots[index], index));
       tokens.addAll(_personPromptTags(index).map((tag) => tag.en));
     }
-    tokens.addAll(_selectedTags.map((tag) => tag.en));
+    tokens.addAll(
+      _selectedTags
+          .where((tag) => !_isSharedActionGroup(tag.group))
+          .map((tag) => tag.en),
+    );
     tokens.addAll(_extraTags(_extraPositive.text).map(_positiveEnglishTag));
     tokens.addAll(_extraTags(_preprompt.text));
+    tokens.addAll(
+      _selectedTags
+          .where((tag) => _isSharedActionGroup(tag.group))
+          .map((tag) => tag.en),
+    );
     final seen = <String>{};
     return tokens
         .map(_moderationSafePromptTag)
@@ -8325,10 +8383,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> get _sharedPositiveTokens => <String>[
-        ..._selectedTags.map((tag) => tag.en),
+        ..._selectedTags
+            .where((tag) => !_isSharedActionGroup(tag.group))
+            .map((tag) => tag.en),
         ..._extraTags(_extraPositive.text).map(_positiveEnglishTag),
         ..._extraTags(_preprompt.text),
       ].map(_moderationSafePromptTag).where((tag) => tag.isNotEmpty).toList();
+
+  List<String> get _sharedActionTokens => _selectedTags
+      .where((tag) => _isSharedActionGroup(tag.group))
+      .map((tag) => tag.en)
+      .map(_moderationSafePromptTag)
+      .where((tag) => tag.isNotEmpty)
+      .toList();
 
   String _groupedPositiveText() {
     final output = <String>[];
@@ -8375,6 +8442,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    void addIndividualActionBlock(Iterable<_GeneratedOutputTag> values) {
+      final actionValues = <String>[];
+      final local = <String>{};
+      for (final tag in values) {
+        final value = _moderationSafePromptTag(tag.en);
+        if (value.isEmpty || !local.add(value.toLowerCase())) continue;
+        actionValues.add(value);
+      }
+      if (actionValues.isEmpty) return;
+      output.add('(${actionValues.join(', ')}).');
+      used.addAll(actionValues.map((value) => value.toLowerCase()));
+    }
+
     addTokens(_peopleTokensNew());
     for (var index = 0; index < _personSlots.length; index++) {
       final personal = _deduplicatePromptOutputTags([
@@ -8407,16 +8487,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .where(_isOverallClothingWearOutputTag)
             .map((tag) => tag.en),
       );
+      final individualActions = personal
+          .where((tag) => _isIndividualActionOutputTag(index, tag))
+          .toList();
       addTokens(personal
           .where((tag) =>
               !_isCharacterWeightOutputTag(tag) &&
-              !_isClothingWeightOutputTag(tag))
+              !_isClothingWeightOutputTag(tag) &&
+              !_isIndividualActionOutputTag(index, tag))
           .map((tag) => tag.en));
+      addIndividualActionBlock(individualActions);
     }
+    addTokens(_sharedPositiveTokens);
     for (var index = 0; index < _personSlots.length; index++) {
       addTokens(_personFinalPromptTags(index).map((tag) => tag.en));
     }
-    addTokens(_sharedPositiveTokens);
+    addTokens(_sharedActionTokens);
     return output.join(' ');
   }
 
@@ -9712,8 +9798,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (tag.en == '1girl' || tag.en == '1boy' || tag.en == '1person') {
           continue;
         }
-        final target =
-            globalGroups.contains(tag.group) ? _selectedIds : _personTagIds(0);
+        final target = globalGroups.contains(tag.group) ||
+                _isSharedActionGroup(tag.group)
+            ? _selectedIds
+            : _personTagIds(0);
         final current =
             target == _selectedIds ? _selectedTags : _selectedTagsForPerson(0);
         for (final conflict
@@ -9933,6 +10021,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           break;
         case 5:
           _removeAdultPosePackageTags();
+          final sharedActionIds =
+              removableByGroup(_sharedActionPickerGroups.toSet());
+          _selectedIds.removeWhere(sharedActionIds.contains);
           removePersonTags((group) =>
               poseGroups.contains(group) ||
               expandedPickerTagGroups.contains(group));
@@ -13753,6 +13844,68 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _sharedActionPicker() {
+    final groups = _sharedActionPickerGroups
+        .where((group) => (_tagsByGroup[group] ?? const <TagItem>[]).isNotEmpty)
+        .toList();
+    if (_personSlots.length < 2 || groups.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final selected = _selectedTags
+        .where((tag) => _isSharedActionGroup(tag.group))
+        .toList();
+    final sharedActionIds = _allTags
+        .where((tag) => _isSharedActionGroup(tag.group))
+        .map((tag) => tag.id)
+        .toSet();
+    return Card(
+      margin: const EdgeInsets.only(top: 10),
+      color: const Color(0xfff97316).withOpacity(.08),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.groups_outlined, color: Color(0xfffb923c)),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    '多人共同動作',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+                IconButton(
+                  tooltip: '清除多人共同動作',
+                  onPressed: selected.isEmpty
+                      ? null
+                      : () => setState(() {
+                            _selectedIds.removeWhere(sharedActionIds.contains);
+                            _persist();
+                          }),
+                  icon: const Icon(Icons.delete_sweep_outlined),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            const Text(
+              '這裡設定角色一起進行的互動、親吻或成人姿勢；輸出會放在所有角色資訊之後，不使用括號與角色權重。',
+              style: TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 10),
+            _stepTagPicker(
+              groups,
+              nextLabel: '',
+              showNext: false,
+              searchGroups: groups,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _stepCategorizedPersonTagPicker(
     Map<String, List<String>> sections, {
     required String nextLabel,
@@ -13953,6 +14106,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
           );
         }),
+        if (_personSlots.length > 1) ...[
+          const SizedBox(height: 10),
+          _sharedActionPicker(),
+        ],
         const SizedBox(height: 4),
         Align(
           alignment: Alignment.centerRight,
@@ -15442,6 +15599,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       .contains(tag.group) ||
                   expandedPickerTagGroups.contains(tag.group))
               .map((tag) => tag.zh)
+              .followedBy(_selectedTags
+                  .where((tag) => _isSharedActionGroup(tag.group))
+                  .map((tag) => tag.zh))
               .join('、')
               .ifEmpty('每位人物分別設定'),
           Icons.accessibility_new,
