@@ -18,6 +18,9 @@ const _stepLayoutVersion = 3;
 const _expressionEyesGroup = '表情・眼睛';
 const _expressionMouthGroup = '表情・嘴巴';
 const _expressionOtherGroup = '表情・其他臉部';
+const _indoorSceneGroup = '室內場景';
+const _outdoorSceneGroup = '戶外場景';
+const _outdoorTimeGroup = '戶外時段';
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
@@ -26,6 +29,101 @@ const _defaultNegativeText =
     'lowres, worst quality, bad quality, bad anatomy, bad hands, extra digits, '
     'multiple views, fewer digits, extra limbs, missing fingers, deformed, text, '
     'error, jpeg artifacts, watermark, unfinished, displeasing, signature, username, scan artifacts';
+
+const _indoorSceneIds = <String>{
+  'scene_indoor_pool',
+  'scene_sports_hall',
+  'scene_gym',
+  'scene_training_room',
+  'scene_martial_arts_dojo',
+  'scene_dance_studio',
+  'scene_ice_rink',
+  'scene_bowling_alley',
+  'scene_archery_range',
+  'scene_boxing_ring',
+  'scene_wrestling_arena',
+  'scene_locker_room',
+  'scene_shopping_mall',
+  'scene_cafe',
+  'scene_restaurant',
+  'scene_library',
+  'scene_train_interior',
+  'scene_office',
+  'scene_hospital',
+  'scene_aquarium',
+  'scene_museum',
+  'scene_theater',
+  'scene_concert_stage',
+  'scene_school_hallway',
+  'scene_convenience_store',
+  'scene_living_room',
+  'scene_kitchen',
+  'scene_dining_room',
+  'scene_hallway',
+  'scene_apartment',
+  'scene_studio_apartment',
+  'scene_hotel_room',
+  'scene_hotel_lobby',
+  'scene_dormitory_room',
+  'scene_laundry_room',
+  'scene_walk_in_closet',
+  'scene_art_studio',
+  'scene_photography_studio',
+  'scene_recording_studio',
+  'scene_backstage',
+  'scene_dressing_room',
+  'scene_ballroom',
+  'scene_banquet_hall',
+  'scene_workshop',
+  'scene_laboratory',
+  'scene_computer_room',
+  'scene_auditorium',
+  'scene_subway_station',
+  'scene_subway_interior',
+  'scene_airport',
+  'scene_airplane_cabin',
+  'scene_bookstore',
+  'scene_flower_shop',
+  'scene_shopping_arcade',
+  'scene_greenhouse',
+  'scene_tatami_room',
+  'scene_traditional_japanese_house',
+  'scene_ryokan',
+  'scene_arcade',
+  'scene_karaoke_room',
+  'scene_billiards_hall',
+  'scene_movie_theater',
+  'scene_planetarium',
+  'scene_tea_house',
+  'scene_bakery',
+  'scene_wedding_venue',
+  'scene_fencing_hall',
+  'scene_climbing_gym',
+  'scene_shooting_range',
+  'scene_table_tennis_room',
+  'scene_kendo_dojo',
+  'scene_weight_room',
+  'scene_yoga_studio',
+  'scene_ballet_studio',
+  'scene_kyudo_dojo',
+  'scene_traditional_kyudo_dojo',
+  'scene_wooden_floor',
+};
+
+bool _isScenePickerGroup(String group) =>
+    group == _indoorSceneGroup || group == _outdoorSceneGroup;
+
+bool _isGlobalPromptGroup(String group) =>
+    _isScenePickerGroup(group) ||
+    group == _outdoorTimeGroup ||
+    const {'畫面', '品質', '其他'}.contains(group);
+
+String _catalogPickerGroup(CatalogTagData data) {
+  if (data.group != '場景') return data.group;
+  return _indoorSceneIds.contains(data.id)
+      ? _indoorSceneGroup
+      : _outdoorSceneGroup;
+}
 
 const _negativeCatalog = <Map<String, String>>[
   {'en': 'lowres', 'zh': '低解析度'},
@@ -1974,7 +2072,7 @@ class _RemoteCharacter {
 TagItem _catalogTag(CatalogTagData data, {String prefix = 'catalog'}) =>
     TagItem(
       id: '${prefix}_${data.id}',
-      group: data.group,
+      group: _catalogPickerGroup(data),
       zh: data.zh,
       en: data.en,
       order: data.order,
@@ -3700,6 +3798,7 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'eye_shape'),
       _tag('eye_narrow', '眼睛', '細長眼', 'narrow eyes', 2,
           conflictGroup: 'eye_shape'),
+      _tag('eye_sharp', '眼睛', '銳利眼神', 'sharp eyes', 2),
       _tag('eye_upturned', '眼睛', '上挑眼', 'upturned eyes', 2,
           conflictGroup: 'eye_shape'),
       _tag('eye_downturned', '眼睛', '下垂眼', 'downturned eyes', 2,
@@ -4588,16 +4687,22 @@ List<TagItem> _seedTags() => [
           adult: true),
 
       // Scene, camera and model-friendly quality terms.
-      _tag('scene_bedroom', '場景', '臥室', 'bedroom', 9),
-      _tag('scene_in_a_room', '場景', '在房間內', 'in a room', 9),
-      _tag('scene_wet_bed', '場景', '濕床（成年角色）', 'wet bed', 9, adult: true),
-      _tag('scene_bathroom', '場景', '浴室', 'bathroom', 9),
-      _tag('scene_classroom', '場景', '教室', 'classroom', 9),
-      _tag('scene_beach', '場景', '海灘', 'beach', 9),
-      _tag('scene_cherry_blossoms', '場景', '櫻花樹下', 'cherry blossoms', 9),
-      _tag('scene_night', '場景', '夜晚', 'night', 9),
-      _tag('scene_sunset', '場景', '日落', 'sunset', 9),
-      _tag('scene_simple_background', '場景', '簡單背景', 'simple background', 9),
+      _tag('scene_bedroom', _indoorSceneGroup, '臥室', 'bedroom', 9),
+      _tag('scene_in_a_room', _indoorSceneGroup, '在房間內', 'in a room', 9),
+      _tag('scene_wet_bed', _indoorSceneGroup, '濕床（成年角色）', 'wet bed', 9, adult: true),
+      _tag('scene_bathroom', _indoorSceneGroup, '浴室', 'bathroom', 9),
+      _tag('scene_classroom', _indoorSceneGroup, '教室', 'classroom', 9),
+      _tag('scene_beach', _outdoorSceneGroup, '海灘', 'beach', 9),
+      _tag('scene_cherry_blossoms', _outdoorSceneGroup, '櫻花樹下', 'cherry blossoms', 9),
+      _tag('scene_sunrise', _outdoorTimeGroup, '日出', 'sunrise', 9,
+          conflictGroup: 'outdoor_time'),
+      _tag('scene_dusk', _outdoorTimeGroup, '黃昏', 'dusk', 9,
+          conflictGroup: 'outdoor_time'),
+      _tag('scene_night', _outdoorTimeGroup, '夜晚', 'night', 9,
+          conflictGroup: 'outdoor_time'),
+      _tag('scene_sunset', _outdoorTimeGroup, '日落', 'sunset', 9,
+          conflictGroup: 'outdoor_time'),
+      _tag('scene_simple_background', _indoorSceneGroup, '簡單背景', 'simple background', 9),
       _tag('scene_evening_light', '畫面', '黃昏光線', 'evening light', 10,
           conflictGroup: 'lighting'),
       _tag('frame_japanese_text', '畫面', '日文文字', 'japanese text', 10),
@@ -4962,8 +5067,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '動作': 50,
       '物件': 51,
       '成人道具': 57,
-      '場景': 70,
-      '畫面': 71,
+       _indoorSceneGroup: 70,
+       _outdoorSceneGroup: 70,
+       _outdoorTimeGroup: 71,
+       '畫面': 72,
     };
     if (expandedAdultClothingGroups.contains(group)) return 36;
     if (expandedSexualActGroups.contains(group)) return 42;
@@ -7081,7 +7188,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         final legacyPersonal = _allTags
             .where((tag) =>
                 _selectedIds.contains(tag.id) &&
-                !['場景', '畫面', '品質'].contains(tag.group))
+                !_isGlobalPromptGroup(tag.group))
             .toList();
         if (legacyPersonal.isNotEmpty) {
           _personSelectedIds[0] = legacyPersonal.map((tag) => tag.id).toSet();
@@ -8460,7 +8567,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return 'pose';
     }
     if (tag.group == '性姿勢') return 'sex_position';
-    if (tag.group == '場景') return 'scene';
+    if (_isScenePickerGroup(tag.group)) return 'scene';
     if (tag.group == '胸部' &&
         [
           'flat chest',
@@ -8694,7 +8801,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void _randomizeSceneAndFrame() {
     final random = Random();
     final sceneCandidates = _allTags
-        .where((tag) => tag.group == '場景' && (_showAdult || !tag.adult))
+        .where((tag) => _isScenePickerGroup(tag.group) && (_showAdult || !tag.adult))
+        .toList()
+      ..shuffle(random);
+    final outdoorTimeCandidates = _allTags
+        .where((tag) => tag.group == _outdoorTimeGroup && (_showAdult || !tag.adult))
         .toList()
       ..shuffle(random);
     final framingCandidates = _allTags
@@ -8703,10 +8814,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..shuffle(random);
 
     setState(() {
-      _selectedIds.removeWhere((id) => _allTags.any(
-          (tag) => tag.id == id && (tag.group == '場景' || tag.group == '畫面')));
-      if (sceneCandidates.isNotEmpty)
-        _selectedIds.add(sceneCandidates.first.id);
+      _selectedIds.removeWhere((id) => _allTags.any((tag) =>
+          tag.id == id && (_isScenePickerGroup(tag.group) ||
+              tag.group == _outdoorTimeGroup || tag.group == '畫面')));
+      if (sceneCandidates.isNotEmpty) {
+        final scene = sceneCandidates.first;
+        _selectedIds.add(scene.id);
+        if (scene.group == _outdoorSceneGroup &&
+            outdoorTimeCandidates.isNotEmpty) {
+          _selectedIds.add(outdoorTimeCandidates.first.id);
+        }
+      }
       if (framingCandidates.isNotEmpty) {
         _selectedIds.add(framingCandidates.first.id);
       }
@@ -9398,7 +9516,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
-    final globalGroups = {'場景', '畫面', '品質', '其他'};
+    final globalGroups = {
+      _indoorSceneGroup,
+      _outdoorSceneGroup,
+      _outdoorTimeGroup,
+      '畫面',
+      '品質',
+      '其他',
+    };
     setState(() {
       if (importedPeopleCount != null) {
         while (_personSlots.length < importedPeopleCount!) {
@@ -9594,7 +9719,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       switch (index) {
         case 0:
-          final removable = removableByGroup({'場景', '畫面'});
+          final removable = removableByGroup({
+            _indoorSceneGroup,
+            _outdoorSceneGroup,
+            _outdoorTimeGroup,
+            '畫面',
+          });
           _selectedIds.removeWhere(removable.contains);
           _search.clear();
           _activeGroup = '全部';
@@ -11819,10 +11949,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '表情',
                     '姿勢',
                     '動作',
-                    '物件',
-                    '成人道具',
-                    '場景',
-                    '其他',
+                     '物件',
+                     '成人道具',
+                     _indoorSceneGroup,
+                     _outdoorSceneGroup,
+                     _outdoorTimeGroup,
+                     '其他',
                   ]
                       .map(
                         (value) => DropdownMenuItem(
@@ -11863,7 +11995,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             ? 3
                             : ['姿勢'].contains(group)
                                 ? 4
-                                : ['場景'].contains(group)
+                                : _isScenePickerGroup(group) ||
+                                        group == _outdoorTimeGroup
                                     ? 9
                                     : 2;
                 final tag = TagItem(
@@ -12094,6 +12227,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     final poseTone = poseTones[group];
     if (poseTone != null) return poseTone;
+    if (group == _indoorSceneGroup) return const Color(0xff38bdf8);
+    if (group == _outdoorSceneGroup) return const Color(0xff4ade80);
+    if (group == _outdoorTimeGroup) return const Color(0xfffbbf24);
     if (expandedSexualActGroups.contains(group)) {
       return const Color(0xfff97316);
     }
@@ -12312,6 +12448,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (clothingColorLabel != null) return clothingColorLabel;
     if (group == _allClothingWearGroup) return '\u7A7F\u812B\u72C0\u614B';
     if (group == _cosplayGroup) return 'Cosplay／角色扮演';
+    if (group == _indoorSceneGroup) return '室內場景';
+    if (group == _outdoorSceneGroup) return '戶外場景';
+    if (group == _outdoorTimeGroup) return '戶外時段';
     if (group == _clothingGroupHat) return '帽子／頭戴';
     if (group == _clothingGroupHairAccessory) return '髮飾';
     if (group == _clothingGroupEyewear) return '眼鏡／眼罩';
@@ -15010,7 +15149,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           0,
           '場景與畫面',
           _selectedTags
-              .where((tag) => ['場景', '畫面'].contains(tag.group))
+              .where((tag) => _isGlobalPromptGroup(tag.group))
               .map((tag) => tag.zh)
               .join('、')
               .ifEmpty('尚未選擇'),
@@ -15026,7 +15165,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   icon: const Icon(Icons.shuffle),
                 ),
               ),
-              _stepTagPicker(['場景', '畫面'], nextLabel: '下一步：角色資料'),
+              _stepTagPicker(
+                [
+                  _indoorSceneGroup,
+                  _outdoorSceneGroup,
+                  _outdoorTimeGroup,
+                  '畫面',
+                ],
+                nextLabel: '下一步：角色資料',
+              ),
             ],
           ),
           onClear: () => _clearStepTags(0)),
