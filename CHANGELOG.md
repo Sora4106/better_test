@@ -1,4 +1,9 @@
-# 更新紀錄
+﻿# 更新紀錄
+
+## 1.1.98+100 - 2026-09-18
+
+- feat: group garment prompt blocks; categorize scenes and camera tags; simplify face packages
+
 
 ## 1.1.97+99 - 2026-09-18
 

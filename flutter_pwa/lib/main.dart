@@ -21,6 +21,10 @@ const _expressionOtherGroup = '表情・其他臉部';
 const _indoorSceneGroup = '室內場景';
 const _outdoorSceneGroup = '戶外場景';
 const _outdoorTimeGroup = '戶外時段';
+const _cameraFramingGroup = '鏡頭・取景範圍';
+const _cameraFaceFocusGroup = '鏡頭・臉部（眼睛／嘴巴／表情）';
+const _cameraFocusGroup = '鏡頭・局部聚焦';
+const _cameraCropGroup = '鏡頭・裁切構圖';
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
@@ -113,10 +117,20 @@ const _indoorSceneIds = <String>{
 bool _isScenePickerGroup(String group) =>
     group == _indoorSceneGroup || group == _outdoorSceneGroup;
 
+bool _isCameraGroup(String group) =>
+    const {
+      _cameraFramingGroup,
+      _cameraFaceFocusGroup,
+      _cameraFocusGroup,
+      _cameraCropGroup,
+      '畫面',
+    }.contains(group);
+
 bool _isGlobalPromptGroup(String group) =>
     _isScenePickerGroup(group) ||
     group == _outdoorTimeGroup ||
-    const {'畫面', '品質', '其他'}.contains(group);
+    _isCameraGroup(group) ||
+    const {'品質', '其他'}.contains(group);
 
 String _catalogPickerGroup(CatalogTagData data) {
   if (data.group != '場景') return data.group;
@@ -325,6 +339,7 @@ class _GeneratedOutputTag {
     this.characterTag = false,
     this.combinationId,
     this.personPoseExtraValue,
+    this.clothingBlockKey,
   });
 
   final String zh;
@@ -335,6 +350,11 @@ class _GeneratedOutputTag {
   final bool characterTag;
   final String? combinationId;
   final String? personPoseExtraValue;
+
+  /// Identifies the garment block that owns this generated clothing phrase.
+  /// This is used only when rendering the English prompt, so its individual
+  /// type/material/detail/colour/wear-state phrases can remain together.
+  final String? clothingBlockKey;
 }
 
 class Preset {
@@ -4706,16 +4726,40 @@ List<TagItem> _seedTags() => [
       _tag('scene_evening_light', '畫面', '黃昏光線', 'evening light', 10,
           conflictGroup: 'lighting'),
       _tag('frame_japanese_text', '畫面', '日文文字', 'japanese text', 10),
-      _tag('camera_portrait', '畫面', '肖像構圖', 'portrait', 10),
-      _tag('camera_full_body', '畫面', '全身', 'full body', 10),
-      _tag('camera_upper_body', '畫面', '上半身', 'upper body', 10),
-      _tag('camera_close_up', '畫面', '特寫', 'close-up', 10),
-      _tag('camera_cowboy_shot', '畫面', '膝上構圖', 'cowboy shot', 10),
+      // Danbooru image-composition tags: framing from head to toe.
+      _tag('camera_portrait', _cameraFramingGroup, '臉部到肩膀肖像', 'portrait', 10),
+      _tag('camera_close_up', _cameraFramingGroup, '近距離特寫', 'close-up', 10),
+      _tag('camera_upper_body', _cameraFramingGroup, '上半身（頭到軀幹）', 'upper body', 10),
+      _tag('camera_cowboy_shot', _cameraFramingGroup, '膝上構圖（頭到大腿）', 'cowboy shot', 10),
+      _tag('camera_feet_out_of_frame', _cameraFramingGroup, '頭到小腿（腳出框）', 'feet out of frame', 10),
+      _tag('camera_full_body', _cameraFramingGroup, '頭到腳完整全身', 'full body', 10),
+      _tag('camera_wide_shot', _cameraFramingGroup, '遠景全身', 'wide shot', 10),
+      _tag('camera_very_wide_shot', _cameraFramingGroup, '極遠景全身', 'very wide shot', 10),
+      _tag('camera_lower_body', _cameraFramingGroup, '下半身（腰部以下）', 'lower body', 10),
+      _tag('camera_head_out_of_frame', _cameraFramingGroup, '頸部以下（頭出框）', 'head out of frame', 10),
+      _tag('camera_eyes_out_of_frame', _cameraFramingGroup, '鼻部以下（眼睛出框）', 'eyes out of frame', 10),
+
+      // Official face-focus tags for eyes, mouth, and the full expression.
+      _tag('camera_face_focus', _cameraFaceFocusGroup, '臉部／表情聚焦', 'face focus', 10),
+      _tag('camera_eye_focus', _cameraFaceFocusGroup, '眼睛聚焦', 'eye focus', 10),
+      _tag('camera_mouth_focus', _cameraFaceFocusGroup, '嘴巴聚焦', 'mouth focus', 10),
+
+      // Official focus tags keep a selected body detail near the camera.
+      _tag('camera_hair_focus', _cameraFocusGroup, '髮型聚焦', 'hair focus', 10),
+      _tag('camera_hand_focus', _cameraFocusGroup, '手部聚焦', 'hand focus', 10),
+      _tag('camera_leg_focus', _cameraFocusGroup, '腿部聚焦', 'leg focus', 10),
+      _tag('camera_foot_focus', _cameraFocusGroup, '腳部聚焦', 'foot focus', 10),
+
+      // Cropped tags describe a body part being intentionally cut by the frame.
+      _tag('camera_cropped_head', _cameraCropGroup, '頭部裁切', 'cropped head', 10),
+      _tag('camera_cropped_shoulders', _cameraCropGroup, '肩膀裁切', 'cropped shoulders', 10),
+      _tag('camera_cropped_torso', _cameraCropGroup, '軀幹裁切', 'cropped torso', 10),
+      _tag('camera_cropped_arms', _cameraCropGroup, '手臂裁切', 'cropped arms', 10),
+      _tag('camera_cropped_legs', _cameraCropGroup, '腿部裁切', 'cropped legs', 10),
       _tag('camera_from_above', '畫面', '俯視', 'from above', 10),
       _tag('camera_from_below', '畫面', '仰視', 'from below', 10),
       _tag('camera_pov', '畫面', '第一人稱視角', 'pov', 10),
       _tag('camera_birds_eye', '畫面', '鳥瞰視角', 'birds-eye', 10),
-      _tag('camera_wide_shot', '畫面', '遠景鏡頭', 'wide shot', 10),
       _tag('camera_isometric', '畫面', '等角視角', 'isometric', 10),
       _tag('camera_high_angle', '畫面', '高角度視角', 'high-angle view', 10),
       _tag('camera_low_angle', '畫面', '低角度視角', 'low-angle view', 10),
@@ -5066,11 +5110,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '性姿勢': 56,
       '動作': 50,
       '物件': 51,
-      '成人道具': 57,
+       '成人道具': 57,
        _indoorSceneGroup: 70,
        _outdoorSceneGroup: 70,
        _outdoorTimeGroup: 71,
-       '畫面': 72,
+       _cameraFramingGroup: 72,
+       _cameraFaceFocusGroup: 73,
+       _cameraFocusGroup: 74,
+       _cameraCropGroup: 75,
+       '畫面': 76,
     };
     if (expandedAdultClothingGroups.contains(group)) return 36;
     if (expandedSexualActGroups.contains(group)) return 42;
@@ -5480,6 +5528,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .compareTo(_clothingBaseHeadToFootOrder(b));
     if (headToFoot != 0) return headToFoot;
     return _compareOutputTags(a, b);
+  }
+
+  /// Keeps each garment's generated prompt phrases in a distinct block.
+  /// Accessories have one shared data scope, so split them again by their
+  /// head-to-foot picker category (hair accessory, eyewear, neck accessory,
+  /// and so on) instead of merging every accessory into one parenthesis.
+  String _clothingPromptBlockKey(String scope, TagItem base) {
+    if (scope != 'accessory') return scope;
+    return 'accessory:${_clothingAccessoryPickerGroup(base)}';
   }
 
   String? _clothingScopeForTag(TagItem tag) {
@@ -6495,6 +6552,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             en: piece.$2,
             tagIds: ids,
             personIndex: personIndex,
+            clothingBlockKey: _clothingPromptBlockKey(scope, base),
           )));
     }
 
@@ -6539,6 +6597,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           tagId: tag.id,
           tagIds: [tag.id],
           personIndex: personIndex,
+          clothingBlockKey: _clothingPromptBlockKey(scope, base),
         ));
       }
     }
@@ -6902,6 +6961,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  /// The consolidated all-clothing wear-state picker intentionally has no
+  /// garment scope. Keep it outside the individual garment blocks.
+  bool _isOverallClothingWearOutputTag(_GeneratedOutputTag output) {
+    return output.tagIds.any((id) {
+      final tag = _tagsById[id];
+      return tag?.group == _legacyClothingWearGroup;
+    });
+  }
+
   double _boundedPromptWeight(Object? value,
       {double fallback = _defaultPromptWeight}) {
     final parsed = switch (value) {
@@ -6924,6 +6992,43 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
     if (values.isEmpty) return '';
     return '(${values.join(', ')}:${_boundedPromptWeight(weight).toStringAsFixed(2)}).';
+  }
+
+  /// Renders clothing as readable garment-level sub-blocks while preserving
+  /// the existing single outfit-weight control. For example:
+  /// ((dark blue blouse, cotton blouse). (white skirt, lace-trimmed skirt)
+  /// :1.15).
+  ///
+  /// The inner parentheses do not introduce an extra weight. They merely keep
+  /// each garment's type, material, details, colours, and local wear state
+  /// together so BetterWaifu receives the intended combinations clearly.
+  String _groupedClothingPromptBlock(
+    Iterable<_GeneratedOutputTag> tags, {
+    required double weight,
+  }) {
+    final grouped = <String, List<String>>{};
+    final ungrouped = <String>[];
+    final seen = <String>{};
+
+    for (final tag in tags) {
+      final value = _moderationSafePromptTag(tag.en);
+      if (value.isEmpty || !seen.add(value.toLowerCase())) continue;
+      final key = tag.clothingBlockKey;
+      if (key == null || key.isEmpty) {
+        ungrouped.add(value);
+      } else {
+        grouped.putIfAbsent(key, () => <String>[]).add(value);
+      }
+    }
+
+    final sections = <String>[
+      ...grouped.values
+          .where((values) => values.isNotEmpty)
+          .map((values) => '(${values.join(', ')})'),
+      if (ungrouped.isNotEmpty) ungrouped.join(', '),
+    ];
+    if (sections.isEmpty) return '';
+    return '(${sections.join('. ')}:${_boundedPromptWeight(weight).toStringAsFixed(2)}).';
   }
 
   int get _personSelectedCount =>
@@ -7847,6 +7952,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         combinationId: previous.combinationId,
         personPoseExtraValue:
             previous.personPoseExtraValue ?? tag.personPoseExtraValue,
+        clothingBlockKey: previous.clothingBlockKey ?? tag.clothingBlockKey,
       );
     }
     return result;
@@ -8252,6 +8358,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    void addGroupedClothingTags(Iterable<_GeneratedOutputTag> values,
+        {required double weight}) {
+      final tags = <_GeneratedOutputTag>[];
+      final local = <String>{};
+      for (final tag in values) {
+        final value = _moderationSafePromptTag(tag.en);
+        if (value.isEmpty || !local.add(value.toLowerCase())) continue;
+        tags.add(tag);
+      }
+      final block = _groupedClothingPromptBlock(tags, weight: weight);
+      if (block.isEmpty) return;
+      output.add(block);
+      for (final tag in tags) {
+        used.add(_moderationSafePromptTag(tag.en).toLowerCase());
+      }
+    }
+
     addTokens(_peopleTokensNew());
     for (var index = 0; index < _personSlots.length; index++) {
       final personal = _deduplicatePromptOutputTags([
@@ -8271,9 +8394,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         emphasizeHairColor,
         weight: _personSlots[index].hairColorWeight,
       );
-      addWeightedTags(
-        personal.where(_isClothingWeightOutputTag),
+      final clothing = personal.where(_isClothingWeightOutputTag).toList();
+      addGroupedClothingTags(
+        clothing.where((tag) => !_isOverallClothingWearOutputTag(tag)),
         weight: _clothingPromptWeight,
+      );
+      // The all-clothing wear-state picker (for example "partially
+      // undressed") remains a normal prompt tag. Only a garment-specific
+      // wear state belongs inside that garment's parenthesized block.
+      addTokens(
+        clothing
+            .where(_isOverallClothingWearOutputTag)
+            .map((tag) => tag.en),
       );
       addTokens(personal
           .where((tag) =>
@@ -8550,7 +8682,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (tag.group == '服裝') return 'one_piece';
     // Camera/framing tags are composable: for example, full body +
     // low-angle view + from below can intentionally be used together.
-    if (tag.group == '畫面') return null;
+    if (_isCameraGroup(tag.group)) return null;
     if (tag.group == '姿勢') {
       const basicPoses = {
         'standing',
@@ -8809,6 +8941,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList()
       ..shuffle(random);
     final framingCandidates = _allTags
+        .where((tag) => tag.group == _cameraFramingGroup && (_showAdult || !tag.adult))
+        .toList()
+      ..shuffle(random);
+    final viewCandidates = _allTags
         .where((tag) => tag.group == '畫面' && (_showAdult || !tag.adult))
         .toList()
       ..shuffle(random);
@@ -8816,7 +8952,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       _selectedIds.removeWhere((id) => _allTags.any((tag) =>
           tag.id == id && (_isScenePickerGroup(tag.group) ||
-              tag.group == _outdoorTimeGroup || tag.group == '畫面')));
+              tag.group == _outdoorTimeGroup || _isCameraGroup(tag.group))));
       if (sceneCandidates.isNotEmpty) {
         final scene = sceneCandidates.first;
         _selectedIds.add(scene.id);
@@ -8827,6 +8963,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       if (framingCandidates.isNotEmpty) {
         _selectedIds.add(framingCandidates.first.id);
+      }
+      if (viewCandidates.isNotEmpty) {
+        _selectedIds.add(viewCandidates.first.id);
       }
       _persist();
     });
@@ -9520,6 +9659,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _indoorSceneGroup,
       _outdoorSceneGroup,
       _outdoorTimeGroup,
+      _cameraFramingGroup,
+      _cameraFaceFocusGroup,
+      _cameraFocusGroup,
+      _cameraCropGroup,
       '畫面',
       '品質',
       '其他',
@@ -9723,6 +9866,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             _indoorSceneGroup,
             _outdoorSceneGroup,
             _outdoorTimeGroup,
+            _cameraFramingGroup,
+            _cameraFaceFocusGroup,
+            _cameraFocusGroup,
+            _cameraCropGroup,
             '畫面',
           });
           _selectedIds.removeWhere(removable.contains);
@@ -11954,6 +12101,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                      _indoorSceneGroup,
                      _outdoorSceneGroup,
                      _outdoorTimeGroup,
+                     _cameraFramingGroup,
+                     _cameraFaceFocusGroup,
+                     _cameraFocusGroup,
+                     _cameraCropGroup,
                      '其他',
                   ]
                       .map(
@@ -11996,7 +12147,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             : ['姿勢'].contains(group)
                                 ? 4
                                 : _isScenePickerGroup(group) ||
-                                        group == _outdoorTimeGroup
+                                        group == _outdoorTimeGroup ||
+                                        _isCameraGroup(group)
                                     ? 9
                                     : 2;
                 final tag = TagItem(
@@ -12230,6 +12382,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _indoorSceneGroup) return const Color(0xff38bdf8);
     if (group == _outdoorSceneGroup) return const Color(0xff4ade80);
     if (group == _outdoorTimeGroup) return const Color(0xfffbbf24);
+    if (group == _cameraFramingGroup) return const Color(0xff60a5fa);
+    if (group == _cameraFaceFocusGroup) return const Color(0xfff472b6);
+    if (group == _cameraFocusGroup) return const Color(0xfff472b6);
+    if (group == _cameraCropGroup) return const Color(0xffa78bfa);
     if (expandedSexualActGroups.contains(group)) {
       return const Color(0xfff97316);
     }
@@ -12451,6 +12607,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _indoorSceneGroup) return '室內場景';
     if (group == _outdoorSceneGroup) return '戶外場景';
     if (group == _outdoorTimeGroup) return '戶外時段';
+    if (group == _cameraFramingGroup) return '鏡頭・取景範圍';
+    if (group == _cameraFaceFocusGroup) return '鏡頭・臉部（眼睛／嘴巴／表情）';
+    if (group == _cameraFocusGroup) return '鏡頭・局部聚焦';
+    if (group == _cameraCropGroup) return '鏡頭・裁切構圖';
     if (group == _clothingGroupHat) return '帽子／頭戴';
     if (group == _clothingGroupHairAccessory) return '髮飾';
     if (group == _clothingGroupEyewear) return '眼鏡／眼罩';
@@ -13686,15 +13846,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     icon: Icons.accessibility_new,
                     tone: const Color(0xff38bdf8),
                     packages: generalPosePackages,
-                  ),
-                  _promptPackagePanel(
-                    personIndex: index,
-                    panelId: 'face',
-                    title: '臉部表情套裝',
-                    subtitle: '眼神／情緒與嘴部細節的組合；套用後仍可修改。',
-                    icon: Icons.face_retouching_natural,
-                    tone: const Color(0xfff472b6),
-                    packages: facialExpressionPackages,
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -15170,6 +15321,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   _indoorSceneGroup,
                   _outdoorSceneGroup,
                   _outdoorTimeGroup,
+                  _cameraFramingGroup,
+                  _cameraFaceFocusGroup,
+                  _cameraFocusGroup,
+                  _cameraCropGroup,
                   '畫面',
                 ],
                 nextLabel: '下一步：角色資料',
