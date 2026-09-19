@@ -10,6 +10,7 @@ import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'expanded_tag_data.dart';
 import 'outfit_reference_catalog.dart';
+import 'object_catalog_data.dart';
 import 'prompt_package_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
@@ -26,6 +27,26 @@ const _cameraFramingGroup = '鏡頭・取景範圍';
 const _cameraFaceFocusGroup = '鏡頭・臉部（眼睛／嘴巴／表情）';
 const _cameraFocusGroup = '鏡頭・身體聚焦（頭到腳）';
 const _cameraCropGroup = '鏡頭・裁切構圖';
+const _objectFurnitureGroup = '物件・家具／室內';
+const _objectDiningGroup = '物件・飲食／餐具';
+const _objectStudyGroup = '物件・學習／藝術／音樂';
+const _objectTechGroup = '物件・科技／媒體';
+const _objectSportGroup = '物件・運動／戶外';
+const _objectToolGroup = '物件・工具／科學／遊戲';
+const _objectFantasyGroup = '物件・武器／奇幻';
+const _objectTravelGroup = '物件・交通／旅行';
+const _objectDailyGroup = '物件・日常／裝飾';
+const _objectPickerGroups = <String>{
+  _objectFurnitureGroup,
+  _objectDiningGroup,
+  _objectStudyGroup,
+  _objectTechGroup,
+  _objectSportGroup,
+  _objectToolGroup,
+  _objectFantasyGroup,
+  _objectTravelGroup,
+  _objectDailyGroup,
+};
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
@@ -4877,6 +4898,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<TagItem> _supplemental = [
     ...supplementalTags,
     ...expandedPromptTags,
+    ...objectCatalogTags,
     ...clothingTaxonomyTags,
     ...clothingDimensionTags,
     ...clothingOverallTags,
@@ -5045,6 +5067,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _tagsForPickerGroup(String group) {
     _allTags;
+    if (_isObjectPickerGroup(group)) {
+      return _allTags
+          .where((tag) => _objectPickerGroupForTag(tag) == group)
+          .toList();
+    }
     if (_clothingAccessoryPickerGroups.contains(group)) {
       return (_clothingBasesByDisplayGroupCache![_clothingGroupAccessory] ??
               const <TagItem>[])
@@ -5296,6 +5323,109 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isFaceExpressionTag(TagItem tag) =>
       tag.group == '臉部特徵' || tag.group == '表情';
+
+  bool _isObjectPickerGroup(String group) => _objectPickerGroups.contains(group);
+
+  bool _isObjectTag(TagItem tag) => tag.group == '物件';
+
+  /// Maps both legacy and new object IDs into visual picker sections while
+  /// keeping their stored group as 物件 for saved prompts and interactions.
+  String? _objectPickerGroupForTag(TagItem tag) {
+    if (!_isObjectTag(tag)) return null;
+    final id = tag.id;
+    if (id.startsWith('obj_furniture_') ||
+        const {
+          'object_pillow',
+          'object_cushion',
+          'object_chair',
+          'object_sofa',
+          'object_bed',
+          'object_table',
+        }.contains(id)) {
+      return _objectFurnitureGroup;
+    }
+    if (id.startsWith('obj_food_') ||
+        const {
+          'object_water_bottle',
+          'object_cup',
+          'object_mug',
+          'object_plate',
+          'object_omelet_rice',
+          'object_fork',
+          'object_spoon',
+          'object_chopsticks',
+        }.contains(id)) {
+      return _objectDiningGroup;
+    }
+    if (id.startsWith('obj_study_') ||
+        const {
+          'object_book',
+          'object_notebook',
+          'object_pen',
+          'object_pencil',
+          'object_microphone',
+          'object_guitar',
+          'object_violin',
+          'object_piano',
+          'object_paintbrush',
+          'object_palette',
+        }.contains(id)) {
+      return _objectStudyGroup;
+    }
+    if (id.startsWith('obj_tech_') ||
+        const {
+          'object_camera',
+          'object_smartphone',
+          'object_laptop',
+          'object_tablet',
+          'object_headphones',
+        }.contains(id)) {
+      return _objectTechGroup;
+    }
+    if (id.startsWith('obj_sport_') ||
+        const {
+          'object_basketball',
+          'object_soccer_ball',
+          'object_volleyball',
+          'object_baseball',
+          'object_baseball_bat',
+          'object_tennis_racket',
+          'object_badminton_racket',
+          'object_skateboard',
+          'object_bicycle',
+          'object_scooter',
+          'object_yumi_bow',
+          'object_japanese_longbow',
+          'object_archery_target',
+          'object_mato_target',
+        }.contains(id)) {
+      return _objectSportGroup;
+    }
+    if (id.startsWith('obj_tool_')) return _objectToolGroup;
+    if (id.startsWith('obj_fantasy_') ||
+        const {
+          'object_bow',
+          'object_arrow',
+          'object_sword',
+          'object_staff',
+          'object_magic_wand',
+          'object_shield',
+        }.contains(id)) {
+      return _objectFantasyGroup;
+    }
+    if (id.startsWith('obj_travel_') ||
+        const {
+          'object_backpack',
+          'object_handbag',
+          'object_briefcase',
+          'object_motorcycle',
+          'object_horse',
+          'object_car',
+        }.contains(id)) {
+      return _objectTravelGroup;
+    }
+    return _objectDailyGroup;
+  }
 
   bool _isExpressionPickerGroup(String group) => const {
         _expressionEyesGroup,
@@ -8904,6 +9034,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _tagBelongsToRandomGroups(TagItem tag, Set<String> groups) {
     if (groups.contains(tag.group)) return true;
+    final objectPickerGroup = _objectPickerGroupForTag(tag);
+    if (objectPickerGroup != null && groups.contains(objectPickerGroup)) {
+      return true;
+    }
     if (groups.contains('表情') && _isFaceExpressionTag(tag)) return true;
     if (groups.any(_isExpressionPickerGroup)) {
       final subgroup = _expressionSubgroupForTag(tag);
@@ -8937,7 +9071,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
 
     List<TagItem> candidates(String group) => _allTags
-        .where((tag) => tag.group == group && (_showAdult || !tag.adult))
+        .where((tag) =>
+            (tag.group == group || _objectPickerGroupForTag(tag) == group) &&
+            (_showAdult || !tag.adult))
         .toList()
       ..shuffle(random);
 
@@ -9060,14 +9196,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (expandedGroups.isNotEmpty) {
       final pool = _allTags
           .where((tag) =>
-              expandedGroups.contains(tag.group) && (_showAdult || !tag.adult))
+              (expandedGroups.contains(tag.group) ||
+                  expandedGroups.contains(_objectPickerGroupForTag(tag))) &&
+              (_showAdult || !tag.adult))
           .toList()
         ..shuffle(random);
       final maxCount = expandedGroups.any(expandedSexualPoseGroups.contains)
           ? 1
           : min(2, pool.length);
       for (final tag in pool) {
-        if (added.where((item) => expandedGroups.contains(item.group)).length >=
+        if (added
+                .where((item) =>
+                    expandedGroups.contains(item.group) ||
+                    expandedGroups.contains(_objectPickerGroupForTag(item)))
+                .length >=
             maxCount) {
           break;
         }
@@ -10172,6 +10314,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..._clothingAccessoryPickerGroups,
     }.contains(group);
     final tags = selected.where((tag) {
+      if (_isObjectPickerGroup(group)) {
+        return _objectPickerGroupForTag(tag) == group;
+      }
       if (_isExpressionPickerGroup(group)) {
         return _expressionSubgroupForTag(tag) == group;
       }
@@ -12506,9 +12651,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '身體動作': Color(0xfff97316),
       '親吻動作': Color(0xfff9a8d4),
       '多人互動': Color(0xfffacc15),
-      '角色姿勢': Color(0xffc084fc),
-      '物件': Color(0xff94a3b8),
-      '性姿勢': Color(0xfffb7185),
+       '角色姿勢': Color(0xffc084fc),
+       '物件': Color(0xff94a3b8),
+       _objectFurnitureGroup: Color(0xffa8a29e),
+       _objectDiningGroup: Color(0xfffb923c),
+       _objectStudyGroup: Color(0xff60a5fa),
+       _objectTechGroup: Color(0xff22d3ee),
+       _objectSportGroup: Color(0xff34d399),
+       _objectToolGroup: Color(0xfffbbf24),
+       _objectFantasyGroup: Color(0xffc084fc),
+       _objectTravelGroup: Color(0xff38bdf8),
+       _objectDailyGroup: Color(0xfff9a8d4),
+       '性姿勢': Color(0xfffb7185),
       '性姿勢・一般': Color(0xfffb7185),
       '性姿勢・後入': Color(0xfff43f5e),
       '性姿勢・女上位': Color(0xffec4899),
@@ -12822,6 +12976,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           activeGroup == '表情' && tag.group == '臉部特徵';
       final faceExpressionInSubgroup =
           _expressionSubgroupForTag(tag) == activeGroup;
+      final objectPickerGroup = _objectPickerGroupForTag(tag);
+      final objectCategoryMatch = objectPickerGroup == activeGroup;
+      final objectInPickerGroups =
+          objectPickerGroup != null && groups.contains(objectPickerGroup);
       final usesClothingBaseDisplayGroup = const {
         _clothingGroupTop,
         _clothingGroupPants,
@@ -12849,10 +13007,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               _clothingBaseDisplayGroup(tag) == activeGroup);
       final directActiveGroupMatch = usesClothingBaseDisplayGroup
           ? clothingBaseDisplayMatch
-          : tag.group == activeGroup;
+          : tag.group == activeGroup || objectCategoryMatch;
       final inGroup = searchAcrossGroups
           ? pickerTagIds.contains(tag.id)
           : (groups.contains(tag.group) ||
+                  objectInPickerGroups ||
                   clothingBaseDisplayMatch ||
                   allClothingWear ||
                   hairColorInHairGroup ||
@@ -14015,17 +14174,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ? storedSection
                   : sectionNames.first;
           final currentGroups = sections[currentSection]!;
-          final selectedCountsByGroup = <String, int>{};
-          for (final id in _personTagIds(index)) {
-            final group = _tagsById[id]?.group;
-            if (group != null) {
-              selectedCountsByGroup.update(
-                group,
-                (count) => count + 1,
-                ifAbsent: () => 1,
-              );
-            }
-          }
+          int selectedCountForPickerGroup(String pickerGroup) =>
+              _selectedTagsForPerson(index)
+                  .where((tag) =>
+                      tag.group == pickerGroup ||
+                      _objectPickerGroupForTag(tag) == pickerGroup)
+                  .length;
           return Card(
             margin: const EdgeInsets.only(bottom: 10),
             color:
@@ -14084,7 +14238,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         final selectedCount = sectionGroups.fold<int>(
                           0,
                           (total, group) =>
-                              total + (selectedCountsByGroup[group] ?? 0),
+                              total + selectedCountForPickerGroup(group),
                         );
                         final width = _wizardGroupChipWidth(
                               section,
