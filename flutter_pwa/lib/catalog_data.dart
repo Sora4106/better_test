@@ -2761,7 +2761,6 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('lala_fangs', '虎牙', 'fangs'),
       _trait('lala_cheerful', '開朗表情', 'cheerful expression'),
       _trait('lala_energetic', '活力感', 'energetic'),
-      _trait('lala_charming', '可愛氣質', 'cute'),
     ],
   ),
   CatalogCharacter(
@@ -2800,7 +2799,6 @@ final catalogCharacters = <CatalogCharacter>[
             adult: true),
         _trait('momo_mischievous_smile', '惡作劇笑容', 'mischievous smile'),
         _trait('momo_seductive_expression', '挑逗表情', 'seductive expression'),
-        _trait('momo_charming', '可愛氣質', 'cute'),
       ]),
   CatalogCharacter(
       id: 'to_love_ru_yui',
@@ -3635,7 +3633,6 @@ final catalogCharacters = <CatalogCharacter>[
       CatalogTagData(id: 'nana_medium_breasts', group: '角色標籤', zh: '中等胸部', en: 'medium breasts', order: 1, adult: true),
       _trait('nana_tsundere', '傲嬌表情', 'tsundere expression'),
       _trait('nana_lively', '活潑表情', 'lively expression'),
-      _trait('nana_charming', '可愛氣質', 'cute'),
     ],
   ),
   CatalogCharacter(
@@ -3655,7 +3652,6 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('haruna_shy', '害羞表情', 'shy expression'),
       _trait('haruna_gentle_smile', '溫柔微笑', 'gentle smile'),
       _trait('haruna_soft', '柔和表情', 'soft expression'),
-      _trait('haruna_charming', '可愛氣質', 'cute'),
     ],
   ),
   CatalogCharacter(
@@ -3695,7 +3691,6 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('mea_slender', '纖細體態', 'slender build'),
       _trait('mea_playful', '俏皮表情', 'playful expression'),
       _trait('mea_cheerful', '開朗表情', 'cheerful expression'),
-      _trait('mea_charming', '可愛氣質', 'cute'),
       _trait('mea_lively', '活潑表情', 'lively'),
     ],
   ),
@@ -3732,7 +3727,6 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('mikan_short_hair', '短髮', 'short hair'),
       _trait('mikan_fair_skin', '白皙肌膚', 'fair skin'),
       _trait('mikan_petite', '嬌小體態', 'petite body'),
-      _trait('mikan_charming', '可愛氣質', 'cute'),
       _trait('mikan_gentle', '溫柔表情', 'gentle expression'),
       _trait('mikan_sweet_smile', '甜美微笑', 'sweet smile'),
     ],
