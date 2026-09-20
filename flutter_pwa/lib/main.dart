@@ -4,6 +4,7 @@ import 'dart:html' as html;
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'app_version.dart';
 import 'catalog_data.dart';
@@ -19,6 +20,7 @@ const _stepLayoutVersion = 3;
 // Dynamic head details are selected with poses, not with permanent character
 // appearance.  Keep the actual stored tag groups unchanged for compatibility.
 const _staticFaceAppearanceGroup = '固定外觀・臉部結構';
+const _animalTraitGroup = '獸化特徵';
 const _expressionEyesGroup = '頭部動態・眼睛／視線';
 const _expressionMouthGroup = '頭部動態・嘴巴／口型';
 const _expressionTeasingGroup = '頭部動態・挑逗';
@@ -472,6 +474,77 @@ class _AdultPosePackage {
   final List<String> personTags;
   final List<String> frameTags;
   final String category;
+
+  /// A withdrawal/end state is only meaningful for penetrative adult poses.
+  /// It retains the pose and framing, removes the in-progress act labels, and
+  /// derives a direction from the original position instead of turning every
+  /// package into the same generic ending action.
+  bool get supportsEndPose =>
+      maleCount > 0 &&
+      personTags.any(
+        (tag) => const {'vaginal', 'triple vaginal', 'anal'}.contains(tag),
+      );
+
+  String get endMovementTag {
+    final tags = personTags.toSet();
+    // The person on top separates vertically, so preserve that vertical read.
+    if (tags.contains('girl on top') ||
+        tags.contains('cowgirl position') ||
+        tags.contains('reverse cowgirl') ||
+        tags.contains('reverse cowgirl position') ||
+        tags.contains('squatting cowgirl position') ||
+        tags.contains('reverse squatting cowgirl position') ||
+        tags.contains('upright straddle') ||
+        tags.contains('reverse upright straddle') ||
+        tags.contains('amazon position') ||
+        tags.contains('mounting')) {
+      return 'pulling out upwards';
+    }
+    // Side-by-side positions read most clearly as a lateral separation.
+    if (tags.contains('on side') ||
+        tags.contains('lying on side') ||
+        tags.contains('spooning')) {
+      return 'pulling out sideways';
+    }
+    // Rear-entry positions keep the rear orientation while separating.
+    if (tags.contains('doggystyle') ||
+        tags.contains('sex from behind') ||
+        tags.contains('bent over') ||
+        tags.contains('top-down bottom-up') ||
+        tags.contains('prone bone')) {
+      return 'pulling out backwards';
+    }
+    // Face-to-face, standing, and the remaining positions retain their
+    // original pose and separate backwards from that configuration.
+    return 'pulling out backwards';
+  }
+
+  String get endMovementZh => switch (endMovementTag) {
+        'pulling out upwards' => '向上抽離',
+        'pulling out sideways' => '向側邊抽離',
+        'pulling out backwards' => '向後抽離',
+        _ => '抽離動作',
+      };
+
+  List<String> personTagsFor({required bool endPose}) {
+    if (!endPose || !supportsEndPose) return personTags;
+    const inProgressActs = <String>{
+      'sex',
+      'vaginal',
+      'triple vaginal',
+      'anal',
+    };
+    return [
+      ...personTags.where((tag) => !inProgressActs.contains(tag)),
+      'pulling out',
+      if (endMovementTag != 'pulling out') endMovementTag,
+    ];
+  }
+
+  Iterable<String> get allPersonTags => [
+        ...personTags,
+        if (supportsEndPose) ...personTagsFor(endPose: true),
+      ];
 }
 
 _AdultPosePackage _adultPosePack(
@@ -2187,6 +2260,7 @@ const _clothingGroupHeadAccessory = '配件・頭部';
 const _clothingGroupHairAccessory = '配件・髮飾';
 const _clothingGroupEyewear = '配件・眼鏡';
 const _clothingGroupFaceAccessory = '配件・臉耳';
+const _clothingGroupAnimalAccessory = '配件・獸飾';
 const _clothingGroupNeckAccessory = '配件・頸肩';
 const _clothingGroupHandAccessory = '配件・手臂';
 const _clothingGroupWaistAccessory = '配件・腰部';
@@ -2197,6 +2271,7 @@ const _clothingAccessoryPickerGroups = <String>{
   _clothingGroupHairAccessory,
   _clothingGroupEyewear,
   _clothingGroupFaceAccessory,
+  _clothingGroupAnimalAccessory,
   _clothingGroupNeckAccessory,
   _clothingGroupHandAccessory,
   _clothingGroupWaistAccessory,
@@ -2220,6 +2295,7 @@ const _clothingGarmentPickerGroups = <String>[
   _clothingGroupHairAccessory,
   _clothingGroupEyewear,
   _clothingGroupFaceAccessory,
+  _clothingGroupAnimalAccessory,
   _clothingGroupNeckAccessory,
   _clothingGroupOuterwear,
   _clothingGroupTop,
@@ -2337,6 +2413,11 @@ String _clothingScopedKindLabel(String kind) =>
 
 String _clothingAccessoryPickerGroup(TagItem tag) {
   final english = tag.en.toLowerCase();
+  if (RegExp(
+    r'\b(?:animal|cat|fox|dog|wolf|bear|bunny|rabbit|bird|feathered|wing)\b.*\b(?:ears?|tail|wings?|headband|headpiece|decoration|hairclip|hairpin)\b',
+  ).hasMatch(english)) {
+    return _clothingGroupAnimalAccessory;
+  }
   if (RegExp(r'\b(hair|hairband|hairclip|hairpin|barrette|headband)\b')
       .hasMatch(english)) {
     return _clothingGroupHairAccessory;
@@ -4732,6 +4813,17 @@ List<TagItem> _seedTags() => [
       _tag('act_semen_flowing_out', '性行為', '精液流出（成年角色）', 'semen flowing out', 7,
           adult: true),
       _tag('act_cumshot', '性行為', '射精畫面（成年角色）', 'cumshot', 7, adult: true),
+      _tag('act_pulling_out', '性行為', '性交結束・抽離動作（成年角色）', 'pulling out', 7,
+          adult: true),
+      _tag('act_pulling_out_upwards', '性行為', '性交結束・向上抽離（成年角色）',
+          'pulling out upwards', 7,
+          adult: true),
+      _tag('act_pulling_out_sideways', '性行為', '性交結束・向側邊抽離（成年角色）',
+          'pulling out sideways', 7,
+          adult: true),
+      _tag('act_pulling_out_backwards', '性行為', '性交結束・向後抽離（成年角色）',
+          'pulling out backwards', 7,
+          adult: true),
       _tag('act_sweat', '性行為', '汗水', 'sweat', 7),
       _tag(
         'position_missionary',
@@ -4941,6 +5033,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
+  // Tracks the default identity cue added for physical animal ears/tails. It
+  // lets a user remove the physical feature without removing a furry tag they
+  // explicitly chose for another reason.
+  final Set<int> _autoFurryIdentityForPerson = <int>{};
   final Map<int, Set<String>> _removedCharacterTags = <int, Set<String>>{};
   final Map<int, String> _personTagQueries = <int, String>{};
   final Map<String, String> _personActiveGroups = <String, String>{};
@@ -5209,6 +5305,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ].toSet().toList();
 
   int _outputGroupOrder(String group) {
+    if (group == _animalTraitGroup) return 18;
     const order = <String, int>{
       // 人物：由頭部、臉部一路排到身體，再進入服裝。
       '角色類型': 8,
@@ -5385,10 +5482,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   static const _staticFaceAppearanceIds = <String>{
     'face_fangs',
     'face_sharp_teeth',
-    'face_ahoge',
-    'face_animal_ears',
-    'face_cat_ears',
-    'face_fox_ears',
     'face_horns',
     'face_elf_ears',
     'face_pointy_ears',
@@ -5411,6 +5504,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       (tag.group == '臉部特徵' && !_isStaticFaceAppearanceTag(tag));
 
   bool _isFixedCharacterFeatureTag(TagItem tag) =>
+      tag.group == _animalTraitGroup ||
       const {
         '身體特徵',
         '眼睛',
@@ -5838,10 +5932,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _clothingGroupHairAccessory => 2,
         _clothingGroupEyewear => 3,
         _clothingGroupFaceAccessory => 4,
-        _clothingGroupNeckAccessory => 5,
-        _clothingGroupHandAccessory => 6,
-        _clothingGroupWaistAccessory => 7,
-        _clothingGroupOtherAccessory => 8,
+        _clothingGroupAnimalAccessory => 5,
+        _clothingGroupNeckAccessory => 6,
+        _clothingGroupHandAccessory => 7,
+        _clothingGroupWaistAccessory => 8,
+        _clothingGroupOtherAccessory => 9,
         _ => 9,
       };
     }
@@ -7796,7 +7891,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'characterPromptWeight': _characterPromptWeight,
         'clothingPromptWeight': _clothingPromptWeight,
         'extraPositive': _extraPositive.text,
-        'unregisteredPositiveTags': _unregisteredPositiveTags.toList(),
+        'unregisteredPositiveTags': _isCompactMobileViewport
+            ? const <String>[]
+            : _unregisteredPositiveTags.toList(),
         'reversePrompt': _reversePrompt.text,
         'negative': _negative.text,
         'customNegativeTranslations': _customNegativeTranslations,
@@ -7872,6 +7969,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return trait.group;
     }
     final value = trait.en.toLowerCase();
+    if (RegExp(r'\b(?:ahoge|cowlick)\b').hasMatch(value)) return '髮型';
     if (value.endsWith(' hair')) {
       final color = value.substring(0, value.length - ' hair'.length).trim();
       if (_clothingColorNames.contains(color)) return '髮色';
@@ -7896,6 +7994,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'mature female'
     ].contains(value)) {
       return '身體特徵';
+    }
+    if (RegExp(
+      r'\b(?:animal|cat|fox|dog|wolf|bunny|rabbit)\s+(?:ears?|tail)\b|\b(?:feathered|bat|angel|demon)\s+wings?\b',
+    ).hasMatch(value)) {
+      return _animalTraitGroup;
     }
     if (RegExp(
       r'\b(?:tails?|horns?|wings?|elf ears|animal ears|pointy ears|fangs?|claws?)\b',
@@ -8078,6 +8181,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       ids.addAll(_characterTraitOptions(trait).map((tag) => tag.id));
     }
+    _syncAutoFurryIdentity(index, ids);
   }
 
   Set<String> _traitOverrideGroups(String en) {
@@ -8397,11 +8501,31 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .replaceAll(RegExp(r'^[,，。.;\s]+|[,，。.;\s]+$'), '')
       .replaceAll(RegExp(r'\s+'), ' ');
 
-  List<String> _extraTags(String value) => value
-      .split(RegExp(r'[,，、。.;\n\r]+'))
-      .map(_cleanTag)
-      .where((item) => item.isNotEmpty)
-      .toList();
+  /// The unregistered-tag inbox is useful on desktop, but occupies too much
+  /// of a phone screen and is hard to manage there. Do not retain it in the
+  /// compact mobile layout.
+  bool get _isCompactMobileViewport => (html.window.innerWidth ?? 999) < 600;
+
+  List<String> _extraTags(String value) {
+    // `;3` is a valid symbolic expression, even though a semicolon normally
+    // separates prompt tags. Keep it intact everywhere text is parsed.
+    const protectedSymbols = <String, String>{
+      ';3': '__bw_symbol_semicolon_three__',
+    };
+    var normalized = value;
+    for (final entry in protectedSymbols.entries) {
+      normalized = normalized.replaceAll(entry.key, ' ${entry.value} ');
+    }
+    final restore = <String, String>{
+      for (final entry in protectedSymbols.entries) entry.value: entry.key,
+    };
+    return normalized
+        .split(RegExp(r'[,，、。.;\n\r]+'))
+        .map(_cleanTag)
+        .where((item) => item.isNotEmpty)
+        .map((item) => restore[item] ?? item)
+        .toList();
+  }
 
   String _unknownPositiveKey(String value) {
     final englishKey = _englishTagKey(value);
@@ -8418,6 +8542,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _collectUnknownExtraPositiveTags() {
+    if (_isCompactMobileViewport) {
+      _unregisteredPositiveTags.clear();
+      return;
+    }
     final candidates = <String>[
       ..._extraTags(_extraPositive.text),
       ..._personSlots.expand(
@@ -8433,6 +8561,44 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (!alreadyStored) _unregisteredPositiveTags.add(token);
     }
     _unregisteredPositiveTags.removeWhere(_isRegisteredPositiveTag);
+  }
+
+  void _clearExtraPositive() {
+    if (_extraPositive.text.trim().isEmpty) return;
+    setState(() {
+      _extraPositive.clear();
+      _collectUnknownExtraPositiveTags();
+      _persist();
+    });
+  }
+
+  Future<void> _pasteAndReplaceExtraPositive() async {
+    String? pasted;
+    try {
+      pasted = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
+    } catch (_) {
+      // Browser clipboard access may be denied when it is not user initiated.
+    }
+    final value = pasted?.trim() ?? '';
+    if (value.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('剪貼簿沒有可貼上的文字。')),
+        );
+      }
+      return;
+    }
+    if (!mounted) return;
+    setState(() {
+      // Replace, rather than append, so pasted prompts never mix with an old
+      // extra-positive sentence by accident.
+      _extraPositive.text = value;
+      _collectUnknownExtraPositiveTags();
+      _persist();
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('已貼上並取代額外正向標籤。')),
+    );
   }
 
   String _positiveEnglishTag(String value) {
@@ -8883,8 +9049,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         tokens.add('額外正向標籤（中文對照）：${extra.map((tag) => tag.zh).join('、')}');
       }
     }
-    if (_preprompt.text.trim().isNotEmpty)
-      tokens.add('Amanatsu 品質前綴：${_preprompt.text.trim()}');
+    if (_preprompt.text.trim().isNotEmpty) {
+      tokens.add(
+        'Amanatsu 品質前綴：${_extraTags(_preprompt.text).map(_positiveChineseTag).join('、')}',
+      );
+    }
     return tokens.join('。 ');
   }
 
@@ -9620,6 +9789,29 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  bool _isPhysicalAnimalEarOrTailTag(TagItem tag) =>
+      tag.group == _animalTraitGroup &&
+      RegExp(r'\b(?:ears?|tail)\b').hasMatch(tag.en) &&
+      !const {'catalog_trait_furry', 'catalog_trait_anthro'}.contains(tag.id);
+
+  void _syncAutoFurryIdentity(int personIndex, Set<String> selectedIds) {
+    final hasPhysicalAnimalTrait = selectedIds
+        .map((id) => _tagsById[id])
+        .whereType<TagItem>()
+        .any(_isPhysicalAnimalEarOrTailTag);
+    final hasIdentityCue = selectedIds.contains('catalog_trait_furry') ||
+        selectedIds.contains('catalog_trait_anthro');
+    if (hasPhysicalAnimalTrait && !hasIdentityCue) {
+      selectedIds.add('catalog_trait_furry');
+      _autoFurryIdentityForPerson.add(personIndex);
+      return;
+    }
+    if (!hasPhysicalAnimalTrait &&
+        _autoFurryIdentityForPerson.remove(personIndex)) {
+      selectedIds.remove('catalog_trait_furry');
+    }
+  }
+
   Future<void> _toggle(TagItem tag, {int? personIndex}) async {
     final targetIds =
         personIndex == null ? _selectedIds : _personTagIds(personIndex);
@@ -9645,6 +9837,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   _characterTraitOptions(trait).map((option) => option.id));
             }
           }
+        }
+        if (personIndex != null) {
+          _syncAutoFurryIdentity(personIndex, targetIds);
         }
         _persist();
       });
@@ -9710,6 +9905,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       targetIds.add(tag.id);
       if (personIndex != null) {
+        if (tag.id == 'catalog_trait_anthro') {
+          _autoFurryIdentityForPerson.remove(personIndex);
+        }
+        _syncAutoFurryIdentity(personIndex, targetIds);
         if (_isClothingGroup(tag.group)) {
           _markClothingTemplateCustomized(personIndex);
         }
@@ -9803,6 +10002,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String _compactReverseKey(String value) =>
       _englishTagKey(value).replaceAll(' ', '');
+
+  /// Keeps punctuation so symbolic Danbooru expressions such as `;3`, `>_<`,
+  /// and `@_@` can round-trip through reverse import.
+  String _reverseExactKey(String value) =>
+      value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+
+  bool _reverseKeyContainsPhrase(String value, String phrase) {
+    final key = _englishTagKey(value);
+    final candidate = _englishTagKey(phrase);
+    if (key.isEmpty || candidate.isEmpty) return false;
+    return ' $key '.contains(' $candidate ');
+  }
 
   int _reverseEditDistance(String left, String right) {
     if (left == right) return 0;
@@ -9902,9 +10113,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   TagItem? _tagByReverseLabel(String value) {
+    final exactKey = _reverseExactKey(value);
     final englishKey = _englishTagKey(value);
     final chineseKey = _cleanTag(value);
     for (final tag in _allTags) {
+      if (exactKey.isNotEmpty && _reverseExactKey(tag.en) == exactKey) {
+        return tag;
+      }
       if (englishKey.isNotEmpty && _englishTagKey(tag.en) == englishKey) {
         return tag;
       }
@@ -9913,38 +10128,126 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
+  List<TagItem> _reverseObjectInteractionCandidates(String value) {
+    final key = _englishTagKey(value);
+    if (key.isEmpty) return const <TagItem>[];
+
+    String? modeId;
+    String remainder = '';
+    if (key.startsWith('holding ') && key.endsWith(' overhead')) {
+      modeId = 'action_holding_object_overhead';
+      remainder = key
+          .substring('holding '.length, key.length - ' overhead'.length)
+          .trim();
+    } else {
+      const modes = <String, String>{
+        'hugging ': 'action_hugging_object',
+        'riding ': 'action_riding_object',
+        'holding ': 'action_holding_object',
+        'carrying ': 'action_carrying_object',
+        'sitting on ': 'action_sitting_on_object',
+        'lying on ': 'action_lying_on_object',
+        'leaning on ': 'action_leaning_on_object',
+      };
+      for (final entry in modes.entries) {
+        if (!key.startsWith(entry.key)) continue;
+        modeId = entry.value;
+        remainder = key.substring(entry.key.length).trim();
+        break;
+      }
+    }
+    if (modeId == null || remainder.isEmpty) return const <TagItem>[];
+    final object = _tagByReverseLabel(remainder);
+    final mode = _tagsById[modeId];
+    if (mode == null || object == null || object.group != '物件') {
+      return const <TagItem>[];
+    }
+    return [mode, object];
+  }
+
+  List<TagItem> _reverseExtraFeatureCandidates(String value) {
+    final key = _englishTagKey(value);
+    if (key.isEmpty) return const <TagItem>[];
+    final bases = _allTags
+        .where((tag) => tag.group == '額外特徵')
+        .where((tag) => _reverseKeyContainsPhrase(key, tag.en))
+        .toList()
+      ..sort((a, b) =>
+          _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
+    if (bases.isEmpty) return const <TagItem>[];
+
+    final result = <TagItem>[bases.first];
+    for (final tag in _allTags.where(
+        (tag) => tag.group == '額外特徵位置' && _reverseKeyContainsPhrase(key, tag.en))) {
+      result.add(tag);
+    }
+    for (final tag in _allTags.where((tag) => tag.group == '額外特徵顏色')) {
+      final words = _clothingColorWords(tag);
+      if (words.isNotEmpty && words.every((word) => _reverseKeyContainsPhrase(key, word))) {
+        result.add(tag);
+      }
+    }
+    return result.toSet().toList();
+  }
+
   List<TagItem> _reverseTagCandidates(String value) {
     final exact = _tagByReverseLabel(value);
     if (exact != null) return [exact];
     final key = _englishTagKey(value);
     if (key.isEmpty) return const <TagItem>[];
 
-    final hair = <TagItem>[];
-    final hairColors = _allTags
-        .where((tag) => tag.group == '髮色')
-        .where((tag) => key.contains(_englishTagKey(tag.en)))
-        .toList()
-      ..sort((a, b) =>
-          _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
-    if (hairColors.isNotEmpty) hair.add(hairColors.first);
+    final objectInteraction = _reverseObjectInteractionCandidates(value);
+    if (objectInteraction.isNotEmpty) return objectInteraction;
+
+    final extraFeature = _reverseExtraFeatureCandidates(value);
+    if (extraFeature.isNotEmpty) return extraFeature;
+
     final hairSuffixes = _allTags
         .where((tag) =>
             (tag.group == '髮型' ||
                 tag.group == '髮長' ||
                 _hairLengthTag(tag.en) != null) &&
-            key.endsWith(_englishTagKey(tag.en)))
+            _reverseKeyContainsPhrase(key, tag.en))
         .toList()
       ..sort((a, b) =>
           _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
-    if (hairSuffixes.isNotEmpty && hair.isNotEmpty) {
-      hair.add(hairSuffixes.first);
+    final hasHairContext = key.contains('hair') || hairSuffixes.isNotEmpty;
+    final hair = <TagItem>[];
+    if (hasHairContext) {
+      final hairColors = _allTags
+          .where((tag) => tag.group == '髮色')
+          .where((tag) {
+            final color = _hairColorWord(tag);
+            return color != null && _reverseKeyContainsPhrase(key, color);
+          })
+          .toList()
+        ..sort((a, b) => _englishTagKey(b.en)
+            .length
+            .compareTo(_englishTagKey(a.en).length));
+      if (hairColors.isNotEmpty) hair.add(hairColors.first);
+    }
+    if (hairSuffixes.isNotEmpty) {
+      final length = hairSuffixes.firstWhere(
+        (tag) => _hairLengthTag(tag.en) != null,
+        orElse: () => hairSuffixes.first,
+      );
+      hair.add(length);
+      final style = hairSuffixes.cast<TagItem?>().firstWhere(
+            (tag) => tag != null &&
+                _isHairStyleTag(tag) &&
+                _hairLengthTag(tag.en) == null,
+            orElse: () => null,
+          );
+      if (style != null) hair.add(style);
+    }
+    if (hair.isNotEmpty) {
       return hair.toSet().toList();
     }
 
     final bases = _allTags
         .where((tag) =>
             _isClothingBaseGroup(tag.group) &&
-            key.endsWith(_englishTagKey(tag.en)))
+            _reverseKeyContainsPhrase(key, tag.en))
         .toList()
       ..sort((a, b) =>
           _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
@@ -10027,15 +10330,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return englishKey.isEmpty ? _cleanTag(value).toLowerCase() : englishKey;
   }
 
+  List<String> _reversePromptTokens(String value) {
+    return _extraTags(value)
+        .where((token) => !['break', 'and'].contains(token.toLowerCase()))
+        .toList();
+  }
+
   void _reversePromptTags() {
+    // `:3` is a supported symbolic mouth expression. Shield it before
+    // stripping optional prompt-weight suffixes such as `tag:1.15`.
+    const colonThreeMarker = '__bw_symbol_colon_three__';
     final normalized = _reversePrompt.text
+        .replaceAll(':3', colonThreeMarker)
         .replaceAllMapped(RegExp(r':\s*-?(?:\d+(?:\.\d+)?|\.\d+)'), (_) => '')
         .replaceAll(RegExp(r'[()\[\]{}]'), '');
-    final tokens = normalized
-        .split(RegExp(r'[,，、\n\r。；;.]+'))
-        .map(_cleanTag)
-        .where((token) => token.isNotEmpty)
-        .where((token) => !['break', 'and'].contains(token.toLowerCase()))
+    final tokens = _reversePromptTokens(normalized)
+        .map((token) => token == colonThreeMarker ? ':3' : token)
         .toList();
     if (tokens.isEmpty) {
       ScaffoldMessenger.of(context)
@@ -10165,6 +10475,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
         target.add(tag.id);
       }
+      _syncAutoFurryIdentity(0, _personTagIds(0));
 
       final existingExtra = _extraTags(_extraPositive.text);
       final existingKeys = existingExtra.map(_reverseExtraKey).toSet();
@@ -10209,6 +10520,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       _selectedIds.clear();
       _personSelectedIds.clear();
+      _autoFurryIdentityForPerson.clear();
       _personCombinationIds.clear();
       _removedCharacterTags.clear();
       _personTagQueries.clear();
@@ -10402,6 +10714,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupHairAccessory ||
       _clothingGroupEyewear ||
       _clothingGroupFaceAccessory ||
+      _clothingGroupAnimalAccessory ||
       _clothingGroupNeckAccessory ||
       _clothingGroupHandAccessory ||
       _clothingGroupWaistAccessory ||
@@ -10689,10 +11002,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..addAll(shifted);
     }
 
+    void shiftIndexSet(Set<int> source) {
+      final shifted = source
+          .where((personIndex) => personIndex != index)
+          .map((personIndex) =>
+              personIndex > index ? personIndex - 1 : personIndex)
+          .toSet();
+      source
+        ..clear()
+        ..addAll(shifted);
+    }
+
     setState(() {
       _removeAdultPosePackageTags();
       _personSlots.removeAt(index);
       shiftMap(_personSelectedIds);
+      shiftIndexSet(_autoFurryIdentityForPerson);
       shiftMap(_personCombinationIds);
       shiftMap(_removedCharacterTags);
       shiftMap(_personTagQueries);
@@ -12850,6 +13175,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupHairAccessory: Color(0xfff472b6),
       _clothingGroupEyewear: Color(0xff60a5fa),
       _clothingGroupFaceAccessory: Color(0xfffb7185),
+      _clothingGroupAnimalAccessory: Color(0xffa78bfa),
       _clothingGroupNeckAccessory: Color(0xffc084fc),
       _clothingGroupHandAccessory: Color(0xff38bdf8),
       _clothingGroupWaistAccessory: Color(0xfffacc15),
@@ -13070,6 +13396,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _clothingGroupHairAccessory) return '髮飾';
     if (group == _clothingGroupEyewear) return '眼鏡／眼罩';
     if (group == _clothingGroupHeadAccessory) return '其他頭部配件';
+    if (group == _clothingGroupAnimalAccessory) return '獸耳／尾飾／翅飾';
     if (group == '褲子') return '下身／褲子';
     if (group == '短褲') return '下身／短褲';
     if (group == '服裝') return '連身裙／洋裝';
@@ -13630,6 +13957,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(instruction),
+        if (groups.contains(_animalTraitGroup)) ...[
+          const SizedBox(height: 6),
+          Text(
+            '獸耳／獸尾在此代表角色本身的生理特徵，會自動加入 furry；若角色是擬人獸，請改選 anthro。服裝造型用的耳飾、尾飾與翅飾請在服裝的「獸耳／尾飾／翅飾」設定。翅膀本身不會強制加入 furry。',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         ..._personSlots.asMap().entries.map((entry) {
           final index = entry.key;
@@ -13730,7 +14067,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Set<String> get _adultPosePackagePersonTagIds => _adultPosePackageTags(
-        _adultPosePackages.expand((package) => package.personTags),
+        _adultPosePackages.expand((package) => package.allPersonTags),
       ).map((tag) => tag.id).toSet();
 
   Set<String> get _adultPosePackageFrameTagIds => _adultPosePackageTags(
@@ -13750,11 +14087,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..sort(_compareOutputTags);
   }
 
-  bool _adultPosePackageIsSelected(_AdultPosePackage package) {
+  bool _adultPosePackageIsSelected(
+    _AdultPosePackage package, {
+    required bool endPose,
+  }) {
     final anchor = _adultPosePackageAnchor(package);
     if (anchor == null) return false;
-    final personIds =
-        _adultPosePackageTags(package.personTags).map((tag) => tag.id).toSet();
+    final personIds = _adultPosePackageTags(
+      package.personTagsFor(endPose: endPose),
+    ).map((tag) => tag.id).toSet();
     final frameIds =
         _adultPosePackageTags(package.frameTags).map((tag) => tag.id).toSet();
     return personIds.isNotEmpty &&
@@ -13801,19 +14142,31 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
-  Future<void> _applyAdultPosePackage(_AdultPosePackage package) async {
+  Future<void> _applyAdultPosePackage(
+    _AdultPosePackage package, {
+    required bool endPose,
+  }) async {
     if (!_showAdult) return;
+    if (endPose && !package.supportsEndPose) return;
     final anchor = _adultPosePackageAnchor(package);
     if (anchor == null || !_matchingAdultPosePackages().contains(package)) {
       return;
     }
-    final personTags = _adultPosePackageTags(package.personTags);
+    final personTags = _adultPosePackageTags(
+      package.personTagsFor(endPose: endPose),
+    );
     final frameTags = _adultPosePackageTags(package.frameTags);
+    final phaseLabel = endPose
+        ? '性愛結束姿勢・${package.endMovementZh}'
+        : '性愛中姿勢';
     final resolvedEnglish = {
       ...personTags.map((tag) => _englishTagKey(tag.en)),
       ...frameTags.map((tag) => _englishTagKey(tag.en)),
     };
-    final missing = [...package.personTags, ...package.frameTags]
+    final missing = [
+      ...package.personTagsFor(endPose: endPose),
+      ...package.frameTags,
+    ]
         .where((tag) => !resolvedEnglish.contains(_englishTagKey(tag)))
         .toList();
     if (missing.isNotEmpty) {
@@ -13827,7 +14180,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('套用「${package.name}」？'),
+        title: Text('套用「${package.name}・$phaseLabel」？'),
         content: SizedBox(
           width: 620,
           child: SingleChildScrollView(
@@ -13842,7 +14195,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 const SizedBox(height: 10),
                 Text('目前人物組成：${_peopleZhNew()}'),
                 const SizedBox(height: 8),
-                Text(package.description),
+                Text('${package.description}\n階段：$phaseLabel'),
                 const SizedBox(height: 10),
                 const Text('將套用：',
                     style: TextStyle(fontWeight: FontWeight.w700)),
@@ -13889,7 +14242,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(
-        '已套用「${package.name}」：${personTags.length + frameTags.length} 個標籤',
+        '已套用「${package.name}・$phaseLabel」：${personTags.length + frameTags.length} 個標籤',
       ),
     ));
   }
@@ -13959,55 +14312,152 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           package.category, () => <_AdultPosePackage>[])
                       .add(package);
                 }
-                Widget packageChip(_AdultPosePackage package) {
-                  final active = _adultPosePackageIsSelected(package);
+                Widget packageCard(_AdultPosePackage package) {
+                  final inProgressActive = _adultPosePackageIsSelected(
+                    package,
+                    endPose: false,
+                  );
+                  final endPoseActive = package.supportsEndPose &&
+                      _adultPosePackageIsSelected(package, endPose: true);
                   final english = [
-                    ...package.personTags,
-                    ...package.frameTags,
-                  ].join(', ');
+                    '性愛中：${[...package.personTags, ...package.frameTags].join(', ')}',
+                    if (package.supportsEndPose)
+                      '性愛結束（${package.endMovementZh}）：${[...package.personTagsFor(endPose: true), ...package.frameTags].join(', ')}',
+                  ].join('\n');
+
+                  Widget phaseButton({
+                    required bool endPose,
+                    required bool active,
+                  }) {
+                    final label = endPose ? '性愛結束姿勢' : '性愛中姿勢';
+                    return Expanded(
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                          backgroundColor: active
+                              ? tone
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .secondaryContainer,
+                          foregroundColor: active
+                              ? Colors.white
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .onSecondaryContainer,
+                        ),
+                        onPressed: () {
+                          if (active) {
+                            unawaited(_clearAdultPosePackageTags());
+                          } else {
+                            unawaited(_applyAdultPosePackage(
+                              package,
+                              endPose: endPose,
+                            ));
+                          }
+                        },
+                        icon: Icon(
+                          active
+                              ? Icons.check_circle
+                              : endPose
+                                  ? Icons.vertical_align_top
+                                  : Icons.play_circle_outline,
+                          size: 17,
+                        ),
+                        label: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    );
+                  }
+
                   return SizedBox(
                     width: width,
                     child: Tooltip(
                       message: english,
-                      child: ChoiceChip(
-                        selected: active,
-                        onSelected: (value) {
-                          if (value) {
-                            unawaited(_applyAdultPosePackage(package));
-                          } else {
-                            unawaited(_clearAdultPosePackageTags());
-                          }
-                        },
-                        avatar: Icon(
-                          active
-                              ? Icons.check_circle
-                              : Icons.auto_awesome_outlined,
-                          size: 18,
-                        ),
-                        label: SizedBox(
-                          width: double.infinity,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                package.name,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                package.description,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 11),
-                              ),
-                            ],
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: (inProgressActive || endPoseActive)
+                              ? tone.withOpacity(.15)
+                              : Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withOpacity(.46),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: (inProgressActive || endPoseActive)
+                                ? tone
+                                : Theme.of(context).colorScheme.outline,
                           ),
                         ),
-                        labelPadding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 7,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  inProgressActive || endPoseActive
+                                      ? Icons.check_circle
+                                      : Icons.auto_awesome_outlined,
+                                  color: tone,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Expanded(
+                                  child: Text(
+                                    package.name,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              package.description,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 11),
+                            ),
+                            if (package.supportsEndPose)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 3),
+                                child: Text(
+                                  '結束動作：${package.endMovementZh}',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w700,
+                                    color: tone,
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(height: 9),
+                            Row(
+                              children: [
+                                phaseButton(
+                                  endPose: false,
+                                  active: inProgressActive,
+                                ),
+                                if (package.supportsEndPose) ...[
+                                  const SizedBox(width: 7),
+                                  phaseButton(
+                                    endPose: true,
+                                    active: endPoseActive,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -14044,7 +14494,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             child: Wrap(
                               spacing: 8,
                               runSpacing: 8,
-                              children: entry.value.map(packageChip).toList(),
+                              children: entry.value.map(packageCard).toList(),
                             ),
                           ),
                         ],
@@ -14557,6 +15007,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupHairAccessory ||
       _clothingGroupEyewear ||
       _clothingGroupFaceAccessory ||
+      _clothingGroupAnimalAccessory ||
       _clothingGroupNeckAccessory ||
       _clothingGroupHandAccessory ||
       _clothingGroupWaistAccessory ||
@@ -15581,6 +16032,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _unregisteredPositiveTagsPanel() {
+    if (_isCompactMobileViewport) return const SizedBox.shrink();
     final tags = _unregisteredPositiveTags.toList();
     if (tags.isEmpty) return const SizedBox.shrink();
     return Container(
@@ -15722,11 +16174,33 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             _persist();
             setState(() {});
           },
-          decoration: const InputDecoration(
-              labelText: '額外正向標籤', hintText: '中文或英文，逗號/換行分隔')),
-      const SizedBox(height: 10),
-      _unregisteredPositiveTagsPanel(),
-      const SizedBox(height: 10),
+          decoration: InputDecoration(
+            labelText: '額外正向標籤',
+            hintText: '中文或英文，逗號/換行分隔',
+            suffixIconConstraints: const BoxConstraints(minWidth: 0),
+            suffixIcon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: '貼上並取代目前內容',
+                  onPressed: () => unawaited(_pasteAndReplaceExtraPositive()),
+                  icon: const Icon(Icons.content_paste_go_outlined),
+                ),
+                IconButton(
+                  tooltip: '清除額外正向標籤',
+                  onPressed: _extraPositive.text.trim().isEmpty
+                      ? null
+                      : _clearExtraPositive,
+                  icon: const Icon(Icons.clear),
+                ),
+              ],
+            ),
+          )),
+      if (!_isCompactMobileViewport) ...[
+        const SizedBox(height: 10),
+        _unregisteredPositiveTagsPanel(),
+        const SizedBox(height: 10),
+      ],
       TextField(
           controller: _reversePrompt,
           maxLines: 4,
@@ -15914,6 +16388,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '髮型',
             '眼睛',
             _staticFaceAppearanceGroup,
+            _animalTraitGroup,
             '額外特徵',
             '額外特徵位置',
             '額外特徵顏色',
@@ -16287,7 +16762,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   if (preprompt.isNotEmpty) ...[
                     const SizedBox(height: 6),
                     Text(
-                      'Amanatsu 品質前綴：$preprompt',
+                      'Amanatsu 品質前綴：${_extraTags(preprompt).map(_positiveChineseTag).join('、')}',
                       style: const TextStyle(fontSize: 12),
                     ),
                   ],

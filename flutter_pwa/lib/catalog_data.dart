@@ -123,17 +123,55 @@ const supplementalTags = <CatalogTagData>[
       en: 'sharp teeth',
       order: 1),
   CatalogTagData(
-      id: 'face_ahoge', group: '臉部特徵', zh: '呆毛', en: 'ahoge', order: 1),
+      id: 'face_ahoge', group: '髮型', zh: '呆毛', en: 'ahoge', order: 1),
   CatalogTagData(
       id: 'face_animal_ears',
-      group: '臉部特徵',
-      zh: '獸耳',
+      group: '獸化特徵',
+      zh: '獸耳（角色特徵）',
       en: 'animal ears',
       order: 1),
   CatalogTagData(
-      id: 'face_cat_ears', group: '臉部特徵', zh: '貓耳', en: 'cat ears', order: 1),
+      id: 'face_cat_ears', group: '獸化特徵', zh: '貓耳（角色特徵）', en: 'cat ears', order: 1),
   CatalogTagData(
-      id: 'face_fox_ears', group: '臉部特徵', zh: '狐耳', en: 'fox ears', order: 1),
+      id: 'face_fox_ears', group: '獸化特徵', zh: '狐耳（角色特徵）', en: 'fox ears', order: 1),
+  // Physical animal traits. They are separate from costume accessories so
+  // the generated prompt can carry an explicit furry/anthro identity cue.
+  CatalogTagData(
+      id: 'trait_furry',
+      group: '獸化特徵',
+      zh: '獸人角色（furry）',
+      en: 'furry',
+      order: 1,
+      conflictGroup: 'animal_identity'),
+  CatalogTagData(
+      id: 'trait_anthro',
+      group: '獸化特徵',
+      zh: '擬人獸角色（anthro）',
+      en: 'anthro',
+      order: 1,
+      conflictGroup: 'animal_identity'),
+  CatalogTagData(
+      id: 'trait_dog_ears', group: '獸化特徵', zh: '狗耳（角色特徵）', en: 'dog ears', order: 1),
+  CatalogTagData(
+      id: 'trait_wolf_ears', group: '獸化特徵', zh: '狼耳（角色特徵）', en: 'wolf ears', order: 1),
+  CatalogTagData(
+      id: 'trait_bunny_ears', group: '獸化特徵', zh: '兔耳（角色特徵）', en: 'bunny ears', order: 1),
+  CatalogTagData(
+      id: 'trait_animal_tail', group: '獸化特徵', zh: '獸尾（角色特徵）', en: 'animal tail', order: 1),
+  CatalogTagData(
+      id: 'trait_cat_tail', group: '獸化特徵', zh: '貓尾（角色特徵）', en: 'cat tail', order: 1),
+  CatalogTagData(
+      id: 'trait_fox_tail', group: '獸化特徵', zh: '狐尾（角色特徵）', en: 'fox tail', order: 1),
+  CatalogTagData(
+      id: 'trait_dog_tail', group: '獸化特徵', zh: '狗尾（角色特徵）', en: 'dog tail', order: 1),
+  CatalogTagData(
+      id: 'trait_bunny_tail', group: '獸化特徵', zh: '兔尾（角色特徵）', en: 'bunny tail', order: 1),
+  CatalogTagData(
+      id: 'trait_wings', group: '獸化特徵', zh: '翅膀（角色特徵）', en: 'wings', order: 1),
+  CatalogTagData(
+      id: 'trait_feathered_wings', group: '獸化特徵', zh: '羽翼（角色特徵）', en: 'feathered wings', order: 1),
+  CatalogTagData(
+      id: 'trait_bat_wings', group: '獸化特徵', zh: '蝙蝠翼（角色特徵）', en: 'bat wings', order: 1),
   CatalogTagData(
       id: 'face_horns', group: '臉部特徵', zh: '角', en: 'horns', order: 1),
   CatalogTagData(
@@ -2367,6 +2405,63 @@ const supplementalTags = <CatalogTagData>[
       en: 'cat tail decoration',
       order: 2,
       conflictGroup: 'cat_tail_accessory'),
+  // Wearable animal motifs. These are costume pieces, not body traits.
+  CatalogTagData(
+      id: 'accessory_animal_ears_headband',
+      group: '配件',
+      zh: '獸耳頭飾',
+      en: 'animal ears headband',
+      order: 2,
+      conflictGroup: 'animal_ears_accessory'),
+  CatalogTagData(
+      id: 'accessory_fox_ears_headband',
+      group: '配件',
+      zh: '狐耳頭飾',
+      en: 'fox ears headband',
+      order: 2,
+      conflictGroup: 'animal_ears_accessory'),
+  CatalogTagData(
+      id: 'accessory_bunny_ears_headband',
+      group: '配件',
+      zh: '兔耳頭飾',
+      en: 'bunny ears headband',
+      order: 2,
+      conflictGroup: 'animal_ears_accessory'),
+  CatalogTagData(
+      id: 'accessory_animal_tail_decoration',
+      group: '配件',
+      zh: '獸尾裝飾',
+      en: 'animal tail decoration',
+      order: 2,
+      conflictGroup: 'animal_tail_accessory'),
+  CatalogTagData(
+      id: 'accessory_fox_tail_decoration',
+      group: '配件',
+      zh: '狐尾裝飾',
+      en: 'fox tail decoration',
+      order: 2,
+      conflictGroup: 'animal_tail_accessory'),
+  CatalogTagData(
+      id: 'accessory_bunny_tail_decoration',
+      group: '配件',
+      zh: '兔尾裝飾',
+      en: 'bunny tail decoration',
+      order: 2,
+      conflictGroup: 'animal_tail_accessory'),
+  CatalogTagData(
+      id: 'accessory_wing_decoration',
+      group: '配件',
+      zh: '翅膀裝飾',
+      en: 'wing decoration',
+      order: 2,
+      conflictGroup: 'wing_accessory'),
+  CatalogTagData(
+      id: 'accessory_feathered_wing_hairclip',
+      group: '配件',
+      zh: '羽翼髮夾',
+      en: 'feathered wing hairclip',
+      order: 2,
+      conflictGroup: 'wing_accessory'),
   CatalogTagData(
       id: 'clothing_kyudo_uniform',
       group: '服裝',

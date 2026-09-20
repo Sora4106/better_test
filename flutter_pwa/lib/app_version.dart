@@ -1,7 +1,8 @@
-const appVersion = '1.1.102';
-const appBuildNumber = 104;
-const appVersionLabel = '1.1.102+104';
+﻿const appVersion = '1.1.103';
+const appBuildNumber = 105;
+const appVersionLabel = '1.1.103+105';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.103', 'build': '105', 'label': '1.1.103+105', 'date': '2026-09-20', 'notes': 'feat: add direction-aware adult pose ending actions; fix: classify ahoge as a fixed hairstyle and separate animal traits from wearable animal accessories'},
   {'version': '1.1.102', 'build': '104', 'label': '1.1.102+104', 'date': '2026-09-20', 'notes': 'feat: separate fixed appearance from dynamic pose controls; reorganize pose tags and add official symbolic expressions'},
   {'version': '1.1.101', 'build': '103', 'label': '1.1.101+103', 'date': '2026-09-19', 'notes': 'feat: add 108 categorized object and prop tags'},
   {'version': '1.1.100', 'build': '102', 'label': '1.1.100+102', 'date': '2026-09-19', 'notes': 'feat: add teasing expressions and head-to-toe camera focus'},

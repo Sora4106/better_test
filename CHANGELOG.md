@@ -1,5 +1,10 @@
 ﻿# 更新紀錄
 
+## 1.1.103+105 - 2026-09-20
+
+- feat: add direction-aware adult pose ending actions; fix: classify ahoge as a fixed hairstyle and separate animal traits from wearable animal accessories
+
+
 ## 1.1.102+104 - 2026-09-20
 
 - 固定角色外觀與頭部動態拆分：髮型、眼睛類型、臉部結構與身體特徵保留在角色外觀；表情、視線、嘴型與頭頸動作改由姿勢設定

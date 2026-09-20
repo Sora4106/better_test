@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.102",
-    "build":  104,
-    "label":  "1.1.102+104",
+    "version":  "1.1.103",
+    "build":  105,
+    "label":  "1.1.103+105",
     "history":  [
+                    {
+                        "version":  "1.1.103",
+                        "build":  105,
+                        "label":  "1.1.103+105",
+                        "date":  "2026-09-20",
+                        "notes":  "feat: add direction-aware adult pose ending actions; fix: classify ahoge as a fixed hairstyle and separate animal traits from wearable animal accessories"
+                    },
                     {
                         "version":  "1.1.102",
                         "build":  104,
