@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.107';
-const appBuildNumber = 109;
-const appVersionLabel = '1.1.107+109';
+﻿const appVersion = '1.1.108';
+const appBuildNumber = 110;
+const appVersionLabel = '1.1.108+110';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.108', 'build': '110', 'label': '1.1.108+110', 'date': '2026-09-20', 'notes': 'feat: 隱藏負面提示詞中英文顯示但保留調整與複製；新增12部動漫、21名角色及16套角色扮演服裝'},
   {'version': '1.1.107', 'build': '109', 'label': '1.1.107+109', 'date': '2026-09-20', 'notes': 'feat: 加入完整 Project SEKAI 角色名單與六大團體分類，移除動漫及角色列表顯示上限並支援團體搜尋'},
   {'version': '1.1.106', 'build': '108', 'label': '1.1.106+108', 'date': '2026-09-20', 'notes': 'fix: 移除角色預設中的 cute／可愛氣質標籤，避免觸發敏感詞限制'},
   {'version': '1.1.105', 'build': '107', 'label': '1.1.105+107', 'date': '2026-09-20', 'notes': 'feat: 新增 Project SEKAI 25時，在 Nightcord。與出包王女角色資料；補齊雙語角色特徵、髮型、眼睛、體態與表情標籤'},

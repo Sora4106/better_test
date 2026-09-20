@@ -4120,6 +4120,54 @@ List<TagItem> _seedTags() => [
       _tag('cosplay_dark_magician_girl_tag', '角色扮演', '黑魔導女孩（Cosplay 標籤）',
           'dark magician girl', 2,
           conflictGroup: 'onepiece_style'),
+      _tag('cosplay_artoria_saber', '角色扮演', 'Saber 藍白鎧甲洋裝',
+          'Saber cosplay outfit with blue armored dress and silver breastplate', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_tsunade', '角色扮演', '綱手綠色羽織忍者裝',
+          'Tsunade cosplay outfit with green haori and gray wrap top', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_konan', '角色扮演', '小南曉組織長袍',
+          'Konan cosplay outfit with black red-cloud cloak', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_yoruichi', '角色扮演', '夜一黑金戰鬥服',
+          'Yoruichi cosplay outfit with black sleeveless combat suit and gold arm guards', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_rangiku', '角色扮演', '亂菊死霸裝',
+          'Rangiku cosplay outfit with black shinigami robe and white sash', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_android_18', '角色扮演', '人造人 18 號牛仔背心裝',
+          'Android 18 cosplay outfit with denim vest striped shirt and denim skirt', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_revy', '角色扮演', '萊薇傭兵戰鬥裝',
+          'Revy cosplay outfit with black crop top denim hot pants and shoulder holsters', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_faye_valentine', '角色扮演', '菲黃色太空賞金獵人裝',
+          'Faye Valentine cosplay outfit with yellow crop top yellow hot pants and red jacket', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_motoko_kusanagi', '角色扮演', '草薙素子紫黑戰術服',
+          'Motoko Kusanagi cosplay outfit with purple tactical bodysuit and black jacket', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_fujiko_mine', '角色扮演', '峰不二子紅色禮服',
+          'Fujiko Mine cosplay outfit with red evening dress and black high heels', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_mei_mei', '角色扮演', '冥冥黑色長裙戰鬥裝',
+          'Mei Mei cosplay outfit with black long dress and black boots', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_mirko', '角色扮演', '米爾科白紫兔英雄裝',
+          'Mirko cosplay outfit with white purple rabbit hero bodysuit and thigh boots', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_riza_hawkeye', '角色扮演', '莉莎藍色軍官制服',
+          'Riza Hawkeye cosplay outfit with blue military uniform and black boots', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_olivier_armstrong', '角色扮演', '奧莉薇藍色將軍制服',
+          'Olivier Armstrong cosplay outfit with blue general uniform and fur-trimmed coat', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_nier_2b', '角色扮演', '2B 黑色哥德戰鬥洋裝',
+          '2B YoRHa cosplay outfit with black gothic combat dress and thigh boots', 2,
+          conflictGroup: 'onepiece_style'),
+      _tag('cosplay_nier_a2', '角色扮演', 'A2 黑色戰鬥緊身裝',
+          'A2 YoRHa cosplay outfit with black combat bodysuit and thigh boots', 2,
+          conflictGroup: 'onepiece_style'),
       _tag('clothing_bra', '胸罩', '胸罩', 'bra', 2, adult: true),
       _tag('clothing_sports_bra', '胸罩', '運動胸罩', 'sports bra', 2),
       _tag('clothing_lace_bra', '胸罩', '蕾絲胸罩', 'lace bra', 2, adult: true),
@@ -9144,54 +9192,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     return tokens.join('。 ');
   }
-
-  String _negativeTranslation(String tag) {
-    final custom = _customNegativeTranslations[tag.toLowerCase()];
-    if (custom != null && custom.trim().isNotEmpty) return custom;
-    const translations = {
-      'lowres': '低解析度',
-      'worst quality': '最差品質',
-      'bad quality': '低品質',
-      'bad anatomy': '解剖結構錯誤',
-      'bad hands': '手部錯誤',
-      'extra digits': '多餘手指',
-      'fewer digits': '手指數量不足',
-      'multiple views': '多視角',
-      'extra limbs': '多餘肢體',
-      'missing fingers': '缺少手指',
-      'deformed': '變形',
-      'poorly drawn face': '臉部繪製不佳',
-      'text': '文字',
-      'error': '錯誤',
-      'jpeg artifacts': 'JPEG 壓縮痕跡',
-      'watermark': '浮水印',
-      'logo': '標誌',
-      'signature': '簽名',
-      'unfinished': '未完成',
-      'displeasing': '令人不適的畫面',
-      'username': '使用者名稱',
-      'scan artifacts': '掃描痕跡',
-      'sketch': '草稿',
-      'monochrome': '單色',
-      'greyscale': '灰階',
-      'guro': '血腥獵奇',
-      'artist name': '藝術家名稱',
-      'old': '老舊風格',
-      'early': '早期風格',
-      'chromatic aberration': '色差',
-      'artistic error': '藝術錯誤',
-      'cropped hair': '短髮',
-      'close-cropped hair': '極短髮',
-      'long hair': '長髮',
-      'very long hair': '超長髮',
-      'medium hair': '中長髮',
-    };
-    return translations[tag.toLowerCase()] ??
-        (RegExp(r'[\u4e00-\u9fff]').hasMatch(tag) ? tag : '未內建翻譯：$tag');
-  }
-
-  String get _negativeZh =>
-      _negativeTokens.map((tag) => '${_negativeTranslation(tag)}。').join(' ');
 
   String get _negativeText => _negativeTokens.map((tag) => '$tag.').join(' ');
 
@@ -16328,14 +16328,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant)),
       const SizedBox(height: 10),
-      TextField(
-          controller: _negative,
-          maxLines: 4,
-          onChanged: (_) => setState(() {}),
-          decoration: const InputDecoration(
-              labelText: '負面標籤 English',
-              prefixIcon: Icon(Icons.block_outlined))),
-      const SizedBox(height: 10),
       Container(
           width: double.infinity,
           padding: const EdgeInsets.all(12),
@@ -16345,7 +16337,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .secondaryContainer
                   .withOpacity(.35),
               borderRadius: BorderRadius.circular(10)),
-          child: Text('負面標籤中文翻譯：\n$_negativeZh')),
+          child: const Row(children: [
+            Icon(Icons.visibility_off_outlined, size: 18),
+            SizedBox(width: 8),
+            Expanded(child: Text('負面提示內容已隱藏；仍可在下方調整，並使用左側「負」按鈕複製英文內容。')),
+          ])),
       const SizedBox(height: 12),
       _negativeTagPicker(),
       const SizedBox(height: 12),
@@ -16733,17 +16729,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             const SizedBox(height: 12),
             _unregisteredPositiveTagsPanel(),
             const SizedBox(height: 12),
-            TextField(
-              controller: _negative,
-              maxLines: 4,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: '負面標籤（Negative prompt）',
-                hintText: 'lowres, blurry, bad anatomy…',
-                prefixIcon: Icon(Icons.block_outlined),
-              ),
-            ),
-            const SizedBox(height: 8),
+            const Row(children: [
+              Icon(Icons.visibility_off_outlined, size: 18),
+              SizedBox(width: 8),
+              Expanded(child: Text('負面提示內容已隱藏；仍可選擇標籤並使用左側「負」按鈕複製。')),
+            ]),
+            const SizedBox(height: 10),
             _negativeTagPicker(),
           ],
         ),
@@ -16951,20 +16942,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         children: [english, const SizedBox(width: 14), chinese],
                       );
               },
-            ),
-            const SizedBox(height: 12),
-            _outputField(
-              'Negative prompt · 負面標籤',
-              _negativeText,
-              onCopy: () => _copy(_negativeText, '負面標籤'),
-              maxLines: 3,
-            ),
-            const SizedBox(height: 12),
-            _outputField(
-              'Negative prompt · 中文翻譯',
-              _negativeZh,
-              onCopy: () => _copy(_negativeZh, '負面中文翻譯'),
-              maxLines: 3,
             ),
             const SizedBox(height: 12),
             Container(
