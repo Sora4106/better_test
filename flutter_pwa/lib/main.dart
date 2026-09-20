@@ -11158,11 +11158,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final lower = slot.animeQuery.trim().toLowerCase();
     final seen = <String>{};
     final matches = _allCharacters.where((item) {
-      if (!seen.add(item.animeTag)) return false;
-      if (lower.isEmpty) return true;
-      return '${item.animeZh} ${item.animeEn} ${item.animeTag}'
-          .toLowerCase()
-          .contains(lower);
+      if (lower.isNotEmpty &&
+          !'${item.animeZh} ${item.animeEn} ${item.animeTag} ${item.unitZh} ${item.unitEn} ${item.unitTag}'
+              .toLowerCase()
+              .contains(lower)) {
+        return false;
+      }
+      return seen.add(item.animeTag);
     }).toList();
     if (slot.animeTag.isNotEmpty) {
       matches.sort((a, b) {
@@ -11172,7 +11174,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         return aSelected ? -1 : 1;
       });
     }
-    return matches.take(18).toList();
+    return matches;
   }
 
   List<CatalogCharacter> _matchingCharacters(PersonSlot slot) {
@@ -11182,7 +11184,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         return false;
       }
       if (lower.isEmpty) return true;
-      return '${item.animeZh} ${item.animeEn} ${item.characterZh} ${item.characterEn} ${item.animeTag} ${item.characterTag}'
+      return '${item.animeZh} ${item.animeEn} ${item.characterZh} ${item.characterEn} ${item.animeTag} ${item.characterTag} ${item.unitZh} ${item.unitEn} ${item.unitTag}'
           .toLowerCase()
           .contains(lower);
     }).toList();
@@ -11193,7 +11195,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         return (aIndex < 0 ? 999 : aIndex).compareTo(bIndex < 0 ? 999 : bIndex);
       });
     }
-    return source.take(18).toList();
+    return source;
   }
 
   Future<Map<String, dynamic>> _remoteJson(String url) async {
@@ -16030,7 +16032,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 children: matches
                                     .map((character) => ChoiceChip(
                                         label: Text(
-                                            '${character.characterZh} · ${character.characterEn}'),
+                                            character.unitZh.isEmpty
+                                                ? '${character.characterZh} · ${character.characterEn}'
+                                                : '${character.characterZh} · ${character.characterEn}\n${character.unitZh}',
+                                            textAlign: TextAlign.center),
                                         selected:
                                             slot.characterId == character.id,
                                         onSelected: (_) =>
