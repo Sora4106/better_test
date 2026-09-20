@@ -81,6 +81,7 @@ final List<CatalogTagData> fingerGestureTags = <CatalogTagData>[
       ('豎起拇指', 'thumbs up', 'official'),
       ('拇指向下', 'thumbs down', 'official'),
       ('食指抵唇噤聲', 'shushing', 'official'),
+      ('雙食指相貼', 'index fingers together', 'official'),
     ],
   ),
   ..._fingerGestureTags(
@@ -89,6 +90,7 @@ final List<CatalogTagData> fingerGestureTags = <CatalogTagData>[
     const [
       ('手指放在嘴邊', 'finger to mouth', 'official'),
       ('手指貼著臉頰', 'finger to cheek', 'official'),
+      ('手遮臉無奈動作', 'facepalm', 'official'),
       ('舔自己的手指', 'licking own finger', 'official'),
       ('舔另一人的手指', "licking another's finger", 'official'),
       ('自己的手指放入口中', 'finger in own mouth', 'official'),

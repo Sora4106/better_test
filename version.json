@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.101",
-    "build":  103,
-    "label":  "1.1.101+103",
+    "version":  "1.1.102",
+    "build":  104,
+    "label":  "1.1.102+104",
     "history":  [
+                    {
+                        "version":  "1.1.102",
+                        "build":  104,
+                        "label":  "1.1.102+104",
+                        "date":  "2026-09-20",
+                        "notes":  "feat: separate fixed appearance from dynamic pose controls; reorganize pose tags and add official symbolic expressions"
+                    },
                     {
                         "version":  "1.1.101",
                         "build":  103,

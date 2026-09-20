@@ -16,10 +16,15 @@ import 'prompt_package_data.dart';
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
 const _stepLayoutVersion = 3;
-const _expressionEyesGroup = '表情・眼睛';
-const _expressionMouthGroup = '表情・嘴巴';
-const _expressionTeasingGroup = '表情・挑逗';
-const _expressionOtherGroup = '表情・其他臉部';
+// Dynamic head details are selected with poses, not with permanent character
+// appearance.  Keep the actual stored tag groups unchanged for compatibility.
+const _staticFaceAppearanceGroup = '固定外觀・臉部結構';
+const _expressionEyesGroup = '頭部動態・眼睛／視線';
+const _expressionMouthGroup = '頭部動態・嘴巴／口型';
+const _expressionTeasingGroup = '頭部動態・挑逗';
+const _expressionSymbolGroup = '頭部動態・符號表情';
+const _expressionOtherGroup = '頭部動態・情緒／其他';
+const _objectInteractionGroup = '互動・物件動作';
 const _indoorSceneGroup = '室內場景';
 const _outdoorSceneGroup = '戶外場景';
 const _outdoorTimeGroup = '戶外時段';
@@ -4319,6 +4324,22 @@ List<TagItem> _seedTags() => [
       _tag('expr_raised_eyebrow', '表情', '挑眉', 'raised eyebrow', 3),
       _tag('expr_squinting', '表情', '瞇起眼', 'squinting', 3),
       _tag('expr_staring', '表情', '凝視', 'staring', 3),
+      // Danbooru-style symbol expressions. Use the canonical symbols: >_<
+      // and @_@. The older >o< form is deprecated and is intentionally omitted.
+      _tag('expr_symbol_squeezed_face', '表情', '困擾擠壓臉', '>_<', 3),
+      _tag('expr_symbol_dizzy_face', '表情', '驚愕暈眩臉', '@_@', 3),
+      _tag('expr_symbol_cheerful', '表情', '開心符號表情', '^^^', 3),
+      _tag('expr_symbol_happy_eyes', '表情', '彎眼開心符號', '^_^', 3),
+      _tag('expr_symbol_round_eyes', '表情', '圓眼驚訝符號', 'o_o', 3),
+      _tag('expr_symbol_x_eyes', '表情', 'X 眼符號', 'x_x', 3),
+      _tag('expr_symbol_v_mouth', '表情', 'V 形符號嘴', 'v', 3),
+      _tag('expr_symbol_playful', '表情', '俏皮眨眼嘴', ';3', 3),
+      _tag('expr_spoken_squiggle', '表情', '說話波浪符號', 'spoken squiggle', 3),
+      _tag('expr_jitome', '表情', '半閉嫌棄眼', 'jitome', 3),
+      _tag('expr_unamused', '表情', '不以為然', 'unamused', 3),
+      _tag('expr_flustered', '表情', '慌張害羞', 'flustered', 3),
+      _tag('expr_crazy_eyes', '表情', '瘋狂眼神', 'crazy eyes', 3),
+      _tag('expr_crazy_smile', '表情', '瘋狂笑容', 'crazy smile', 3),
 
       // Pose/action.
       _tag('pose_standing', '站立與蹲姿', '站立', 'standing', 4),
@@ -4462,6 +4483,7 @@ List<TagItem> _seedTags() => [
       _tag('action_cooking', '動作', '烹飪', 'cooking', 4),
       _tag('action_eating', '動作', '吃東西', 'eating', 4),
       _tag('action_drinking', '動作', '喝東西', 'drinking', 4),
+      _tag('action_holding_flame', '動作', '手持火焰', 'holding flame', 4),
 
       // Composable actions: select one of these together with an object to
       // generate a single prompt noun, such as "hugging teddy bear".
@@ -4759,6 +4781,8 @@ List<TagItem> _seedTags() => [
       _tag('scene_classroom', _indoorSceneGroup, '教室', 'classroom', 9),
       _tag('scene_beach', _outdoorSceneGroup, '海灘', 'beach', 9),
       _tag('scene_cherry_blossoms', _outdoorSceneGroup, '櫻花樹下', 'cherry blossoms', 9),
+      _tag('scene_snowing', _outdoorSceneGroup, '下雪', 'snowing', 9),
+      _tag('scene_cold', _outdoorSceneGroup, '寒冷', 'cold', 9),
       _tag('scene_sunrise', _outdoorTimeGroup, '日出', 'sunrise', 9,
           conflictGroup: 'outdoor_time'),
       _tag('scene_dusk', _outdoorTimeGroup, '黃昏', 'dusk', 9,
@@ -4770,6 +4794,17 @@ List<TagItem> _seedTags() => [
       _tag('scene_simple_background', _indoorSceneGroup, '簡單背景', 'simple background', 9),
       _tag('scene_evening_light', '畫面', '黃昏光線', 'evening light', 10,
           conflictGroup: 'lighting'),
+      _tag('effect_breath', '畫面', '呼出白氣', 'breath', 10),
+      _tag('effect_snowflakes', '畫面', '飄落雪花', 'snowflakes', 10),
+      _tag('effect_shiny_skin', '畫面', '發亮肌膚', 'shiny skin', 10),
+      _tag('effect_glitter', '畫面', '閃粉光點', 'glitter', 10),
+      _tag('effect_light_particles', '畫面', '光粒子', 'light particles', 10),
+      _tag('effect_black_fire', '畫面', '黑色火焰', 'black fire', 10),
+      _tag('effect_high_contrast', '畫面', '高對比', 'high contrast', 10),
+      _tag('effect_depth_of_field', '畫面', '景深', 'depth of field', 10),
+      _tag('effect_complementary_colors', '畫面', '互補色搭配', 'complementary colors', 10),
+      _tag('effect_foreshortening', '畫面', '透視縮短', 'foreshortening', 10),
+      _tag('effect_colorful', '畫面', '繽紛色彩', 'colorful', 10),
       _tag('frame_japanese_text', '畫面', '日文文字', 'japanese text', 10),
       // Danbooru image-composition tags: framing from head to toe.
       _tag('camera_portrait', _cameraFramingGroup, '臉部到肩膀肖像', 'portrait', 10),
@@ -5065,8 +5100,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _tagsByGroupCache!;
   }
 
+  /// Avoid showing the same English prompt token twice when legacy and newer
+  /// catalogs both contain it. The first item keeps its existing ID so saved
+  /// selections remain compatible.
+  List<TagItem> _uniquePickerTags(Iterable<TagItem> tags) {
+    final seen = <String>{};
+    return tags
+        .where((tag) => seen.add(_cleanTag(tag.en).toLowerCase()))
+        .toList();
+  }
+
   List<TagItem> _tagsForPickerGroup(String group) {
     _allTags;
+    if (group == _staticFaceAppearanceGroup) {
+      return (_tagsByGroupCache!['臉部特徵'] ?? const <TagItem>[])
+          .where(_isStaticFaceAppearanceTag)
+          .toList();
+    }
+    if (group == _objectInteractionGroup) {
+      return _allTags.where(_isObjectInteractionTag).toList();
+    }
     if (_isObjectPickerGroup(group)) {
       return _allTags
           .where((tag) => _objectPickerGroupForTag(tag) == group)
@@ -5106,16 +5159,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ];
     }
     if (group == '表情') {
-      return <TagItem>[
+      return _uniquePickerTags(<TagItem>[
         ...?_tagsByGroupCache!['表情'],
         ...?_tagsByGroupCache!['臉部特徵'],
-      ];
+      ].where(_isDynamicHeadActionTag));
     }
     if (_isExpressionPickerGroup(group)) {
-      return <TagItem>[
+      return _uniquePickerTags(<TagItem>[
         ...?_tagsByGroupCache!['表情'],
         ...?_tagsByGroupCache!['臉部特徵'],
-      ].where((tag) => _expressionSubgroupForTag(tag) == group).toList();
+      ].where((tag) => _expressionSubgroupForTag(tag) == group));
+    }
+    if (group == '動作') {
+      return (_tagsByGroupCache!['動作'] ?? const <TagItem>[])
+          .where((tag) => !_isObjectInteractionTag(tag))
+          .toList();
     }
     return _tagsByGroupCache![group] ?? const <TagItem>[];
   }
@@ -5127,7 +5185,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         unique.putIfAbsent(tag.id, () => tag);
       }
     }
-    return unique.values.toList();
+    return _uniquePickerTags(unique.values);
   }
 
   List<CatalogCharacter> get _allCharacters =>
@@ -5324,6 +5382,55 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isFaceExpressionTag(TagItem tag) =>
       tag.group == '臉部特徵' || tag.group == '表情';
 
+  static const _staticFaceAppearanceIds = <String>{
+    'face_fangs',
+    'face_sharp_teeth',
+    'face_ahoge',
+    'face_animal_ears',
+    'face_cat_ears',
+    'face_fox_ears',
+    'face_horns',
+    'face_elf_ears',
+    'face_pointy_ears',
+    'face_eyebrows',
+    'face_lips',
+  };
+
+  /// These are permanent visual traits. All other face tags describe a
+  /// momentary expression, gaze, mouth shape, or head action and belong to
+  /// the pose workflow.
+  bool _isStaticFaceAppearanceTag(TagItem tag) =>
+      tag.group == '臉部特徵' && _staticFaceAppearanceIds.contains(tag.id);
+
+  bool _isObjectInteractionTag(TagItem tag) =>
+      tag.group == '動作' && tag.conflictGroup == 'object_interaction_mode';
+
+  bool _isDynamicHeadActionTag(TagItem tag) =>
+      tag.group == '表情' ||
+      tag.group == '頭部姿勢' ||
+      (tag.group == '臉部特徵' && !_isStaticFaceAppearanceTag(tag));
+
+  bool _isFixedCharacterFeatureTag(TagItem tag) =>
+      const {
+        '身體特徵',
+        '眼睛',
+        '額外特徵',
+        '額外特徵位置',
+        '額外特徵顏色',
+        '髮長',
+        '髮型',
+        '髮色',
+        '胸部',
+        '裸露',
+      }.contains(tag.group) ||
+      _isStaticFaceAppearanceTag(tag);
+
+  bool _isPoseWorkflowTag(TagItem tag) =>
+      _isDynamicHeadActionTag(tag) ||
+      const {'姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'}
+          .contains(tag.group) ||
+      expandedPickerTagGroups.contains(tag.group);
+
   bool _isObjectPickerGroup(String group) => _objectPickerGroups.contains(group);
 
   bool _isObjectTag(TagItem tag) => tag.group == '物件';
@@ -5431,13 +5538,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _expressionEyesGroup,
         _expressionMouthGroup,
         _expressionTeasingGroup,
+        _expressionSymbolGroup,
         _expressionOtherGroup,
       }.contains(group);
 
   String? _expressionSubgroupForTag(TagItem tag) {
-    if (!_isFaceExpressionTag(tag)) return null;
+    if (!_isDynamicHeadActionTag(tag)) return null;
 
     final english = tag.en.toLowerCase();
+    const symbolExpressions = <String>{
+      '>_<',
+      '@_@',
+      '^^^',
+      '^_^',
+      'o_o',
+      'x_x',
+      'v',
+      ';3',
+      ':3',
+      '3:',
+      'spoken squiggle',
+      'anger vein',
+      'facial mark',
+    };
+    if (symbolExpressions.contains(english)) {
+      return _expressionSymbolGroup;
+    }
     const teasingExpressions = <String>{
       'seductive expression',
       'seductive smile',
@@ -7126,6 +7252,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (tag == null) return false;
       return tag.group == '\u59ff\u52e2' ||
           tag.group == '\u52d5\u4f5c' ||
+          _isDynamicHeadActionTag(tag) ||
           expandedGeneralPoseGroups.contains(tag.group) ||
           expandedAdultToolGroups.contains(tag.group) ||
           (_personSlots.length <= 1 && _isSharedActionGroup(tag.group));
@@ -7137,7 +7264,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     '角色標籤',
     '自訂角色',
     '自訂特徵',
-    '臉部特徵',
     '身體特徵',
     '眼睛',
     '胸部',
@@ -7154,7 +7280,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (output.characterTag) return true;
     return output.tagIds.any((id) {
       final tag = _tagsById[id];
-      return tag != null && _characterWeightGroups.contains(tag.group);
+      return tag != null &&
+          (_characterWeightGroups.contains(tag.group) ||
+              _isStaticFaceAppearanceTag(tag));
     });
   }
 
@@ -7277,9 +7405,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .where((group) => !_isScopedClothingGroup(group))
             .where((group) => group != '髮色' && group != '臉部特徵')
             .toSet(),
+        _staticFaceAppearanceGroup,
         _expressionEyesGroup,
         _expressionMouthGroup,
         _expressionTeasingGroup,
+        _expressionSymbolGroup,
         _expressionOtherGroup,
       ];
 
@@ -9034,6 +9164,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _tagBelongsToRandomGroups(TagItem tag, Set<String> groups) {
     if (groups.contains(tag.group)) return true;
+    if (groups.contains(_staticFaceAppearanceGroup) &&
+        _isStaticFaceAppearanceTag(tag)) {
+      return true;
+    }
+    if (groups.contains(_objectInteractionGroup) &&
+        _isObjectInteractionTag(tag)) {
+      return true;
+    }
     final objectPickerGroup = _objectPickerGroupForTag(tag);
     if (objectPickerGroup != null && groups.contains(objectPickerGroup)) {
       return true;
@@ -9070,10 +9208,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return true;
     }
 
-    List<TagItem> candidates(String group) => _allTags
-        .where((tag) =>
-            (tag.group == group || _objectPickerGroupForTag(tag) == group) &&
-            (_showAdult || !tag.adult))
+    List<TagItem> candidates(String group) => _tagsForPickerGroup(group)
+        .where((tag) => _showAdult || !tag.adult)
         .toList()
       ..shuffle(random);
 
@@ -9112,6 +9248,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (groupSet.contains('眼睛')) {
       addRandomFromGroup('眼睛', max: 2);
     }
+    if (groupSet.contains(_staticFaceAppearanceGroup)) {
+      addRandomFromGroup(_staticFaceAppearanceGroup, max: 2);
+    }
     if (groupSet.contains('身體特徵')) {
       addRandomFromGroup('身體特徵', max: 2);
     }
@@ -9128,8 +9267,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       addRandomFromGroup('髮型', min: 1, max: 2);
     }
     if (groupSet.contains('表情')) {
-      addRandomFromGroup('臉部特徵', max: 3);
-      addRandomFromGroup('表情', max: 5);
+      addRandomFromExpressionGroup(_expressionEyesGroup, max: 2);
+      addRandomFromExpressionGroup(_expressionMouthGroup, max: 2);
+      addRandomFromExpressionGroup(_expressionTeasingGroup, max: 1);
+      addRandomFromExpressionGroup(_expressionSymbolGroup, max: 1);
+      addRandomFromExpressionGroup(_expressionOtherGroup, max: 2);
     }
     if (groupSet.contains(_expressionEyesGroup)) {
       addRandomFromExpressionGroup(_expressionEyesGroup, max: 3);
@@ -9139,6 +9281,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (groupSet.contains(_expressionTeasingGroup)) {
       addRandomFromExpressionGroup(_expressionTeasingGroup, max: 3);
+    }
+    if (groupSet.contains(_expressionSymbolGroup)) {
+      addRandomFromExpressionGroup(_expressionSymbolGroup, max: 2);
     }
     if (groupSet.contains(_expressionOtherGroup)) {
       addRandomFromExpressionGroup(_expressionOtherGroup, max: 3);
@@ -9174,6 +9319,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     const directlyHandledGroups = <String>{
       '眼睛',
+      _staticFaceAppearanceGroup,
       '身體特徵',
       '額外特徵',
       '髮長',
@@ -9182,6 +9328,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _expressionEyesGroup,
       _expressionMouthGroup,
       _expressionTeasingGroup,
+      _expressionSymbolGroup,
       _expressionOtherGroup,
       '胸部',
       '裸露',
@@ -9197,6 +9344,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final pool = _allTags
           .where((tag) =>
               (expandedGroups.contains(tag.group) ||
+                  (expandedGroups.contains(_objectInteractionGroup) &&
+                      _isObjectInteractionTag(tag)) ||
                   expandedGroups.contains(_objectPickerGroupForTag(tag))) &&
               (_showAdult || !tag.adult))
           .toList()
@@ -9208,6 +9357,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (added
                 .where((item) =>
                     expandedGroups.contains(item.group) ||
+                    (expandedGroups.contains(_objectInteractionGroup) &&
+                        _isObjectInteractionTag(item)) ||
                     expandedGroups.contains(_objectPickerGroupForTag(item)))
                 .length >=
             maxCount) {
@@ -10089,7 +10240,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       0: '場景與畫面',
       1: '角色資料',
       2: '組合標籤',
-      3: '角色特徵',
+      3: '固定角色外觀',
       4: '服裝與穿脫狀態',
       5: '姿勢、互動與成人分類',
       6: '品質、額外與負面',
@@ -10114,35 +10265,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
     if (confirmed != true) return;
 
-    const characterGroups = <String>{
-      '身體特徵',
-      '眼睛',
-      '臉部特徵',
-      '表情',
-      '額外特徵',
-      '額外特徵位置',
-      '額外特徵顏色',
-      '髮長',
-      '髮型',
-      '髮色',
-      '胸部',
-      '裸露',
-    };
-    const poseGroups = <String>{
-      '姿勢',
-      '動作',
-      '物件',
-      '成人道具',
-      '性行為',
-      '性姿勢',
-    };
     final removableByGroup = (Set<String> groups) => _allTags
         .where((tag) => groups.contains(tag.group))
         .map((tag) => tag.id)
         .toSet();
-    void removePersonTags(bool Function(String group) matches) {
+    void removePersonTagsWhere(bool Function(TagItem tag) matches) {
       final removable = _allTags
-          .where((tag) => matches(tag.group))
+          .where(matches)
           .map((tag) => tag.id)
           .toSet();
       for (final ids in _personSelectedIds.values) {
@@ -10202,7 +10331,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _personCombinationIds.clear();
           break;
         case 3:
-          removePersonTags(characterGroups.contains);
+          removePersonTagsWhere(_isFixedCharacterFeatureTag);
           for (var personIndex = 0;
               personIndex < _personSlots.length;
               personIndex++) {
@@ -10221,16 +10350,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
           break;
         case 4:
-          removePersonTags(_isClothingGroup);
+          removePersonTagsWhere((tag) => _isClothingGroup(tag.group));
           break;
         case 5:
           _removeAdultPosePackageTags();
           final sharedActionIds =
               removableByGroup(_sharedActionPickerGroups.toSet());
           _selectedIds.removeWhere(sharedActionIds.contains);
-          removePersonTags((group) =>
-              poseGroups.contains(group) ||
-              expandedPickerTagGroups.contains(group));
+          removePersonTagsWhere(_isPoseWorkflowTag);
           for (var personIndex = 0;
               personIndex < _personSlots.length;
               personIndex++) {
@@ -10314,6 +10441,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..._clothingAccessoryPickerGroups,
     }.contains(group);
     final tags = selected.where((tag) {
+      if (group == _staticFaceAppearanceGroup) {
+        return _isStaticFaceAppearanceTag(tag);
+      }
+      if (group == _objectInteractionGroup) {
+        return _isObjectInteractionTag(tag);
+      }
       if (_isObjectPickerGroup(group)) {
         return _objectPickerGroupForTag(tag) == group;
       }
@@ -12542,13 +12675,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final tags = _allTags.where((tag) {
       final hairColorInHairGroup = effectiveGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
-          effectiveGroup == '表情' && tag.group == '臉部特徵';
+          effectiveGroup == '表情' &&
+              tag.group == '臉部特徵' &&
+              _isDynamicHeadActionTag(tag);
       final faceExpressionInSubgroup = _expressionSubgroupForTag(tag) == group;
+      final staticFaceAppearanceMatch =
+          group == _staticFaceAppearanceGroup && _isStaticFaceAppearanceTag(tag);
+      final objectInteractionMatch =
+          group == _objectInteractionGroup && _isObjectInteractionTag(tag);
       final groupMatch = group == '全部' ||
           tag.group == effectiveGroup ||
           hairColorInHairGroup ||
           faceExpressionInMergedGroup ||
-          faceExpressionInSubgroup;
+          faceExpressionInSubgroup ||
+          staticFaceAppearanceMatch ||
+          objectInteractionMatch;
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -12639,6 +12780,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '全身姿勢': Color(0xffe879f9),
       '軀幹姿勢': Color(0xff2dd4bf),
       '頭部姿勢': Color(0xfff472b6),
+      _expressionEyesGroup: Color(0xfff472b6),
+      _expressionMouthGroup: Color(0xfffb7185),
+      _expressionTeasingGroup: Color(0xffe879f9),
+      _expressionSymbolGroup: Color(0xfffacc15),
+      _expressionOtherGroup: Color(0xffc084fc),
+      _staticFaceAppearanceGroup: Color(0xff60a5fa),
       '手臂姿勢': Color(0xff60a5fa),
       '手部姿勢': Color(0xffa3e635),
       '手指・指向方向': Color(0xfffacc15),
@@ -12651,8 +12798,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '身體動作': Color(0xfff97316),
       '親吻動作': Color(0xfff9a8d4),
       '多人互動': Color(0xfffacc15),
-       '角色姿勢': Color(0xffc084fc),
-       '物件': Color(0xff94a3b8),
+      '角色姿勢': Color(0xffc084fc),
+      '物件': Color(0xff94a3b8),
+      _objectInteractionGroup: Color(0xff14b8a6),
        _objectFurnitureGroup: Color(0xffa8a29e),
        _objectDiningGroup: Color(0xfffb923c),
        _objectStudyGroup: Color(0xff60a5fa),
@@ -12973,9 +13121,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               selectedClothingScopes.contains(_scopedClothingSlot(tag.group)));
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup =
-          activeGroup == '表情' && tag.group == '臉部特徵';
+          activeGroup == '表情' &&
+              tag.group == '臉部特徵' &&
+              _isDynamicHeadActionTag(tag);
       final faceExpressionInSubgroup =
           _expressionSubgroupForTag(tag) == activeGroup;
+      final staticFaceAppearanceMatch =
+          activeGroup == _staticFaceAppearanceGroup &&
+              _isStaticFaceAppearanceTag(tag);
+      final staticFaceInPickerGroups =
+          groups.contains(_staticFaceAppearanceGroup) &&
+              _isStaticFaceAppearanceTag(tag);
+      final objectInteractionMatch =
+          activeGroup == _objectInteractionGroup && _isObjectInteractionTag(tag);
+      final objectInteractionInPickerGroups =
+          groups.contains(_objectInteractionGroup) && _isObjectInteractionTag(tag);
       final objectPickerGroup = _objectPickerGroupForTag(tag);
       final objectCategoryMatch = objectPickerGroup == activeGroup;
       final objectInPickerGroups =
@@ -13007,22 +13167,29 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               _clothingBaseDisplayGroup(tag) == activeGroup);
       final directActiveGroupMatch = usesClothingBaseDisplayGroup
           ? clothingBaseDisplayMatch
-          : tag.group == activeGroup || objectCategoryMatch;
+          : tag.group == activeGroup ||
+              objectCategoryMatch ||
+              staticFaceAppearanceMatch ||
+              objectInteractionMatch;
       final inGroup = searchAcrossGroups
           ? pickerTagIds.contains(tag.id)
           : (groups.contains(tag.group) ||
                   objectInPickerGroups ||
+                  staticFaceInPickerGroups ||
+                  objectInteractionInPickerGroups ||
                   clothingBaseDisplayMatch ||
                   allClothingWear ||
                   hairColorInHairGroup ||
                   faceExpressionInMergedGroup ||
                   faceExpressionInSubgroup) &&
-              (activeGroup == null ||
-                  directActiveGroupMatch ||
-                  allClothingWear ||
-                  hairColorInHairGroup ||
-                  faceExpressionInMergedGroup ||
-                  faceExpressionInSubgroup);
+                  (activeGroup == null ||
+                      directActiveGroupMatch ||
+                      allClothingWear ||
+                      hairColorInHairGroup ||
+                      faceExpressionInMergedGroup ||
+                      faceExpressionInSubgroup ||
+                      staticFaceAppearanceMatch ||
+                      objectInteractionMatch);
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -14177,8 +14344,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           int selectedCountForPickerGroup(String pickerGroup) =>
               _selectedTagsForPerson(index)
                   .where((tag) =>
-                      tag.group == pickerGroup ||
-                      _objectPickerGroupForTag(tag) == pickerGroup)
+                      (tag.group == pickerGroup &&
+                          !(pickerGroup == '動作' &&
+                              _isObjectInteractionTag(tag))) ||
+                      _objectPickerGroupForTag(tag) == pickerGroup ||
+                      (pickerGroup == _staticFaceAppearanceGroup &&
+                          _isStaticFaceAppearanceTag(tag)) ||
+                      (pickerGroup == _objectInteractionGroup &&
+                          _isObjectInteractionTag(tag)) ||
+                      (_isExpressionPickerGroup(pickerGroup) &&
+                          _expressionSubgroupForTag(tag) == pickerGroup))
                   .length;
           return Card(
             margin: const EdgeInsets.only(bottom: 10),
@@ -15723,26 +15898,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           onClear: () => _clearStepTags(2)),
       _stepCard(
           3,
-          '角色特徵',
+          '固定角色外觀',
           _personSelectedIds.isEmpty
               ? '每位人物分別設定'
               : _personSelectedIds.values
                   .expand(
                       (ids) => _allTags.where((tag) => ids.contains(tag.id)))
-                  .where((tag) => [
-                        '身體特徵',
-                        '眼睛',
-                        '額外特徵',
-                        '額外特徵位置',
-                        '額外特徵顏色',
-                        '髮長',
-                        '髮色',
-                        '髮型',
-                        '臉部特徵',
-                        '胸部',
-                        '裸露',
-                        '表情'
-                      ].contains(tag.group))
+                  .where(_isFixedCharacterFeatureTag)
                   .map((tag) => tag.zh)
                   .join('、')
                   .ifEmpty('尚未選擇'),
@@ -15750,11 +15912,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _stepPersonTagPicker([
             '髮長',
             '髮型',
-            _expressionEyesGroup,
-            _expressionMouthGroup,
-            _expressionTeasingGroup,
-            _expressionOtherGroup,
             '眼睛',
+            _staticFaceAppearanceGroup,
             '額外特徵',
             '額外特徵位置',
             '額外特徵顏色',
@@ -15764,7 +15923,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ],
               nextLabel: '下一步：服裝',
               instruction:
-                  '請依頭部到身體的順序設定每位人物：髮長、髮型、眼睛與臉部表情，再設定額外特徵、身體特徵、胸部與裸露；髮色會在髮型分類中置於下方。'),
+                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材與額外特徵。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
       _stepCard(
           4,
@@ -15811,10 +15970,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           '姿勢、互動與成人分類',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
-              .where((tag) =>
-                  ['姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢']
-                      .contains(tag.group) ||
-                  expandedPickerTagGroups.contains(tag.group))
+              .where(_isPoseWorkflowTag)
               .map((tag) => tag.zh)
               .followedBy(_selectedTags
                   .where((tag) => _isSharedActionGroup(tag.group))
@@ -15824,7 +15980,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Icons.accessibility_new,
           _stepCategorizedPersonTagPicker(expandedTagPickerSections,
               nextLabel: '下一步：品質與負面',
-              instruction: '先選上層分類，再選細分類與標籤；每位人物會保留自己的姿勢、互動、服飾與成人內容。'),
+              instruction: '依序選頭部、上半身、下半身、全身姿勢，再選物件或人物互動；成人性姿勢與道具集中在最後。每位人物會保留自己的動作與互動。'),
           onClear: () => _clearStepTags(5)),
       _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal(),
