@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.104';
-const appBuildNumber = 106;
-const appVersionLabel = '1.1.104+106';
+﻿const appVersion = '1.1.105';
+const appBuildNumber = 107;
+const appVersionLabel = '1.1.105+107';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.105', 'build': '107', 'label': '1.1.105+107', 'date': '2026-09-20', 'notes': 'feat: 新增 Project SEKAI 25時，在 Nightcord。與出包王女角色資料；補齊雙語角色特徵、髮型、眼睛、體態與表情標籤'},
   {'version': '1.1.104', 'build': '106', 'label': '1.1.104+106', 'date': '2026-09-20', 'notes': 'feat: add typed, color-customizable wing prompt blocks; feat: add standalone adult pulling-out actions and 100 editable sensual pose packages'},
   {'version': '1.1.103', 'build': '105', 'label': '1.1.103+105', 'date': '2026-09-20', 'notes': 'feat: add direction-aware adult pose ending actions; fix: classify ahoge as a fixed hairstyle and separate animal traits from wearable animal accessories'},
   {'version': '1.1.102', 'build': '104', 'label': '1.1.102+104', 'date': '2026-09-20', 'notes': 'feat: separate fixed appearance from dynamic pose controls; reorganize pose tags and add official symbolic expressions'},

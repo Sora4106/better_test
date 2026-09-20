@@ -1,5 +1,10 @@
 ﻿# 更新紀錄
 
+## 1.1.105+107 - 2026-09-20
+
+- feat: 新增 Project SEKAI 25時，在 Nightcord。與出包王女角色資料；補齊雙語角色特徵、髮型、眼睛、體態與表情標籤
+
+
 ## 1.1.104+106 - 2026-09-20
 
 - feat: add typed, color-customizable wing prompt blocks; feat: add standalone adult pulling-out actions and 100 editable sensual pose packages
