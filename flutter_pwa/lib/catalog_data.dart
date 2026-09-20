@@ -167,11 +167,27 @@ const supplementalTags = <CatalogTagData>[
   CatalogTagData(
       id: 'trait_bunny_tail', group: '獸化特徵', zh: '兔尾（角色特徵）', en: 'bunny tail', order: 1),
   CatalogTagData(
-      id: 'trait_wings', group: '獸化特徵', zh: '翅膀（角色特徵）', en: 'wings', order: 1),
+      id: 'trait_wings', group: '獸化特徵', zh: '一般翅膀', en: 'wings', order: 1, conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_feathered_wings', group: '獸化特徵', zh: '羽翼（角色特徵）', en: 'feathered wings', order: 1),
+      id: 'trait_feathered_wings', group: '獸化特徵', zh: '羽毛翅膀', en: 'feathered wings', order: 1, conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_bat_wings', group: '獸化特徵', zh: '蝙蝠翼（角色特徵）', en: 'bat wings', order: 1),
+      id: 'trait_bat_wings', group: '獸化特徵', zh: '蝙蝠翅膀', en: 'bat wings', order: 1, conflictGroup: 'wing_type'),
+  CatalogTagData(
+      id: 'trait_angel_wings', group: '獸化特徵', zh: '天使翅膀', en: 'angel wings', order: 1, conflictGroup: 'wing_type'),
+  CatalogTagData(
+      id: 'trait_demon_wings', group: '獸化特徵', zh: '惡魔翅膀', en: 'demon wings', order: 1, conflictGroup: 'wing_type'),
+  CatalogTagData(
+      id: 'trait_dragon_wings', group: '獸化特徵', zh: '龍翼', en: 'dragon wings', order: 1, conflictGroup: 'wing_type'),
+  CatalogTagData(
+      id: 'trait_fairy_wings', group: '獸化特徵', zh: '精靈翅膀', en: 'fairy wings', order: 1, conflictGroup: 'wing_type'),
+  CatalogTagData(
+      id: 'trait_butterfly_wings', group: '獸化特徵', zh: '蝴蝶翅膀', en: 'butterfly wings', order: 1, conflictGroup: 'wing_type'),
+  CatalogTagData(
+      id: 'trait_insect_wings', group: '獸化特徵', zh: '昆蟲翅膀', en: 'insect wings', order: 1, conflictGroup: 'wing_type'),
+  CatalogTagData(
+      id: 'trait_mechanical_wings', group: '獸化特徵', zh: '機械翅膀', en: 'mechanical wings', order: 1, conflictGroup: 'wing_type'),
+  CatalogTagData(
+      id: 'trait_skeletal_wings', group: '獸化特徵', zh: '骨骼翅膀', en: 'skeletal wings', order: 1, conflictGroup: 'wing_type'),
   CatalogTagData(
       id: 'face_horns', group: '臉部特徵', zh: '角', en: 'horns', order: 1),
   CatalogTagData(

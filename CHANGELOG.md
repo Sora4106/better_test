@@ -1,5 +1,10 @@
 ﻿# 更新紀錄
 
+## 1.1.104+106 - 2026-09-20
+
+- feat: add typed, color-customizable wing prompt blocks; feat: add standalone adult pulling-out actions and 100 editable sensual pose packages
+
+
 ## 1.1.103+105 - 2026-09-20
 
 - feat: add direction-aware adult pose ending actions; fix: classify ahoge as a fixed hairstyle and separate animal traits from wearable animal accessories

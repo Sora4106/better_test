@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.103",
-    "build":  105,
-    "label":  "1.1.103+105",
+    "version":  "1.1.104",
+    "build":  106,
+    "label":  "1.1.104+106",
     "history":  [
+                    {
+                        "version":  "1.1.104",
+                        "build":  106,
+                        "label":  "1.1.104+106",
+                        "date":  "2026-09-20",
+                        "notes":  "feat: add typed, color-customizable wing prompt blocks; feat: add standalone adult pulling-out actions and 100 editable sensual pose packages"
+                    },
                     {
                         "version":  "1.1.103",
                         "build":  105,

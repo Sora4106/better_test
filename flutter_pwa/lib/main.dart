@@ -17,6 +17,8 @@ import 'prompt_package_data.dart';
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
 const _stepLayoutVersion = 3;
+const _wingTypeGroup = '翅膀類型';
+const _wingColorGroup = '翅膀顏色';
 // Dynamic head details are selected with poses, not with permanent character
 // appearance.  Keep the actual stored tag groups unchanged for compatibility.
 const _staticFaceAppearanceGroup = '固定外觀・臉部結構';
@@ -177,6 +179,10 @@ bool _isGlobalPromptGroup(String group) =>
     const {'品質', '其他'}.contains(group);
 
 String _catalogPickerGroup(CatalogTagData data) {
+  if (data.group == _animalTraitGroup &&
+      RegExp(r'\bwings?\b', caseSensitive: false).hasMatch(data.en)) {
+    return _wingTypeGroup;
+  }
   if (data.group != '場景') return data.group;
   return _indoorSceneIds.contains(data.id)
       ? _indoorSceneGroup
@@ -3708,6 +3714,13 @@ List<TagItem> _hairColorShadeTags() {
       .toList();
 }
 
+List<TagItem> _wingColorTags() => [
+      ..._clothingColorTags(
+          'wing_color', _wingColorGroup, '翅膀', 'wings', 'wing_color'),
+      ..._clothingColorShadeTags(
+          'wing_shade_color', _wingColorGroup, '翅膀', 'wings', 'wing_color'),
+    ];
+
 List<TagItem> _expandedHairStyleTags() {
   const definitions = <List<String>>[
     ['hime_cut', '公主切', 'hime cut'],
@@ -3925,6 +3938,7 @@ List<TagItem> _seedTags() => [
       _tag('trait_yellow_hair', '髮色', '黃髮', 'yellow hair', 1,
           conflictGroup: 'hair_color'),
       ..._hairColorShadeTags(),
+      ..._wingColorTags(),
       ..._eyeColorTags(),
       ..._clothingColorShadeTags(
           'eye_shade_color', '眼睛', '眼睛', 'eyes', 'eye_color'),
@@ -4824,6 +4838,18 @@ List<TagItem> _seedTags() => [
       _tag('act_pulling_out_backwards', '性行為', '性交結束・向後抽離（成年角色）',
           'pulling out backwards', 7,
           adult: true),
+      _tag('act_pulling_out_downwards', '性行為', '性交結束・向下抽離（成年角色）',
+          'pulling out downwards', 7,
+          adult: true),
+      _tag('act_pulling_out_from_behind', '性行為', '性交結束・從後方抽離（成年角色）',
+          'pulling out from behind', 7,
+          adult: true),
+      _tag('act_pulling_out_standing', '性行為', '性交結束・站立抽離（成年角色）',
+          'pulling out while standing', 7,
+          adult: true),
+      _tag('act_pulling_out_lying', '性行為', '性交結束・躺臥抽離（成年角色）',
+          'pulling out while lying down', 7,
+          adult: true),
       _tag('act_sweat', '性行為', '汗水', 'sweat', 7),
       _tag(
         'position_missionary',
@@ -5306,6 +5332,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   int _outputGroupOrder(String group) {
     if (group == _animalTraitGroup) return 18;
+    if (group == _wingTypeGroup || group == _wingColorGroup) return 18;
     const order = <String, int>{
       // 人物：由頭部、臉部一路排到身體，再進入服裝。
       '角色類型': 8,
@@ -5505,6 +5532,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isFixedCharacterFeatureTag(TagItem tag) =>
       tag.group == _animalTraitGroup ||
+      tag.group == _wingTypeGroup ||
+      tag.group == _wingColorGroup ||
       const {
         '身體特徵',
         '眼睛',
@@ -5751,6 +5780,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '配件顏色',
         '帽子顏色',
         '眼鏡顏色',
+        _wingColorGroup,
         '服裝細節顏色',
       }.contains(group) ||
       group.endsWith('邊線色') ||
@@ -7146,6 +7176,44 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  bool _isWingOutputTag(_GeneratedOutputTag output) => output.tagIds.any((id) {
+        final tag = _tagsById[id];
+        return tag?.group == _wingTypeGroup || tag?.group == _wingColorGroup;
+      });
+
+  /// Keeps each wing set together as its own unweighted prompt block. A color
+  /// is not emitted separately: choosing white plus angel wings becomes the
+  /// single phrase "white angel wings".
+  List<_GeneratedOutputTag> _wingOutputTagsForPerson(int personIndex) {
+    final selected = _selectedTagsForPerson(personIndex);
+    final types = selected.where((tag) => tag.group == _wingTypeGroup).toList();
+    final colors = selected.where((tag) => tag.group == _wingColorGroup).toList();
+    final color = colors.isEmpty ? null : colors.first;
+    if (types.isEmpty) {
+      return color == null
+          ? const <_GeneratedOutputTag>[]
+          : [
+              _GeneratedOutputTag(
+                zh: color.zh,
+                en: color.en,
+                tagIds: [color.id],
+                personIndex: personIndex,
+              ),
+            ];
+    }
+    return types
+        .map((type) => _GeneratedOutputTag(
+              zh: '${color == null ? '' : _clothingColorChinesePrefix(color)}${type.zh}',
+              en: [
+                if (color != null) _clothingColorPrefix(color),
+                type.en,
+              ].join(' '),
+              tagIds: [type.id, if (color != null) color.id],
+              personIndex: personIndex,
+            ))
+        .toList();
+  }
+
   List<_GeneratedOutputTag> _objectInteractionOutputTagsForPerson(
       int personIndex) {
     final selected = _selectedTagsForPerson(personIndex);
@@ -7264,6 +7332,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selected = _selectedTagsForPerson(index);
     final clothing = _clothingOutputTagsForPerson(index);
     final hair = _hairOutputTagsForPerson(index);
+    final wings = _wingOutputTagsForPerson(index);
     final extra = _extraFeatureOutputTagsForPerson(index);
     final objectInteractions = _objectInteractionOutputTagsForPerson(index);
     final combinationExtra = _combinationExtraOutputTagsForPerson(index);
@@ -7271,6 +7340,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final covered = {
       ...clothing.expand((tag) => tag.tagIds),
       ...hair.expand((tag) => tag.tagIds),
+      ...wings.expand((tag) => tag.tagIds),
       ...extra.expand((tag) => tag.tagIds),
       ...objectInteractions.expand((tag) => tag.tagIds),
       ...combinationExtra.expand((tag) => tag.tagIds),
@@ -7302,6 +7372,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...beforeClothing,
       ...extra,
       ...hair,
+      ...wings,
       ...clothing,
       ...afterClothing,
       ...objectInteractions,
@@ -7976,6 +8047,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (_hairLengthTag(value) != null) return '髮長';
     if (value.contains('hair')) return '髮型';
+    if (RegExp(r'\bwings?\b').hasMatch(value)) return _wingTypeGroup;
     if (RegExp(r'\b(?:[a-z-]+\s+)?eyes?\b').hasMatch(value) ||
         RegExp(r'\b(?:pupils?|sclera|sharingan|rinnegan|byakugan|tenseigan|jougan|ketsuryugan)\b')
             .hasMatch(value)) {
@@ -8939,6 +9011,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       used.addAll(actionValues.map((value) => value.toLowerCase()));
     }
 
+    void addWingBlock(Iterable<_GeneratedOutputTag> values) {
+      final wingValues = <String>[];
+      final local = <String>{};
+      for (final tag in values) {
+        final value = _moderationSafePromptTag(tag.en);
+        if (value.isEmpty || !local.add(value.toLowerCase())) continue;
+        wingValues.add(value);
+      }
+      if (wingValues.isEmpty) return;
+      output.add('(${wingValues.join(', ')}).');
+      used.addAll(wingValues.map((value) => value.toLowerCase()));
+    }
+
     addTokens(_peopleTokensNew());
     for (var index = 0; index < _personSlots.length; index++) {
       final personal = _deduplicatePromptOutputTags([
@@ -8958,6 +9043,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         emphasizeHairColor,
         weight: _personSlots[index].hairColorWeight,
       );
+      final wings = personal.where(_isWingOutputTag).toList();
+      addWingBlock(wings);
       final clothing = personal.where(_isClothingWeightOutputTag).toList();
       addGroupedClothingTags(
         clothing.where((tag) => !_isOverallClothingWearOutputTag(tag)),
@@ -8977,6 +9064,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       addTokens(personal
           .where((tag) =>
               !_isCharacterWeightOutputTag(tag) &&
+              !_isWingOutputTag(tag) &&
               !_isClothingWeightOutputTag(tag) &&
               !_isIndividualActionOutputTag(index, tag))
           .map((tag) => tag.en));
@@ -13159,6 +13247,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     final poseTone = poseTones[group];
     if (poseTone != null) return poseTone;
+    if (group == _wingTypeGroup) return const Color(0xff818cf8);
+    if (group == _wingColorGroup) return const Color(0xff38bdf8);
     if (group == _indoorSceneGroup) return const Color(0xff38bdf8);
     if (group == _outdoorSceneGroup) return const Color(0xff4ade80);
     if (group == _outdoorTimeGroup) return const Color(0xfffbbf24);
@@ -13368,6 +13458,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '配件顏色': '配件主色',
       '帽子顏色': '帽子主色',
       '眼鏡顏色': '眼鏡主色',
+      _wingColorGroup: '翅膀顏色',
       '服裝邊線色': '連身裝次色',
       '上衣邊線色': '上衣次色',
       '下身邊線色': '下身次色',
@@ -14840,6 +14931,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     icon: Icons.accessibility_new,
                     tone: const Color(0xff38bdf8),
                     packages: generalPosePackages,
+                  ),
+                  _promptPackagePanel(
+                    personIndex: index,
+                    panelId: 'sexy-pose',
+                    title: '性感姿勢套裝',
+                    subtitle: '非露骨的姿勢、肢體線條與表情搭配；共 100 套，可套用後個別調整。',
+                    icon: Icons.auto_awesome_outlined,
+                    tone: const Color(0xfff472b6),
+                    packages: sexyPosePackages,
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -16389,6 +16489,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '眼睛',
             _staticFaceAppearanceGroup,
             _animalTraitGroup,
+            _wingTypeGroup,
+            _wingColorGroup,
             '額外特徵',
             '額外特徵位置',
             '額外特徵顏色',
@@ -16398,7 +16500,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ],
               nextLabel: '下一步：服裝',
               instruction:
-                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材與額外特徵。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
+                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、翅膀與額外特徵。翅膀類型與顏色會自動合併成獨立提示區塊。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
       _stepCard(
           4,
