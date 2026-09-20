@@ -19,6 +19,17 @@ const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
 const _stepLayoutVersion = 3;
 const _wingTypeGroup = '翅膀類型';
 const _wingColorGroup = '翅膀顏色';
+const _animalEarColorGroup = '獸耳顏色';
+const _animalTailColorGroup = '獸尾顏色';
+const _animalHandColorGroup = '獸手顏色';
+const _animalFootColorGroup = '獸足顏色';
+const _physicalTraitColorGroups = <String>{
+  _animalEarColorGroup,
+  _animalTailColorGroup,
+  _animalHandColorGroup,
+  _animalFootColorGroup,
+  _wingColorGroup,
+};
 // Dynamic head details are selected with poses, not with permanent character
 // appearance.  Keep the actual stored tag groups unchanged for compatibility.
 const _staticFaceAppearanceGroup = '固定外觀・臉部結構';
@@ -148,8 +159,7 @@ const _indoorSceneIds = <String>{
 bool _isScenePickerGroup(String group) =>
     group == _indoorSceneGroup || group == _outdoorSceneGroup;
 
-bool _isCameraGroup(String group) =>
-    const {
+bool _isCameraGroup(String group) => const {
       _cameraFramingGroup,
       _cameraFaceFocusGroup,
       _cameraFocusGroup,
@@ -2156,11 +2166,10 @@ class PersonSlot {
         ..originalTraits = '${json['originalTraits'] ?? ''}'
         ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}'
         ..hairColorWeightEnabled = json['hairColorWeightEnabled'] == true
-        ..hairColorWeight = (double.tryParse(
-                    '${json['hairColorWeight'] ?? 1.15}') ??
-                1.15)
-            .clamp(0.50, 1.50)
-            .toDouble();
+        ..hairColorWeight =
+            (double.tryParse('${json['hairColorWeight'] ?? 1.15}') ?? 1.15)
+                .clamp(0.50, 1.50)
+                .toDouble();
 }
 
 class _RemoteAnime {
@@ -2428,7 +2437,8 @@ String _clothingAccessoryPickerGroup(TagItem tag) {
       .hasMatch(english)) {
     return _clothingGroupHairAccessory;
   }
-  if (RegExp(r'\b(tiara|veil|crown|headdress|wreath|halo|headpiece|fascinator)\b')
+  if (RegExp(
+          r'\b(tiara|veil|crown|headdress|wreath|halo|headpiece|fascinator)\b')
       .hasMatch(english)) {
     return _clothingGroupHeadAccessory;
   }
@@ -3721,6 +3731,25 @@ List<TagItem> _wingColorTags() => [
           'wing_shade_color', _wingColorGroup, '翅膀', 'wings', 'wing_color'),
     ];
 
+List<TagItem> _animalTraitColorTags() => [
+      ..._clothingColorTags('animal_ear_color', _animalEarColorGroup, '獸耳',
+          'animal ears', 'animal_ear_color'),
+      ..._clothingColorShadeTags('animal_ear_shade_color', _animalEarColorGroup,
+          '獸耳', 'animal ears', 'animal_ear_color'),
+      ..._clothingColorTags('animal_tail_color', _animalTailColorGroup, '獸尾',
+          'animal tail', 'animal_tail_color'),
+      ..._clothingColorShadeTags('animal_tail_shade_color',
+          _animalTailColorGroup, '獸尾', 'animal tail', 'animal_tail_color'),
+      ..._clothingColorTags('animal_hand_color', _animalHandColorGroup, '獸手',
+          'animal hands', 'animal_hand_color'),
+      ..._clothingColorShadeTags('animal_hand_shade_color',
+          _animalHandColorGroup, '獸手', 'animal hands', 'animal_hand_color'),
+      ..._clothingColorTags('animal_foot_color', _animalFootColorGroup, '獸足',
+          'animal feet', 'animal_foot_color'),
+      ..._clothingColorShadeTags('animal_foot_shade_color',
+          _animalFootColorGroup, '獸足', 'animal feet', 'animal_foot_color'),
+    ];
+
 List<TagItem> _expandedHairStyleTags() {
   const definitions = <List<String>>[
     ['hime_cut', '公主切', 'hime cut'],
@@ -3938,6 +3967,7 @@ List<TagItem> _seedTags() => [
       _tag('trait_yellow_hair', '髮色', '黃髮', 'yellow hair', 1,
           conflictGroup: 'hair_color'),
       ..._hairColorShadeTags(),
+      ..._animalTraitColorTags(),
       ..._wingColorTags(),
       ..._eyeColorTags(),
       ..._clothingColorShadeTags(
@@ -4120,8 +4150,12 @@ List<TagItem> _seedTags() => [
       _tag('cosplay_dark_magician_girl_tag', '角色扮演', '黑魔導女孩（Cosplay 標籤）',
           'dark magician girl', 2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_artoria_saber', '角色扮演', 'Saber 藍白鎧甲洋裝',
-          'Saber cosplay outfit with blue armored dress and silver breastplate', 2,
+      _tag(
+          'cosplay_artoria_saber',
+          '角色扮演',
+          'Saber 藍白鎧甲洋裝',
+          'Saber cosplay outfit with blue armored dress and silver breastplate',
+          2,
           conflictGroup: 'onepiece_style'),
       _tag('cosplay_tsunade', '角色扮演', '綱手綠色羽織忍者裝',
           'Tsunade cosplay outfit with green haori and gray wrap top', 2,
@@ -4129,44 +4163,88 @@ List<TagItem> _seedTags() => [
       _tag('cosplay_konan', '角色扮演', '小南曉組織長袍',
           'Konan cosplay outfit with black red-cloud cloak', 2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_yoruichi', '角色扮演', '夜一黑金戰鬥服',
-          'Yoruichi cosplay outfit with black sleeveless combat suit and gold arm guards', 2,
+      _tag(
+          'cosplay_yoruichi',
+          '角色扮演',
+          '夜一黑金戰鬥服',
+          'Yoruichi cosplay outfit with black sleeveless combat suit and gold arm guards',
+          2,
           conflictGroup: 'onepiece_style'),
       _tag('cosplay_rangiku', '角色扮演', '亂菊死霸裝',
           'Rangiku cosplay outfit with black shinigami robe and white sash', 2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_android_18', '角色扮演', '人造人 18 號牛仔背心裝',
-          'Android 18 cosplay outfit with denim vest striped shirt and denim skirt', 2,
+      _tag(
+          'cosplay_android_18',
+          '角色扮演',
+          '人造人 18 號牛仔背心裝',
+          'Android 18 cosplay outfit with denim vest striped shirt and denim skirt',
+          2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_revy', '角色扮演', '萊薇傭兵戰鬥裝',
-          'Revy cosplay outfit with black crop top denim hot pants and shoulder holsters', 2,
+      _tag(
+          'cosplay_revy',
+          '角色扮演',
+          '萊薇傭兵戰鬥裝',
+          'Revy cosplay outfit with black crop top denim hot pants and shoulder holsters',
+          2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_faye_valentine', '角色扮演', '菲黃色太空賞金獵人裝',
-          'Faye Valentine cosplay outfit with yellow crop top yellow hot pants and red jacket', 2,
+      _tag(
+          'cosplay_faye_valentine',
+          '角色扮演',
+          '菲黃色太空賞金獵人裝',
+          'Faye Valentine cosplay outfit with yellow crop top yellow hot pants and red jacket',
+          2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_motoko_kusanagi', '角色扮演', '草薙素子紫黑戰術服',
-          'Motoko Kusanagi cosplay outfit with purple tactical bodysuit and black jacket', 2,
+      _tag(
+          'cosplay_motoko_kusanagi',
+          '角色扮演',
+          '草薙素子紫黑戰術服',
+          'Motoko Kusanagi cosplay outfit with purple tactical bodysuit and black jacket',
+          2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_fujiko_mine', '角色扮演', '峰不二子紅色禮服',
-          'Fujiko Mine cosplay outfit with red evening dress and black high heels', 2,
+      _tag(
+          'cosplay_fujiko_mine',
+          '角色扮演',
+          '峰不二子紅色禮服',
+          'Fujiko Mine cosplay outfit with red evening dress and black high heels',
+          2,
           conflictGroup: 'onepiece_style'),
       _tag('cosplay_mei_mei', '角色扮演', '冥冥黑色長裙戰鬥裝',
           'Mei Mei cosplay outfit with black long dress and black boots', 2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_mirko', '角色扮演', '米爾科白紫兔英雄裝',
-          'Mirko cosplay outfit with white purple rabbit hero bodysuit and thigh boots', 2,
+      _tag(
+          'cosplay_mirko',
+          '角色扮演',
+          '米爾科白紫兔英雄裝',
+          'Mirko cosplay outfit with white purple rabbit hero bodysuit and thigh boots',
+          2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_riza_hawkeye', '角色扮演', '莉莎藍色軍官制服',
-          'Riza Hawkeye cosplay outfit with blue military uniform and black boots', 2,
+      _tag(
+          'cosplay_riza_hawkeye',
+          '角色扮演',
+          '莉莎藍色軍官制服',
+          'Riza Hawkeye cosplay outfit with blue military uniform and black boots',
+          2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_olivier_armstrong', '角色扮演', '奧莉薇藍色將軍制服',
-          'Olivier Armstrong cosplay outfit with blue general uniform and fur-trimmed coat', 2,
+      _tag(
+          'cosplay_olivier_armstrong',
+          '角色扮演',
+          '奧莉薇藍色將軍制服',
+          'Olivier Armstrong cosplay outfit with blue general uniform and fur-trimmed coat',
+          2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_nier_2b', '角色扮演', '2B 黑色哥德戰鬥洋裝',
-          '2B YoRHa cosplay outfit with black gothic combat dress and thigh boots', 2,
+      _tag(
+          'cosplay_nier_2b',
+          '角色扮演',
+          '2B 黑色哥德戰鬥洋裝',
+          '2B YoRHa cosplay outfit with black gothic combat dress and thigh boots',
+          2,
           conflictGroup: 'onepiece_style'),
-      _tag('cosplay_nier_a2', '角色扮演', 'A2 黑色戰鬥緊身裝',
-          'A2 YoRHa cosplay outfit with black combat bodysuit and thigh boots', 2,
+      _tag(
+          'cosplay_nier_a2',
+          '角色扮演',
+          'A2 黑色戰鬥緊身裝',
+          'A2 YoRHa cosplay outfit with black combat bodysuit and thigh boots',
+          2,
           conflictGroup: 'onepiece_style'),
       _tag('clothing_bra', '胸罩', '胸罩', 'bra', 2, adult: true),
       _tag('clothing_sports_bra', '胸罩', '運動胸罩', 'sports bra', 2),
@@ -4942,11 +5020,13 @@ List<TagItem> _seedTags() => [
       // Scene, camera and model-friendly quality terms.
       _tag('scene_bedroom', _indoorSceneGroup, '臥室', 'bedroom', 9),
       _tag('scene_in_a_room', _indoorSceneGroup, '在房間內', 'in a room', 9),
-      _tag('scene_wet_bed', _indoorSceneGroup, '濕床（成年角色）', 'wet bed', 9, adult: true),
+      _tag('scene_wet_bed', _indoorSceneGroup, '濕床（成年角色）', 'wet bed', 9,
+          adult: true),
       _tag('scene_bathroom', _indoorSceneGroup, '浴室', 'bathroom', 9),
       _tag('scene_classroom', _indoorSceneGroup, '教室', 'classroom', 9),
       _tag('scene_beach', _outdoorSceneGroup, '海灘', 'beach', 9),
-      _tag('scene_cherry_blossoms', _outdoorSceneGroup, '櫻花樹下', 'cherry blossoms', 9),
+      _tag('scene_cherry_blossoms', _outdoorSceneGroup, '櫻花樹下',
+          'cherry blossoms', 9),
       _tag('scene_snowing', _outdoorSceneGroup, '下雪', 'snowing', 9),
       _tag('scene_cold', _outdoorSceneGroup, '寒冷', 'cold', 9),
       _tag('scene_sunrise', _outdoorTimeGroup, '日出', 'sunrise', 9,
@@ -4957,7 +5037,8 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'outdoor_time'),
       _tag('scene_sunset', _outdoorTimeGroup, '日落', 'sunset', 9,
           conflictGroup: 'outdoor_time'),
-      _tag('scene_simple_background', _indoorSceneGroup, '簡單背景', 'simple background', 9),
+      _tag('scene_simple_background', _indoorSceneGroup, '簡單背景',
+          'simple background', 9),
       _tag('scene_evening_light', '畫面', '黃昏光線', 'evening light', 10,
           conflictGroup: 'lighting'),
       _tag('effect_breath', '畫面', '呼出白氣', 'breath', 10),
@@ -4968,59 +5049,85 @@ List<TagItem> _seedTags() => [
       _tag('effect_black_fire', '畫面', '黑色火焰', 'black fire', 10),
       _tag('effect_high_contrast', '畫面', '高對比', 'high contrast', 10),
       _tag('effect_depth_of_field', '畫面', '景深', 'depth of field', 10),
-      _tag('effect_complementary_colors', '畫面', '互補色搭配', 'complementary colors', 10),
+      _tag('effect_complementary_colors', '畫面', '互補色搭配', 'complementary colors',
+          10),
       _tag('effect_foreshortening', '畫面', '透視縮短', 'foreshortening', 10),
       _tag('effect_colorful', '畫面', '繽紛色彩', 'colorful', 10),
       _tag('frame_japanese_text', '畫面', '日文文字', 'japanese text', 10),
       // Danbooru image-composition tags: framing from head to toe.
       _tag('camera_portrait', _cameraFramingGroup, '臉部到肩膀肖像', 'portrait', 10),
       _tag('camera_close_up', _cameraFramingGroup, '近距離特寫', 'close-up', 10),
-      _tag('camera_upper_body', _cameraFramingGroup, '上半身（頭到軀幹）', 'upper body', 10),
-      _tag('camera_cowboy_shot', _cameraFramingGroup, '膝上構圖（頭到大腿）', 'cowboy shot', 10),
-      _tag('camera_feet_out_of_frame', _cameraFramingGroup, '頭到小腿（腳出框）', 'feet out of frame', 10),
+      _tag('camera_upper_body', _cameraFramingGroup, '上半身（頭到軀幹）', 'upper body',
+          10),
+      _tag('camera_cowboy_shot', _cameraFramingGroup, '膝上構圖（頭到大腿）',
+          'cowboy shot', 10),
+      _tag('camera_feet_out_of_frame', _cameraFramingGroup, '頭到小腿（腳出框）',
+          'feet out of frame', 10),
       _tag('camera_full_body', _cameraFramingGroup, '頭到腳完整全身', 'full body', 10),
       _tag('camera_wide_shot', _cameraFramingGroup, '遠景全身', 'wide shot', 10),
-      _tag('camera_very_wide_shot', _cameraFramingGroup, '極遠景全身', 'very wide shot', 10),
-      _tag('camera_lower_body', _cameraFramingGroup, '下半身（腰部以下）', 'lower body', 10),
-      _tag('camera_head_out_of_frame', _cameraFramingGroup, '頸部以下（頭出框）', 'head out of frame', 10),
-      _tag('camera_eyes_out_of_frame', _cameraFramingGroup, '鼻部以下（眼睛出框）', 'eyes out of frame', 10),
+      _tag('camera_very_wide_shot', _cameraFramingGroup, '極遠景全身',
+          'very wide shot', 10),
+      _tag('camera_lower_body', _cameraFramingGroup, '下半身（腰部以下）', 'lower body',
+          10),
+      _tag('camera_head_out_of_frame', _cameraFramingGroup, '頸部以下（頭出框）',
+          'head out of frame', 10),
+      _tag('camera_eyes_out_of_frame', _cameraFramingGroup, '鼻部以下（眼睛出框）',
+          'eyes out of frame', 10),
 
       // Face focus from the head through the neck.
-      _tag('camera_head_focus', _cameraFaceFocusGroup, '頭部聚焦', 'head focus', 10),
-      _tag('camera_face_focus', _cameraFaceFocusGroup, '臉部／表情聚焦', 'face focus', 10),
-      _tag('camera_forehead_focus', _cameraFaceFocusGroup, '額頭聚焦', 'forehead focus', 10),
-      _tag('camera_eyebrow_focus', _cameraFaceFocusGroup, '眉毛聚焦', 'eyebrow focus', 10),
+      _tag(
+          'camera_head_focus', _cameraFaceFocusGroup, '頭部聚焦', 'head focus', 10),
+      _tag('camera_face_focus', _cameraFaceFocusGroup, '臉部／表情聚焦', 'face focus',
+          10),
+      _tag('camera_forehead_focus', _cameraFaceFocusGroup, '額頭聚焦',
+          'forehead focus', 10),
+      _tag('camera_eyebrow_focus', _cameraFaceFocusGroup, '眉毛聚焦',
+          'eyebrow focus', 10),
       _tag('camera_eye_focus', _cameraFaceFocusGroup, '眼睛聚焦', 'eye focus', 10),
-      _tag('camera_nose_focus', _cameraFaceFocusGroup, '鼻子聚焦', 'nose focus', 10),
-      _tag('camera_mouth_focus', _cameraFaceFocusGroup, '嘴巴聚焦', 'mouth focus', 10),
-      _tag('camera_lips_focus', _cameraFaceFocusGroup, '嘴唇聚焦', 'lips focus', 10),
-      _tag('camera_chin_focus', _cameraFaceFocusGroup, '下巴聚焦', 'chin focus', 10),
+      _tag(
+          'camera_nose_focus', _cameraFaceFocusGroup, '鼻子聚焦', 'nose focus', 10),
+      _tag('camera_mouth_focus', _cameraFaceFocusGroup, '嘴巴聚焦', 'mouth focus',
+          10),
+      _tag(
+          'camera_lips_focus', _cameraFaceFocusGroup, '嘴唇聚焦', 'lips focus', 10),
+      _tag(
+          'camera_chin_focus', _cameraFaceFocusGroup, '下巴聚焦', 'chin focus', 10),
       _tag('camera_ear_focus', _cameraFaceFocusGroup, '耳朵聚焦', 'ear focus', 10),
-      _tag('camera_neck_focus', _cameraFaceFocusGroup, '頸部聚焦', 'neck focus', 10),
+      _tag(
+          'camera_neck_focus', _cameraFaceFocusGroup, '頸部聚焦', 'neck focus', 10),
 
       // Body focus from the hair and shoulders down to the toes. These remain
       // composable with framing and angle tags, so the user can target more
       // than one detail when a scene needs it.
       _tag('camera_hair_focus', _cameraFocusGroup, '髮型聚焦', 'hair focus', 10),
-      _tag('camera_shoulder_focus', _cameraFocusGroup, '肩膀聚焦', 'shoulder focus', 10),
-      _tag('camera_collarbone_focus', _cameraFocusGroup, '鎖骨聚焦', 'collarbone focus', 10),
-      _tag('camera_upper_arm_focus', _cameraFocusGroup, '上手臂聚焦', 'upper arm focus', 10),
+      _tag('camera_shoulder_focus', _cameraFocusGroup, '肩膀聚焦', 'shoulder focus',
+          10),
+      _tag('camera_collarbone_focus', _cameraFocusGroup, '鎖骨聚焦',
+          'collarbone focus', 10),
+      _tag('camera_upper_arm_focus', _cameraFocusGroup, '上手臂聚焦',
+          'upper arm focus', 10),
       _tag('camera_elbow_focus', _cameraFocusGroup, '手肘聚焦', 'elbow focus', 10),
-      _tag('camera_forearm_focus', _cameraFocusGroup, '前臂聚焦', 'forearm focus', 10),
+      _tag('camera_forearm_focus', _cameraFocusGroup, '前臂聚焦', 'forearm focus',
+          10),
       _tag('camera_wrist_focus', _cameraFocusGroup, '手腕聚焦', 'wrist focus', 10),
       _tag('camera_hand_focus', _cameraFocusGroup, '手部聚焦', 'hand focus', 10),
-      _tag('camera_finger_focus', _cameraFocusGroup, '手指聚焦', 'finger focus', 10),
+      _tag(
+          'camera_finger_focus', _cameraFocusGroup, '手指聚焦', 'finger focus', 10),
       _tag('camera_chest_focus', _cameraFocusGroup, '胸口聚焦', 'chest focus', 10),
-      _tag('camera_breast_focus', _cameraFocusGroup, '胸部聚焦（成年角色）', 'breast focus', 10,
+      _tag('camera_breast_focus', _cameraFocusGroup, '胸部聚焦（成年角色）',
+          'breast focus', 10,
           adult: true),
       _tag('camera_torso_focus', _cameraFocusGroup, '軀幹聚焦', 'torso focus', 10),
-      _tag('camera_stomach_focus', _cameraFocusGroup, '腹部聚焦', 'stomach focus', 10),
+      _tag('camera_stomach_focus', _cameraFocusGroup, '腹部聚焦', 'stomach focus',
+          10),
       _tag('camera_navel_focus', _cameraFocusGroup, '肚臍聚焦', 'navel focus', 10),
       _tag('camera_waist_focus', _cameraFocusGroup, '腰部聚焦', 'waist focus', 10),
       _tag('camera_hip_focus', _cameraFocusGroup, '臀／髖部聚焦', 'hip focus', 10),
-      _tag('camera_butt_focus', _cameraFocusGroup, '臀部聚焦（成年角色）', 'butt focus', 10,
+      _tag('camera_butt_focus', _cameraFocusGroup, '臀部聚焦（成年角色）', 'butt focus',
+          10,
           adult: true),
-      _tag('camera_crotch_focus', _cameraFocusGroup, '胯部聚焦（成年角色）', 'crotch focus', 10,
+      _tag('camera_crotch_focus', _cameraFocusGroup, '胯部聚焦（成年角色）',
+          'crotch focus', 10,
           adult: true),
       _tag('camera_thigh_focus', _cameraFocusGroup, '大腿聚焦', 'thigh focus', 10),
       _tag('camera_knee_focus', _cameraFocusGroup, '膝蓋聚焦', 'knee focus', 10),
@@ -5032,8 +5139,10 @@ List<TagItem> _seedTags() => [
 
       // Cropped tags describe a body part being intentionally cut by the frame.
       _tag('camera_cropped_head', _cameraCropGroup, '頭部裁切', 'cropped head', 10),
-      _tag('camera_cropped_shoulders', _cameraCropGroup, '肩膀裁切', 'cropped shoulders', 10),
-      _tag('camera_cropped_torso', _cameraCropGroup, '軀幹裁切', 'cropped torso', 10),
+      _tag('camera_cropped_shoulders', _cameraCropGroup, '肩膀裁切',
+          'cropped shoulders', 10),
+      _tag('camera_cropped_torso', _cameraCropGroup, '軀幹裁切', 'cropped torso',
+          10),
       _tag('camera_cropped_arms', _cameraCropGroup, '手臂裁切', 'cropped arms', 10),
       _tag('camera_cropped_legs', _cameraCropGroup, '腿部裁切', 'cropped legs', 10),
       _tag('camera_from_above', '畫面', '俯視', 'from above', 10),
@@ -5150,6 +5259,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final GlobalKey _outputKey = GlobalKey(debugLabel: 'prompt-output');
   final ScrollController _pageScrollController = ScrollController();
   final TextEditingController _search = TextEditingController();
+  final TextEditingController _globalTagSearch = TextEditingController();
   final TextEditingController _extraPositive = TextEditingController();
   final TextEditingController _reversePrompt = TextEditingController();
   final TextEditingController _negative = TextEditingController(
@@ -5171,6 +5281,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _clipSkip = '2';
   int _peopleCount = 1;
   int _stepIndex = 0;
+  int _globalSearchPersonIndex = 0;
+  String _globalTagQuery = '';
   bool _showAdult = false;
   bool _groupPeoplePrompt = true;
   static const double _minimumPromptWeight = 0.50;
@@ -5380,7 +5492,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   int _outputGroupOrder(String group) {
     if (group == _animalTraitGroup) return 18;
-    if (group == _wingTypeGroup || group == _wingColorGroup) return 18;
+    if (group == _wingTypeGroup || _physicalTraitColorGroups.contains(group)) {
+      return 18;
+    }
     const order = <String, int>{
       // 人物：由頭部、臉部一路排到身體，再進入服裝。
       '角色類型': 8,
@@ -5435,15 +5549,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '性姿勢': 56,
       '動作': 50,
       '物件': 51,
-       '成人道具': 57,
-       _indoorSceneGroup: 70,
-       _outdoorSceneGroup: 70,
-       _outdoorTimeGroup: 71,
-       _cameraFramingGroup: 72,
-       _cameraFaceFocusGroup: 73,
-       _cameraFocusGroup: 74,
-       _cameraCropGroup: 75,
-       '畫面': 76,
+      '成人道具': 57,
+      _indoorSceneGroup: 70,
+      _outdoorSceneGroup: 70,
+      _outdoorTimeGroup: 71,
+      _cameraFramingGroup: 72,
+      _cameraFaceFocusGroup: 73,
+      _cameraFocusGroup: 74,
+      _cameraCropGroup: 75,
+      '畫面': 76,
     };
     if (expandedAdultClothingGroups.contains(group)) return 36;
     if (expandedSexualActGroups.contains(group)) return 42;
@@ -5581,7 +5695,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isFixedCharacterFeatureTag(TagItem tag) =>
       tag.group == _animalTraitGroup ||
       tag.group == _wingTypeGroup ||
-      tag.group == _wingColorGroup ||
+      _physicalTraitColorGroups.contains(tag.group) ||
       const {
         '身體特徵',
         '眼睛',
@@ -5598,11 +5712,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isPoseWorkflowTag(TagItem tag) =>
       _isDynamicHeadActionTag(tag) ||
-      const {'姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'}
-          .contains(tag.group) ||
+      const {'姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'}.contains(tag.group) ||
       expandedPickerTagGroups.contains(tag.group);
 
-  bool _isObjectPickerGroup(String group) => _objectPickerGroups.contains(group);
+  bool _isObjectPickerGroup(String group) =>
+      _objectPickerGroups.contains(group);
 
   bool _isObjectTag(TagItem tag) => tag.group == '物件';
 
@@ -5828,6 +5942,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '配件顏色',
         '帽子顏色',
         '眼鏡顏色',
+        _animalEarColorGroup,
+        _animalTailColorGroup,
+        _animalHandColorGroup,
+        _animalFootColorGroup,
         _wingColorGroup,
         '服裝細節顏色',
       }.contains(group) ||
@@ -6166,19 +6284,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
-  /// Clothing selections are generally composable, but these fields describe
-  /// one concrete value for one garment slot.  Treating them as replacements
-  /// lets an applied outfit reference act as a one-time starting point: the
-  /// user can immediately change a shirt's colour/cut/style without retaining
-  /// the reference's previous value.
+  /// A garment noun and each colour channel describe one concrete value for a
+  /// garment slot, so those values replace the previous selection. Design
+  /// dimensions (style, cut, fit, length, material, detail, and pattern) are
+  /// intentionally composable and may be selected more than once.
   String? _editableClothingSelectionKey(TagItem tag) {
     if (!_isClothingGroup(tag.group)) return null;
 
     final scope = _clothingScopeForTag(tag);
     final kind = _scopedClothingKind(tag.group);
-    if (scope != null &&
-        const {'style', 'cut', 'fit', 'length', 'detail_color'}
-            .contains(kind)) {
+    if (scope != null && kind == 'detail_color') {
       return '$scope:$kind';
     }
 
@@ -6195,8 +6310,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (conflict == 'clothing_color' ||
         conflict.endsWith('_color') ||
         conflict.endsWith('_trim_color') ||
-        conflict.endsWith('_detail_color') ||
-        conflict.endsWith('_style')) {
+        conflict.endsWith('_detail_color')) {
       return 'legacy:$conflict';
     }
     return null;
@@ -6231,8 +6345,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _isClothingCombinationTags(_combinationTags(combination)));
 
   void _markClothingTemplateCustomized(int personIndex) {
-    _personCombinationIds[personIndex]
-        ?.removeWhere(_isClothingCombinationId);
+    _personCombinationIds[personIndex]?.removeWhere(_isClothingCombinationId);
   }
 
   String? _clothingColorGroup(String group) {
@@ -7224,6 +7337,102 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  bool _isAnimalEarTypeTag(TagItem tag) =>
+      tag.group == _animalTraitGroup &&
+      RegExp(r'\bears?\b', caseSensitive: false).hasMatch(tag.en);
+
+  bool _isAnimalTailTypeTag(TagItem tag) =>
+      tag.group == _animalTraitGroup &&
+      RegExp(r'\btails?\b', caseSensitive: false).hasMatch(tag.en);
+
+  bool _isAnimalHandTypeTag(TagItem tag) =>
+      tag.group == _animalTraitGroup &&
+      tag.conflictGroup == 'animal_hand_type';
+
+  bool _isAnimalFootTypeTag(TagItem tag) =>
+      tag.group == _animalTraitGroup &&
+      tag.conflictGroup == 'animal_foot_type';
+
+  bool _isWingTypeTag(TagItem tag) => tag.group == _wingTypeGroup;
+
+  String _withoutLeadingPromptColor(String value) {
+    final cleaned = _cleanTag(value);
+    final lower = cleaned.toLowerCase();
+    final colors = [..._clothingColorNames]
+      ..sort((a, b) => b.length.compareTo(a.length));
+    for (final color in colors) {
+      if (lower == color) return '';
+      if (lower.startsWith('$color ')) {
+        return cleaned.substring(color.length).trim();
+      }
+    }
+    return cleaned;
+  }
+
+  String _withoutLeadingChineseColor(String value) {
+    final cleaned = value.trim();
+    final colors = _promptColorChinese.values.toSet().toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    for (final color in colors) {
+      if (cleaned == color) return '';
+      if (cleaned.startsWith(color)) {
+        return cleaned.substring(color.length).trim();
+      }
+    }
+    return cleaned;
+  }
+
+  List<_GeneratedOutputTag> _coloredPhysicalTraitOutputTagsForPerson(
+    int personIndex, {
+    required bool Function(TagItem tag) isType,
+    required String colorGroup,
+  }) {
+    final selected = _selectedTagsForPerson(personIndex);
+    final types = selected.where(isType).toList();
+    if (types.isEmpty) return const <_GeneratedOutputTag>[];
+    final color = selected.cast<TagItem?>().firstWhere(
+          (tag) => tag?.group == colorGroup,
+          orElse: () => null,
+        );
+    return types.map((type) {
+      final baseEnglish = _withoutLeadingPromptColor(type.en);
+      final baseChinese = _withoutLeadingChineseColor(type.zh);
+      return _GeneratedOutputTag(
+        zh: '${color == null ? '' : _clothingColorChinesePrefix(color)}$baseChinese',
+        en: [
+          if (color != null) _clothingColorPrefix(color),
+          baseEnglish,
+        ].where((value) => value.isNotEmpty).join(' '),
+        tagIds: [type.id, if (color != null) color.id],
+        personIndex: personIndex,
+      );
+    }).toList();
+  }
+
+  List<_GeneratedOutputTag> _animalTraitOutputTagsForPerson(int personIndex) =>
+      [
+        ..._coloredPhysicalTraitOutputTagsForPerson(
+          personIndex,
+          isType: _isAnimalEarTypeTag,
+          colorGroup: _animalEarColorGroup,
+        ),
+        ..._coloredPhysicalTraitOutputTagsForPerson(
+          personIndex,
+          isType: _isAnimalTailTypeTag,
+          colorGroup: _animalTailColorGroup,
+        ),
+        ..._coloredPhysicalTraitOutputTagsForPerson(
+          personIndex,
+          isType: _isAnimalHandTypeTag,
+          colorGroup: _animalHandColorGroup,
+        ),
+        ..._coloredPhysicalTraitOutputTagsForPerson(
+          personIndex,
+          isType: _isAnimalFootTypeTag,
+          colorGroup: _animalFootColorGroup,
+        ),
+      ];
+
   bool _isWingOutputTag(_GeneratedOutputTag output) => output.tagIds.any((id) {
         final tag = _tagsById[id];
         return tag?.group == _wingTypeGroup || tag?.group == _wingColorGroup;
@@ -7232,35 +7441,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   /// Keeps each wing set together as its own unweighted prompt block. A color
   /// is not emitted separately: choosing white plus angel wings becomes the
   /// single phrase "white angel wings".
-  List<_GeneratedOutputTag> _wingOutputTagsForPerson(int personIndex) {
-    final selected = _selectedTagsForPerson(personIndex);
-    final types = selected.where((tag) => tag.group == _wingTypeGroup).toList();
-    final colors = selected.where((tag) => tag.group == _wingColorGroup).toList();
-    final color = colors.isEmpty ? null : colors.first;
-    if (types.isEmpty) {
-      return color == null
-          ? const <_GeneratedOutputTag>[]
-          : [
-              _GeneratedOutputTag(
-                zh: color.zh,
-                en: color.en,
-                tagIds: [color.id],
-                personIndex: personIndex,
-              ),
-            ];
-    }
-    return types
-        .map((type) => _GeneratedOutputTag(
-              zh: '${color == null ? '' : _clothingColorChinesePrefix(color)}${type.zh}',
-              en: [
-                if (color != null) _clothingColorPrefix(color),
-                type.en,
-              ].join(' '),
-              tagIds: [type.id, if (color != null) color.id],
-              personIndex: personIndex,
-            ))
-        .toList();
-  }
+  List<_GeneratedOutputTag> _wingOutputTagsForPerson(int personIndex) =>
+      _coloredPhysicalTraitOutputTagsForPerson(
+        personIndex,
+        isType: _isWingTypeTag,
+        colorGroup: _wingColorGroup,
+      );
 
   List<_GeneratedOutputTag> _objectInteractionOutputTagsForPerson(
       int personIndex) {
@@ -7380,6 +7566,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selected = _selectedTagsForPerson(index);
     final clothing = _clothingOutputTagsForPerson(index);
     final hair = _hairOutputTagsForPerson(index);
+    final animalTraits = _animalTraitOutputTagsForPerson(index);
     final wings = _wingOutputTagsForPerson(index);
     final extra = _extraFeatureOutputTagsForPerson(index);
     final objectInteractions = _objectInteractionOutputTagsForPerson(index);
@@ -7388,7 +7575,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final covered = {
       ...clothing.expand((tag) => tag.tagIds),
       ...hair.expand((tag) => tag.tagIds),
+      ...animalTraits.expand((tag) => tag.tagIds),
       ...wings.expand((tag) => tag.tagIds),
+      ...selected
+          .where((tag) => _physicalTraitColorGroups.contains(tag.group))
+          .map((tag) => tag.id),
       ...extra.expand((tag) => tag.tagIds),
       ...objectInteractions.expand((tag) => tag.tagIds),
       ...combinationExtra.expand((tag) => tag.tagIds),
@@ -7420,6 +7611,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...beforeClothing,
       ...extra,
       ...hair,
+      ...animalTraits,
       ...wings,
       ...clothing,
       ...afterClothing,
@@ -7427,6 +7619,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...poseExtra,
       ...combinationExtra,
     ];
+  }
+
+  List<String> _fixedCharacterFeatureSummaryZh() {
+    final result = <String>[];
+    final seen = <String>{};
+    for (var index = 0; index < _personSlots.length; index++) {
+      for (final output in _personPromptTags(index)) {
+        final fixed = output.tagIds.any((id) {
+          final tag = _tagsById[id];
+          return tag != null && _isFixedCharacterFeatureTag(tag);
+        });
+        if (!fixed || output.zh.trim().isEmpty) continue;
+        final value = output.zh.trim();
+        if (seen.add(value)) result.add(value);
+      }
+    }
+    return result;
   }
 
   bool _isFinalPersonOutputTag(int personIndex, _GeneratedOutputTag output) {
@@ -7757,6 +7966,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _persist();
     _search.removeListener(_scheduleSearchRefresh);
     _search.dispose();
+    _globalTagSearch.dispose();
     _extraPositive.dispose();
     _reversePrompt.dispose();
     _negative.dispose();
@@ -9102,9 +9312,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // undressed") remains a normal prompt tag. Only a garment-specific
       // wear state belongs inside that garment's parenthesized block.
       addTokens(
-        clothing
-            .where(_isOverallClothingWearOutputTag)
-            .map((tag) => tag.en),
+        clothing.where(_isOverallClothingWearOutputTag).map((tag) => tag.en),
       );
       final individualActions = personal
           .where((tag) => _isIndividualActionOutputTag(index, tag))
@@ -9421,6 +9629,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _tagBelongsToRandomGroups(TagItem tag, Set<String> groups) {
     if (groups.contains(tag.group)) return true;
+    if (groups.contains(_animalTraitGroup) &&
+        const {
+          _animalEarColorGroup,
+          _animalTailColorGroup,
+          _animalHandColorGroup,
+          _animalFootColorGroup,
+        }.contains(tag.group)) {
+      return true;
+    }
+    if (groups.contains(_wingTypeGroup) && tag.group == _wingColorGroup) {
+      return true;
+    }
     if (groups.contains(_staticFaceAppearanceGroup) &&
         _isStaticFaceAppearanceTag(tag)) {
       return true;
@@ -9505,6 +9725,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (groupSet.contains('眼睛')) {
       addRandomFromGroup('眼睛', max: 2);
     }
+    if (groupSet.contains(_animalTraitGroup)) {
+      addRandomFromGroup(_animalTraitGroup, max: 2);
+      final selected =
+          target.map((id) => _tagsById[id]).whereType<TagItem>().toList();
+      if (selected.any(_isAnimalEarTypeTag)) {
+        addRandomFromGroup(_animalEarColorGroup, min: 1);
+      }
+      if (selected.any(_isAnimalTailTypeTag)) {
+        addRandomFromGroup(_animalTailColorGroup, min: 1);
+      }
+      if (selected.any(_isAnimalHandTypeTag)) {
+        addRandomFromGroup(_animalHandColorGroup, min: 1);
+      }
+      if (selected.any(_isAnimalFootTypeTag)) {
+        addRandomFromGroup(_animalFootColorGroup, min: 1);
+      }
+    }
+    if (groupSet.contains(_wingTypeGroup)) {
+      addRandomFromGroup(_wingTypeGroup, min: 1);
+      if (target
+          .map((id) => _tagsById[id])
+          .whereType<TagItem>()
+          .any(_isWingTypeTag)) {
+        addRandomFromGroup(_wingColorGroup, min: 1);
+      }
+    }
     if (groupSet.contains(_staticFaceAppearanceGroup)) {
       addRandomFromGroup(_staticFaceAppearanceGroup, max: 2);
     }
@@ -9576,6 +9822,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     const directlyHandledGroups = <String>{
       '眼睛',
+      _animalTraitGroup,
+      _wingTypeGroup,
       _staticFaceAppearanceGroup,
       '身體特徵',
       '額外特徵',
@@ -9625,21 +9873,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    _removeOrphanedPhysicalTraitColors(target);
+    _syncAutoFurryIdentity(personIndex, target);
     setState(_persist);
   }
 
   void _randomizeSceneAndFrame() {
     final random = Random();
     final sceneCandidates = _allTags
-        .where((tag) => _isScenePickerGroup(tag.group) && (_showAdult || !tag.adult))
+        .where((tag) =>
+            _isScenePickerGroup(tag.group) && (_showAdult || !tag.adult))
         .toList()
       ..shuffle(random);
     final outdoorTimeCandidates = _allTags
-        .where((tag) => tag.group == _outdoorTimeGroup && (_showAdult || !tag.adult))
+        .where((tag) =>
+            tag.group == _outdoorTimeGroup && (_showAdult || !tag.adult))
         .toList()
       ..shuffle(random);
     final framingCandidates = _allTags
-        .where((tag) => tag.group == _cameraFramingGroup && (_showAdult || !tag.adult))
+        .where((tag) =>
+            tag.group == _cameraFramingGroup && (_showAdult || !tag.adult))
         .toList()
       ..shuffle(random);
     final viewCandidates = _allTags
@@ -9649,8 +9902,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     setState(() {
       _selectedIds.removeWhere((id) => _allTags.any((tag) =>
-          tag.id == id && (_isScenePickerGroup(tag.group) ||
-              tag.group == _outdoorTimeGroup || _isCameraGroup(tag.group))));
+          tag.id == id &&
+          (_isScenePickerGroup(tag.group) ||
+              tag.group == _outdoorTimeGroup ||
+              _isCameraGroup(tag.group))));
       if (sceneCandidates.isNotEmpty) {
         final scene = sceneCandidates.first;
         _selectedIds.add(scene.id);
@@ -9877,16 +10132,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
-  bool _isPhysicalAnimalEarOrTailTag(TagItem tag) =>
+  bool _isPhysicalAnimalTraitTag(TagItem tag) =>
       tag.group == _animalTraitGroup &&
-      RegExp(r'\b(?:ears?|tail)\b').hasMatch(tag.en) &&
+      (_isAnimalEarTypeTag(tag) ||
+          _isAnimalTailTypeTag(tag) ||
+          _isAnimalHandTypeTag(tag) ||
+          _isAnimalFootTypeTag(tag)) &&
       !const {'catalog_trait_furry', 'catalog_trait_anthro'}.contains(tag.id);
+
+  void _removeOrphanedPhysicalTraitColors(Set<String> selectedIds) {
+    final selected =
+        selectedIds.map((id) => _tagsById[id]).whereType<TagItem>().toList();
+    bool hasType(bool Function(TagItem tag) matcher) => selected.any(matcher);
+    final orphanGroups = <String>{
+      if (!hasType(_isAnimalEarTypeTag)) _animalEarColorGroup,
+      if (!hasType(_isAnimalTailTypeTag)) _animalTailColorGroup,
+      if (!hasType(_isAnimalHandTypeTag)) _animalHandColorGroup,
+      if (!hasType(_isAnimalFootTypeTag)) _animalFootColorGroup,
+      if (!hasType(_isWingTypeTag)) _wingColorGroup,
+    };
+    if (orphanGroups.isEmpty) return;
+    selectedIds
+        .removeWhere((id) => orphanGroups.contains(_tagsById[id]?.group));
+  }
 
   void _syncAutoFurryIdentity(int personIndex, Set<String> selectedIds) {
     final hasPhysicalAnimalTrait = selectedIds
         .map((id) => _tagsById[id])
         .whereType<TagItem>()
-        .any(_isPhysicalAnimalEarOrTailTag);
+        .any(_isPhysicalAnimalTraitTag);
     final hasIdentityCue = selectedIds.contains('catalog_trait_furry') ||
         selectedIds.contains('catalog_trait_anthro');
     if (hasPhysicalAnimalTrait && !hasIdentityCue) {
@@ -9927,6 +10201,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
         }
         if (personIndex != null) {
+          _removeOrphanedPhysicalTraitColors(targetIds);
           _syncAutoFurryIdentity(personIndex, targetIds);
         }
         _persist();
@@ -9997,6 +10272,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _autoFurryIdentityForPerson.remove(personIndex);
         }
         _syncAutoFurryIdentity(personIndex, targetIds);
+        _removeOrphanedPhysicalTraitColors(targetIds);
         if (_isClothingGroup(tag.group)) {
           _markClothingTemplateCustomized(personIndex);
         }
@@ -10265,20 +10541,61 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (bases.isEmpty) return const <TagItem>[];
 
     final result = <TagItem>[bases.first];
-    for (final tag in _allTags.where(
-        (tag) => tag.group == '額外特徵位置' && _reverseKeyContainsPhrase(key, tag.en))) {
+    for (final tag in _allTags.where((tag) =>
+        tag.group == '額外特徵位置' && _reverseKeyContainsPhrase(key, tag.en))) {
       result.add(tag);
     }
     for (final tag in _allTags.where((tag) => tag.group == '額外特徵顏色')) {
       final words = _clothingColorWords(tag);
-      if (words.isNotEmpty && words.every((word) => _reverseKeyContainsPhrase(key, word))) {
+      if (words.isNotEmpty &&
+          words.every((word) => _reverseKeyContainsPhrase(key, word))) {
         result.add(tag);
       }
     }
     return result.toSet().toList();
   }
 
+  List<TagItem> _reversePhysicalTraitCandidates(String value) {
+    final key = _englishTagKey(value);
+    if (key.isEmpty) return const <TagItem>[];
+    final types = _allTags.where((tag) {
+      final physicalType = _isAnimalEarTypeTag(tag) ||
+          _isAnimalTailTypeTag(tag) ||
+          _isAnimalHandTypeTag(tag) ||
+          _isAnimalFootTypeTag(tag) ||
+          _isWingTypeTag(tag);
+      return physicalType && _reverseKeyContainsPhrase(key, tag.en);
+    }).toList()
+      ..sort((a, b) =>
+          _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
+    if (types.isEmpty) return const <TagItem>[];
+
+    final type = types.first;
+    final colorGroup = _isAnimalEarTypeTag(type)
+        ? _animalEarColorGroup
+        : _isAnimalTailTypeTag(type)
+            ? _animalTailColorGroup
+            : _isAnimalHandTypeTag(type)
+                ? _animalHandColorGroup
+                : _isAnimalFootTypeTag(type)
+                    ? _animalFootColorGroup
+                    : _wingColorGroup;
+    final colors = _allTags
+        .where((tag) => tag.group == colorGroup)
+        .where((tag) {
+      final words = _clothingColorWords(tag);
+      return words.isNotEmpty &&
+          words.every((word) => _reverseKeyContainsPhrase(key, word));
+    }).toList()
+      ..sort((a, b) => _clothingColorPrefix(b)
+          .length
+          .compareTo(_clothingColorPrefix(a).length));
+    return [type, if (colors.isNotEmpty) colors.first];
+  }
+
   List<TagItem> _reverseTagCandidates(String value) {
+    final physicalTrait = _reversePhysicalTraitCandidates(value);
+    if (physicalTrait.isNotEmpty) return physicalTrait;
     final exact = _tagByReverseLabel(value);
     if (exact != null) return [exact];
     final key = _englishTagKey(value);
@@ -10305,13 +10622,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final hairColors = _allTags
           .where((tag) => tag.group == '髮色')
           .where((tag) {
-            final color = _hairColorWord(tag);
-            return color != null && _reverseKeyContainsPhrase(key, color);
-          })
-          .toList()
-        ..sort((a, b) => _englishTagKey(b.en)
-            .length
-            .compareTo(_englishTagKey(a.en).length));
+        final color = _hairColorWord(tag);
+        return color != null && _reverseKeyContainsPhrase(key, color);
+      }).toList()
+        ..sort((a, b) =>
+            _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
       if (hairColors.isNotEmpty) hair.add(hairColors.first);
     }
     if (hairSuffixes.isNotEmpty) {
@@ -10321,7 +10636,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       );
       hair.add(length);
       final style = hairSuffixes.cast<TagItem?>().firstWhere(
-            (tag) => tag != null &&
+            (tag) =>
+                tag != null &&
                 _isHairStyleTag(tag) &&
                 _hairLengthTag(tag.en) == null,
             orElse: () => null,
@@ -10551,10 +10867,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (tag.en == '1girl' || tag.en == '1boy' || tag.en == '1person') {
           continue;
         }
-        final target = globalGroups.contains(tag.group) ||
-                _isSharedActionGroup(tag.group)
-            ? _selectedIds
-            : _personTagIds(0);
+        final target =
+            globalGroups.contains(tag.group) || _isSharedActionGroup(tag.group)
+                ? _selectedIds
+                : _personTagIds(0);
         final current =
             target == _selectedIds ? _selectedTags : _selectedTagsForPerson(0);
         for (final conflict
@@ -10670,10 +10986,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .map((tag) => tag.id)
         .toSet();
     void removePersonTagsWhere(bool Function(TagItem tag) matches) {
-      final removable = _allTags
-          .where(matches)
-          .map((tag) => tag.id)
-          .toSet();
+      final removable = _allTags.where(matches).map((tag) => tag.id).toSet();
       for (final ids in _personSelectedIds.values) {
         ids.removeWhere(removable.contains);
       }
@@ -10869,6 +11182,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       return tag.group == group;
     }).toList();
+    if (group == _animalTraitGroup) {
+      tags.addAll(selected.where((tag) =>
+          tag.group == _animalEarColorGroup ||
+          tag.group == _animalTailColorGroup ||
+          tag.group == _animalHandColorGroup ||
+          tag.group == _animalFootColorGroup));
+    } else if (group == _wingTypeGroup) {
+      tags.addAll(selected.where((tag) => tag.group == _wingColorGroup));
+    }
     if (tags.isEmpty) {
       ScaffoldMessenger.of(context)
           .showSnackBar(const SnackBar(content: Text('目前分類沒有已選取的標籤')));
@@ -10894,7 +11216,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
     if (confirmed != true) return;
     setState(() {
-      _personTagIds(personIndex).removeAll(tags.map((tag) => tag.id));
+      final ids = _personTagIds(personIndex);
+      ids.removeAll(tags.map((tag) => tag.id));
+      _removeOrphanedPhysicalTraitColors(ids);
+      _syncAutoFurryIdentity(personIndex, ids);
       _persist();
     });
     ScaffoldMessenger.of(context).showSnackBar(
@@ -12089,15 +12414,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         return (_tagsByGroup[group] ?? const <TagItem>[])
             .cast<TagItem?>()
             .firstWhere(
-              (tag) {
-                if (tag == null) return false;
-                final tagColor = _clothingColorWord(tag);
-                if (tagColor == color) return true;
-                final tagKey = _englishTagKey(tag.en);
-                return tagKey == expected || tagKey.startsWith('$expected ');
-              },
-              orElse: () => null,
-            );
+          (tag) {
+            if (tag == null) return false;
+            final tagColor = _clothingColorWord(tag);
+            if (tagColor == color) return true;
+            final tagKey = _englishTagKey(tag.en);
+            return tagKey == expected || tagKey.startsWith('$expected ');
+          },
+          orElse: () => null,
+        );
       }
 
       if (piece.cut != null) {
@@ -12942,16 +13267,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '表情',
                     '姿勢',
                     '動作',
-                     '物件',
-                     '成人道具',
-                     _indoorSceneGroup,
-                     _outdoorSceneGroup,
-                     _outdoorTimeGroup,
-                     _cameraFramingGroup,
-                     _cameraFaceFocusGroup,
-                     _cameraFocusGroup,
-                     _cameraCropGroup,
-                     '其他',
+                    '物件',
+                    '成人道具',
+                    _indoorSceneGroup,
+                    _outdoorSceneGroup,
+                    _outdoorTimeGroup,
+                    _cameraFramingGroup,
+                    _cameraFaceFocusGroup,
+                    _cameraFocusGroup,
+                    _cameraCropGroup,
+                    '其他',
                   ]
                       .map(
                         (value) => DropdownMenuItem(
@@ -13089,13 +13414,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selectedFamily = _selectedColorFamily(effectiveGroup, _selectedIds);
     final tags = _allTags.where((tag) {
       final hairColorInHairGroup = effectiveGroup == '髮型' && tag.group == '髮色';
-      final faceExpressionInMergedGroup =
-          effectiveGroup == '表情' &&
-              tag.group == '臉部特徵' &&
-              _isDynamicHeadActionTag(tag);
+      final faceExpressionInMergedGroup = effectiveGroup == '表情' &&
+          tag.group == '臉部特徵' &&
+          _isDynamicHeadActionTag(tag);
       final faceExpressionInSubgroup = _expressionSubgroupForTag(tag) == group;
-      final staticFaceAppearanceMatch =
-          group == _staticFaceAppearanceGroup && _isStaticFaceAppearanceTag(tag);
+      final staticFaceAppearanceMatch = group == _staticFaceAppearanceGroup &&
+          _isStaticFaceAppearanceTag(tag);
       final objectInteractionMatch =
           group == _objectInteractionGroup && _isObjectInteractionTag(tag);
       final groupMatch = group == '全部' ||
@@ -13216,16 +13540,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '角色姿勢': Color(0xffc084fc),
       '物件': Color(0xff94a3b8),
       _objectInteractionGroup: Color(0xff14b8a6),
-       _objectFurnitureGroup: Color(0xffa8a29e),
-       _objectDiningGroup: Color(0xfffb923c),
-       _objectStudyGroup: Color(0xff60a5fa),
-       _objectTechGroup: Color(0xff22d3ee),
-       _objectSportGroup: Color(0xff34d399),
-       _objectToolGroup: Color(0xfffbbf24),
-       _objectFantasyGroup: Color(0xffc084fc),
-       _objectTravelGroup: Color(0xff38bdf8),
-       _objectDailyGroup: Color(0xfff9a8d4),
-       '性姿勢': Color(0xfffb7185),
+      _objectFurnitureGroup: Color(0xffa8a29e),
+      _objectDiningGroup: Color(0xfffb923c),
+      _objectStudyGroup: Color(0xff60a5fa),
+      _objectTechGroup: Color(0xff22d3ee),
+      _objectSportGroup: Color(0xff34d399),
+      _objectToolGroup: Color(0xfffbbf24),
+      _objectFantasyGroup: Color(0xffc084fc),
+      _objectTravelGroup: Color(0xff38bdf8),
+      _objectDailyGroup: Color(0xfff9a8d4),
+      '性姿勢': Color(0xfffb7185),
       '性姿勢・一般': Color(0xfffb7185),
       '性姿勢・後入': Color(0xfff43f5e),
       '性姿勢・女上位': Color(0xffec4899),
@@ -13250,6 +13574,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final poseTone = poseTones[group];
     if (poseTone != null) return poseTone;
     if (group == _wingTypeGroup) return const Color(0xff818cf8);
+    if (group == _animalEarColorGroup) return const Color(0xfff472b6);
+    if (group == _animalTailColorGroup) return const Color(0xffc084fc);
+    if (group == _animalHandColorGroup) return const Color(0xfffb923c);
+    if (group == _animalFootColorGroup) return const Color(0xff34d399);
     if (group == _wingColorGroup) return const Color(0xff38bdf8);
     if (group == _indoorSceneGroup) return const Color(0xff38bdf8);
     if (group == _outdoorSceneGroup) return const Color(0xff4ade80);
@@ -13460,6 +13788,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '配件顏色': '配件主色',
       '帽子顏色': '帽子主色',
       '眼鏡顏色': '眼鏡主色',
+      _animalEarColorGroup: '獸耳顏色',
+      _animalTailColorGroup: '獸尾顏色',
+      _animalHandColorGroup: '獸手顏色',
+      _animalFootColorGroup: '獸足顏色',
       _wingColorGroup: '翅膀顏色',
       '服裝邊線色': '連身裝次色',
       '上衣邊線色': '上衣次色',
@@ -13485,6 +13817,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _cameraFaceFocusGroup) return '鏡頭・臉部（眼睛／嘴巴／表情）';
     if (group == _cameraFocusGroup) return '鏡頭・身體聚焦（頭到腳）';
     if (group == _cameraCropGroup) return '鏡頭・裁切構圖';
+    if (group == _animalTraitGroup) return '獸人特徵（含顏色）';
+    if (group == _wingTypeGroup) return '翅膀（含顏色）';
     if (group == _clothingGroupHat) return '帽子／頭戴';
     if (group == _clothingGroupHairAccessory) return '髮飾';
     if (group == _clothingGroupEyewear) return '眼鏡／眼罩';
@@ -13540,10 +13874,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           (personIndex == null ||
               selectedClothingScopes.contains(_scopedClothingSlot(tag.group)));
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
-      final faceExpressionInMergedGroup =
-          activeGroup == '表情' &&
-              tag.group == '臉部特徵' &&
-              _isDynamicHeadActionTag(tag);
+      final faceExpressionInMergedGroup = activeGroup == '表情' &&
+          tag.group == '臉部特徵' &&
+          _isDynamicHeadActionTag(tag);
       final faceExpressionInSubgroup =
           _expressionSubgroupForTag(tag) == activeGroup;
       final staticFaceAppearanceMatch =
@@ -13552,10 +13885,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final staticFaceInPickerGroups =
           groups.contains(_staticFaceAppearanceGroup) &&
               _isStaticFaceAppearanceTag(tag);
-      final objectInteractionMatch =
-          activeGroup == _objectInteractionGroup && _isObjectInteractionTag(tag);
+      final objectInteractionMatch = activeGroup == _objectInteractionGroup &&
+          _isObjectInteractionTag(tag);
       final objectInteractionInPickerGroups =
-          groups.contains(_objectInteractionGroup) && _isObjectInteractionTag(tag);
+          groups.contains(_objectInteractionGroup) &&
+              _isObjectInteractionTag(tag);
       final objectPickerGroup = _objectPickerGroupForTag(tag);
       final objectCategoryMatch = objectPickerGroup == activeGroup;
       final objectInPickerGroups =
@@ -13602,14 +13936,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   hairColorInHairGroup ||
                   faceExpressionInMergedGroup ||
                   faceExpressionInSubgroup) &&
-                  (activeGroup == null ||
-                      directActiveGroupMatch ||
-                      allClothingWear ||
-                      hairColorInHairGroup ||
-                      faceExpressionInMergedGroup ||
-                      faceExpressionInSubgroup ||
-                      staticFaceAppearanceMatch ||
-                      objectInteractionMatch);
+              (activeGroup == null ||
+                  directActiveGroupMatch ||
+                  allClothingWear ||
+                  hairColorInHairGroup ||
+                  faceExpressionInMergedGroup ||
+                  faceExpressionInSubgroup ||
+                  staticFaceAppearanceMatch ||
+                  objectInteractionMatch);
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -13647,9 +13981,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final colors = _selectedHairColorTags(personIndex);
     final hasColor = colors.isNotEmpty;
     final value = _boundedPromptWeight(slot.hairColorWeight);
-    final colorLabel = hasColor
-        ? colors.map((tag) => tag.zh).join('、')
-        : '請先在上方選擇一種髮色';
+    final colorLabel =
+        hasColor ? colors.map((tag) => tag.zh).join('、') : '請先在上方選擇一種髮色';
 
     void updateEnabled(bool enabled) {
       setState(() {
@@ -13680,9 +14013,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             title: const Text('髮色單獨加強',
                 style: TextStyle(fontWeight: FontWeight.w800)),
             subtitle: Text(
-              hasColor
-                  ? '目前髮色：$colorLabel。勾選後會將完整髮部描述獨立加權。'
-                  : colorLabel,
+              hasColor ? '目前髮色：$colorLabel。勾選後會將完整髮部描述獨立加權。' : colorLabel,
               style: const TextStyle(fontSize: 12),
             ),
           ),
@@ -13700,8 +14031,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     key: ValueKey<String>(
                         'hair-color-weight-$personIndex-${value.toStringAsFixed(2)}'),
                     initialValue: value.toStringAsFixed(2),
-                    keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
                     textAlign: TextAlign.center,
                     decoration: const InputDecoration(
                       isDense: true,
@@ -13741,6 +14072,166 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               style: TextStyle(fontSize: 11),
             ),
           ],
+        ],
+      ),
+    );
+  }
+
+  Widget _physicalTraitColorSection({
+    required int personIndex,
+    required String title,
+    required String colorGroup,
+    required List<TagItem> types,
+  }) {
+    final selectedIds = _personTagIds(personIndex);
+    final selectedColor =
+        _selectedTagsForPerson(personIndex).cast<TagItem?>().firstWhere(
+              (tag) => tag?.group == colorGroup,
+              orElse: () => null,
+            );
+    final colors = _stepVisibleTags(
+      [colorGroup],
+      queryText: '',
+      activeGroup: colorGroup,
+      personIndex: personIndex,
+    );
+    final tone = _pickerLayerTone(colorGroup);
+    final previews = types.map((type) {
+      final baseEnglish = _withoutLeadingPromptColor(type.en);
+      final baseChinese = _withoutLeadingChineseColor(type.zh);
+      final zh =
+          '${selectedColor == null ? '' : _clothingColorChinesePrefix(selectedColor)}$baseChinese';
+      final en = [
+        if (selectedColor != null) _clothingColorPrefix(selectedColor),
+        baseEnglish,
+      ].where((value) => value.isNotEmpty).join(' ');
+      return '$zh · $en';
+    }).join('、');
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: _pickerLayerSurface(tone, selected: false),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: tone.withOpacity(.75)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.palette_outlined, size: 18, color: tone),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  '$title（直接合併到特徵）',
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+              if (selectedColor != null)
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  tooltip: '清除$title',
+                  onPressed: () =>
+                      _toggle(selectedColor, personIndex: personIndex),
+                  icon: const Icon(Icons.clear, size: 18),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '輸出預覽：$previews',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: colors
+                .map((tag) => _colorTagChip(
+                      tag,
+                      personIndex: personIndex,
+                      selected: selectedIds.contains(tag.id),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _integratedPhysicalTraitColors(int personIndex, String currentGroup) {
+    final selected = _selectedTagsForPerson(personIndex);
+    final sections = <Widget>[];
+    if (currentGroup == _animalTraitGroup) {
+      final ears = selected.where(_isAnimalEarTypeTag).toList();
+      final tails = selected.where(_isAnimalTailTypeTag).toList();
+      final hands = selected.where(_isAnimalHandTypeTag).toList();
+      final feet = selected.where(_isAnimalFootTypeTag).toList();
+      if (ears.isNotEmpty) {
+        sections.add(_physicalTraitColorSection(
+          personIndex: personIndex,
+          title: '獸耳顏色',
+          colorGroup: _animalEarColorGroup,
+          types: ears,
+        ));
+      }
+      if (tails.isNotEmpty) {
+        sections.add(_physicalTraitColorSection(
+          personIndex: personIndex,
+          title: '獸尾顏色',
+          colorGroup: _animalTailColorGroup,
+          types: tails,
+        ));
+      }
+      if (hands.isNotEmpty) {
+        sections.add(_physicalTraitColorSection(
+          personIndex: personIndex,
+          title: '獸手顏色',
+          colorGroup: _animalHandColorGroup,
+          types: hands,
+        ));
+      }
+      if (feet.isNotEmpty) {
+        sections.add(_physicalTraitColorSection(
+          personIndex: personIndex,
+          title: '獸足顏色',
+          colorGroup: _animalFootColorGroup,
+          types: feet,
+        ));
+      }
+    } else if (currentGroup == _wingTypeGroup) {
+      final wings = selected.where(_isWingTypeTag).toList();
+      if (wings.isNotEmpty) {
+        sections.add(_physicalTraitColorSection(
+          personIndex: personIndex,
+          title: '翅膀顏色',
+          colorGroup: _wingColorGroup,
+          types: wings,
+        ));
+      }
+    }
+    if (sections.isNotEmpty) return Column(children: sections);
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.info_outline, size: 17),
+          const SizedBox(width: 7),
+          Expanded(
+            child: Text(
+              currentGroup == _wingTypeGroup
+                  ? '先選擇翅膀類型，顏色選項就會直接顯示在翅膀設定內。'
+                  : '先選擇獸耳、獸尾、獸手或獸足，對應的顏色選項就會直接顯示在特徵內。',
+              style: const TextStyle(fontSize: 12),
+            ),
+          ),
         ],
       ),
     );
@@ -14031,6 +14522,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
           ),
         ],
+        if (personIndex != null &&
+            (currentGroup == _animalTraitGroup ||
+                currentGroup == _wingTypeGroup))
+          _integratedPhysicalTraitColors(personIndex, currentGroup),
         if (showNext) ...[
           const SizedBox(height: 14),
           Align(
@@ -14053,7 +14548,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (groups.contains(_animalTraitGroup)) ...[
           const SizedBox(height: 6),
           Text(
-            '獸耳／獸尾在此代表角色本身的生理特徵，會自動加入 furry；若角色是擬人獸，請改選 anthro。服裝造型用的耳飾、尾飾與翅飾請在服裝的「獸耳／尾飾／翅飾」設定。翅膀本身不會強制加入 furry。',
+            '獸耳、獸尾、獸手與獸足在此代表角色本身的生理特徵，會自動加入 furry；若角色是擬人獸，請改選 anthro。選好類型後，顏色會直接顯示在該特徵下方並合併輸出。服裝造型用的耳飾、尾飾與翅飾請在服裝的「獸耳／尾飾／翅飾」設定。翅膀本身不會強制加入 furry。',
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -14249,9 +14744,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       package.personTagsFor(endPose: endPose),
     );
     final frameTags = _adultPosePackageTags(package.frameTags);
-    final phaseLabel = endPose
-        ? '性愛結束姿勢・${package.endMovementZh}'
-        : '性愛中姿勢';
+    final phaseLabel = endPose ? '性愛結束姿勢・${package.endMovementZh}' : '性愛中姿勢';
     final resolvedEnglish = {
       ...personTags.map((tag) => _englishTagKey(tag.en)),
       ...frameTags.map((tag) => _englishTagKey(tag.en)),
@@ -14259,9 +14752,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final missing = [
       ...package.personTagsFor(endPose: endPose),
       ...package.frameTags,
-    ]
-        .where((tag) => !resolvedEnglish.contains(_englishTagKey(tag)))
-        .toList();
+    ].where((tag) => !resolvedEnglish.contains(_englishTagKey(tag))).toList();
     if (missing.isNotEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('套件缺少系統標籤：${missing.join(', ')}'),
@@ -14413,9 +14904,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   final endPoseActive = package.supportsEndPose &&
                       _adultPosePackageIsSelected(package, endPose: true);
                   final english = [
-                    '性愛中：${[...package.personTags, ...package.frameTags].join(', ')}',
+                    '性愛中：${[
+                      ...package.personTags,
+                      ...package.frameTags
+                    ].join(', ')}',
                     if (package.supportsEndPose)
-                      '性愛結束（${package.endMovementZh}）：${[...package.personTagsFor(endPose: true), ...package.frameTags].join(', ')}',
+                      '性愛結束（${package.endMovementZh}）：${[
+                        ...package.personTagsFor(endPose: true),
+                        ...package.frameTags
+                      ].join(', ')}',
                   ].join('\n');
 
                   Widget phaseButton({
@@ -14655,11 +15152,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     required Color tone,
     required List<PromptPackageData> packages,
   }) {
-    final categories = packages.map((package) => package.category).toSet().toList();
+    final categories =
+        packages.map((package) => package.category).toSet().toList();
     final stateKey = 'quick-package:$panelId:$personIndex';
     final stored = _personActiveGroups[stateKey];
-    final activeCategory =
-        stored != null && categories.contains(stored) ? stored : categories.first;
+    final activeCategory = stored != null && categories.contains(stored)
+        ? stored
+        : categories.first;
     final visible = packages
         .where((package) => package.category == activeCategory)
         .toList();
@@ -14782,9 +15281,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (_personSlots.length < 2 || groups.isEmpty) {
       return const SizedBox.shrink();
     }
-    final selected = _selectedTags
-        .where((tag) => _isSharedActionGroup(tag.group))
-        .toList();
+    final selected =
+        _selectedTags.where((tag) => _isSharedActionGroup(tag.group)).toList();
     final sharedActionIds = _allTags
         .where((tag) => _isSharedActionGroup(tag.group))
         .map((tag) => tag.id)
@@ -15543,7 +16041,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-            '服裝依頭部到腳部排列；先選衣種，再控制該部位可用的剪裁、版型、長度、材質、裝飾、圖案與顏色。官方標籤會優先輸出，描述詞則保留作進階補充。'),
+            '服裝依頭部到腳部排列；先選衣種，再控制該部位可用的剪裁、版型、長度、材質、裝飾、圖案與顏色。多維度設計可同時勾選多項，主體衣種與同一色彩欄位則維持替換。官方標籤會優先輸出，描述詞則保留作進階補充。'),
         const SizedBox(height: 8),
         _clothingLayerLegend(),
         const SizedBox(height: 12),
@@ -15623,7 +16121,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       tone: const Color(0xff60a5fa),
                       title: '2. $activeClothingLabel：多維度設計',
                       description:
-                          '只列出適用於目前衣種的選項；有精準官方標籤時優先使用，進階色名與自然敘述會標示為描述。',
+                          '只列出適用於目前衣種的選項；風格、剪裁、版型、長度、材質、細節與圖案皆可多選。主色、次色及細節色仍各自單選，換色會取代同欄位舊色。',
                       child: _stepTagPicker(
                         adaptiveDetails,
                         nextLabel: '下一步',
@@ -16417,6 +16915,179 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ]);
   }
 
+  List<TagItem> _globalTagSearchResults(String rawQuery) {
+    final query = rawQuery.trim().toLowerCase().replaceAll('_', ' ');
+    if (query.isEmpty) return const <TagItem>[];
+    final terms = query.split(RegExp(r'\s+')).where((term) => term.isNotEmpty);
+    final allTags = _allTags;
+    final hiddenIds = _hiddenTaxonomyDuplicateIdsCache ?? <String>{};
+    final results = allTags.where((tag) {
+      if (!_showAdult && tag.adult) return false;
+      if (hiddenIds.contains(tag.id)) return false;
+      final haystack = [
+        tag.zh,
+        tag.en.replaceAll('_', ' '),
+        tag.group,
+        _wizardGroupLabel(tag.group),
+      ].join(' ').toLowerCase();
+      return terms.every(haystack.contains);
+    }).toList();
+
+    int matchRank(TagItem tag) {
+      final zh = tag.zh.trim().toLowerCase();
+      final en = tag.en.trim().toLowerCase().replaceAll('_', ' ');
+      if (zh == query || en == query) return 0;
+      if (zh.startsWith(query) || en.startsWith(query)) return 1;
+      return 2;
+    }
+
+    results.sort((a, b) {
+      final rankCompare = matchRank(a).compareTo(matchRank(b));
+      if (rankCompare != 0) return rankCompare;
+      final groupCompare = _wizardGroupLabel(a.group)
+          .compareTo(_wizardGroupLabel(b.group));
+      return groupCompare == 0 ? _compareOutputTags(a, b) : groupCompare;
+    });
+    return results;
+  }
+
+  Widget _globalSearchTagChip(TagItem tag, int targetPersonIndex) {
+    final personIndex =
+        _isGlobalPromptGroup(tag.group) ? null : targetPersonIndex;
+    final selected = personIndex == null
+        ? _selectedIds.contains(tag.id)
+        : _personTagIds(personIndex).contains(tag.id);
+    final tone = _pickerLayerTone(tag.group);
+    return FilterChip(
+      selected: selected,
+      avatar: tag.adult
+          ? Icon(
+              Icons.eighteen_mp,
+              size: 15,
+              color: selected
+                  ? _pickerLayerText(tone, selected: true)
+                  : const Color(0xffffa7b7),
+            )
+          : null,
+      label: Text(
+        '${_wizardGroupLabel(tag.group)}｜${tag.zh}  ·  ${tag.en}',
+        softWrap: true,
+        style: TextStyle(
+          color: _pickerLayerText(tone, selected: selected),
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+      backgroundColor: _pickerLayerSurface(tone, selected: false),
+      selectedColor: _pickerLayerSurface(tone, selected: true),
+      checkmarkColor: _pickerLayerText(tone, selected: true),
+      side: BorderSide(color: selected ? tone : tone.withOpacity(.7)),
+      onSelected: (_) => _toggle(tag, personIndex: personIndex),
+    );
+  }
+
+  Widget _globalTagSearchPanel() {
+    final targetPersonIndex = min(
+      max(0, _globalSearchPersonIndex),
+      max(0, _personSlots.length - 1),
+    );
+    final results = _globalTagSearchResults(_globalTagQuery);
+    const displayLimit = 160;
+    final displayed = results.take(displayLimit).toList();
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 15),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.manage_search_outlined),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text(
+                    '全系統標籤搜尋',
+                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                if (_personSlots.length > 1)
+                  DropdownButton<int>(
+                    value: targetPersonIndex,
+                    underline: const SizedBox.shrink(),
+                    items: List.generate(
+                      _personSlots.length,
+                      (index) => DropdownMenuItem<int>(
+                        value: index,
+                        child: Text('套用到人物 ${index + 1}'),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      if (value == null) return;
+                      setState(() => _globalSearchPersonIndex = value);
+                    },
+                  )
+                else
+                  const Text('套用到人物 1',
+                      style: TextStyle(fontSize: 12)),
+              ],
+            ),
+            const SizedBox(height: 10),
+            TextField(
+              controller: _globalTagSearch,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: '搜尋所有中文、英文標籤或分類…',
+                suffixIcon: _globalTagQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: '清除搜尋文字',
+                        onPressed: () {
+                          _globalTagSearch.clear();
+                          setState(() => _globalTagQuery = '');
+                        },
+                        icon: const Icon(Icons.clear),
+                      ),
+                filled: true,
+              ),
+              onChanged: (value) => setState(() => _globalTagQuery = value),
+            ),
+            const SizedBox(height: 7),
+            Text(
+              _globalTagQuery.trim().isEmpty
+                  ? '輸入關鍵字後會搜尋整個系統；18+ 標籤會依「顯示 18+ 分類」設定顯示。'
+                  : results.isEmpty
+                      ? '找不到符合的標籤。'
+                      : results.length > displayLimit
+                          ? '已搜尋全部 ${results.length} 個結果；為避免畫面延遲，先顯示最相符的 $displayLimit 個。'
+                          : '搜尋到 ${results.length} 個標籤；場景與多人動作會全局套用，其他標籤會套用到指定人物。',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            if (displayed.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxHeight: 360),
+                child: SingleChildScrollView(
+                  primary: false,
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: displayed
+                        .map((tag) =>
+                            _globalSearchTagChip(tag, targetPersonIndex))
+                        .toList(),
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _progressiveBuilder() {
     return Column(children: [
       _stepCard(
@@ -16474,15 +17145,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _stepCard(
           3,
           '固定角色外觀',
-          _personSelectedIds.isEmpty
-              ? '每位人物分別設定'
-              : _personSelectedIds.values
-                  .expand(
-                      (ids) => _allTags.where((tag) => ids.contains(tag.id)))
-                  .where(_isFixedCharacterFeatureTag)
-                  .map((tag) => tag.zh)
-                  .join('、')
-                  .ifEmpty('尚未選擇'),
+          _fixedCharacterFeatureSummaryZh()
+              .join('、')
+              .ifEmpty(_personSelectedIds.isEmpty ? '每位人物分別設定' : '尚未選擇'),
           Icons.face_retouching_natural,
           _stepPersonTagPicker([
             '髮長',
@@ -16491,7 +17156,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             _staticFaceAppearanceGroup,
             _animalTraitGroup,
             _wingTypeGroup,
-            _wingColorGroup,
             '額外特徵',
             '額外特徵位置',
             '額外特徵顏色',
@@ -16499,9 +17163,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '胸部',
             '裸露',
           ],
-              nextLabel: '下一步：服裝',
-              instruction:
-                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、翅膀與額外特徵。翅膀類型與顏色會自動合併成獨立提示區塊。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
+               nextLabel: '下一步：服裝',
+               instruction:
+                   '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸耳、獸尾、獸手、獸足、翅膀與額外特徵。獸化部位及翅膀的顏色都放在各自特徵內，並自動合併成中英文提示詞。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
       _stepCard(
           4,
@@ -16558,7 +17222,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Icons.accessibility_new,
           _stepCategorizedPersonTagPicker(expandedTagPickerSections,
               nextLabel: '下一步：品質與負面',
-              instruction: '依序選頭部、上半身、下半身、全身姿勢，再選物件或人物互動；成人性姿勢與道具集中在最後。每位人物會保留自己的動作與互動。'),
+              instruction:
+                  '依序選頭部、上半身、下半身、全身姿勢，再選物件或人物互動；成人性姿勢與道具集中在最後。每位人物會保留自己的動作與互動。'),
           onClear: () => _clearStepTags(5)),
       _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal(),
@@ -17150,6 +17815,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             controller: _pageScrollController,
             padding: EdgeInsets.fromLTRB(contentLeftPadding, 16, 16, 38),
             children: [
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1120),
+                child: _globalTagSearchPanel(),
+              ),
+              const SizedBox(height: 12),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1120),
                 child: _progressiveBuilder(),
