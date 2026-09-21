@@ -3036,6 +3036,29 @@ CatalogCharacter _animeCharacter({
       traits: traits,
     );
 
+/// Main playable female protagonists from the Pokémon games.
+///
+/// Keep the preset focused on source / character recognition and stable visual
+/// features.  Their clothes are deliberately not included here, so users can
+/// freely combine any outfit template without inheriting an original costume.
+CatalogCharacter _pokemonHeroine({
+  required String id,
+  required String characterZh,
+  required String characterEn,
+  required String characterTag,
+  required List<CatalogTagData> traits,
+}) =>
+    _animeCharacter(
+      id: id,
+      animeZh: '寶可夢',
+      animeEn: 'Pokémon',
+      animeTag: 'pokemon',
+      characterZh: characterZh,
+      characterEn: characterEn,
+      characterTag: characterTag,
+      traits: traits,
+    );
+
 final catalogCharacters = <CatalogCharacter>[
   CatalogCharacter(
     id: 'to_love_ru_lala',
@@ -4828,6 +4851,151 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('nier_a2_blue_eyes', '藍色眼睛', 'blue eyes'),
       _trait('nier_a2_beauty_mark', '嘴角美人痣', 'beauty mark under mouth'),
       _trait('nier_a2_serious', '嚴肅表情', 'serious expression'),
+    ],
+  ),
+  // Pokémon game player protagonists.  All names use their established
+  // Danbooru-style character tags and are searchable under 寶可夢 / Pokémon.
+  _pokemonHeroine(
+    id: 'pokemon_leaf',
+    characterZh: '葉子',
+    characterEn: 'Leaf',
+    characterTag: 'leaf_(pokemon)',
+    traits: [
+      _trait('pokemon_leaf_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_leaf_long_hair', '長髮', 'long hair'),
+      _trait('pokemon_leaf_brown_eyes', '棕色眼睛', 'brown eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_kris',
+    characterZh: '克莉絲',
+    characterEn: 'Kris',
+    characterTag: 'kris_(pokemon)',
+    traits: [
+      _trait('pokemon_kris_blue_hair', '藍色頭髮', 'blue hair'),
+      _trait('pokemon_kris_long_hair', '長髮', 'long hair'),
+      _trait('pokemon_kris_blue_eyes', '藍色眼睛', 'blue eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_may',
+    characterZh: '小遙',
+    characterEn: 'May',
+    characterTag: 'may_(pokemon)',
+    traits: [
+      _trait('pokemon_may_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_may_ponytail', '馬尾', 'ponytail'),
+      _trait('pokemon_may_blue_eyes', '藍色眼睛', 'blue eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_dawn',
+    characterZh: '小光',
+    characterEn: 'Dawn',
+    characterTag: 'dawn_(pokemon)',
+    traits: [
+      _trait('pokemon_dawn_blue_hair', '藍色頭髮', 'blue hair'),
+      _trait('pokemon_dawn_short_hair', '短髮', 'short hair'),
+      _trait('pokemon_dawn_blue_eyes', '藍色眼睛', 'blue eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_lyra',
+    characterZh: '琴音',
+    characterEn: 'Lyra',
+    characterTag: 'lyra_(pokemon)',
+    traits: [
+      _trait('pokemon_lyra_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_lyra_twintails', '雙馬尾', 'twintails'),
+      _trait('pokemon_lyra_brown_eyes', '棕色眼睛', 'brown eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_hilda',
+    characterZh: '鬥子',
+    characterEn: 'Hilda',
+    characterTag: 'hilda_(pokemon)',
+    traits: [
+      _trait('pokemon_hilda_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_hilda_twintails', '雙馬尾', 'twintails'),
+      _trait('pokemon_hilda_blue_eyes', '藍色眼睛', 'blue eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_rosa',
+    characterZh: '芽衣',
+    characterEn: 'Rosa',
+    characterTag: 'rosa_(pokemon)',
+    traits: [
+      _trait('pokemon_rosa_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_rosa_ponytail', '馬尾', 'ponytail'),
+      _trait('pokemon_rosa_blue_eyes', '藍色眼睛', 'blue eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_serena',
+    characterZh: '莎莉娜',
+    characterEn: 'Serena',
+    characterTag: 'serena_(pokemon)',
+    traits: [
+      _trait('pokemon_serena_blonde_hair', '金髮', 'blonde hair'),
+      _trait('pokemon_serena_short_hair', '短髮', 'short hair'),
+      _trait('pokemon_serena_blue_eyes', '藍色眼睛', 'blue eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_selene',
+    characterZh: '美月',
+    characterEn: 'Selene',
+    characterTag: 'selene_(pokemon)',
+    traits: [
+      _trait('pokemon_selene_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_selene_long_hair', '長髮', 'long hair'),
+      _trait('pokemon_selene_brown_eyes', '棕色眼睛', 'brown eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_elaine',
+    characterZh: '伊萊恩',
+    characterEn: 'Elaine',
+    characterTag: 'elaine_(pokemon)',
+    traits: [
+      _trait('pokemon_elaine_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_elaine_ponytail', '馬尾', 'ponytail'),
+      _trait('pokemon_elaine_brown_eyes', '棕色眼睛', 'brown eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_gloria',
+    characterZh: '葛洛莉亞',
+    characterEn: 'Gloria',
+    characterTag: 'gloria_(pokemon)',
+    traits: [
+      _trait('pokemon_gloria_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_gloria_long_hair', '長髮', 'long hair'),
+      _trait('pokemon_gloria_brown_eyes', '棕色眼睛', 'brown eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_akari',
+    characterZh: '明耀',
+    characterEn: 'Akari',
+    characterTag: 'akari_(pokemon)',
+    traits: [
+      _trait('pokemon_akari_dark_blue_hair', '深藍色頭髮', 'dark blue hair'),
+      _trait('pokemon_akari_ponytail', '馬尾', 'ponytail'),
+      _trait('pokemon_akari_blue_eyes', '藍色眼睛', 'blue eyes'),
+    ],
+  ),
+  _pokemonHeroine(
+    id: 'pokemon_juliana',
+    characterZh: '朱莉安娜',
+    characterEn: 'Juliana',
+    characterTag: 'juliana_(pokemon)',
+    traits: [
+      _trait('pokemon_juliana_brown_hair', '棕色頭髮', 'brown hair'),
+      _trait('pokemon_juliana_short_hair', '短髮', 'short hair'),
+      _trait('pokemon_juliana_brown_eyes', '棕色眼睛', 'brown eyes'),
     ],
   ),
 ];
