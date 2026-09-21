@@ -9150,25 +9150,34 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (slot.mode == '動漫角色') {
       final character = _characterForNew(slot);
       if (character == null) return [];
+      // A catalog character tag already carries its source identity (for
+      // example `leaf_(pokemon)`). Emitting the franchise tag again adds
+      // noise without making the character more specific. Unit tags remain:
+      // they distinguish variants such as Nightcord at 25:00 Miku.
+      final emitCharacterTag = character.characterTag.trim().isNotEmpty &&
+          !_isRemovedCharacterTag(index, character.characterTag);
       return [
-        if (!_isRemovedCharacterTag(index, character.animeTag))
+        if (!emitCharacterTag &&
+            !_isRemovedCharacterTag(index, character.animeTag))
           character.animeTag,
         if (character.unitTag.trim().isNotEmpty &&
             !_isRemovedCharacterTag(index, character.unitTag))
           character.unitTag,
-        if (!_isRemovedCharacterTag(index, character.characterTag))
-          character.characterTag,
+        if (emitCharacterTag) character.characterTag,
         ..._characterTraitsForSlot(slot, index).map((item) => item.en),
       ];
     }
     final own = <String>[];
-    if (_cleanTag(slot.originalAnimeTag).isNotEmpty &&
+    final originalCharacterTag = _cleanTag(slot.originalCharacterTag);
+    final emitOriginalCharacter = originalCharacterTag.isNotEmpty &&
+        !_isRemovedCharacterTag(index, originalCharacterTag);
+    if (!emitOriginalCharacter &&
+        _cleanTag(slot.originalAnimeTag).isNotEmpty &&
         !_isRemovedCharacterTag(index, slot.originalAnimeTag)) {
       own.add(_cleanTag(slot.originalAnimeTag));
     }
-    if (_cleanTag(slot.originalCharacterTag).isNotEmpty &&
-        !_isRemovedCharacterTag(index, slot.originalCharacterTag)) {
-      own.add(_cleanTag(slot.originalCharacterTag));
+    if (emitOriginalCharacter) {
+      own.add(originalCharacterTag);
     }
     own.addAll(_extraTags(slot.originalTraits)
         .where((tag) => !_isRemovedCharacterTag(index, tag)));
@@ -9182,7 +9191,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final character = _characterForNew(slot);
       if (character == null) return const <_GeneratedOutputTag>[];
       final result = <_GeneratedOutputTag>[];
-      if (!_isRemovedCharacterTag(index, character.animeTag)) {
+      final emitCharacterTag = character.characterTag.trim().isNotEmpty &&
+          !_isRemovedCharacterTag(index, character.characterTag);
+      if (!emitCharacterTag &&
+          !_isRemovedCharacterTag(index, character.animeTag)) {
         result.add(_GeneratedOutputTag(
           zh: character.animeZh,
           en: character.animeTag,
@@ -9201,7 +9213,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           characterTag: true,
         ));
       }
-      if (!_isRemovedCharacterTag(index, character.characterTag)) {
+      if (emitCharacterTag) {
         result.add(_GeneratedOutputTag(
           zh: character.characterZh,
           en: character.characterTag,
@@ -9222,7 +9234,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final result = <_GeneratedOutputTag>[];
     final animeTag = _cleanTag(slot.originalAnimeTag);
     final characterTag = _cleanTag(slot.originalCharacterTag);
-    if (animeTag.isNotEmpty && !_isRemovedCharacterTag(index, animeTag)) {
+    final emitOriginalCharacter =
+        characterTag.isNotEmpty && !_isRemovedCharacterTag(index, characterTag);
+    if (!emitOriginalCharacter &&
+        animeTag.isNotEmpty &&
+        !_isRemovedCharacterTag(index, animeTag)) {
       result.add(_GeneratedOutputTag(
         zh: slot.originalAnimeZh.trim().isEmpty
             ? animeTag
@@ -9232,8 +9248,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         characterTag: true,
       ));
     }
-    if (characterTag.isNotEmpty &&
-        !_isRemovedCharacterTag(index, characterTag)) {
+    if (emitOriginalCharacter) {
       result.add(_GeneratedOutputTag(
         zh: slot.originalCharacterZh.trim().isEmpty
             ? characterTag
