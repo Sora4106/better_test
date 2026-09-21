@@ -167,6 +167,14 @@ bool _isCameraGroup(String group) => const {
       '畫面',
     }.contains(group);
 
+/// Only these tags belong to the first wizard step. Shared interactions,
+/// quality, and miscellaneous prompt terms can still be stored globally, but
+/// must not be displayed as if they were a scene or camera selection.
+bool _isSceneVisualPromptGroup(String group) =>
+    _isScenePickerGroup(group) ||
+    group == _outdoorTimeGroup ||
+    _isCameraGroup(group);
+
 /// Shared actions describe what multiple characters do together. They are
 /// selected globally and are intentionally rendered after every character's
 /// own pose/action block, without parentheses or a character weight.
@@ -182,9 +190,7 @@ bool _isSharedActionGroup(String group) =>
     expandedSexualActGroups.contains(group);
 
 bool _isGlobalPromptGroup(String group) =>
-    _isScenePickerGroup(group) ||
-    group == _outdoorTimeGroup ||
-    _isCameraGroup(group) ||
+    _isSceneVisualPromptGroup(group) ||
     _isSharedActionGroup(group) ||
     const {'品質', '其他'}.contains(group);
 
@@ -282,6 +288,56 @@ class TagItem {
         support: '${json['support'] ?? 'standard'}',
       );
 }
+
+class _HairGradientStyle {
+  const _HairGradientStyle({
+    required this.id,
+    required this.zh,
+    required this.hint,
+  });
+
+  final String id;
+  final String zh;
+  final String hint;
+}
+
+const _defaultHairGradientStyle = 'linear';
+
+/// Two selected hair colours are emitted as one composed phrase.  These
+/// choices describe where colour 2 appears relative to colour 1, rather than
+/// adding unconnected colour tags that the model might apply elsewhere.
+const _hairGradientStyles = <_HairGradientStyle>[
+  _HairGradientStyle(
+    id: 'linear',
+    zh: '全髮線性漸層',
+    hint: '色 1 從髮根平滑過渡至色 2',
+  ),
+  _HairGradientStyle(
+    id: 'tips',
+    zh: '髮尾漸層',
+    hint: '色 1 為主髮色，色 2 出現在髮尾',
+  ),
+  _HairGradientStyle(
+    id: 'roots',
+    zh: '髮根漸層',
+    hint: '色 1 為主髮色，色 2 出現在髮根',
+  ),
+  _HairGradientStyle(
+    id: 'inner',
+    zh: '內層挑染',
+    hint: '色 1 為外層，色 2 出現在內層髮束',
+  ),
+  _HairGradientStyle(
+    id: 'split',
+    zh: '左右分色',
+    hint: '左右兩側分別使用色 1 與色 2',
+  ),
+  _HairGradientStyle(
+    id: 'underlayer',
+    zh: '底層雙色',
+    hint: '色 1 為表層，色 2 為下層髮色',
+  ),
+];
 
 /// Exact, active names listed by Danbooru's official Hair Styles tag group or
 /// confirmed through its tag API. Other hairstyle entries remain available as
@@ -769,6 +825,36 @@ final _adultPosePackages = <_AdultPosePackage>[
     frameTags: ['side view', 'full body'],
   ),
   _AdultPosePackage(
+    id: 'couple_prone_bone_back_hug',
+    name: '同向俯臥後抱位・側面',
+    description: '兩人身體同向平貼，男方從後方環抱並進行後入，側面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'prone bone',
+      'lying on stomach',
+      'hug from behind',
+    ],
+    frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_supine_rear_hug',
+    name: '同向仰躺後抱位・側面',
+    description: '兩人身體同向仰躺，男方在後方環抱並由後方進行，側面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'sex from behind',
+      'lying on back',
+      'hug from behind',
+    ],
+    frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
     id: 'couple_spooning_side',
     name: '側臥相擁式・側面',
     description: '兩人側臥相擁，側面全身構圖',
@@ -810,9 +896,235 @@ final _adultPosePackages = <_AdultPosePackage>[
     personTags: ['oral', '69', 'lying'],
     frameTags: ['side view', 'full body'],
   ),
+  ..._femaleFemaleAdultPosePackages,
   ..._additionalAdultPosePackages,
   ..._groupAdultPosePackages,
   ..._shijuhatteAdultPosePackages,
+];
+
+/// Adult female/female presets shown only when the current cast is exactly two
+/// women.  All prompt terms are already present in the local bilingual tag
+/// catalog, so applying a preset can select real tags instead of adding free
+/// text that cannot be reverse-matched later.
+final _femaleFemaleAdultPosePackages = <_AdultPosePackage>[
+  _adultPosePack(
+    'ff_tribadism_face_to_face_front',
+    '女女剪式摩擦・正面',
+    '兩位成年女性面對面、雙腿交纏進行剪式摩擦',
+    '女女・摩擦',
+    ['tribadism', 'scissoring', 'face-to-face', 'lying', 'leg lock'],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_tribadism_side',
+    '女女側臥摩擦・側面',
+    '兩位成年女性側臥、腿部交纏摩擦，以側面呈現',
+    '女女・摩擦',
+    ['tribadism', 'scissoring', 'on side', 'lying on side', 'leg lock'],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_tribadism_seated_front',
+    '女女坐姿摩擦・正面',
+    '兩位成年女性面對面坐著，張腿並以剪式姿勢摩擦',
+    '女女・摩擦',
+    ['tribadism', 'scissoring', 'sitting', 'face-to-face', 'legs apart'],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_cunnilingus_lying_front',
+    '女女仰躺舔陰・正面',
+    '一位成年女性仰躺張腿，另一位從正面進行口部互動',
+    '女女・口部',
+    ['oral', 'cunnilingus', 'lying on back', 'legs apart'],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_facesitting_low',
+    '女女顏面騎乘・低角度',
+    '一位成年女性跨坐在上，另一位進行口部互動',
+    '女女・口部',
+    ['oral', 'cunnilingus', 'facesitting', 'girl on top', 'straddling'],
+    ['low-angle view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_sixty_nine_side',
+    '女女六九式・側面',
+    '兩位成年女性反向躺臥，同時進行口部互動',
+    '女女・口部',
+    ['oral', '69', 'cunnilingus', 'lying', 'on side'],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_mutual_fingering_seated',
+    '女女相互指交・坐姿',
+    '兩位成年女性面對面坐著，同時進行手指刺激',
+    '女女・相互刺激',
+    [
+      'mutual masturbation',
+      'fingering',
+      'vaginal fingering',
+      'sitting',
+      'face-to-face',
+    ],
+    ['front view', 'cowboy shot'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_mutual_masturbation_above',
+    '女女相互自慰・俯視',
+    '兩位成年女性並排仰躺，同時進行相互自慰',
+    '女女・相互刺激',
+    [
+      'mutual masturbation',
+      'female masturbation',
+      'lying on back',
+      'legs apart'
+    ],
+    ['from above', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_strapon_missionary_side',
+    '女女穿戴式傳教士體位・側面',
+    '一位成年女性使用穿戴式道具，另一位仰躺的面對面體位',
+    '女女・穿戴式道具',
+    [
+      'sex',
+      'vaginal',
+      'strap-on',
+      'missionary',
+      'lying on back',
+      'face-to-face'
+    ],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_strapon_doggy_rear',
+    '女女穿戴式後入・背面',
+    '一位成年女性使用穿戴式道具，對四肢著地的另一位後入',
+    '女女・穿戴式道具',
+    [
+      'sex',
+      'vaginal',
+      'strap-on',
+      'doggystyle',
+      'sex from behind',
+      'all fours'
+    ],
+    ['rear view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_strapon_cowgirl_low',
+    '女女穿戴式女上位・低角度',
+    '一位成年女性使用穿戴式道具，另一位面對面跨坐在上',
+    '女女・穿戴式道具',
+    [
+      'sex',
+      'vaginal',
+      'strap-on',
+      'cowgirl position',
+      'girl on top',
+      'straddling'
+    ],
+    ['low-angle view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_double_dildo_front',
+    '女女雙頭道具・正面',
+    '兩位成年女性面對面跨坐，使用雙頭假陰莖',
+    '女女・玩具',
+    [
+      'sex toy use',
+      'double dildo',
+      'vaginal object insertion',
+      'face-to-face',
+      'straddling',
+    ],
+    ['front view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_breast_grinding_front',
+    '女女胸部貼合摩擦・正面',
+    '兩位成年女性面對面擁抱，胸部貼合摩擦',
+    '女女・貼身互動',
+    [
+      'breast grinding',
+      'grinding',
+      'nipple-to-nipple',
+      'face-to-face',
+      'hugging'
+    ],
+    ['front view', 'cowboy shot'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_kissing_lap_straddle',
+    '女女膝上跨坐接吻',
+    '一位成年女性跨坐在另一位腿上，面對面擁抱接吻',
+    '女女・貼身互動',
+    ['french kiss', 'straddling', 'sitting on lap', 'face-to-face', 'hugging'],
+    ['side view', 'cowboy shot'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_strapon_prone_bone_back_hug',
+    '女女穿戴式・同向俯臥後抱位',
+    '兩位成年女性同向平貼俯臥，後方以穿戴式道具環抱後入',
+    '女女・穿戴式道具',
+    [
+      'sex',
+      'vaginal',
+      'strap-on',
+      'prone bone',
+      'lying on stomach',
+      'hug from behind',
+    ],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'ff_strapon_supine_rear_hug',
+    '女女穿戴式・同向仰躺後抱位',
+    '兩位成年女性同向仰躺，後方以穿戴式道具環抱並由後方進行',
+    '女女・穿戴式道具',
+    [
+      'sex',
+      'vaginal',
+      'strap-on',
+      'sex from behind',
+      'lying on back',
+      'hug from behind',
+    ],
+    ['side view', 'full body'],
+    femaleCount: 2,
+    maleCount: 0,
+  ),
 ];
 
 final _additionalAdultPosePackages = <_AdultPosePackage>[
@@ -2121,8 +2433,13 @@ class PersonSlot {
   String originalCharacterTag = '';
   String originalTraits = '';
   String poseExtraPositive = '';
+  // Anime character names are always kept.  This flag only controls the
+  // character's automatically-applied, stable appearance traits.
+  bool characterTraitsEnabled = true;
   bool hairColorWeightEnabled = false;
   double hairColorWeight = 1.15;
+  List<String> hairGradientColorIds = <String>[];
+  String hairGradientStyle = _defaultHairGradientStyle;
 
   Map<String, dynamic> toJson() => {
         'gender': gender,
@@ -2142,8 +2459,11 @@ class PersonSlot {
         'originalCharacterTag': originalCharacterTag,
         'originalTraits': originalTraits,
         'poseExtraPositive': poseExtraPositive,
+        'characterTraitsEnabled': characterTraitsEnabled,
         'hairColorWeightEnabled': hairColorWeightEnabled,
         'hairColorWeight': hairColorWeight,
+        'hairGradientColorIds': hairGradientColorIds,
+        'hairGradientStyle': hairGradientStyle,
       };
 
   factory PersonSlot.fromJson(Map<String, dynamic> json) => PersonSlot(
@@ -2165,11 +2485,17 @@ class PersonSlot {
         ..originalCharacterTag = '${json['originalCharacterTag'] ?? ''}'
         ..originalTraits = '${json['originalTraits'] ?? ''}'
         ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}'
+        ..characterTraitsEnabled = json['characterTraitsEnabled'] != false
         ..hairColorWeightEnabled = json['hairColorWeightEnabled'] == true
         ..hairColorWeight =
             (double.tryParse('${json['hairColorWeight'] ?? 1.15}') ?? 1.15)
                 .clamp(0.50, 1.50)
-                .toDouble();
+                .toDouble()
+        ..hairGradientColorIds = (json['hairGradientColorIds'] as List? ?? [])
+            .map((id) => '$id')
+            .toList()
+        ..hairGradientStyle =
+            '${json['hairGradientStyle'] ?? _defaultHairGradientStyle}';
 }
 
 class _RemoteAnime {
@@ -4706,6 +5032,12 @@ List<TagItem> _seedTags() => [
       _tag('action_drinking', '動作', '喝東西', 'drinking', 4),
       _tag('action_holding_flame', '動作', '手持火焰', 'holding flame', 4),
 
+      // Multi-character contact. This remains usable outside adult packages
+      // and also gives the same-direction rear-hug poses a clear upper-body
+      // relationship.
+      _tag(
+          'interaction_hug_from_behind', '多人互動', '從後方環抱', 'hug from behind', 4),
+
       // Composable actions: select one of these together with an object to
       // generate a single prompt noun, such as "hugging teddy bear".
       _tag('action_hugging_object', '動作', '抱著物件', 'hugging object', 4,
@@ -6299,6 +6631,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     if (_isClothingBaseTag(tag)) {
       final baseScope = _clothingScopeForBase(tag);
+      // Accessories are independent wearable/decorative pieces. Returning a
+      // shared "accessory:base" key made selecting a tail decoration remove
+      // cat ears (and likewise prevented hats, glasses, jewellery, and wings
+      // from coexisting). Their colour channels still keep their own
+      // replacement keys, but the accessory nouns themselves are multi-select.
+      if (baseScope == 'accessory') return null;
       return baseScope == null ? null : '$baseScope:base';
     }
 
@@ -6613,6 +6951,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _isColorPickerTag(TagItem tag) {
+    if (tag.group == '髮色') return true;
     if (tag.group == '眼睛') return tag.conflictGroup == 'eye_color';
     return _isClothingColorGroup(tag.group);
   }
@@ -7264,22 +7603,142 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return tag.zh.replaceFirst(RegExp(r'髮$'), '');
   }
 
+  /// Keeps a stable click order for the two gradient colours. Existing saved
+  /// prompts did not store this order, so their already-selected colour is
+  /// treated as colour 1 the first time the hairstyle picker is opened.
+  List<String> _hairGradientColorIdsForPerson(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const <String>[];
+    }
+    final available = _selectedTagsForPerson(personIndex)
+        .where((tag) => _hairColorWord(tag) != null)
+        .map((tag) => tag.id)
+        .toSet();
+    final configured = _personSlots[personIndex]
+        .hairGradientColorIds
+        .where(available.contains)
+        .toList();
+    for (final tag in _selectedTagsForPerson(personIndex)) {
+      if (_hairColorWord(tag) != null && !configured.contains(tag.id)) {
+        configured.add(tag.id);
+      }
+    }
+    return configured.take(2).toList();
+  }
+
+  void _syncHairGradientColorIds(int personIndex, Set<String> selectedIds) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final available = <String>{};
+    for (final id in selectedIds) {
+      final tag = _tagsById[id];
+      if (tag != null && _hairColorWord(tag) != null) available.add(id);
+    }
+    final slot = _personSlots[personIndex];
+    final ordered =
+        slot.hairGradientColorIds.where(available.contains).toList();
+    final remaining = available.where((id) => !ordered.contains(id)).toList()
+      ..sort((a, b) {
+        final first = _tagsById[a];
+        final second = _tagsById[b];
+        if (first == null || second == null) return a.compareTo(b);
+        return _compareOutputTags(first, second);
+      });
+    ordered.addAll(remaining);
+    slot.hairGradientColorIds = ordered.take(2).toList();
+    if (slot.hairGradientColorIds.length < 2) {
+      slot.hairGradientStyle = _defaultHairGradientStyle;
+    }
+  }
+
+  _HairGradientStyle _hairGradientStyleForSlot(PersonSlot slot) =>
+      _hairGradientStyles.firstWhere(
+        (style) => style.id == slot.hairGradientStyle,
+        orElse: () => _hairGradientStyles.first,
+      );
+
+  int _hairGradientColorOrder(int personIndex, String tagId) {
+    final index = _hairGradientColorIdsForPerson(personIndex).indexOf(tagId);
+    return index < 0 ? 0 : index + 1;
+  }
+
+  ({String zh, String en}) _gradientHairDescription(
+    TagItem primary,
+    TagItem secondary,
+    _HairGradientStyle style,
+  ) {
+    final primaryEn = _hairColorWord(primary)!;
+    final secondaryEn = _hairColorWord(secondary)!;
+    final primaryZh = _hairColorChinese(primary);
+    final secondaryZh = _hairColorChinese(secondary);
+    return switch (style.id) {
+      'tips' => (
+          zh: '${primaryZh}髮搭配${secondaryZh}色髮尾漸層',
+          en: '$primaryEn hair with $secondaryEn tips',
+        ),
+      'roots' => (
+          zh: '${primaryZh}髮搭配${secondaryZh}色髮根漸層',
+          en: '$primaryEn hair with $secondaryEn roots',
+        ),
+      'inner' => (
+          zh: '${primaryZh}外層搭配${secondaryZh}內層髮',
+          en: '$primaryEn hair with $secondaryEn inner hair',
+        ),
+      'split' => (
+          zh: '${primaryZh}${secondaryZh}左右分色髮',
+          en: '$primaryEn and $secondaryEn split-dye hair',
+        ),
+      'underlayer' => (
+          zh: '${primaryZh}表層搭配${secondaryZh}底層髮',
+          en: '$primaryEn hair with $secondaryEn underlayer',
+        ),
+      _ => (
+          zh: '${primaryZh}漸層至${secondaryZh}色髮',
+          en: '$primaryEn to $secondaryEn gradient hair',
+        ),
+    };
+  }
+
   List<_GeneratedOutputTag> _hairOutputTagsForPerson(int personIndex) {
     final selected = _selectedTagsForPerson(personIndex);
-    final colors =
-        selected.where((tag) => _hairColorWord(tag) != null).toList();
+    final colors = _selectedHairColorTags(personIndex);
     final lengths =
         selected.where((tag) => _hairLengthTag(tag.en) != null).toList();
     final styles = selected
         .where((tag) => _isHairStyleTag(tag) && _hairLengthTag(tag.en) == null)
         .toList();
-    if (colors.isEmpty || (lengths.isEmpty && styles.isEmpty)) {
+    if (colors.isEmpty ||
+        (colors.length < 2 && lengths.isEmpty && styles.isEmpty)) {
       return const <_GeneratedOutputTag>[];
     }
 
-    final color = colors.first;
     final length = lengths.isEmpty ? null : lengths.first;
-    final related = <TagItem>[color, ...lengths, ...styles];
+    final related = <TagItem>[...colors, ...lengths, ...styles];
+    if (colors.length >= 2) {
+      final gradient = _gradientHairDescription(
+        colors[0],
+        colors[1],
+        _hairGradientStyleForSlot(_personSlots[personIndex]),
+      );
+      return [
+        _GeneratedOutputTag(
+          zh: [
+            gradient.zh,
+            if (length != null) length.zh,
+            ...styles.map((tag) => tag.zh),
+          ].join('、'),
+          en: [
+            gradient.en,
+            if (length != null) length.en,
+            ...styles.map((tag) => tag.en),
+          ].join(', '),
+          tagIds: related.map((tag) => tag.id).toList(),
+          personIndex: personIndex,
+        ),
+      ];
+    }
+
+    final color = colors.first;
+    final singleColorRelated = <TagItem>[color, ...lengths, ...styles];
     final english = <String>[_hairColorWord(color)!];
     final chinese = <String>[_hairColorChinese(color)];
     if (length != null) {
@@ -7297,7 +7756,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _GeneratedOutputTag(
         zh: chinese.join(),
         en: english.join(' '),
-        tagIds: related.map((tag) => tag.id).toList(),
+        tagIds: singleColorRelated.map((tag) => tag.id).toList(),
         personIndex: personIndex,
       ),
     ];
@@ -7346,12 +7805,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       RegExp(r'\btails?\b', caseSensitive: false).hasMatch(tag.en);
 
   bool _isAnimalHandTypeTag(TagItem tag) =>
-      tag.group == _animalTraitGroup &&
-      tag.conflictGroup == 'animal_hand_type';
+      tag.group == _animalTraitGroup && tag.conflictGroup == 'animal_hand_type';
 
   bool _isAnimalFootTypeTag(TagItem tag) =>
-      tag.group == _animalTraitGroup &&
-      tag.conflictGroup == 'animal_foot_type';
+      tag.group == _animalTraitGroup && tag.conflictGroup == 'animal_foot_type';
 
   bool _isWingTypeTag(TagItem tag) => tag.group == _wingTypeGroup;
 
@@ -7436,6 +7893,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isWingOutputTag(_GeneratedOutputTag output) => output.tagIds.any((id) {
         final tag = _tagsById[id];
         return tag?.group == _wingTypeGroup || tag?.group == _wingColorGroup;
+      });
+
+  bool _isAnimalTraitOutputTag(_GeneratedOutputTag output) =>
+      output.tagIds.any((id) {
+        final tag = _tagsById[id];
+        return tag?.group == _animalTraitGroup ||
+            const {
+              _animalEarColorGroup,
+              _animalTailColorGroup,
+              _animalHandColorGroup,
+              _animalFootColorGroup,
+            }.contains(tag?.group);
       });
 
   /// Keeps each wing set together as its own unweighted prompt block. A color
@@ -7710,8 +8179,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<TagItem> _selectedHairColorTags(int personIndex) =>
-      _selectedTagsForPerson(personIndex)
-          .where((tag) => _hairColorWord(tag) != null)
+      _hairGradientColorIdsForPerson(personIndex)
+          .map((id) => _tagsById[id])
+          .whereType<TagItem>()
           .toList();
 
   /// Hair colour is normally part of the character-trait block. When the
@@ -8493,17 +8963,95 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final tag = tagsById[id];
       return tag != null && _traitOverrideGroups(tag.en).isNotEmpty;
     });
+    _personSlots[index].hairGradientColorIds = <String>[];
+    _personSlots[index].hairGradientStyle = _defaultHairGradientStyle;
+    _personSlots[index].characterTraitsEnabled = true;
     _removedCharacterTags.remove(index);
+  }
+
+  bool _isStableCharacterTrait(
+      CatalogCharacter character, CatalogTagData trait) {
+    final value = _englishTagKey(trait.en);
+    final identityValues = <String>{
+      _englishTagKey(character.animeTag),
+      _englishTagKey(character.characterTag),
+      _englishTagKey(character.characterEn),
+      _englishTagKey(character.unitTag),
+      _englishTagKey(character.unitEn),
+    }..removeWhere((item) => item.isEmpty);
+    if (identityValues.contains(value)) return false;
+
+    // Expressions, moods, and generic face-quality terms are dynamic choices.
+    // They must not be silently re-applied as a character's fixed appearance.
+    const dynamicTerms = <String>{
+      'expression',
+      'smile',
+      'melancholic',
+      'energetic',
+      'disciplined',
+      'lively',
+      'mature',
+      'mysterious',
+      'elegant',
+      'refined facial features',
+      'delicate facial features',
+      'sweet face',
+      'cute',
+      'quiet',
+      'tired',
+      'serious',
+      'calm',
+      'distant',
+      'soft',
+      'playful',
+      'lonely',
+      'confident',
+      'stern',
+      'fierce',
+      'relaxed',
+      'emotionless',
+      'tsundere',
+    };
+    return !dynamicTerms.any((term) =>
+        value == term || value.endsWith(' $term') || value.contains('$term '));
+  }
+
+  void _setCharacterTraitsEnabled(int index, bool enabled) {
+    if (index < 0 || index >= _personSlots.length) return;
+    final slot = _personSlots[index];
+    final character = _characterForNew(slot);
+    if (character == null) return;
+    setState(() {
+      if (!enabled) {
+        _removeCharacterTraitSelections(index, character);
+      } else {
+        // Restoring means restoring the catalogue defaults, including a trait
+        // the user may have previously removed one by one.
+        _removedCharacterTags.remove(index);
+      }
+      slot.characterTraitsEnabled = enabled;
+      if (enabled) _syncCharacterTraitsForSlot(index);
+      _persist();
+    });
   }
 
   void _syncCharacterTraitsForSlot(int index) {
     if (index < 0 || index >= _personSlots.length) return;
     final slot = _personSlots[index];
-    if (!slot.detailed || slot.mode != '動漫角色') return;
+    if (!slot.detailed || slot.mode != '動漫角色' || !slot.characterTraitsEnabled) {
+      return;
+    }
     final character = _characterForNew(slot);
     if (character == null) return;
     final ids = _personTagIds(index);
-    for (final trait in character.traits) {
+    // Remove old auto-applied source / expression entries from saved sessions.
+    // A manual expression can still be picked normally after this migration.
+    for (final trait in character.traits
+        .where((trait) => !_isStableCharacterTrait(character, trait))) {
+      ids.removeAll(_characterTraitOptions(trait).map((tag) => tag.id));
+    }
+    for (final trait in character.traits
+        .where((trait) => _isStableCharacterTrait(character, trait))) {
       if (_isRemovedCharacterTag(index, trait.en)) continue;
       final groups = _exclusiveTraitOverrideGroups(trait.en);
       if (_hasExplicitCharacterTraitOverride(index, character, groups)) {
@@ -8583,9 +9131,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<CatalogTagData> _characterTraitsForSlot(PersonSlot slot, int index) {
     final character = _characterForNew(slot);
-    if (character == null) return const <CatalogTagData>[];
+    if (character == null || !slot.characterTraitsEnabled) {
+      return const <CatalogTagData>[];
+    }
     final replaced = _personOverrideGroups(index);
     return character.traits
+        .where((trait) => _isStableCharacterTrait(character, trait))
         .where((trait) =>
             _traitOverrideGroups(trait.en).intersection(replaced).isEmpty &&
             !_characterTraitOptions(trait)
@@ -8602,6 +9153,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return [
         if (!_isRemovedCharacterTag(index, character.animeTag))
           character.animeTag,
+        if (character.unitTag.trim().isNotEmpty &&
+            !_isRemovedCharacterTag(index, character.unitTag))
+          character.unitTag,
         if (!_isRemovedCharacterTag(index, character.characterTag))
           character.characterTag,
         ..._characterTraitsForSlot(slot, index).map((item) => item.en),
@@ -8632,6 +9186,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         result.add(_GeneratedOutputTag(
           zh: character.animeZh,
           en: character.animeTag,
+          personIndex: index,
+          characterTag: true,
+        ));
+      }
+      if (character.unitTag.trim().isNotEmpty &&
+          !_isRemovedCharacterTag(index, character.unitTag)) {
+        result.add(_GeneratedOutputTag(
+          zh: character.unitZh.trim().isEmpty
+              ? character.unitEn
+              : character.unitZh,
+          en: character.unitTag,
           personIndex: index,
           characterTag: true,
         ));
@@ -8815,6 +9380,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
         }
         _personTagIds(outputTag.personIndex!).removeAll(outputTag.tagIds);
+        _syncHairGradientColorIds(
+            outputTag.personIndex!, _personTagIds(outputTag.personIndex!));
       } else if (outputTag.tagId != null) {
         if (outputTag.personIndex == null) {
           _selectedIds.remove(outputTag.tagId);
@@ -8911,11 +9478,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     final value = pasted?.trim() ?? '';
     if (value.isEmpty) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('剪貼簿沒有可貼上的文字。')),
-        );
-      }
       return;
     }
     if (!mounted) return;
@@ -8926,9 +9488,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _collectUnknownExtraPositiveTags();
       _persist();
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('已貼上並取代額外正向標籤。')),
-    );
   }
 
   String _positiveEnglishTag(String value) {
@@ -9301,6 +9860,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         emphasizeHairColor,
         weight: _personSlots[index].hairColorWeight,
       );
+      // Keep physical animal traits beside the selected character, rather than
+      // letting ears/tails/hands/feet drift into the shared prompt tail.
+      addWeightedTags(
+        personal.where(_isAnimalTraitOutputTag),
+        weight: _characterPromptWeight,
+      );
       final wings = personal.where(_isWingOutputTag).toList();
       addWingBlock(wings);
       final clothing = personal.where(_isClothingWeightOutputTag).toList();
@@ -9320,6 +9885,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       addTokens(personal
           .where((tag) =>
               !_isCharacterWeightOutputTag(tag) &&
+              !_isAnimalTraitOutputTag(tag) &&
               !_isWingOutputTag(tag) &&
               !_isClothingWeightOutputTag(tag) &&
               !_isIndividualActionOutputTag(index, tag))
@@ -9874,6 +10440,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
 
     _removeOrphanedPhysicalTraitColors(target);
+    _syncHairGradientColorIds(personIndex, target);
     _syncAutoFurryIdentity(personIndex, target);
     setState(_persist);
   }
@@ -10175,6 +10742,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Future<void> _toggle(TagItem tag, {int? personIndex}) async {
+    if (personIndex != null && _hairColorWord(tag) != null) {
+      await _toggleHairColor(tag, personIndex);
+      return;
+    }
     final targetIds =
         personIndex == null ? _selectedIds : _personTagIds(personIndex);
     final currentTags = personIndex == null
@@ -10288,6 +10859,70 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  Future<void> _toggleHairColor(TagItem tag, int personIndex) async {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final targetIds = _personTagIds(personIndex);
+    final slot = _personSlots[personIndex];
+    final orderedIds = _hairGradientColorIdsForPerson(personIndex);
+
+    if (targetIds.contains(tag.id)) {
+      setState(() {
+        targetIds.remove(tag.id);
+        orderedIds.remove(tag.id);
+        slot.hairGradientColorIds = orderedIds;
+        if (orderedIds.length < 2) {
+          slot.hairGradientStyle = _defaultHairGradientStyle;
+        }
+        if (_isCurrentCharacterTrait(personIndex, tag)) {
+          final character = _characterForNew(slot);
+          for (final trait in character?.traits ?? const <CatalogTagData>[]) {
+            if (_characterTraitUsesTag(trait, tag.id)) {
+              _removedCharacterTagSet(personIndex)
+                  .add(_cleanTag(trait.en).toLowerCase());
+              targetIds.removeAll(
+                  _characterTraitOptions(trait).map((option) => option.id));
+            }
+          }
+        }
+        _syncHairGradientColorIds(personIndex, targetIds);
+        _persist();
+      });
+      return;
+    }
+
+    final confirmed = await _confirmCharacterOverride(tag, personIndex);
+    if (!confirmed) return;
+    setState(() {
+      // Preserve colour 1 when colour 2 is selected. Selecting a third colour
+      // only replaces colour 2; remove colour 1 first when a new base colour
+      // is wanted.
+      if (orderedIds.length >= 2) {
+        targetIds.remove(orderedIds.last);
+        orderedIds.removeLast();
+      }
+      _removeOriginalCharacterTraitsForOverride(personIndex, tag);
+      targetIds.addAll(orderedIds);
+      targetIds.removeWhere((id) {
+        final current = _tagsById[id];
+        return current != null &&
+            _hairColorWord(current) != null &&
+            !orderedIds.contains(id);
+      });
+      orderedIds.add(tag.id);
+      targetIds.add(tag.id);
+      slot.hairGradientColorIds = orderedIds.take(2).toList();
+      _syncHairGradientColorIds(personIndex, targetIds);
+      final character = _characterForNew(slot);
+      for (final trait in character?.traits ?? const <CatalogTagData>[]) {
+        if (_characterTraitUsesTag(trait, tag.id)) {
+          _removedCharacterTagSet(personIndex)
+              .remove(_cleanTag(trait.en).toLowerCase());
+        }
+      }
+      _persist();
+    });
+  }
+
   Future<bool> _confirmCharacterOverride(TagItem tag, int personIndex) async {
     if (personIndex < 0 || personIndex >= _personSlots.length) return true;
     final slot = _personSlots[personIndex];
@@ -10333,7 +10968,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return apply == true;
   }
 
-  Future<void> _copy(String value, String label) async {
+  Future<void> _copy(String value, String label,
+      {bool showFeedback = false}) async {
     try {
       await html.window.navigator.clipboard?.writeText(value);
     } catch (_) {
@@ -10346,7 +10982,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       html.document.execCommand('copy');
       area.remove();
     }
-    if (!mounted) return;
+    if (!showFeedback || !mounted) return;
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text('$label已複製')));
   }
@@ -10360,8 +10996,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..setAttribute('download', 'betterwaifu-unregistered-positive-tags.txt')
       ..click();
     html.Url.revokeObjectUrl(url);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('未加入標籤清單已下載')));
   }
 
   String _compactReverseKey(String value) =>
@@ -10752,8 +11386,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .map((token) => token == colonThreeMarker ? ':3' : token)
         .toList();
     if (tokens.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('請先貼上要反推的提示標籤。')));
       return;
     }
 
@@ -10890,16 +11522,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _collectUnknownExtraPositiveTags();
       _persist();
     });
-
-    final location = importedPeopleCount == null
-        ? ''
-        : '；人物數量已調整為 $_peopleCount 人，辨識到的人物標籤先放在人物 1';
-    final characterNote = detectedCharacter == null
-        ? ''
-        : '；已帶入角色 ${detectedCharacter!.characterEn}';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            '已勾選 ${recognized.length} 個標籤，${unknown.length} 個未收錄標籤已加入額外正向欄位$location$characterNote')));
   }
 
   Future<void> _clearAllTags() async {
@@ -10946,8 +11568,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _preprompt.clear();
       _persist();
     });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('目前組合已清除')));
     unawaited(_scrollToStep(0));
   }
 
@@ -11060,6 +11680,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     .add(_cleanTag(trait).toLowerCase());
               }
             }
+            slot.hairGradientColorIds = <String>[];
+            slot.hairGradientStyle = _defaultHairGradientStyle;
           }
           break;
         case 4:
@@ -11090,8 +11712,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _persist();
     });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('已清除「$title」')));
   }
 
   String? _clothingScopeForPickerGroup(String group) {
@@ -11190,10 +11810,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           tag.group == _animalFootColorGroup));
     } else if (group == _wingTypeGroup) {
       tags.addAll(selected.where((tag) => tag.group == _wingColorGroup));
+    } else if (group == '髮型') {
+      tags.addAll(selected.where((tag) => tag.group == '髮色'));
     }
     if (tags.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('目前分類沒有已選取的標籤')));
       return;
     }
     final confirmed = await showDialog<bool>(
@@ -11218,12 +11838,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       final ids = _personTagIds(personIndex);
       ids.removeAll(tags.map((tag) => tag.id));
+      if (group == '髮型') {
+        ids.removeWhere((id) => _tagsById[id]?.group == '髮色');
+      }
+      _syncHairGradientColorIds(personIndex, ids);
       _removeOrphanedPhysicalTraitColors(ids);
       _syncAutoFurryIdentity(personIndex, ids);
       _persist();
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已清除「${_wizardGroupLabel(group)}」')));
   }
 
   void _downloadBackup() {
@@ -11233,8 +11855,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..setAttribute('download', 'betterwaifu-prompt-backup.json')
       ..click();
     html.Url.revokeObjectUrl(url);
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('記憶資料已匯出')));
   }
 
   void _importBackup() {
@@ -11260,12 +11880,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             _combinations.clear();
             _restore();
           });
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('記憶資料已匯入')));
-        } catch (_) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(const SnackBar(content: Text('JSON 檔案格式不正確')));
-        }
+        } catch (_) {}
       });
     });
   }
@@ -11475,8 +12090,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _peopleCount = _personSlots.length;
       _persist();
     });
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('已刪除「$label」')));
   }
 
   List<CatalogCharacter> _matchingAnime(PersonSlot slot) {
@@ -11585,9 +12198,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (slotIndex < 0 || slotIndex >= _personSlots.length) return;
     final query = _personSlots[slotIndex].animeQuery.trim();
     if (query.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('請先輸入動漫名稱再查詢。')),
-      );
       return;
     }
     setState(() {
@@ -11976,8 +12586,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _remoteLookupLoading.remove(slotIndex);
       _persist();
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('已匯入 ${imported.length} 個角色；前 18 個會嘗試補抓角色特徵。')));
   }
 
   Widget _remoteAnimePanel(int index) {
@@ -12295,8 +12903,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   void _advanceStep() {
     if (_stepIndex == 1 && !_charactersComplete()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('請為每個需要詳細設定的角色選擇動漫角色，或切換成不需細節。')));
       return;
     }
     final nextStep = _stepIndex < 6 ? _stepIndex + 1 : _stepIndex;
@@ -12514,9 +13120,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       OutfitReferencePresetData preset, int personIndex) async {
     final resolution = _resolveOutfitReference(preset);
     if (resolution.missing.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('「${preset.name}」尚缺少：${resolution.missing.join('、')}'),
-      ));
       return;
     }
     await _applyCombination(_outfitReferenceCombination(preset), personIndex);
@@ -12638,9 +13241,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .where((tag) => _isClothingGroup(tag.group))
         .toList();
     if (clothingTags.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-              '\u8ACB\u5148\u70BA\u6B64\u4EBA\u7269\u9078\u64C7\u670D\u88DD\u6A23\u5F0F')));
       return;
     }
     final preview = _clothingOutputTagsFromSelection(clothingTags);
@@ -12722,9 +13322,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _combinations.insert(0, combination);
       _persist();
     });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            '\u5DF2\u5C07\u300C$trimmedName\u300D\u5132\u5B58\u70BA\u670D\u88DD\u7D44\u5408')));
   }
 
   Future<void> _editCombination({PromptCombination? existing}) async {
@@ -13035,7 +13632,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _personCombinationIds[personIndex]
           ?.removeWhere(clothingCombinationIds.contains);
     }
-    var added = 0;
     for (final tag in tags) {
       if (target.contains(tag.id)) continue;
       if (!await _confirmCharacterOverride(tag, personIndex)) continue;
@@ -13056,7 +13652,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         target.remove(conflict.id);
       }
       target.add(tag.id);
-      added++;
     }
     _personCombinationIds
         .putIfAbsent(personIndex, () => <String>{})
@@ -13064,10 +13659,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       _persist();
     });
-    final suffix = skippedAdult ? '\uFF1B\u672A\u958B\u555F 18+，部分成人標籤未套用' : '';
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text(
-            '\u5DF2\u5C07\u300C${combination.name}\u300D\u5957\u7528\u5230\u4EBA\u7269 ${personIndex + 1}\uFF08${added} \u500B\u6A19\u7C64\uFF09$suffix')));
   }
 
   Widget _stepCombinations() {
@@ -13726,35 +14317,73 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       {required int? personIndex, required bool selected}) {
     final colorWord = _clothingColorWord(tag);
     final tone = _pickerLayerTone(tag.group);
-    final swatch = Container(
-      width: 28,
-      height: 28,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color:
-            colorWord == 'multicolored' ? null : _promptColorValues[colorWord],
-        gradient: colorWord == 'multicolored'
-            ? const LinearGradient(
-                colors: [
-                  Color(0xffef4444),
-                  Color(0xfffacc15),
-                  Color(0xff22c55e),
-                  Color(0xff3b82f6),
-                  Color(0xffa855f7),
-                ],
-              )
-            : null,
-        border: Border.all(
-          color: selected ? const Color(0xffffffff) : _buttonBorder,
-          width: selected ? 2 : 1,
-        ),
+    final gradientOrder = personIndex != null && tag.group == '髮色'
+        ? _hairGradientColorOrder(personIndex, tag.id)
+        : 0;
+    final swatch = SizedBox(
+      width: 32,
+      height: 32,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: colorWord == 'multicolored'
+                  ? null
+                  : _promptColorValues[colorWord],
+              gradient: colorWord == 'multicolored'
+                  ? const LinearGradient(
+                      colors: [
+                        Color(0xffef4444),
+                        Color(0xfffacc15),
+                        Color(0xff22c55e),
+                        Color(0xff3b82f6),
+                        Color(0xffa855f7),
+                      ],
+                    )
+                  : null,
+              border: Border.all(
+                color: selected ? const Color(0xffffffff) : _buttonBorder,
+                width: selected ? 2 : 1,
+              ),
+            ),
+            child: selected
+                ? const Icon(Icons.check, size: 17, color: Colors.white)
+                : null,
+          ),
+          if (gradientOrder > 0)
+            Positioned(
+              right: 0,
+              bottom: 0,
+              child: Container(
+                width: 16,
+                height: 16,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: const Color(0xff171326),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 1),
+                ),
+                child: Text(
+                  '$gradientOrder',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
-      child: selected
-          ? const Icon(Icons.check, size: 17, color: Colors.white)
-          : null,
     );
     return Tooltip(
-      message: '${tag.zh} · ${tag.en}',
+      message: gradientOrder > 0
+          ? '${tag.zh} · ${tag.en}｜漸層色 $gradientOrder'
+          : '${tag.zh} · ${tag.en}',
       child: ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 58, minHeight: 44),
         child: FilterChip(
@@ -13952,6 +14581,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final isPickerColor =
           tag.group != '眼睛' || tag.conflictGroup == 'eye_color';
       final colorMatch = searchAcrossGroups ||
+              (pickerGroup == '髮型' && tag.group == '髮色') ||
               colorGroup == null ||
               !isPickerColor ||
               !_isShadeColorTag(tag)
@@ -13973,6 +14603,113 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _sortPickerTags(tags, pickerGroup);
   }
 
+  Widget _hairGradientControl(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const SizedBox.shrink();
+    }
+    final slot = _personSlots[personIndex];
+    final colors = _selectedHairColorTags(personIndex);
+    const tone = Color(0xffa78bfa);
+    if (colors.length < 2) {
+      final first = colors.isEmpty ? null : colors.first;
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: const Color(0xff2b2440),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: tone.withOpacity(.72)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.gradient_outlined, color: tone, size: 20),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                first == null
+                    ? '選擇第一種髮色後，再選第二種髮色即可建立漸層。'
+                    : '色 1：${first.zh}。再選一種髮色即可建立雙色漸層。',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final primary = colors[0];
+    final secondary = colors[1];
+    final primaryColor = _promptColorValues[_hairColorWord(primary)] ?? tone;
+    final secondaryColor =
+        _promptColorValues[_hairColorWord(secondary)] ?? tone;
+    final selectedStyle = _hairGradientStyleForSlot(slot);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xff2b2440),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: tone.withOpacity(.8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [primaryColor, secondaryColor],
+                  ),
+                  border: Border.all(color: Colors.white.withOpacity(.8)),
+                ),
+              ),
+              const SizedBox(width: 9),
+              const Expanded(
+                child: Text('雙色漸層髮',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+              ),
+              Text('色 1：${primary.zh}  →  色 2：${secondary.zh}',
+                  style: const TextStyle(fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '再點其他顏色會只替換色 2；若要更換色 1，請先點色 1 取消後再選擇。',
+            style: TextStyle(fontSize: 11),
+          ),
+          const SizedBox(height: 9),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: _hairGradientStyles
+                .map((style) => Tooltip(
+                      message: style.hint,
+                      child: ChoiceChip(
+                        selected: selectedStyle.id == style.id,
+                        label: Text(style.zh),
+                        selectedColor: tone,
+                        side: BorderSide(
+                          color: selectedStyle.id == style.id
+                              ? tone
+                              : tone.withOpacity(.65),
+                        ),
+                        onSelected: (_) => setState(() {
+                          slot.hairGradientStyle = style.id;
+                          _persist();
+                        }),
+                      ),
+                    ))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _hairColorWeightControl(int personIndex) {
     if (personIndex < 0 || personIndex >= _personSlots.length) {
       return const SizedBox.shrink();
@@ -13981,8 +14718,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final colors = _selectedHairColorTags(personIndex);
     final hasColor = colors.isNotEmpty;
     final value = _boundedPromptWeight(slot.hairColorWeight);
-    final colorLabel =
-        hasColor ? colors.map((tag) => tag.zh).join('、') : '請先在上方選擇一種髮色';
+    final colorLabel = !hasColor
+        ? '請先在上方選擇一種髮色'
+        : colors.length < 2
+            ? colors.first.zh
+            : '色 1：${colors[0].zh}、色 2：${colors[1].zh}（${_hairGradientStyleForSlot(slot).zh}）';
 
     void updateEnabled(bool enabled) {
       setState(() {
@@ -14456,6 +15196,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ],
         if (currentGroup == '髮型' && personIndex != null) ...[
           const SizedBox(height: 10),
+          _hairGradientControl(personIndex),
+          const SizedBox(height: 10),
           _hairColorWeightControl(personIndex),
         ],
         const SizedBox(height: 10),
@@ -14754,9 +15496,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...package.frameTags,
     ].where((tag) => !resolvedEnglish.contains(_englishTagKey(tag))).toList();
     if (missing.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('套件缺少系統標籤：${missing.join(', ')}'),
-      ));
       return;
     }
 
@@ -14824,11 +15563,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _selectedIds.addAll(frameTags.map((tag) => tag.id));
       _persist();
     });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(
-        '已套用「${package.name}・$phaseLabel」：${personTags.length + frameTags.length} 個標籤',
-      ),
-    ));
   }
 
   Widget _adultPosePackagePanel() {
@@ -15129,18 +15863,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .where((tag) => !resolved.contains(_englishTagKey(tag)))
         .toList();
     if (missing.isNotEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('套裝缺少系統標籤：${missing.join(', ')}'),
-      ));
       return;
     }
     setState(() {
       _personTagIds(personIndex).addAll(tags.map((tag) => tag.id));
       _persist();
     });
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text('已套用「${package.name}」；下方仍可個別調整標籤。'),
-    ));
   }
 
   Widget _promptPackagePanel({
@@ -16389,6 +17117,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final slot = entry.value;
           final animeMatches = _matchingAnime(slot);
           final matches = _matchingCharacters(slot);
+          final selectedCharacter = _characterForNew(slot);
           return Card(
             color:
                 Theme.of(context).colorScheme.surfaceVariant.withOpacity(.35),
@@ -16547,16 +17276,42 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             onPressed: _addCustomCharacter,
                             icon: const Icon(Icons.person_add_alt_1),
                             label: const Text('新增自訂動漫與角色')),
-                        if (_characterForNew(slot) != null)
+                        if (selectedCharacter != null)
                           Padding(
                               padding: const EdgeInsets.only(top: 8),
-                              child: Text(
-                                  '已帶入：${_characterForNew(slot)!.animeEn} · 動漫 tag：${_characterForNew(slot)!.animeTag} · ${_characterForNew(slot)!.characterEn} · ${_characterForNew(slot)!.traits.map((item) => item.en).join(', ')}',
-                                  style: TextStyle(
-                                      fontSize: 11,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary))),
+                              child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Wrap(spacing: 8, runSpacing: 6, children: [
+                                      Chip(
+                                          avatar: const Icon(Icons.auto_awesome,
+                                              size: 16),
+                                          label: Text(
+                                              '${selectedCharacter.animeZh} · ${selectedCharacter.characterZh}')),
+                                      OutlinedButton.icon(
+                                        onPressed: () =>
+                                            _setCharacterTraitsEnabled(index,
+                                                !slot.characterTraitsEnabled),
+                                        icon: Icon(slot.characterTraitsEnabled
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined),
+                                        label: Text(slot.characterTraitsEnabled
+                                            ? '保留名稱／取消特徵'
+                                            : '保留名稱／恢復特徵'),
+                                      ),
+                                    ]),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      slot.characterTraitsEnabled
+                                          ? '角色名稱與出處已加入；下方會自動勾選固定外觀特徵，可在特徵中另行調整。'
+                                          : '目前只保留角色名稱與出處；固定外觀特徵已取消。',
+                                      style: TextStyle(
+                                          fontSize: 11,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary),
+                                    ),
+                                  ])),
                       ],
                       if (slot.mode == '原創') ...[
                         const SizedBox(height: 10),
@@ -16944,8 +17699,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     results.sort((a, b) {
       final rankCompare = matchRank(a).compareTo(matchRank(b));
       if (rankCompare != 0) return rankCompare;
-      final groupCompare = _wizardGroupLabel(a.group)
-          .compareTo(_wizardGroupLabel(b.group));
+      final groupCompare =
+          _wizardGroupLabel(a.group).compareTo(_wizardGroupLabel(b.group));
       return groupCompare == 0 ? _compareOutputTags(a, b) : groupCompare;
     });
     return results;
@@ -17027,8 +17782,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     },
                   )
                 else
-                  const Text('套用到人物 1',
-                      style: TextStyle(fontSize: 12)),
+                  const Text('套用到人物 1', style: TextStyle(fontSize: 12)),
               ],
             ),
             const SizedBox(height: 10),
@@ -17094,7 +17848,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           0,
           '場景與畫面',
           _selectedTags
-              .where((tag) => _isGlobalPromptGroup(tag.group))
+              .where((tag) => _isSceneVisualPromptGroup(tag.group))
               .map((tag) => tag.zh)
               .join('、')
               .ifEmpty('尚未選擇'),
@@ -17163,9 +17917,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '胸部',
             '裸露',
           ],
-               nextLabel: '下一步：服裝',
-               instruction:
-                   '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸耳、獸尾、獸手、獸足、翅膀與額外特徵。獸化部位及翅膀的顏色都放在各自特徵內，並自動合併成中英文提示詞。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
+              nextLabel: '下一步：服裝',
+              instruction:
+                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸耳、獸尾、獸手、獸足、翅膀與額外特徵。獸化部位及翅膀的顏色都放在各自特徵內，並自動合併成中英文提示詞。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
       _stepCard(
           4,
@@ -17570,7 +18324,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                 ),
                 IconButton(
-                  onPressed: () => _copy(_positiveText, '英文正向標籤'),
+                  onPressed: () =>
+                      _copy(_positiveText, '英文正向標籤', showFeedback: true),
                   icon: const Icon(Icons.copy_all),
                 ),
                 IconButton(
@@ -17591,7 +18346,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 final english = _outputField(
                   'English prompt · 可直接貼上',
                   _positiveText,
-                  onCopy: () => _copy(_positiveText, '英文正向標籤'),
+                  onCopy: () =>
+                      _copy(_positiveText, '英文正向標籤', showFeedback: true),
                   maxLines: 6,
                 );
                 final chinese = _chineseOutputField();
@@ -17977,7 +18733,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             visualDensity: VisualDensity.compact,
                             iconSize: 16,
                             tooltip: '複製正向英文標籤',
-                            onPressed: () => _copy(_positiveText, '正向英文標籤'),
+                            onPressed: () => _copy(_positiveText, '正向英文標籤',
+                                showFeedback: true),
                             icon: const Text('正',
                                 style: TextStyle(
                                     fontSize: 15,
@@ -17990,7 +18747,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             visualDensity: VisualDensity.compact,
                             iconSize: 16,
                             tooltip: '複製負面英文標籤',
-                            onPressed: () => _copy(_negativeText, '負面英文標籤'),
+                            onPressed: () => _copy(_negativeText, '負面英文標籤',
+                                showFeedback: true),
                             icon: const Text('負',
                                 style: TextStyle(
                                     fontSize: 15,

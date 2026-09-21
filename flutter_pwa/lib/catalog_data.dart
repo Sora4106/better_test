@@ -143,9 +143,17 @@ const supplementalTags = <CatalogTagData>[
       en: 'animal ears',
       order: 1),
   CatalogTagData(
-      id: 'face_cat_ears', group: '獸化特徵', zh: '貓耳（角色特徵）', en: 'cat ears', order: 1),
+      id: 'face_cat_ears',
+      group: '獸化特徵',
+      zh: '貓耳（角色特徵）',
+      en: 'cat ears',
+      order: 1),
   CatalogTagData(
-      id: 'face_fox_ears', group: '獸化特徵', zh: '狐耳（角色特徵）', en: 'fox ears', order: 1),
+      id: 'face_fox_ears',
+      group: '獸化特徵',
+      zh: '狐耳（角色特徵）',
+      en: 'fox ears',
+      order: 1),
   // Physical animal traits. They are separate from costume accessories so
   // the generated prompt can carry an explicit furry/anthro identity cue.
   CatalogTagData(
@@ -163,21 +171,53 @@ const supplementalTags = <CatalogTagData>[
       order: 1,
       conflictGroup: 'animal_identity'),
   CatalogTagData(
-      id: 'trait_dog_ears', group: '獸化特徵', zh: '狗耳（角色特徵）', en: 'dog ears', order: 1),
+      id: 'trait_dog_ears',
+      group: '獸化特徵',
+      zh: '狗耳（角色特徵）',
+      en: 'dog ears',
+      order: 1),
   CatalogTagData(
-      id: 'trait_wolf_ears', group: '獸化特徵', zh: '狼耳（角色特徵）', en: 'wolf ears', order: 1),
+      id: 'trait_wolf_ears',
+      group: '獸化特徵',
+      zh: '狼耳（角色特徵）',
+      en: 'wolf ears',
+      order: 1),
   CatalogTagData(
-      id: 'trait_bunny_ears', group: '獸化特徵', zh: '兔耳（角色特徵）', en: 'bunny ears', order: 1),
+      id: 'trait_bunny_ears',
+      group: '獸化特徵',
+      zh: '兔耳（角色特徵）',
+      en: 'bunny ears',
+      order: 1),
   CatalogTagData(
-      id: 'trait_animal_tail', group: '獸化特徵', zh: '獸尾（角色特徵）', en: 'animal tail', order: 1),
+      id: 'trait_animal_tail',
+      group: '獸化特徵',
+      zh: '獸尾（角色特徵）',
+      en: 'animal tail',
+      order: 1),
   CatalogTagData(
-      id: 'trait_cat_tail', group: '獸化特徵', zh: '貓尾（角色特徵）', en: 'cat tail', order: 1),
+      id: 'trait_cat_tail',
+      group: '獸化特徵',
+      zh: '貓尾（角色特徵）',
+      en: 'cat tail',
+      order: 1),
   CatalogTagData(
-      id: 'trait_fox_tail', group: '獸化特徵', zh: '狐尾（角色特徵）', en: 'fox tail', order: 1),
+      id: 'trait_fox_tail',
+      group: '獸化特徵',
+      zh: '狐尾（角色特徵）',
+      en: 'fox tail',
+      order: 1),
   CatalogTagData(
-      id: 'trait_dog_tail', group: '獸化特徵', zh: '狗尾（角色特徵）', en: 'dog tail', order: 1),
+      id: 'trait_dog_tail',
+      group: '獸化特徵',
+      zh: '狗尾（角色特徵）',
+      en: 'dog tail',
+      order: 1),
   CatalogTagData(
-      id: 'trait_bunny_tail', group: '獸化特徵', zh: '兔尾（角色特徵）', en: 'bunny tail', order: 1),
+      id: 'trait_bunny_tail',
+      group: '獸化特徵',
+      zh: '兔尾（角色特徵）',
+      en: 'bunny tail',
+      order: 1),
   // Animal-person limb variations. These describe physical hands and feet,
   // rather than gloves, shoes, or costume paw accessories.
   CatalogTagData(
@@ -351,27 +391,82 @@ const supplementalTags = <CatalogTagData>[
       conflictGroup: 'animal_foot_type',
       support: 'description'),
   CatalogTagData(
-      id: 'trait_wings', group: '獸化特徵', zh: '一般翅膀', en: 'wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_wings',
+      group: '獸化特徵',
+      zh: '一般翅膀',
+      en: 'wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_feathered_wings', group: '獸化特徵', zh: '羽毛翅膀', en: 'feathered wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_feathered_wings',
+      group: '獸化特徵',
+      zh: '羽毛翅膀',
+      en: 'feathered wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_bat_wings', group: '獸化特徵', zh: '蝙蝠翅膀', en: 'bat wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_bat_wings',
+      group: '獸化特徵',
+      zh: '蝙蝠翅膀',
+      en: 'bat wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_angel_wings', group: '獸化特徵', zh: '天使翅膀', en: 'angel wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_angel_wings',
+      group: '獸化特徵',
+      zh: '天使翅膀',
+      en: 'angel wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_demon_wings', group: '獸化特徵', zh: '惡魔翅膀', en: 'demon wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_demon_wings',
+      group: '獸化特徵',
+      zh: '惡魔翅膀',
+      en: 'demon wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_dragon_wings', group: '獸化特徵', zh: '龍翼', en: 'dragon wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_dragon_wings',
+      group: '獸化特徵',
+      zh: '龍翼',
+      en: 'dragon wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_fairy_wings', group: '獸化特徵', zh: '精靈翅膀', en: 'fairy wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_fairy_wings',
+      group: '獸化特徵',
+      zh: '精靈翅膀',
+      en: 'fairy wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_butterfly_wings', group: '獸化特徵', zh: '蝴蝶翅膀', en: 'butterfly wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_butterfly_wings',
+      group: '獸化特徵',
+      zh: '蝴蝶翅膀',
+      en: 'butterfly wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_insect_wings', group: '獸化特徵', zh: '昆蟲翅膀', en: 'insect wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_insect_wings',
+      group: '獸化特徵',
+      zh: '昆蟲翅膀',
+      en: 'insect wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_mechanical_wings', group: '獸化特徵', zh: '機械翅膀', en: 'mechanical wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_mechanical_wings',
+      group: '獸化特徵',
+      zh: '機械翅膀',
+      en: 'mechanical wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
-      id: 'trait_skeletal_wings', group: '獸化特徵', zh: '骨骼翅膀', en: 'skeletal wings', order: 1, conflictGroup: 'wing_type'),
+      id: 'trait_skeletal_wings',
+      group: '獸化特徵',
+      zh: '骨骼翅膀',
+      en: 'skeletal wings',
+      order: 1,
+      conflictGroup: 'wing_type'),
   CatalogTagData(
       id: 'face_horns', group: '臉部特徵', zh: '角', en: 'horns', order: 1),
   CatalogTagData(
@@ -2915,10 +3010,9 @@ CatalogCharacter _projectSekaiCharacter({
       unitZh: unitZh,
       unitEn: unitEn,
       unitTag: unitTag,
-      traits: [
-        _trait('${id}_unit', unitZh, unitPrompt),
-        ...traits,
-      ],
+      // Unit/source information is emitted with the selected character, not
+      // as a physical trait.  This keeps the fixed-feature picker clean.
+      traits: traits,
     );
 
 CatalogCharacter _animeCharacter({
@@ -3846,21 +3940,25 @@ final catalogCharacters = <CatalogCharacter>[
     unitEn: 'Nightcord at 25:00',
     unitTag: '25-ji_nightcord_de',
     traits: [
-      _trait('nightcord_miku_unit', '25時，在 Nightcord。初音未來', 'nightcord at 25:00 miku'),
-      _trait('nightcord_miku_nightcord', '25時，在 Nightcord。', '25-ji nightcord de'),
+      _trait('nightcord_miku_unit', '25時，在 Nightcord。初音未來',
+          'nightcord at 25:00 miku'),
+      _trait(
+          'nightcord_miku_nightcord', '25時，在 Nightcord。', '25-ji nightcord de'),
       _trait('nightcord_miku_pale_skin', '蒼白肌膚', 'pale skin'),
       _trait('nightcord_miku_slender', '纖細體態', 'slender build'),
       _trait('nightcord_miku_silver_gray_hair', '銀灰髮', 'silver-gray hair'),
       _trait('nightcord_miku_very_long_hair', '極長髮', 'very long hair'),
       _trait('nightcord_miku_twintails', '雙馬尾', 'twintails'),
       _trait('nightcord_miku_softly_wavy', '柔和波浪髮', 'softly wavy hair'),
-      _trait('nightcord_miku_black_ribbons', '黑色緞帶髮飾', 'black ribbon hair ties'),
+      _trait(
+          'nightcord_miku_black_ribbons', '黑色緞帶髮飾', 'black ribbon hair ties'),
       _trait('nightcord_miku_heterochromia', '異色瞳', 'heterochromia'),
       _trait('nightcord_miku_cyan_eye', '青色眼睛', 'one cyan eye'),
       _trait('nightcord_miku_magenta_eye', '洋紅色眼睛', 'one magenta eye'),
       _trait('nightcord_miku_calm', '冷靜表情', 'calm expression'),
       _trait('nightcord_miku_melancholic', '憂鬱表情', 'melancholic expression'),
-      _trait('nightcord_miku_delicate_face', '精緻五官', 'delicate facial features'),
+      _trait(
+          'nightcord_miku_delicate_face', '精緻五官', 'delicate facial features'),
     ],
   ),
   CatalogCharacter(
@@ -3878,7 +3976,13 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('nana_bob_cut', '鮑伯短髮', 'bob cut'),
       _trait('nana_heart_tail', '黑色心型尾巴', 'black heart-shaped tail'),
       _trait('nana_slender', '纖細體態', 'slender build'),
-      CatalogTagData(id: 'nana_medium_breasts', group: '角色標籤', zh: '中等胸部', en: 'medium breasts', order: 1, adult: true),
+      CatalogTagData(
+          id: 'nana_medium_breasts',
+          group: '角色標籤',
+          zh: '中等胸部',
+          en: 'medium breasts',
+          order: 1,
+          adult: true),
       _trait('nana_tsundere', '傲嬌表情', 'tsundere expression'),
       _trait('nana_lively', '活潑表情', 'lively expression'),
     ],
@@ -3920,7 +4024,8 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('golden_darkness_slender', '纖細體態', 'slender build'),
       _trait('golden_darkness_emotionless', '無表情', 'emotionless expression'),
       _trait('golden_darkness_calm', '冷靜表情', 'calm expression'),
-      _trait('golden_darkness_delicate_face', '精緻五官', 'delicate facial features'),
+      _trait(
+          'golden_darkness_delicate_face', '精緻五官', 'delicate facial features'),
     ],
   ),
   CatalogCharacter(
