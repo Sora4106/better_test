@@ -2436,10 +2436,13 @@ class PersonSlot {
   // Anime character names are always kept.  This flag only controls the
   // character's automatically-applied, stable appearance traits.
   bool characterTraitsEnabled = true;
-  // Keep every person's character and outfit emphasis independent.  The
-  // surrounding prompt blocks are always retained; turning this off only
-  // omits the explicit `:1.05`-style weight suffixes.
+  // Each person's identity, fixed traits, outfit, and individual actions use
+  // one shared outer emphasis block. Turning this off only omits the explicit
+  // `:1.05`-style suffix.
   bool promptWeightEnabled = true;
+  double personPromptWeight = 1.05;
+  // Legacy saved values are retained solely so older local saves can be read.
+  // New prompt output and controls use [personPromptWeight].
   double characterPromptWeight = 1.05;
   double clothingPromptWeight = 1.05;
   bool hairColorWeightEnabled = false;
@@ -2467,6 +2470,7 @@ class PersonSlot {
         'poseExtraPositive': poseExtraPositive,
         'characterTraitsEnabled': characterTraitsEnabled,
         'promptWeightEnabled': promptWeightEnabled,
+        'personPromptWeight': personPromptWeight,
         'characterPromptWeight': characterPromptWeight,
         'clothingPromptWeight': clothingPromptWeight,
         'hairColorWeightEnabled': hairColorWeightEnabled,
@@ -2496,6 +2500,11 @@ class PersonSlot {
         ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}'
         ..characterTraitsEnabled = json['characterTraitsEnabled'] != false
         ..promptWeightEnabled = json['promptWeightEnabled'] != false
+        ..personPromptWeight = (double.tryParse(
+                    '${json['personPromptWeight'] ?? json['characterPromptWeight'] ?? json['clothingPromptWeight'] ?? 1.05}') ??
+                1.05)
+            .clamp(0.50, 1.50)
+            .toDouble()
         ..characterPromptWeight =
             (double.tryParse('${json['characterPromptWeight'] ?? 1.05}') ??
                     1.05)
@@ -5632,6 +5641,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _peopleCount = 1;
   int _stepIndex = 0;
   int _globalSearchPersonIndex = 0;
+  int _stepScrollTicket = 0;
   String _globalTagQuery = '';
   bool _showAdult = false;
   bool _isPreparingCatalog = true;
@@ -8232,15 +8242,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toDouble();
   }
 
-  String _promptTagBlock(
-    Iterable<_GeneratedOutputTag> tags, {
-    double? weight,
-  }) {
+  String _promptTagBlock(Iterable<_GeneratedOutputTag> tags, {double? weight}) {
     final values = <String>[];
     final seen = <String>{};
-    for (final tag in tags) {
-      final value = _moderationSafePromptTag(tag.en);
+    void addValue(String raw) {
+      final value = _moderationSafePromptTag(raw);
       if (value.isNotEmpty && seen.add(value.toLowerCase())) values.add(value);
+    }
+
+    for (final tag in tags) {
+      addValue(tag.en);
     }
     if (values.isEmpty) return '';
     final suffix = weight == null
@@ -8249,18 +8260,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return '(${values.join(', ')}$suffix)';
   }
 
-  /// Renders clothing as readable garment-level sub-blocks while preserving
-  /// the existing single outfit-weight control. For example:
-  /// ((dark blue blouse, cotton blouse). (white skirt, lace-trimmed skirt)
-  /// :1.15).
+  /// Renders clothing as readable garment-level sub-blocks. The surrounding
+  /// person's outer block supplies the shared character/outfit/action weight.
+  /// For example: `(dark blue blouse, cotton blouse). (white skirt, lace)`.
   ///
   /// The inner parentheses do not introduce an extra weight. They merely keep
   /// each garment's type, material, details, colours, and local wear state
   /// together so BetterWaifu receives the intended combinations clearly.
-  String _groupedClothingPromptBlock(
-    Iterable<_GeneratedOutputTag> tags, {
-    double? weight,
-  }) {
+  String _groupedClothingPromptBlock(Iterable<_GeneratedOutputTag> tags) {
     final grouped = <String, List<String>>{};
     final ungrouped = <String>[];
     final seen = <String>{};
@@ -8283,10 +8290,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (ungrouped.isNotEmpty) ungrouped.join(', '),
     ];
     if (sections.isEmpty) return '';
-    final suffix = weight == null
-        ? ''
-        : ':${_boundedPromptWeight(weight).toStringAsFixed(2)}';
-    return '(${sections.join('. ')}$suffix)';
+    return sections.join('. ');
   }
 
   int get _personSelectedCount =>
@@ -9803,8 +9807,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (personal.isEmpty) continue;
 
       // Keep every person's stable identity, outfit, and individual actions
-      // inside one outer block. This prevents traits from different people
-      // being interpreted as belonging to the same character.
+      // inside one outer block with one common weight. Garments keep their
+      // own inner parentheses so their colours and details remain local.
       final emphasizeHairColor =
           personal.where((tag) => _isSelectedHairColorOutputTag(index, tag));
       final characterFeatures = personal.where((tag) =>
@@ -9817,27 +9821,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               !_isClothingWeightOutputTag(tag))
           .toList();
       final segments = <String>[
-        _promptTagBlock(
-          characterFeatures,
-          weight: slot.promptWeightEnabled ? slot.characterPromptWeight : null,
-        ),
+        _promptTagBlock(characterFeatures),
         if (emphasizeHairColor.isNotEmpty)
           _promptTagBlock(
             emphasizeHairColor,
-            weight: slot.hairColorWeightEnabled
-                ? slot.hairColorWeight
-                : (slot.promptWeightEnabled
-                    ? slot.characterPromptWeight
-                    : null),
+            weight: slot.hairColorWeightEnabled ? slot.hairColorWeight : null,
           ),
-        _groupedClothingPromptBlock(
-          clothing,
-          weight: slot.promptWeightEnabled ? slot.clothingPromptWeight : null,
-        ),
+        _groupedClothingPromptBlock(clothing),
         _promptTagBlock(individualActions),
       ].where((block) => block.isNotEmpty).toList();
       if (segments.isNotEmpty) {
-        output.add('(${segments.join('. ')}).');
+        final suffix = slot.promptWeightEnabled
+            ? ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}'
+            : '';
+        output.add('(${segments.join('. ')}$suffix).');
       }
       usedShared.addAll(
         personal
@@ -12846,6 +12843,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return;
     }
     final nextStep = _stepIndex < 6 ? _stepIndex + 1 : _stepIndex;
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _stepIndex = nextStep;
       _activeGroup = '全部';
@@ -16864,14 +16862,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _stepKeys.putIfAbsent(index, () => GlobalKey(debugLabel: 'step-$index'));
 
   Future<void> _scrollToStep(int index) async {
-    // Wait until the selected card has expanded and the previously selected
-    // card has collapsed. This makes the final offset reliable whether the
-    // user starts at the top, middle, or bottom of the page.
+    final ticket = ++_stepScrollTicket;
+    // Wait for the selected card to expand and for an unfocused text field to
+    // finish changing the mobile viewport height before measuring its header.
     await WidgetsBinding.instance.endOfFrame;
-    if (!mounted) return;
+    await Future<void>.delayed(Duration.zero);
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || ticket != _stepScrollTicket) return;
     await _scrollKeyToTop(
       _stepKey(index),
       duration: const Duration(milliseconds: 360),
+    );
+    if (!mounted || ticket != _stepScrollTicket) return;
+
+    // Closing the on-screen keyboard can finish after the first scroll. Make
+    // one final alignment pass so the selected step title stays at the top.
+    await Future<void>.delayed(const Duration(milliseconds: 260));
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || ticket != _stepScrollTicket) return;
+    await _scrollKeyToTop(
+      _stepKey(index),
+      duration: const Duration(milliseconds: 1),
     );
   }
 
@@ -16921,6 +16932,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _openStep(int index) {
+    FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _stepIndex = index;
       _persist();
@@ -17419,12 +17431,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
             value: slot.promptWeightEnabled,
-            title: const Text('啟用此人物的特徵／服裝權重'),
-            subtitle: Text(
-              slot.promptWeightEnabled
-                  ? '角色特徵與服裝會分別輸出 :1.05 類型權重；姿勢維持一般括號。'
-                  : '仍保留角色、服裝與個人動作的分段括號，但不加 :權重。',
-            ),
+            title: const Text('啟用權重'),
             onChanged: (enabled) => setState(() {
               slot.promptWeightEnabled = enabled;
               _persist();
@@ -17434,41 +17441,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             Row(
               children: [
                 const Expanded(
-                  child: Text('此人物的分段權重',
+                  child: Text('人物權重',
                       style: TextStyle(fontWeight: FontWeight.w800)),
                 ),
                 TextButton.icon(
                   onPressed: () => setState(() {
-                    slot.characterPromptWeight = _defaultPromptWeight;
-                    slot.clothingPromptWeight = _defaultPromptWeight;
+                    slot.personPromptWeight = _defaultPromptWeight;
                     _persist();
                   }),
                   icon: const Icon(Icons.restart_alt, size: 18),
-                  label: const Text('還原 1.05'),
+                  label: const Text('1.05'),
                 ),
               ],
             ),
-            const Text(
-              '角色基本特徵與服裝各自可設為 0.50–1.50；僅加強這位人物，不影響其他人物。',
-              style: TextStyle(fontSize: 12),
-            ),
             _promptWeightControl(
-              title: '角色身體特徵權重',
-              description: '角色名稱、髮色、髮長、髮型、眼睛、身體、獸人特徵、翅膀與額外特徵。',
+              title: '人物權重',
               icon: Icons.person_outline,
-              value: slot.characterPromptWeight,
+              value: slot.personPromptWeight,
               onChanged: (value) => setState(() {
-                slot.characterPromptWeight = _boundedPromptWeight(value);
-                _persist();
-              }),
-            ),
-            _promptWeightControl(
-              title: '服裝與設計權重',
-              description: '各服飾部位、顏色、次色、材質、細節、穿脫狀態與配件。',
-              icon: Icons.checkroom_outlined,
-              value: slot.clothingPromptWeight,
-              onChanged: (value) => setState(() {
-                slot.clothingPromptWeight = _boundedPromptWeight(value);
+                slot.personPromptWeight = _boundedPromptWeight(value);
                 _persist();
               }),
             ),
@@ -17480,7 +17471,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Widget _promptWeightControl({
     required String title,
-    required String description,
     required IconData icon,
     required double value,
     required ValueChanged<double> onChanged,
@@ -17511,8 +17501,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       color: Color(0xffddd6fe), fontWeight: FontWeight.w800)),
             ],
           ),
-          const SizedBox(height: 4),
-          Text(description, style: const TextStyle(fontSize: 12)),
           Slider(
             min: _minimumPromptWeight,
             max: _maximumPromptWeight,
@@ -17524,9 +17512,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: const [
-              Text('最低 0.50', style: TextStyle(fontSize: 11)),
-              Text('1.00 為一般強度', style: TextStyle(fontSize: 11)),
-              Text('最高 1.50', style: TextStyle(fontSize: 11)),
+              Text('0.50', style: TextStyle(fontSize: 11)),
+              Text('1.00', style: TextStyle(fontSize: 11)),
+              Text('1.50', style: TextStyle(fontSize: 11)),
             ],
           ),
         ],
@@ -18553,7 +18541,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ListView(
             key: _pageScrollKey,
             controller: _pageScrollController,
-            padding: EdgeInsets.fromLTRB(contentLeftPadding, 16, 16, 38),
+            // Reserve a viewport below the content so even the last expanded
+            // section can place its heading at the very top when selected.
+            padding: EdgeInsets.fromLTRB(
+              contentLeftPadding,
+              16,
+              16,
+              MediaQuery.sizeOf(context).height + 32,
+            ),
             children: [
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1120),
