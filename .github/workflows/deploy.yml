@@ -59,6 +59,11 @@ jobs:
           flutter pub get
           flutter build web --release --base-href "/${{ github.event.repository.name }}/"
 
+      - name: Prepare versioned PWA cache
+        shell: pwsh
+        run: |
+          pwsh -NoProfile -File tools/update-pwa-cache.ps1 -BuildDirectory flutter_pwa/build/web
+
       - name: Assemble Pages site
         run: |
           mkdir -p _site

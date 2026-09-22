@@ -10,8 +10,53 @@
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="icons/icon.svg">
   <title>BetterWaifu Prompt Atelier</title>
+  <style>
+    html, body { margin: 0; min-height: 100%; background: #11111a; }
+    #app-loading {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: #f1ecff;
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: #11111a;
+    }
+    #app-loading > div { text-align: center; }
+    #app-loading .mark {
+      display: inline-grid;
+      place-items: center;
+      width: 48px;
+      height: 48px;
+      margin-bottom: 14px;
+      border-radius: 15px;
+      color: #171326;
+      font-size: 22px;
+      background: linear-gradient(135deg, #bfa8ff, #70d6ff);
+      box-shadow: 0 10px 30px rgba(140, 110, 243, .28);
+    }
+    #app-loading p { margin: 0; color: #c9c0df; font-size: 14px; }
+  </style>
 </head>
 <body>
+  <div id="app-loading" role="status" aria-live="polite">
+    <div>
+      <div class="mark">✦</div>
+      <p>正在載入 Prompt Atelier…</p>
+    </div>
+  </div>
+  <script>
+    (() => {
+      if (!('serviceWorker' in navigator)) return;
+      const cacheVersion = '__PWA_CACHE_VERSION__';
+      navigator.serviceWorker
+        .register(`pwa_cache_worker.js?v=${encodeURIComponent(cacheVersion)}`, {
+          scope: './',
+        })
+        .catch(() => {
+          // The prompt builder works online even if the browser blocks PWA cache.
+        });
+    })();
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

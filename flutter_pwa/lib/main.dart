@@ -2436,6 +2436,12 @@ class PersonSlot {
   // Anime character names are always kept.  This flag only controls the
   // character's automatically-applied, stable appearance traits.
   bool characterTraitsEnabled = true;
+  // Keep every person's character and outfit emphasis independent.  The
+  // surrounding prompt blocks are always retained; turning this off only
+  // omits the explicit `:1.05`-style weight suffixes.
+  bool promptWeightEnabled = true;
+  double characterPromptWeight = 1.05;
+  double clothingPromptWeight = 1.05;
   bool hairColorWeightEnabled = false;
   double hairColorWeight = 1.15;
   List<String> hairGradientColorIds = <String>[];
@@ -2460,6 +2466,9 @@ class PersonSlot {
         'originalTraits': originalTraits,
         'poseExtraPositive': poseExtraPositive,
         'characterTraitsEnabled': characterTraitsEnabled,
+        'promptWeightEnabled': promptWeightEnabled,
+        'characterPromptWeight': characterPromptWeight,
+        'clothingPromptWeight': clothingPromptWeight,
         'hairColorWeightEnabled': hairColorWeightEnabled,
         'hairColorWeight': hairColorWeight,
         'hairGradientColorIds': hairGradientColorIds,
@@ -2486,6 +2495,16 @@ class PersonSlot {
         ..originalTraits = '${json['originalTraits'] ?? ''}'
         ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}'
         ..characterTraitsEnabled = json['characterTraitsEnabled'] != false
+        ..promptWeightEnabled = json['promptWeightEnabled'] != false
+        ..characterPromptWeight =
+            (double.tryParse('${json['characterPromptWeight'] ?? 1.05}') ??
+                    1.05)
+                .clamp(0.50, 1.50)
+                .toDouble()
+        ..clothingPromptWeight =
+            (double.tryParse('${json['clothingPromptWeight'] ?? 1.05}') ?? 1.05)
+                .clamp(0.50, 1.50)
+                .toDouble()
         ..hairColorWeightEnabled = json['hairColorWeightEnabled'] == true
         ..hairColorWeight =
             (double.tryParse('${json['hairColorWeight'] ?? 1.15}') ?? 1.15)
@@ -5548,9 +5567,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
-  // Tracks the default identity cue added for physical animal ears/tails. It
-  // lets a user remove the physical feature without removing a furry tag they
-  // explicitly chose for another reason.
+  // Legacy session bookkeeping. Animal features no longer add a furry/anthro
+  // identity cue automatically; the user selects that identity explicitly.
   final Set<int> _autoFurryIdentityForPerson = <int>{};
   final Map<int, Set<String>> _removedCharacterTags = <int, Set<String>>{};
   final Map<int, String> _personTagQueries = <int, String>{};
@@ -5616,12 +5634,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _globalSearchPersonIndex = 0;
   String _globalTagQuery = '';
   bool _showAdult = false;
-  bool _groupPeoplePrompt = true;
   static const double _minimumPromptWeight = 0.50;
   static const double _maximumPromptWeight = 1.50;
-  static const double _defaultPromptWeight = 1.15;
-  double _characterPromptWeight = _defaultPromptWeight;
-  double _clothingPromptWeight = _defaultPromptWeight;
+  static const double _defaultPromptWeight = 1.05;
 
   List<TagItem> get _allTags {
     final cached = _allTagsCache;
@@ -8130,27 +8145,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .where((tag) => _isFinalPersonOutputTag(personIndex, tag))
           .toList();
 
-  /// A person-selected pose, gesture, movement, object interaction, or custom
-  /// pose sentence belongs to that character. It is rendered as an unweighted
-  /// parenthesized block immediately after the character's outfit.
-  bool _isIndividualActionOutputTag(
-    int personIndex,
-    _GeneratedOutputTag output,
-  ) {
-    if (output.personPoseExtraValue != null) return true;
-    if (_isFinalPersonOutputTag(personIndex, output)) return false;
-    return output.tagIds.any((id) {
-      final tag = _tagsById[id];
-      if (tag == null) return false;
-      return tag.group == '\u59ff\u52e2' ||
-          tag.group == '\u52d5\u4f5c' ||
-          _isDynamicHeadActionTag(tag) ||
-          expandedGeneralPoseGroups.contains(tag.group) ||
-          expandedAdultToolGroups.contains(tag.group) ||
-          (_personSlots.length <= 1 && _isSharedActionGroup(tag.group));
-    });
-  }
-
   static const _characterWeightGroups = <String>{
     '角色類型',
     '角色標籤',
@@ -8170,10 +8164,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isCharacterWeightOutputTag(_GeneratedOutputTag output) {
     if (output.characterTag) return true;
+    if (_isAnimalTraitOutputTag(output) || _isWingOutputTag(output)) {
+      return true;
+    }
     return output.tagIds.any((id) {
       final tag = _tagsById[id];
       return tag != null &&
           (_characterWeightGroups.contains(tag.group) ||
+              tag.group == _animalTraitGroup ||
+              tag.group == _wingTypeGroup ||
+              tag.group == _wingColorGroup ||
+              _physicalTraitColorGroups.contains(tag.group) ||
               _isStaticFaceAppearanceTag(tag));
     });
   }
@@ -8218,15 +8219,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
-  /// The consolidated all-clothing wear-state picker intentionally has no
-  /// garment scope. Keep it outside the individual garment blocks.
-  bool _isOverallClothingWearOutputTag(_GeneratedOutputTag output) {
-    return output.tagIds.any((id) {
-      final tag = _tagsById[id];
-      return tag?.group == _legacyClothingWearGroup;
-    });
-  }
-
   double _boundedPromptWeight(Object? value,
       {double fallback = _defaultPromptWeight}) {
     final parsed = switch (value) {
@@ -8239,16 +8231,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toDouble();
   }
 
-  String _weightedPromptBlock(
+  String _promptTagBlock(
     Iterable<_GeneratedOutputTag> tags, {
-    required double weight,
+    double? weight,
   }) {
-    final values = tags
-        .map((tag) => _moderationSafePromptTag(tag.en))
-        .where((value) => value.isNotEmpty)
-        .toList();
+    final values = <String>[];
+    final seen = <String>{};
+    for (final tag in tags) {
+      final value = _moderationSafePromptTag(tag.en);
+      if (value.isNotEmpty && seen.add(value.toLowerCase())) values.add(value);
+    }
     if (values.isEmpty) return '';
-    return '(${values.join(', ')}:${_boundedPromptWeight(weight).toStringAsFixed(2)}).';
+    final suffix = weight == null
+        ? ''
+        : ':${_boundedPromptWeight(weight).toStringAsFixed(2)}';
+    return '(${values.join(', ')}$suffix)';
   }
 
   /// Renders clothing as readable garment-level sub-blocks while preserving
@@ -8261,7 +8258,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   /// together so BetterWaifu receives the intended combinations clearly.
   String _groupedClothingPromptBlock(
     Iterable<_GeneratedOutputTag> tags, {
-    required double weight,
+    double? weight,
   }) {
     final grouped = <String, List<String>>{};
     final ungrouped = <String>[];
@@ -8285,7 +8282,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (ungrouped.isNotEmpty) ungrouped.join(', '),
     ];
     if (sections.isEmpty) return '';
-    return '(${sections.join('. ')}:${_boundedPromptWeight(weight).toStringAsFixed(2)}).';
+    final suffix = weight == null
+        ? ''
+        : ':${_boundedPromptWeight(weight).toStringAsFixed(2)}';
+    return '(${sections.join('. ')}$suffix)';
   }
 
   int get _personSelectedCount =>
@@ -8626,13 +8626,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _cfg = '${data['cfg'] ?? '5.0'}';
       _clipSkip = '${data['clipSkip'] ?? '2'}';
       _showAdult = data['showAdult'] == true;
-      _groupPeoplePrompt = data['groupPeoplePrompt'] != false;
-      _characterPromptWeight = _boundedPromptWeight(
-        data['characterPromptWeight'],
-      );
-      _clothingPromptWeight = _boundedPromptWeight(
-        data['clothingPromptWeight'],
-      );
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _unregisteredPositiveTags
         ..clear()
@@ -8686,9 +8679,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'cfg': _cfg,
         'clipSkip': _clipSkip,
         'showAdult': _showAdult,
-        'groupPeoplePrompt': _groupPeoplePrompt,
-        'characterPromptWeight': _characterPromptWeight,
-        'clothingPromptWeight': _clothingPromptWeight,
         'extraPositive': _extraPositive.text,
         'unregisteredPositiveTags': _isCompactMobileViewport
             ? const <String>[]
@@ -9787,139 +9777,78 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String _groupedPositiveText() {
     final output = <String>[];
-    final used = <String>{};
-    void addTokens(Iterable<String> values) {
+    final usedShared = <String>{};
+    void addSharedTokens(Iterable<String> values) {
       for (final value in values.map(_moderationSafePromptTag)) {
-        if (value.isNotEmpty && used.add(value.toLowerCase())) {
+        if (value.isNotEmpty && usedShared.add(value.toLowerCase())) {
           output.add('$value.');
         }
       }
     }
 
-    void addWeightedTags(Iterable<_GeneratedOutputTag> values,
-        {required double weight}) {
-      final tags = <_GeneratedOutputTag>[];
-      final local = <String>{};
-      for (final tag in values) {
-        final value = _moderationSafePromptTag(tag.en);
-        if (value.isEmpty || !local.add(value.toLowerCase())) continue;
-        tags.add(tag);
-      }
-      final block = _weightedPromptBlock(tags, weight: weight);
-      if (block.isEmpty) return;
-      output.add(block);
-      for (final tag in tags) {
-        used.add(_moderationSafePromptTag(tag.en).toLowerCase());
-      }
-    }
-
-    void addGroupedClothingTags(Iterable<_GeneratedOutputTag> values,
-        {required double weight}) {
-      final tags = <_GeneratedOutputTag>[];
-      final local = <String>{};
-      for (final tag in values) {
-        final value = _moderationSafePromptTag(tag.en);
-        if (value.isEmpty || !local.add(value.toLowerCase())) continue;
-        tags.add(tag);
-      }
-      final block = _groupedClothingPromptBlock(tags, weight: weight);
-      if (block.isEmpty) return;
-      output.add(block);
-      for (final tag in tags) {
-        used.add(_moderationSafePromptTag(tag.en).toLowerCase());
-      }
-    }
-
-    void addIndividualActionBlock(Iterable<_GeneratedOutputTag> values) {
-      final actionValues = <String>[];
-      final local = <String>{};
-      for (final tag in values) {
-        final value = _moderationSafePromptTag(tag.en);
-        if (value.isEmpty || !local.add(value.toLowerCase())) continue;
-        actionValues.add(value);
-      }
-      if (actionValues.isEmpty) return;
-      output.add('(${actionValues.join(', ')}).');
-      used.addAll(actionValues.map((value) => value.toLowerCase()));
-    }
-
-    void addWingBlock(Iterable<_GeneratedOutputTag> values) {
-      final wingValues = <String>[];
-      final local = <String>{};
-      for (final tag in values) {
-        final value = _moderationSafePromptTag(tag.en);
-        if (value.isEmpty || !local.add(value.toLowerCase())) continue;
-        wingValues.add(value);
-      }
-      if (wingValues.isEmpty) return;
-      output.add('(${wingValues.join(', ')}).');
-      used.addAll(wingValues.map((value) => value.toLowerCase()));
-    }
-
-    addTokens(_peopleTokensNew());
+    addSharedTokens(_peopleTokensNew());
     for (var index = 0; index < _personSlots.length; index++) {
+      final slot = _personSlots[index];
       final personal = _deduplicatePromptOutputTags([
-        ..._characterOutputTagsForSlot(_personSlots[index], index),
+        ..._characterOutputTagsForSlot(slot, index),
         ..._personScopedPromptTags(index),
       ]);
       if (personal.isEmpty) continue;
+
+      // Keep every person's stable identity, outfit, and individual actions
+      // inside one outer block. This prevents traits from different people
+      // being interpreted as belonging to the same character.
       final emphasizeHairColor =
           personal.where((tag) => _isSelectedHairColorOutputTag(index, tag));
-      addWeightedTags(
-        personal.where((tag) =>
-            _isCharacterWeightOutputTag(tag) &&
-            !_isSelectedHairColorOutputTag(index, tag)),
-        weight: _characterPromptWeight,
-      );
-      addWeightedTags(
-        emphasizeHairColor,
-        weight: _personSlots[index].hairColorWeight,
-      );
-      // Keep physical animal traits beside the selected character, rather than
-      // letting ears/tails/hands/feet drift into the shared prompt tail.
-      addWeightedTags(
-        personal.where(_isAnimalTraitOutputTag),
-        weight: _characterPromptWeight,
-      );
-      final wings = personal.where(_isWingOutputTag).toList();
-      addWingBlock(wings);
+      final characterFeatures = personal.where((tag) =>
+          _isCharacterWeightOutputTag(tag) &&
+          !_isSelectedHairColorOutputTag(index, tag));
       final clothing = personal.where(_isClothingWeightOutputTag).toList();
-      addGroupedClothingTags(
-        clothing.where((tag) => !_isOverallClothingWearOutputTag(tag)),
-        weight: _clothingPromptWeight,
-      );
-      // The all-clothing wear-state picker (for example "partially
-      // undressed") remains a normal prompt tag. Only a garment-specific
-      // wear state belongs inside that garment's parenthesized block.
-      addTokens(
-        clothing.where(_isOverallClothingWearOutputTag).map((tag) => tag.en),
-      );
       final individualActions = personal
-          .where((tag) => _isIndividualActionOutputTag(index, tag))
-          .toList();
-      addTokens(personal
           .where((tag) =>
               !_isCharacterWeightOutputTag(tag) &&
-              !_isAnimalTraitOutputTag(tag) &&
-              !_isWingOutputTag(tag) &&
-              !_isClothingWeightOutputTag(tag) &&
-              !_isIndividualActionOutputTag(index, tag))
-          .map((tag) => tag.en));
-      addIndividualActionBlock(individualActions);
+              !_isClothingWeightOutputTag(tag))
+          .toList();
+      final segments = <String>[
+        _promptTagBlock(
+          characterFeatures,
+          weight: slot.promptWeightEnabled ? slot.characterPromptWeight : null,
+        ),
+        if (emphasizeHairColor.isNotEmpty)
+          _promptTagBlock(
+            emphasizeHairColor,
+            weight: slot.hairColorWeightEnabled
+                ? slot.hairColorWeight
+                : (slot.promptWeightEnabled
+                    ? slot.characterPromptWeight
+                    : null),
+          ),
+        _groupedClothingPromptBlock(
+          clothing,
+          weight: slot.promptWeightEnabled ? slot.clothingPromptWeight : null,
+        ),
+        _promptTagBlock(individualActions),
+      ].where((block) => block.isNotEmpty).toList();
+      if (segments.isNotEmpty) {
+        output.add('(${segments.join('. ')}).');
+      }
+      usedShared.addAll(
+        personal
+            .map((tag) => _moderationSafePromptTag(tag.en).toLowerCase())
+            .where((value) => value.isNotEmpty),
+      );
     }
-    addTokens(_sharedPositiveTokens);
     for (var index = 0; index < _personSlots.length; index++) {
-      addTokens(_personFinalPromptTags(index).map((tag) => tag.en));
+      addSharedTokens(_personFinalPromptTags(index).map((tag) => tag.en));
     }
-    addTokens(_sharedActionTokens);
+    addSharedTokens(_sharedActionTokens);
+    addSharedTokens(_sharedPositiveTokens);
     return output.join(' ');
   }
 
   String get _positiveText {
     final hasDetailedPerson = _personSlots.any((slot) => slot.detailed);
-    final usePersonWeights =
-        hasDetailedPerson && (_personSlots.length == 1 || _groupPeoplePrompt);
-    return usePersonWeights
+    return hasDetailedPerson
         ? _groupedPositiveText()
         : _positiveTokens.map((tag) => '$tag.').join(' ');
   }
@@ -9928,7 +9857,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final tokens = <String>[_peopleZhNew()];
     final used = <String>{};
 
-    if (_groupPeoplePrompt && _personSlots.length > 1) {
+    if (_personSlots.length > 1) {
       for (var index = 0; index < _personSlots.length; index++) {
         final personal = _deduplicatePromptOutputTags([
           ..._characterOutputTagsForSlot(_personSlots[index], index),
@@ -10739,21 +10668,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _syncAutoFurryIdentity(int personIndex, Set<String> selectedIds) {
-    final hasPhysicalAnimalTrait = selectedIds
-        .map((id) => _tagsById[id])
-        .whereType<TagItem>()
-        .any(_isPhysicalAnimalTraitTag);
-    final hasIdentityCue = selectedIds.contains('catalog_trait_furry') ||
-        selectedIds.contains('catalog_trait_anthro');
-    if (hasPhysicalAnimalTrait && !hasIdentityCue) {
-      selectedIds.add('catalog_trait_furry');
-      _autoFurryIdentityForPerson.add(personIndex);
-      return;
-    }
-    if (!hasPhysicalAnimalTrait &&
-        _autoFurryIdentityForPerson.remove(personIndex)) {
-      selectedIds.remove('catalog_trait_furry');
-    }
+    // `furry` means a full-fur animal person, while ears, tails, hands, and
+    // feet alone describe a mostly human character with animal features.
+    // Never infer either identity from the selected body parts.
+    _autoFurryIdentityForPerson.remove(personIndex);
   }
 
   Future<void> _toggle(TagItem tag, {int? personIndex}) async {
@@ -15305,7 +15223,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (groups.contains(_animalTraitGroup)) ...[
           const SizedBox(height: 6),
           Text(
-            '獸耳、獸尾、獸手與獸足在此代表角色本身的生理特徵，會自動加入 furry；若角色是擬人獸，請改選 anthro。選好類型後，顏色會直接顯示在該特徵下方並合併輸出。服裝造型用的耳飾、尾飾與翅飾請在服裝的「獸耳／尾飾／翅飾」設定。翅膀本身不會強制加入 furry。',
+            '獸耳、獸尾、獸手與獸足在此代表角色本身的生理特徵，不會自動加入 furry。只選部位時會偏人形；需要全身毛茸茸獸人時，請在此分類另外勾選「全身毛茸茸獸人（furry）」。擬人獸可自行勾選 anthro。選好類型後，顏色會直接顯示在該特徵下方並合併輸出；服裝造型用的耳飾、尾飾與翅飾請在服裝的「獸耳／尾飾／翅飾」設定。',
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -15354,6 +15272,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                     ],
                   ),
+                  const SizedBox(height: 8),
+                  _personPromptWeightControls(index),
                   const SizedBox(height: 8),
                   _stepTagPicker(groups,
                       nextLabel: nextLabel,
@@ -17473,6 +17393,84 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _personPromptWeightControls(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const SizedBox.shrink();
+    }
+    final slot = _personSlots[personIndex];
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 4, 10, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xff1f2948),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: const Color(0xff818cf8).withOpacity(.72)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: slot.promptWeightEnabled,
+            title: const Text('啟用此人物的特徵／服裝權重'),
+            subtitle: Text(
+              slot.promptWeightEnabled
+                  ? '角色特徵與服裝會分別輸出 :1.05 類型權重；姿勢維持一般括號。'
+                  : '仍保留角色、服裝與個人動作的分段括號，但不加 :權重。',
+            ),
+            onChanged: (enabled) => setState(() {
+              slot.promptWeightEnabled = enabled;
+              _persist();
+            }),
+          ),
+          if (slot.promptWeightEnabled) ...[
+            Row(
+              children: [
+                const Expanded(
+                  child: Text('此人物的分段權重',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                ),
+                TextButton.icon(
+                  onPressed: () => setState(() {
+                    slot.characterPromptWeight = _defaultPromptWeight;
+                    slot.clothingPromptWeight = _defaultPromptWeight;
+                    _persist();
+                  }),
+                  icon: const Icon(Icons.restart_alt, size: 18),
+                  label: const Text('還原 1.05'),
+                ),
+              ],
+            ),
+            const Text(
+              '角色基本特徵與服裝各自可設為 0.50–1.50；僅加強這位人物，不影響其他人物。',
+              style: TextStyle(fontSize: 12),
+            ),
+            _promptWeightControl(
+              title: '角色身體特徵權重',
+              description: '角色名稱、髮色、髮長、髮型、眼睛、身體、獸人特徵、翅膀與額外特徵。',
+              icon: Icons.person_outline,
+              value: slot.characterPromptWeight,
+              onChanged: (value) => setState(() {
+                slot.characterPromptWeight = _boundedPromptWeight(value);
+                _persist();
+              }),
+            ),
+            _promptWeightControl(
+              title: '服裝與設計權重',
+              description: '各服飾部位、顏色、次色、材質、細節、穿脫狀態與配件。',
+              icon: Icons.checkroom_outlined,
+              value: slot.clothingPromptWeight,
+              onChanged: (value) => setState(() {
+                slot.clothingPromptWeight = _boundedPromptWeight(value);
+                _persist();
+              }),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _promptWeightControl({
     required String title,
     required String description,
@@ -17628,60 +17626,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 _showAdult = value;
                 _persist();
               })),
-      SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          value: _groupPeoplePrompt,
-          title: const Text('人物特徵／服裝分段加強（括號權重）'),
-          subtitle:
-              const Text('角色基本特徵與整套服裝會各自形成可設定權重的區塊；表情、姿勢、動作、場景與共同標籤維持一般權重。'),
-          onChanged: (value) => setState(() {
-                _groupPeoplePrompt = value;
-                _persist();
-              })),
-      if (_groupPeoplePrompt) ...[
-        const SizedBox(height: 4),
-        Row(
-          children: [
-            const Expanded(
-              child:
-                  Text('分段權重設定', style: TextStyle(fontWeight: FontWeight.w800)),
-            ),
-            TextButton.icon(
-              onPressed: () => setState(() {
-                _characterPromptWeight = _defaultPromptWeight;
-                _clothingPromptWeight = _defaultPromptWeight;
-                _persist();
-              }),
-              icon: const Icon(Icons.restart_alt, size: 18),
-              label: const Text('還原 1.15'),
-            ),
-          ],
-        ),
-        const Text(
-          'BetterWaifu 尚未公布 Amanatsu 的硬性數值上限；本工具依官方範例採用 0.50–1.50 的保護範圍，避免過度加權。',
-          style: TextStyle(fontSize: 12),
-        ),
-        _promptWeightControl(
-          title: '角色裸體基本特徵權重',
-          description: '角色名稱、髮色、髮長、髮型、眼睛、身體、體型與原生特徵。',
-          icon: Icons.person_outline,
-          value: _characterPromptWeight,
-          onChanged: (value) => setState(() {
-            _characterPromptWeight = _boundedPromptWeight(value);
-            _persist();
-          }),
-        ),
-        _promptWeightControl(
-          title: '整套服裝權重',
-          description: '各服飾部位、顏色、次色、材質、細節、穿脫狀態與配件。',
-          icon: Icons.checkroom_outlined,
-          value: _clothingPromptWeight,
-          onChanged: (value) => setState(() {
-            _clothingPromptWeight = _boundedPromptWeight(value);
-            _persist();
-          }),
-        ),
-      ],
     ]);
   }
 
@@ -17934,7 +17878,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ],
               nextLabel: '下一步：服裝',
               instruction:
-                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸耳、獸尾、獸手、獸足、翅膀與額外特徵。獸化部位及翅膀的顏色都放在各自特徵內，並自動合併成中英文提示詞。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
+                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸耳、獸尾、獸手、獸足、翅膀與額外特徵。獸化部位及翅膀的顏色都放在各自特徵內，並自動合併成中英文提示詞；全身毛茸茸 furry 與 anthro 必須自行選擇，不會因耳尾自動加入。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
       _stepCard(
           4,

@@ -154,12 +154,12 @@ const supplementalTags = <CatalogTagData>[
       zh: '狐耳（角色特徵）',
       en: 'fox ears',
       order: 1),
-  // Physical animal traits. They are separate from costume accessories so
-  // the generated prompt can carry an explicit furry/anthro identity cue.
+  // Identity is explicit: users can choose full-fur `furry`, human-like
+  // animal features only, or `anthro`; ears/tails never force an identity.
   CatalogTagData(
       id: 'trait_furry',
       group: '獸化特徵',
-      zh: '獸人角色（furry）',
+      zh: '全身毛茸茸獸人（furry）',
       en: 'furry',
       order: 1,
       conflictGroup: 'animal_identity'),

@@ -1,7 +1,9 @@
-const appVersion = '1.1.115';
-const appBuildNumber = 117;
-const appVersionLabel = '1.1.115+117';
+﻿const appVersion = '1.1.117';
+const appBuildNumber = 119;
+const appVersionLabel = '1.1.117+119';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.117', 'build': '119', 'label': '1.1.117+119', 'date': '2026-09-22', 'notes': '效能優化：加入版本化 PWA 快取與立即載入畫面；核心頁面網路優先取得新版，Flutter 與 CanvasKit 等大型資源改為本機快取並背景更新。'},
+  {'version': '1.1.116', 'build': '118', 'label': '1.1.116+118', 'date': '2026-09-22', 'notes': '角色提示詞改為逐人分段：身體特徵、服裝與個人動作；權重改為逐人可選（預設 1.05），獸人 furry 改為明確手動選用。'},
   {'version': '1.1.115', 'build': '117', 'label': '1.1.115+117', 'date': '2026-09-22', 'notes': '自動偵測：chore: redeploy Pages after repository rename'},
   {'version': '1.1.114', 'build': '116', 'label': '1.1.114+116', 'date': '2026-09-21', 'notes': '角色輸出改為角色標籤優先：選定角色時不再重複輸出作品標籤；保留團體／版本標籤以辨識特殊角色版本，手動移除角色標籤時才回退輸出作品標籤'},
   {'version': '1.1.113', 'build': '115', 'label': '1.1.113+115', 'date': '2026-09-21', 'notes': '新增寶可夢歷代遊戲女性主角清單：13 位角色可依寶可夢／Pokémon 搜尋、套用中英文識別標籤與基本外觀特徵，且不會自動套用原始服裝'},
