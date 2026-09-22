@@ -5555,8 +5555,8 @@ class PromptBuilderApp extends StatefulWidget {
 }
 
 class _PromptBuilderAppState extends State<PromptBuilderApp> {
-  final List<TagItem> _builtIns = _seedTags();
-  final List<TagItem> _supplemental = [
+  late final List<TagItem> _builtIns = _seedTags();
+  late final List<TagItem> _supplemental = [
     ...supplementalTags,
     ...expandedPromptTags,
     ...objectCatalogTags,
@@ -5564,7 +5564,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ...clothingDimensionTags,
     ...clothingOverallTags,
   ].map(_catalogTag).toList();
-  final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
+  late final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
   // Legacy session bookkeeping. Animal features no longer add a furry/anthro
@@ -5634,6 +5634,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _globalSearchPersonIndex = 0;
   String _globalTagQuery = '';
   bool _showAdult = false;
+  bool _isPreparingCatalog = true;
   static const double _minimumPromptWeight = 0.50;
   static const double _maximumPromptWeight = 1.50;
   static const double _defaultPromptWeight = 1.05;
@@ -8309,13 +8310,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   @override
   void initState() {
     super.initState();
-    _restore();
     _checkForVersionUpdate();
     _search.addListener(_scheduleSearchRefresh);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {});
-      unawaited(_scrollToStep(_stepIndex));
+      Future<void>.delayed(Duration.zero, () {
+        if (!mounted) return;
+        // Build the large catalog and restore local selections after Flutter
+        // has produced one frame. This keeps the initial transition from the
+        // HTML splash responsive on lower-powered phones.
+        _restore();
+        if (!mounted) return;
+        setState(() => _isPreparingCatalog = false);
+        unawaited(_scrollToStep(_stepIndex));
+      });
     });
   }
 
@@ -18477,6 +18484,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isPreparingCatalog) {
+      return const Scaffold(
+        body: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: 34,
+                height: 34,
+                child: CircularProgressIndicator(),
+              ),
+              SizedBox(height: 16),
+              Text('正在準備標籤與本機記憶…'),
+            ],
+          ),
+        ),
+      );
+    }
     final showSideStepNames = MediaQuery.sizeOf(context).width >= 900;
     final sideStepRailWidth = showSideStepNames ? 126.0 : 46.0;
     final contentLeftPadding = max(sideStepRailWidth + 14, 72.0);

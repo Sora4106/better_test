@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.117';
-const appBuildNumber = 119;
-const appVersionLabel = '1.1.117+119';
+﻿const appVersion = '1.1.118';
+const appBuildNumber = 120;
+const appVersionLabel = '1.1.118+120';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.118', 'build': '120', 'label': '1.1.118+120', 'date': '2026-09-22', 'notes': '效能優化：完整標籤索引與本機記憶延後至 Flutter 首幀後建立，減少低效能手機進站時的同步阻塞；保留版本化 PWA 快取。'},
   {'version': '1.1.117', 'build': '119', 'label': '1.1.117+119', 'date': '2026-09-22', 'notes': '效能優化：加入版本化 PWA 快取與立即載入畫面；核心頁面網路優先取得新版，Flutter 與 CanvasKit 等大型資源改為本機快取並背景更新。'},
   {'version': '1.1.116', 'build': '118', 'label': '1.1.116+118', 'date': '2026-09-22', 'notes': '角色提示詞改為逐人分段：身體特徵、服裝與個人動作；權重改為逐人可選（預設 1.05），獸人 furry 改為明確手動選用。'},
   {'version': '1.1.115', 'build': '117', 'label': '1.1.115+117', 'date': '2026-09-22', 'notes': '自動偵測：chore: redeploy Pages after repository rename'},
