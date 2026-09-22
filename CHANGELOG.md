@@ -1,4 +1,9 @@
-﻿# 更新紀錄
+# 更新紀錄
+
+## 1.1.115+117 - 2026-09-22
+
+- 自動偵測：chore: redeploy Pages after repository rename
+
 
 ## 1.1.114+116 - 2026-09-21
 

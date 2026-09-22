@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.114';
-const appBuildNumber = 116;
-const appVersionLabel = '1.1.114+116';
+const appVersion = '1.1.115';
+const appBuildNumber = 117;
+const appVersionLabel = '1.1.115+117';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.115', 'build': '117', 'label': '1.1.115+117', 'date': '2026-09-22', 'notes': '自動偵測：chore: redeploy Pages after repository rename'},
   {'version': '1.1.114', 'build': '116', 'label': '1.1.114+116', 'date': '2026-09-21', 'notes': '角色輸出改為角色標籤優先：選定角色時不再重複輸出作品標籤；保留團體／版本標籤以辨識特殊角色版本，手動移除角色標籤時才回退輸出作品標籤'},
   {'version': '1.1.113', 'build': '115', 'label': '1.1.113+115', 'date': '2026-09-21', 'notes': '新增寶可夢歷代遊戲女性主角清單：13 位角色可依寶可夢／Pokémon 搜尋、套用中英文識別標籤與基本外觀特徵，且不會自動套用原始服裝'},
   {'version': '1.1.112', 'build': '114', 'label': '1.1.112+114', 'date': '2026-09-21', 'notes': '移除非複製操作的底部通知；動漫角色名稱與出處改為先行加入，固定外觀特徵自動勾選並可一鍵保留名稱／取消或恢復特徵；修正 Nightcord 初音與舊角色資料的來源、表情誤入固定特徵，並將獸化特徵固定包入人物括號區塊'},

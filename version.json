@@ -1,819 +1,826 @@
-﻿{
-    "version":  "1.1.114",
-    "build":  116,
-    "label":  "1.1.114+116",
-    "history":  [
-                    {
-                        "version":  "1.1.114",
-                        "build":  116,
-                        "label":  "1.1.114+116",
-                        "date":  "2026-09-21",
-                        "notes":  "角色輸出改為角色標籤優先：選定角色時不再重複輸出作品標籤；保留團體／版本標籤以辨識特殊角色版本，手動移除角色標籤時才回退輸出作品標籤"
-                    },
-                    {
-                        "version":  "1.1.113",
-                        "build":  115,
-                        "label":  "1.1.113+115",
-                        "date":  "2026-09-21",
-                        "notes":  "新增寶可夢歷代遊戲女性主角清單：13 位角色可依寶可夢／Pokémon 搜尋、套用中英文識別標籤與基本外觀特徵，且不會自動套用原始服裝"
-                    },
-                    {
-                        "version":  "1.1.112",
-                        "build":  114,
-                        "label":  "1.1.112+114",
-                        "date":  "2026-09-21",
-                        "notes":  "移除非複製操作的底部通知；動漫角色名稱與出處改為先行加入，固定外觀特徵自動勾選並可一鍵保留名稱／取消或恢復特徵；修正 Nightcord 初音與舊角色資料的來源、表情誤入固定特徵，並將獸化特徵固定包入人物括號區塊"
-                    },
-                    {
-                        "version":  "1.1.111",
-                        "build":  113,
-                        "label":  "1.1.111+113",
-                        "date":  "2026-09-21",
-                        "notes":  "新增雙色漸層髮色：依色1／色2順序與六種漸層樣式合併輸出；修正場景與畫面摘要誤列成人行為；補充同向平躺後抱位的男女與女女成人姿勢套件"
-                    },
-                    {
-                        "version":  "1.1.110",
-                        "build":  112,
-                        "label":  "1.1.110+112",
-                        "date":  "2026-09-21",
-                        "notes":  "解除裝飾配件共用基底的單選限制，使獸耳、尾飾、翅飾與其他配件可並存；新增14套兩位成年女性專用成人姿勢套件"
-                    },
-                    {
-                        "version":  "1.1.109",
-                        "build":  111,
-                        "label":  "1.1.109+111",
-                        "date":  "2026-09-21",
-                        "notes":  "新增頂端全系統中英文標籤搜尋與人物套用目標；擴充獸人手腳特徵、顏色、合併輸出與反推連動；服裝多維度設計改為可多選"
-                    },
-                    {
-                        "version":  "1.1.108",
-                        "build":  110,
-                        "label":  "1.1.108+110",
-                        "date":  "2026-09-20",
-                        "notes":  "feat: 隱藏負面提示詞中英文顯示但保留調整與複製；新增12部動漫、21名角色及16套角色扮演服裝"
-                    },
-                    {
-                        "version":  "1.1.107",
-                        "build":  109,
-                        "label":  "1.1.107+109",
-                        "date":  "2026-09-20",
-                        "notes":  "feat: 加入完整 Project SEKAI 角色名單與六大團體分類，移除動漫及角色列表顯示上限並支援團體搜尋"
-                    },
-                    {
-                        "version":  "1.1.106",
-                        "build":  108,
-                        "label":  "1.1.106+108",
-                        "date":  "2026-09-20",
-                        "notes":  "fix: 移除角色預設中的 cute／可愛氣質標籤，避免觸發敏感詞限制"
-                    },
-                    {
-                        "version":  "1.1.105",
-                        "build":  107,
-                        "label":  "1.1.105+107",
-                        "date":  "2026-09-20",
-                        "notes":  "feat: 新增 Project SEKAI 25時，在 Nightcord。與出包王女角色資料；補齊雙語角色特徵、髮型、眼睛、體態與表情標籤"
-                    },
-                    {
-                        "version":  "1.1.104",
-                        "build":  106,
-                        "label":  "1.1.104+106",
-                        "date":  "2026-09-20",
-                        "notes":  "feat: add typed, color-customizable wing prompt blocks; feat: add standalone adult pulling-out actions and 100 editable sensual pose packages"
-                    },
-                    {
-                        "version":  "1.1.103",
-                        "build":  105,
-                        "label":  "1.1.103+105",
-                        "date":  "2026-09-20",
-                        "notes":  "feat: add direction-aware adult pose ending actions; fix: classify ahoge as a fixed hairstyle and separate animal traits from wearable animal accessories"
-                    },
-                    {
-                        "version":  "1.1.102",
-                        "build":  104,
-                        "label":  "1.1.102+104",
-                        "date":  "2026-09-20",
-                        "notes":  "feat: separate fixed appearance from dynamic pose controls; reorganize pose tags and add official symbolic expressions"
-                    },
-                    {
-                        "version":  "1.1.101",
-                        "build":  103,
-                        "label":  "1.1.101+103",
-                        "date":  "2026-09-19",
-                        "notes":  "feat: add 108 categorized object and prop tags"
-                    },
-                    {
-                        "version":  "1.1.100",
-                        "build":  102,
-                        "label":  "1.1.100+102",
-                        "date":  "2026-09-19",
-                        "notes":  "feat: add teasing expressions and head-to-toe camera focus"
-                    },
-                    {
-                        "version":  "1.1.99",
-                        "build":  101,
-                        "label":  "1.1.99+101",
-                        "date":  "2026-09-18",
-                        "notes":  "feat: group individual character actions and add shared multi-character actions"
-                    },
-                    {
-                        "version":  "1.1.98",
-                        "build":  100,
-                        "label":  "1.1.98+100",
-                        "date":  "2026-09-18",
-                        "notes":  "feat: group garment prompt blocks; categorize scenes and camera tags; simplify face packages"
-                    },
-                    {
-                        "version":  "1.1.97",
-                        "build":  99,
-                        "label":  "1.1.97+99",
-                        "date":  "2026-09-18",
-                        "notes":  "release: PWA scene and camera organization"
-                    },
-                    {
-                        "version":  "1.1.96",
-                        "build":  98,
-                        "label":  "1.1.96+98",
-                        "date":  "2026-09-17",
-                        "notes":  "自動偵測：chore: release pwa 1.1.96"
-                    },
-                    {
-                        "version":  "1.1.95",
-                        "build":  97,
-                        "label":  "1.1.95+97",
-                        "date":  "2026-09-16",
-                        "notes":  "自動偵測：chore: release pwa 1.1.95"
-                    },
-                    {
-                        "version":  "1.1.94",
-                        "build":  96,
-                        "label":  "1.1.94+96",
-                        "date":  "2026-09-16",
-                        "notes":  "自動偵測：chore: release pwa 1.1.94"
-                    },
-                    {
-                        "version":  "1.1.93",
-                        "build":  95,
-                        "label":  "1.1.93+95",
-                        "date":  "2026-09-16",
-                        "notes":  "自動偵測：chore: release pwa 1.1.93"
-                    },
-                    {
-                        "version":  "1.1.92",
-                        "build":  94,
-                        "label":  "1.1.92+94",
-                        "date":  "2026-09-16",
-                        "notes":  "自動偵測：chore: release pwa 1.1.92"
-                    },
-                    {
-                        "version":  "1.1.91",
-                        "build":  93,
-                        "label":  "1.1.91+93",
-                        "date":  "2026-09-16",
-                        "notes":  "自動偵測：fix: make outfit templates editable"
-                    },
-                    {
-                        "version":  "1.1.90",
-                        "build":  92,
-                        "label":  "1.1.90+92",
-                        "date":  "2026-09-16",
-                        "notes":  "修正髮色替換時多色累積，角色原始髮色會被新髮色完整覆蓋；新增大蝴蝶結髮飾"
-                    },
-                    {
-                        "version":  "1.1.89",
-                        "build":  91,
-                        "label":  "1.1.89+91",
-                        "date":  "2026-09-15",
-                        "notes":  "移除單機版與部署副路徑，儲存庫及 GitHub Pages 僅保留 Flutter Web PWA"
-                    },
-                    {
-                        "version":  "1.1.88",
-                        "build":  90,
-                        "label":  "1.1.88+90",
-                        "date":  "2026-09-15",
-                        "notes":  "新增帽子與眼鏡獨立分類及 34 種樣式；帽子與眼鏡各自提供主色與次色，不會互相覆蓋；角色特徵、服裝配件與一般姿勢依頭到腳順序重整，並以分類色彩強化辨識"
-                    },
-                    {
-                        "version":  "1.1.87",
-                        "build":  89,
-                        "label":  "1.1.87+89",
-                        "date":  "2026-09-15",
-                        "notes":  "新增獨立髮飾分類；加入 hair bow、hairclip、hair flower、hair scrunchie、hair beads、hair rings、hair stick 等髮飾與配件顏色選擇"
-                    },
-                    {
-                        "version":  "1.1.86",
-                        "build":  88,
-                        "label":  "1.1.86+88",
-                        "date":  "2026-09-15",
-                        "notes":  "修正服裝套裝的上衣顯示；各部位穿脫狀態分開選擇；合併服裝主色、主體與次色邊線輸出，明確保留白色裙裝"
-                    },
-                    {
-                        "version":  "1.1.85",
-                        "build":  87,
-                        "label":  "1.1.85+87",
-                        "date":  "2026-09-14",
-                        "notes":  "每個大項目提供獨立搜尋；搜尋可跨該區所有細分類，清除按鈕同步清空輸入文字且保留已選標籤"
-                    },
-                    {
-                        "version":  "1.1.84",
-                        "build":  86,
-                        "label":  "1.1.84+86",
-                        "date":  "2026-09-14",
-                        "notes":  "角色基本特徵與整套服裝分段加權；涵蓋髮色、髮長、身體、體型與角色替換後特徵，表情姿勢維持一般權重"
-                    },
-                    {
-                        "version":  "1.1.83",
-                        "build":  85,
-                        "label":  "1.1.83+85",
-                        "date":  "2026-09-14",
-                        "notes":  "新增單手高舉蛋包飯、單手指愛心、站立與單腳向後翹起的俏皮姿勢組合"
-                    },
-                    {
-                        "version":  "1.1.82",
-                        "build":  84,
-                        "label":  "1.1.82+84",
-                        "date":  "2026-09-14",
-                        "notes":  "自動偵測：merge: sync remote version metadata"
-                    },
-                    {
-                        "version":  "1.1.81",
-                        "build":  83,
-                        "label":  "1.1.81+83",
-                        "date":  "2026-09-14",
-                        "notes":  "自動偵測：fix: complete base clothing color mappings"
-                    },
-                    {
-                        "version":  "1.1.80",
-                        "build":  82,
-                        "label":  "1.1.80+82",
-                        "date":  "2026-09-14",
-                        "notes":  "新增 60 種手指動作；細分指向方向、手勢形狀、嘴臉互動與細節動作，並區分官方標籤及自然描述"
-                    },
-                    {
-                        "version":  "1.1.79",
-                        "build":  81,
-                        "label":  "1.1.79+81",
-                        "date":  "2026-09-14",
-                        "notes":  "新增 38 套藍色系列服裝組合；涵蓋日常、正式、禮服、運動、街頭、傳統與奇幻穿搭"
-                    },
-                    {
-                        "version":  "1.1.78",
-                        "build":  80,
-                        "label":  "1.1.78+80",
-                        "date":  "2026-09-14",
-                        "notes":  "新增 100 種一般單人姿勢；細分站姿、靠牆、椅子、桌面、地板、床上、仰躺、側躺、俯臥與跪蹲分類"
-                    },
-                    {
-                        "version":  "1.1.77",
-                        "build":  79,
-                        "label":  "1.1.77+79",
-                        "date":  "2026-09-14",
-                        "notes":  "移除 baby 與其他未成年敏感詞；嬰兒藍改為粉彩藍；更新髮型、抱姿、穿搭及舊資料安全轉換"
-                    },
-                    {
-                        "version":  "1.1.76",
-                        "build":  78,
-                        "label":  "1.1.76+78",
-                        "date":  "2026-09-14",
-                        "notes":  "移除年齡敏感服裝詞與學生制服詞；更新 30 套穿搭；舊記憶及額外標籤輸出時自動改為安全替代詞"
-                    },
-                    {
-                        "version":  "1.1.75",
-                        "build":  77,
-                        "label":  "1.1.75+77",
-                        "date":  "2026-09-13",
-                        "notes":  "重建服裝官方與描述分層；改用短精準標籤輸出；依頭到腳分類配件；限制不相容材質與細節並保留舊資料遷移"
-                    },
-                    {
-                        "version":  "1.1.74",
-                        "build":  76,
-                        "label":  "1.1.74+76",
-                        "date":  "2026-09-13",
-                        "notes":  "新增 30 套女子服裝靈感套裝；區分官方髮型與自然描述；補充動態提示詞；加入四十八手與多人姿勢套件"
-                    },
-                    {
-                        "version":  "1.1.73",
-                        "build":  75,
-                        "label":  "1.1.73+75",
-                        "date":  "2026-09-13",
-                        "notes":  "組合標籤預設折疊；新增親吻互動、動態姿勢與成人動態標籤"
-                    },
-                    {
-                        "version":  "1.1.72",
-                        "build":  74,
-                        "label":  "1.1.72+74",
-                        "date":  "2026-09-13",
-                        "notes":  "自動偵測：feat: add 50 adult pose packages and reorder character traits"
-                    },
-                    {
-                        "version":  "1.1.71",
-                        "build":  73,
-                        "label":  "1.1.71+73",
-                        "date":  "2026-09-13",
-                        "notes":  "自動偵測：feat: add adult pose packs and sync clothing presets"
-                    },
-                    {
-                        "version":  "1.1.70",
-                        "build":  72,
-                        "label":  "1.1.70+72",
-                        "date":  "2026-09-13",
-                        "notes":  "自動偵測：feat: 新增貓咪嘴與多種嘴型標籤"
-                    },
-                    {
-                        "version":  "1.1.69",
-                        "build":  71,
-                        "label":  "1.1.69+71",
-                        "date":  "2026-09-13",
-                        "notes":  "自動偵測：fix: 修正頁面底端左側導覽捲動"
-                    },
-                    {
-                        "version":  "1.1.68",
-                        "build":  70,
-                        "label":  "1.1.68+70",
-                        "date":  "2026-09-13",
-                        "notes":  "自動偵測：feat: reorganize pose tools and expand footwear navigation"
-                    },
-                    {
-                        "version":  "1.1.67",
-                        "build":  69,
-                        "label":  "1.1.67+69",
-                        "date":  "2026-09-12",
-                        "notes":  "自動偵測：feat: add direct person removal and optimize tag loading"
-                    },
-                    {
-                        "version":  "1.1.66",
-                        "build":  68,
-                        "label":  "1.1.66+68",
-                        "date":  "2026-09-12",
-                        "notes":  "自動偵測：feat: rebuild clothing taxonomy and visual layers"
-                    },
-                    {
-                        "version":  "1.1.65",
-                        "build":  67,
-                        "label":  "1.1.65+67",
-                        "date":  "2026-09-12",
-                        "notes":  "自動偵測：feat: reorganize pose and clothing tag pickers"
-                    },
-                    {
-                        "version":  "1.1.64",
-                        "build":  66,
-                        "label":  "1.1.64+66",
-                        "date":  "2026-09-12",
-                        "notes":  "自動偵測：feat: refine mouth expressions"
-                    },
-                    {
-                        "version":  "1.1.63",
-                        "build":  65,
-                        "label":  "1.1.63+65",
-                        "date":  "2026-09-11",
-                        "notes":  "自動偵測：feat: add kyudo prompt catalog"
-                    },
-                    {
-                        "version":  "1.1.62",
-                        "build":  64,
-                        "label":  "1.1.62+64",
-                        "date":  "2026-09-11",
-                        "notes":  "feat: expand hair length and hairstyle catalog; add partial clothing and pose clearing"
-                    },
-                    {
-                        "version":  "1.1.61",
-                        "build":  63,
-                        "label":  "1.1.61+63",
-                        "date":  "2026-09-11",
-                        "notes":  "feat: save unregistered extra positive tags; fix: allow composable clothing and pose tags"
-                    },
-                    {
-                        "version":  "1.1.60",
-                        "build":  62,
-                        "label":  "1.1.60+62",
-                        "date":  "2026-09-09",
-                        "notes":  "自動偵測：fix: allow composable camera framing tags"
-                    },
-                    {
-                        "version":  "1.1.59",
-                        "build":  61,
-                        "label":  "1.1.59+61",
-                        "date":  "2026-09-08",
-                        "notes":  "自動偵測：feat: add knees bent pose tag"
-                    },
-                    {
-                        "version":  "1.1.58",
-                        "build":  60,
-                        "label":  "1.1.58+60",
-                        "date":  "2026-09-08",
-                        "notes":  "自動偵測：feat: add stackable ninja props"
-                    },
-                    {
-                        "version":  "1.1.57",
-                        "build":  59,
-                        "label":  "1.1.57+59",
-                        "date":  "2026-09-08",
-                        "notes":  "自動偵測：fix: describe secondary garment colors as trim"
-                    },
-                    {
-                        "version":  "1.1.56",
-                        "build":  58,
-                        "label":  "1.1.56+58",
-                        "date":  "2026-09-08",
-                        "notes":  "自動偵測：fix: preserve clothing secondary color groups"
-                    },
-                    {
-                        "version":  "1.1.55",
-                        "build":  57,
-                        "label":  "1.1.55+57",
-                        "date":  "2026-09-08",
-                        "notes":  "自動偵測：feat: rename clothing trim colors to secondary colors"
-                    },
-                    {
-                        "version":  "1.1.54",
-                        "build":  56,
-                        "label":  "1.1.54+56",
-                        "date":  "2026-09-08",
-                        "notes":  "自動偵測：fix: compose garment trim colors before details"
-                    },
-                    {
-                        "version":  "1.1.53",
-                        "build":  55,
-                        "label":  "1.1.53+55",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：fix: move selfie into camera tags"
-                    },
-                    {
-                        "version":  "1.1.52",
-                        "build":  54,
-                        "label":  "1.1.52+54",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：feat: add per-section tag clearing"
-                    },
-                    {
-                        "version":  "1.1.51",
-                        "build":  53,
-                        "label":  "1.1.51+53",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：fix: restore independent section randomization"
-                    },
-                    {
-                        "version":  "1.1.50",
-                        "build":  52,
-                        "label":  "1.1.50+52",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：feat: sync scene clothing and pose randomization"
-                    },
-                    {
-                        "version":  "1.1.49",
-                        "build":  51,
-                        "label":  "1.1.49+51",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：fix: show secondary colors for all shoe and panties styles"
-                    },
-                    {
-                        "version":  "1.1.48",
-                        "build":  50,
-                        "label":  "1.1.48+50",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：fix: merge one-piece clothing styles into base garments"
-                    },
-                    {
-                        "version":  "1.1.47",
-                        "build":  49,
-                        "label":  "1.1.47+49",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：fix: avoid coral animal moderation false positive"
-                    },
-                    {
-                        "version":  "1.1.46",
-                        "build":  48,
-                        "label":  "1.1.46+48",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：fix: compose shoe styles and clarify demon tail"
-                    },
-                    {
-                        "version":  "1.1.45",
-                        "build":  47,
-                        "label":  "1.1.45+47",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：feat: add official categorized prompt tags"
-                    },
-                    {
-                        "version":  "1.1.44",
-                        "build":  46,
-                        "label":  "1.1.44+46",
-                        "date":  "2026-09-07",
-                        "notes":  "自動偵測：feat: add cosplay and scene prompt tags"
-                    },
-                    {
-                        "version":  "1.1.43",
-                        "build":  45,
-                        "label":  "1.1.43+45",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：fix: compose one-piece outfit labels"
-                    },
-                    {
-                        "version":  "1.1.42",
-                        "build":  44,
-                        "label":  "1.1.42+44",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：fix: remove duplicate one-piece clothing color"
-                    },
-                    {
-                        "version":  "1.1.41",
-                        "build":  43,
-                        "label":  "1.1.41+43",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：fix: show clothing details per selected garment"
-                    },
-                    {
-                        "version":  "1.1.40",
-                        "build":  42,
-                        "label":  "1.1.40+42",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: save clothing designs as combinations"
-                    },
-                    {
-                        "version":  "1.1.39",
-                        "build":  41,
-                        "label":  "1.1.39+41",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：fix: prioritize combination editor upper panel"
-                    },
-                    {
-                        "version":  "1.1.38",
-                        "build":  40,
-                        "label":  "1.1.38+40",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：fix: enlarge combination editor upper section"
-                    },
-                    {
-                        "version":  "1.1.37",
-                        "build":  39,
-                        "label":  "1.1.37+39",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：fix: expand combination editor workspace"
-                    },
-                    {
-                        "version":  "1.1.36",
-                        "build":  38,
-                        "label":  "1.1.36+38",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: add reusable prompt combinations"
-                    },
-                    {
-                        "version":  "1.1.35",
-                        "build":  37,
-                        "label":  "1.1.35+37",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: scope clothing styles and wear states"
-                    },
-                    {
-                        "version":  "1.1.34",
-                        "build":  36,
-                        "label":  "1.1.34+36",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：Merge remote-tracking branch \u0027origin/main\u0027"
-                    },
-                    {
-                        "version":  "1.1.33",
-                        "build":  35,
-                        "label":  "1.1.33+35",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：Merge remote-tracking branch \u0027origin/main\u0027"
-                    },
-                    {
-                        "version":  "1.1.32",
-                        "build":  34,
-                        "label":  "1.1.32+34",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: organize eye colors and special eye tags"
-                    },
-                    {
-                        "version":  "1.1.31",
-                        "build":  33,
-                        "label":  "1.1.31+33",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: add hierarchical color selectors"
-                    },
-                    {
-                        "version":  "1.1.30",
-                        "build":  32,
-                        "label":  "1.1.30+32",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: group person prompts and expand paizuri tags"
-                    },
-                    {
-                        "version":  "1.1.29",
-                        "build":  31,
-                        "label":  "1.1.29+31",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: add object-linked actions and remove avatar preview"
-                    },
-                    {
-                        "version":  "1.1.28",
-                        "build":  30,
-                        "label":  "1.1.28+30",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: add trim colors accessory placement and masturbation tags"
-                    },
-                    {
-                        "version":  "1.1.27",
-                        "build":  29,
-                        "label":  "1.1.27+29",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: add scoped randomization and avatar preview"
-                    },
-                    {
-                        "version":  "1.1.26",
-                        "build":  28,
-                        "label":  "1.1.26+28",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: expand prompt tags and split hair colors"
-                    },
-                    {
-                        "version":  "1.1.25",
-                        "build":  27,
-                        "label":  "1.1.25+27",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: preserve characters during reverse prompt import"
-                    },
-                    {
-                        "version":  "1.1.24",
-                        "build":  26,
-                        "label":  "1.1.24+26",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：fix: repair category chip widget syntax"
-                    },
-                    {
-                        "version":  "1.1.23",
-                        "build":  25,
-                        "label":  "1.1.23+25",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: reverse composed prompt tags"
-                    },
-                    {
-                        "version":  "1.1.22",
-                        "build":  24,
-                        "label":  "1.1.22+24",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: add prompt tag reverse import"
-                    },
-                    {
-                        "version":  "1.1.21",
-                        "build":  23,
-                        "label":  "1.1.21+23",
-                        "date":  "2026-09-06",
-                        "notes":  "自動偵測：feat: compose clothing color and detail tags"
-                    },
-                    {
-                        "version":  "1.1.20",
-                        "build":  22,
-                        "label":  "1.1.20+22",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: group multi-character prompt tags"
-                    },
-                    {
-                        "version":  "1.1.19",
-                        "build":  21,
-                        "label":  "1.1.19+21",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: make generated Chinese tags removable"
-                    },
-                    {
-                        "version":  "1.1.18",
-                        "build":  20,
-                        "label":  "1.1.18+20",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：fix: wrap category filters for small screens"
-                    },
-                    {
-                        "version":  "1.1.17",
-                        "build":  19,
-                        "label":  "1.1.17+19",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：fix: map imported characters to anime tags and close lookup"
-                    },
-                    {
-                        "version":  "1.1.16",
-                        "build":  18,
-                        "label":  "1.1.16+18",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：fix: show imported anime characters in prompt content"
-                    },
-                    {
-                        "version":  "1.1.15",
-                        "build":  17,
-                        "label":  "1.1.15+17",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：fix: improve button contrast and adaptive category widths"
-                    },
-                    {
-                        "version":  "1.1.14",
-                        "build":  16,
-                        "label":  "1.1.14+16",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：fix: support Chinese separators for extra tags"
-                    },
-                    {
-                        "version":  "1.1.13",
-                        "build":  15,
-                        "label":  "1.1.13+15",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: translate extra positive tags and expand expression catalog"
-                    },
-                    {
-                        "version":  "1.1.12",
-                        "build":  14,
-                        "label":  "1.1.12+14",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：fix: make tag controls responsive"
-                    },
-                    {
-                        "version":  "1.1.11",
-                        "build":  13,
-                        "label":  "1.1.11+13",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: expand pose detail skirt lengths and anime aliases"
-                    },
-                    {
-                        "version":  "1.1.10",
-                        "build":  12,
-                        "label":  "1.1.10+12",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: expand hairstyles actions and objects"
-                    },
-                    {
-                        "version":  "1.1.9",
-                        "build":  11,
-                        "label":  "1.1.9+11",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: add automatic hair length negative guards"
-                    },
-                    {
-                        "version":  "1.1.8",
-                        "build":  10,
-                        "label":  "1.1.8+10",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: derive people count from character cards"
-                    },
-                    {
-                        "version":  "1.1.7",
-                        "build":  9,
-                        "label":  "1.1.7+9",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: add editable negative tag library"
-                    },
-                    {
-                        "version":  "1.1.6",
-                        "build":  8,
-                        "label":  "1.1.6+8",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: add scene catalog and random outfits"
-                    },
-                    {
-                        "version":  "1.1.5",
-                        "build":  7,
-                        "label":  "1.1.5+7",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: add gothic styles and innerwear layering"
-                    },
-                    {
-                        "version":  "1.1.4",
-                        "build":  6,
-                        "label":  "1.1.4+6",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: split clothing colors and enforce outfit layers"
-                    },
-                    {
-                        "version":  "1.1.3",
-                        "build":  5,
-                        "label":  "1.1.3+5",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: add reset control and section navigation"
-                    },
-                    {
-                        "version":  "1.1.2",
-                        "build":  4,
-                        "label":  "1.1.2+4",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: refine character overrides and clothing filters"
-                    },
-                    {
-                        "version":  "1.1.1",
-                        "build":  3,
-                        "label":  "1.1.1+3",
-                        "date":  "2026-09-05",
-                        "notes":  "自動偵測：feat: scope tags to each character"
-                    },
-                    {
-                        "version":  "1.1.0",
-                        "build":  2,
-                        "label":  "1.1.0+2",
-                        "date":  "2026-09-05",
-                        "notes":  "加入版本顯示、更新提示、版本歷程與自動追加版本號工具。"
-                    },
-                    {
-                        "version":  "1.0.0",
-                        "build":  1,
-                        "label":  "1.0.0+1",
-                        "date":  "2026-09-05",
-                        "notes":  "建立 BetterWaifu Amanatsu 1.1 提示標籤組合工具。"
-                    }
-                ]
+{
+  "version": "1.1.115",
+  "build": 117,
+  "label": "1.1.115+117",
+  "history": [
+    {
+      "version": "1.1.115",
+      "build": 117,
+      "label": "1.1.115+117",
+      "date": "2026-09-22",
+      "notes": "自動偵測：chore: redeploy Pages after repository rename"
+    },
+    {
+      "version": "1.1.114",
+      "build": 116,
+      "label": "1.1.114+116",
+      "date": "2026-09-21",
+      "notes": "角色輸出改為角色標籤優先：選定角色時不再重複輸出作品標籤；保留團體／版本標籤以辨識特殊角色版本，手動移除角色標籤時才回退輸出作品標籤"
+    },
+    {
+      "version": "1.1.113",
+      "build": 115,
+      "label": "1.1.113+115",
+      "date": "2026-09-21",
+      "notes": "新增寶可夢歷代遊戲女性主角清單：13 位角色可依寶可夢／Pokémon 搜尋、套用中英文識別標籤與基本外觀特徵，且不會自動套用原始服裝"
+    },
+    {
+      "version": "1.1.112",
+      "build": 114,
+      "label": "1.1.112+114",
+      "date": "2026-09-21",
+      "notes": "移除非複製操作的底部通知；動漫角色名稱與出處改為先行加入，固定外觀特徵自動勾選並可一鍵保留名稱／取消或恢復特徵；修正 Nightcord 初音與舊角色資料的來源、表情誤入固定特徵，並將獸化特徵固定包入人物括號區塊"
+    },
+    {
+      "version": "1.1.111",
+      "build": 113,
+      "label": "1.1.111+113",
+      "date": "2026-09-21",
+      "notes": "新增雙色漸層髮色：依色1／色2順序與六種漸層樣式合併輸出；修正場景與畫面摘要誤列成人行為；補充同向平躺後抱位的男女與女女成人姿勢套件"
+    },
+    {
+      "version": "1.1.110",
+      "build": 112,
+      "label": "1.1.110+112",
+      "date": "2026-09-21",
+      "notes": "解除裝飾配件共用基底的單選限制，使獸耳、尾飾、翅飾與其他配件可並存；新增14套兩位成年女性專用成人姿勢套件"
+    },
+    {
+      "version": "1.1.109",
+      "build": 111,
+      "label": "1.1.109+111",
+      "date": "2026-09-21",
+      "notes": "新增頂端全系統中英文標籤搜尋與人物套用目標；擴充獸人手腳特徵、顏色、合併輸出與反推連動；服裝多維度設計改為可多選"
+    },
+    {
+      "version": "1.1.108",
+      "build": 110,
+      "label": "1.1.108+110",
+      "date": "2026-09-20",
+      "notes": "feat: 隱藏負面提示詞中英文顯示但保留調整與複製；新增12部動漫、21名角色及16套角色扮演服裝"
+    },
+    {
+      "version": "1.1.107",
+      "build": 109,
+      "label": "1.1.107+109",
+      "date": "2026-09-20",
+      "notes": "feat: 加入完整 Project SEKAI 角色名單與六大團體分類，移除動漫及角色列表顯示上限並支援團體搜尋"
+    },
+    {
+      "version": "1.1.106",
+      "build": 108,
+      "label": "1.1.106+108",
+      "date": "2026-09-20",
+      "notes": "fix: 移除角色預設中的 cute／可愛氣質標籤，避免觸發敏感詞限制"
+    },
+    {
+      "version": "1.1.105",
+      "build": 107,
+      "label": "1.1.105+107",
+      "date": "2026-09-20",
+      "notes": "feat: 新增 Project SEKAI 25時，在 Nightcord。與出包王女角色資料；補齊雙語角色特徵、髮型、眼睛、體態與表情標籤"
+    },
+    {
+      "version": "1.1.104",
+      "build": 106,
+      "label": "1.1.104+106",
+      "date": "2026-09-20",
+      "notes": "feat: add typed, color-customizable wing prompt blocks; feat: add standalone adult pulling-out actions and 100 editable sensual pose packages"
+    },
+    {
+      "version": "1.1.103",
+      "build": 105,
+      "label": "1.1.103+105",
+      "date": "2026-09-20",
+      "notes": "feat: add direction-aware adult pose ending actions; fix: classify ahoge as a fixed hairstyle and separate animal traits from wearable animal accessories"
+    },
+    {
+      "version": "1.1.102",
+      "build": 104,
+      "label": "1.1.102+104",
+      "date": "2026-09-20",
+      "notes": "feat: separate fixed appearance from dynamic pose controls; reorganize pose tags and add official symbolic expressions"
+    },
+    {
+      "version": "1.1.101",
+      "build": 103,
+      "label": "1.1.101+103",
+      "date": "2026-09-19",
+      "notes": "feat: add 108 categorized object and prop tags"
+    },
+    {
+      "version": "1.1.100",
+      "build": 102,
+      "label": "1.1.100+102",
+      "date": "2026-09-19",
+      "notes": "feat: add teasing expressions and head-to-toe camera focus"
+    },
+    {
+      "version": "1.1.99",
+      "build": 101,
+      "label": "1.1.99+101",
+      "date": "2026-09-18",
+      "notes": "feat: group individual character actions and add shared multi-character actions"
+    },
+    {
+      "version": "1.1.98",
+      "build": 100,
+      "label": "1.1.98+100",
+      "date": "2026-09-18",
+      "notes": "feat: group garment prompt blocks; categorize scenes and camera tags; simplify face packages"
+    },
+    {
+      "version": "1.1.97",
+      "build": 99,
+      "label": "1.1.97+99",
+      "date": "2026-09-18",
+      "notes": "release: PWA scene and camera organization"
+    },
+    {
+      "version": "1.1.96",
+      "build": 98,
+      "label": "1.1.96+98",
+      "date": "2026-09-17",
+      "notes": "自動偵測：chore: release pwa 1.1.96"
+    },
+    {
+      "version": "1.1.95",
+      "build": 97,
+      "label": "1.1.95+97",
+      "date": "2026-09-16",
+      "notes": "自動偵測：chore: release pwa 1.1.95"
+    },
+    {
+      "version": "1.1.94",
+      "build": 96,
+      "label": "1.1.94+96",
+      "date": "2026-09-16",
+      "notes": "自動偵測：chore: release pwa 1.1.94"
+    },
+    {
+      "version": "1.1.93",
+      "build": 95,
+      "label": "1.1.93+95",
+      "date": "2026-09-16",
+      "notes": "自動偵測：chore: release pwa 1.1.93"
+    },
+    {
+      "version": "1.1.92",
+      "build": 94,
+      "label": "1.1.92+94",
+      "date": "2026-09-16",
+      "notes": "自動偵測：chore: release pwa 1.1.92"
+    },
+    {
+      "version": "1.1.91",
+      "build": 93,
+      "label": "1.1.91+93",
+      "date": "2026-09-16",
+      "notes": "自動偵測：fix: make outfit templates editable"
+    },
+    {
+      "version": "1.1.90",
+      "build": 92,
+      "label": "1.1.90+92",
+      "date": "2026-09-16",
+      "notes": "修正髮色替換時多色累積，角色原始髮色會被新髮色完整覆蓋；新增大蝴蝶結髮飾"
+    },
+    {
+      "version": "1.1.89",
+      "build": 91,
+      "label": "1.1.89+91",
+      "date": "2026-09-15",
+      "notes": "移除單機版與部署副路徑，儲存庫及 GitHub Pages 僅保留 Flutter Web PWA"
+    },
+    {
+      "version": "1.1.88",
+      "build": 90,
+      "label": "1.1.88+90",
+      "date": "2026-09-15",
+      "notes": "新增帽子與眼鏡獨立分類及 34 種樣式；帽子與眼鏡各自提供主色與次色，不會互相覆蓋；角色特徵、服裝配件與一般姿勢依頭到腳順序重整，並以分類色彩強化辨識"
+    },
+    {
+      "version": "1.1.87",
+      "build": 89,
+      "label": "1.1.87+89",
+      "date": "2026-09-15",
+      "notes": "新增獨立髮飾分類；加入 hair bow、hairclip、hair flower、hair scrunchie、hair beads、hair rings、hair stick 等髮飾與配件顏色選擇"
+    },
+    {
+      "version": "1.1.86",
+      "build": 88,
+      "label": "1.1.86+88",
+      "date": "2026-09-15",
+      "notes": "修正服裝套裝的上衣顯示；各部位穿脫狀態分開選擇；合併服裝主色、主體與次色邊線輸出，明確保留白色裙裝"
+    },
+    {
+      "version": "1.1.85",
+      "build": 87,
+      "label": "1.1.85+87",
+      "date": "2026-09-14",
+      "notes": "每個大項目提供獨立搜尋；搜尋可跨該區所有細分類，清除按鈕同步清空輸入文字且保留已選標籤"
+    },
+    {
+      "version": "1.1.84",
+      "build": 86,
+      "label": "1.1.84+86",
+      "date": "2026-09-14",
+      "notes": "角色基本特徵與整套服裝分段加權；涵蓋髮色、髮長、身體、體型與角色替換後特徵，表情姿勢維持一般權重"
+    },
+    {
+      "version": "1.1.83",
+      "build": 85,
+      "label": "1.1.83+85",
+      "date": "2026-09-14",
+      "notes": "新增單手高舉蛋包飯、單手指愛心、站立與單腳向後翹起的俏皮姿勢組合"
+    },
+    {
+      "version": "1.1.82",
+      "build": 84,
+      "label": "1.1.82+84",
+      "date": "2026-09-14",
+      "notes": "自動偵測：merge: sync remote version metadata"
+    },
+    {
+      "version": "1.1.81",
+      "build": 83,
+      "label": "1.1.81+83",
+      "date": "2026-09-14",
+      "notes": "自動偵測：fix: complete base clothing color mappings"
+    },
+    {
+      "version": "1.1.80",
+      "build": 82,
+      "label": "1.1.80+82",
+      "date": "2026-09-14",
+      "notes": "新增 60 種手指動作；細分指向方向、手勢形狀、嘴臉互動與細節動作，並區分官方標籤及自然描述"
+    },
+    {
+      "version": "1.1.79",
+      "build": 81,
+      "label": "1.1.79+81",
+      "date": "2026-09-14",
+      "notes": "新增 38 套藍色系列服裝組合；涵蓋日常、正式、禮服、運動、街頭、傳統與奇幻穿搭"
+    },
+    {
+      "version": "1.1.78",
+      "build": 80,
+      "label": "1.1.78+80",
+      "date": "2026-09-14",
+      "notes": "新增 100 種一般單人姿勢；細分站姿、靠牆、椅子、桌面、地板、床上、仰躺、側躺、俯臥與跪蹲分類"
+    },
+    {
+      "version": "1.1.77",
+      "build": 79,
+      "label": "1.1.77+79",
+      "date": "2026-09-14",
+      "notes": "移除 baby 與其他未成年敏感詞；嬰兒藍改為粉彩藍；更新髮型、抱姿、穿搭及舊資料安全轉換"
+    },
+    {
+      "version": "1.1.76",
+      "build": 78,
+      "label": "1.1.76+78",
+      "date": "2026-09-14",
+      "notes": "移除年齡敏感服裝詞與學生制服詞；更新 30 套穿搭；舊記憶及額外標籤輸出時自動改為安全替代詞"
+    },
+    {
+      "version": "1.1.75",
+      "build": 77,
+      "label": "1.1.75+77",
+      "date": "2026-09-13",
+      "notes": "重建服裝官方與描述分層；改用短精準標籤輸出；依頭到腳分類配件；限制不相容材質與細節並保留舊資料遷移"
+    },
+    {
+      "version": "1.1.74",
+      "build": 76,
+      "label": "1.1.74+76",
+      "date": "2026-09-13",
+      "notes": "新增 30 套女子服裝靈感套裝；區分官方髮型與自然描述；補充動態提示詞；加入四十八手與多人姿勢套件"
+    },
+    {
+      "version": "1.1.73",
+      "build": 75,
+      "label": "1.1.73+75",
+      "date": "2026-09-13",
+      "notes": "組合標籤預設折疊；新增親吻互動、動態姿勢與成人動態標籤"
+    },
+    {
+      "version": "1.1.72",
+      "build": 74,
+      "label": "1.1.72+74",
+      "date": "2026-09-13",
+      "notes": "自動偵測：feat: add 50 adult pose packages and reorder character traits"
+    },
+    {
+      "version": "1.1.71",
+      "build": 73,
+      "label": "1.1.71+73",
+      "date": "2026-09-13",
+      "notes": "自動偵測：feat: add adult pose packs and sync clothing presets"
+    },
+    {
+      "version": "1.1.70",
+      "build": 72,
+      "label": "1.1.70+72",
+      "date": "2026-09-13",
+      "notes": "自動偵測：feat: 新增貓咪嘴與多種嘴型標籤"
+    },
+    {
+      "version": "1.1.69",
+      "build": 71,
+      "label": "1.1.69+71",
+      "date": "2026-09-13",
+      "notes": "自動偵測：fix: 修正頁面底端左側導覽捲動"
+    },
+    {
+      "version": "1.1.68",
+      "build": 70,
+      "label": "1.1.68+70",
+      "date": "2026-09-13",
+      "notes": "自動偵測：feat: reorganize pose tools and expand footwear navigation"
+    },
+    {
+      "version": "1.1.67",
+      "build": 69,
+      "label": "1.1.67+69",
+      "date": "2026-09-12",
+      "notes": "自動偵測：feat: add direct person removal and optimize tag loading"
+    },
+    {
+      "version": "1.1.66",
+      "build": 68,
+      "label": "1.1.66+68",
+      "date": "2026-09-12",
+      "notes": "自動偵測：feat: rebuild clothing taxonomy and visual layers"
+    },
+    {
+      "version": "1.1.65",
+      "build": 67,
+      "label": "1.1.65+67",
+      "date": "2026-09-12",
+      "notes": "自動偵測：feat: reorganize pose and clothing tag pickers"
+    },
+    {
+      "version": "1.1.64",
+      "build": 66,
+      "label": "1.1.64+66",
+      "date": "2026-09-12",
+      "notes": "自動偵測：feat: refine mouth expressions"
+    },
+    {
+      "version": "1.1.63",
+      "build": 65,
+      "label": "1.1.63+65",
+      "date": "2026-09-11",
+      "notes": "自動偵測：feat: add kyudo prompt catalog"
+    },
+    {
+      "version": "1.1.62",
+      "build": 64,
+      "label": "1.1.62+64",
+      "date": "2026-09-11",
+      "notes": "feat: expand hair length and hairstyle catalog; add partial clothing and pose clearing"
+    },
+    {
+      "version": "1.1.61",
+      "build": 63,
+      "label": "1.1.61+63",
+      "date": "2026-09-11",
+      "notes": "feat: save unregistered extra positive tags; fix: allow composable clothing and pose tags"
+    },
+    {
+      "version": "1.1.60",
+      "build": 62,
+      "label": "1.1.60+62",
+      "date": "2026-09-09",
+      "notes": "自動偵測：fix: allow composable camera framing tags"
+    },
+    {
+      "version": "1.1.59",
+      "build": 61,
+      "label": "1.1.59+61",
+      "date": "2026-09-08",
+      "notes": "自動偵測：feat: add knees bent pose tag"
+    },
+    {
+      "version": "1.1.58",
+      "build": 60,
+      "label": "1.1.58+60",
+      "date": "2026-09-08",
+      "notes": "自動偵測：feat: add stackable ninja props"
+    },
+    {
+      "version": "1.1.57",
+      "build": 59,
+      "label": "1.1.57+59",
+      "date": "2026-09-08",
+      "notes": "自動偵測：fix: describe secondary garment colors as trim"
+    },
+    {
+      "version": "1.1.56",
+      "build": 58,
+      "label": "1.1.56+58",
+      "date": "2026-09-08",
+      "notes": "自動偵測：fix: preserve clothing secondary color groups"
+    },
+    {
+      "version": "1.1.55",
+      "build": 57,
+      "label": "1.1.55+57",
+      "date": "2026-09-08",
+      "notes": "自動偵測：feat: rename clothing trim colors to secondary colors"
+    },
+    {
+      "version": "1.1.54",
+      "build": 56,
+      "label": "1.1.54+56",
+      "date": "2026-09-08",
+      "notes": "自動偵測：fix: compose garment trim colors before details"
+    },
+    {
+      "version": "1.1.53",
+      "build": 55,
+      "label": "1.1.53+55",
+      "date": "2026-09-07",
+      "notes": "自動偵測：fix: move selfie into camera tags"
+    },
+    {
+      "version": "1.1.52",
+      "build": 54,
+      "label": "1.1.52+54",
+      "date": "2026-09-07",
+      "notes": "自動偵測：feat: add per-section tag clearing"
+    },
+    {
+      "version": "1.1.51",
+      "build": 53,
+      "label": "1.1.51+53",
+      "date": "2026-09-07",
+      "notes": "自動偵測：fix: restore independent section randomization"
+    },
+    {
+      "version": "1.1.50",
+      "build": 52,
+      "label": "1.1.50+52",
+      "date": "2026-09-07",
+      "notes": "自動偵測：feat: sync scene clothing and pose randomization"
+    },
+    {
+      "version": "1.1.49",
+      "build": 51,
+      "label": "1.1.49+51",
+      "date": "2026-09-07",
+      "notes": "自動偵測：fix: show secondary colors for all shoe and panties styles"
+    },
+    {
+      "version": "1.1.48",
+      "build": 50,
+      "label": "1.1.48+50",
+      "date": "2026-09-07",
+      "notes": "自動偵測：fix: merge one-piece clothing styles into base garments"
+    },
+    {
+      "version": "1.1.47",
+      "build": 49,
+      "label": "1.1.47+49",
+      "date": "2026-09-07",
+      "notes": "自動偵測：fix: avoid coral animal moderation false positive"
+    },
+    {
+      "version": "1.1.46",
+      "build": 48,
+      "label": "1.1.46+48",
+      "date": "2026-09-07",
+      "notes": "自動偵測：fix: compose shoe styles and clarify demon tail"
+    },
+    {
+      "version": "1.1.45",
+      "build": 47,
+      "label": "1.1.45+47",
+      "date": "2026-09-07",
+      "notes": "自動偵測：feat: add official categorized prompt tags"
+    },
+    {
+      "version": "1.1.44",
+      "build": 46,
+      "label": "1.1.44+46",
+      "date": "2026-09-07",
+      "notes": "自動偵測：feat: add cosplay and scene prompt tags"
+    },
+    {
+      "version": "1.1.43",
+      "build": 45,
+      "label": "1.1.43+45",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: compose one-piece outfit labels"
+    },
+    {
+      "version": "1.1.42",
+      "build": 44,
+      "label": "1.1.42+44",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: remove duplicate one-piece clothing color"
+    },
+    {
+      "version": "1.1.41",
+      "build": 43,
+      "label": "1.1.41+43",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: show clothing details per selected garment"
+    },
+    {
+      "version": "1.1.40",
+      "build": 42,
+      "label": "1.1.40+42",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: save clothing designs as combinations"
+    },
+    {
+      "version": "1.1.39",
+      "build": 41,
+      "label": "1.1.39+41",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: prioritize combination editor upper panel"
+    },
+    {
+      "version": "1.1.38",
+      "build": 40,
+      "label": "1.1.38+40",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: enlarge combination editor upper section"
+    },
+    {
+      "version": "1.1.37",
+      "build": 39,
+      "label": "1.1.37+39",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: expand combination editor workspace"
+    },
+    {
+      "version": "1.1.36",
+      "build": 38,
+      "label": "1.1.36+38",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add reusable prompt combinations"
+    },
+    {
+      "version": "1.1.35",
+      "build": 37,
+      "label": "1.1.35+37",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: scope clothing styles and wear states"
+    },
+    {
+      "version": "1.1.34",
+      "build": 36,
+      "label": "1.1.34+36",
+      "date": "2026-09-06",
+      "notes": "自動偵測：Merge remote-tracking branch 'origin/main'"
+    },
+    {
+      "version": "1.1.33",
+      "build": 35,
+      "label": "1.1.33+35",
+      "date": "2026-09-06",
+      "notes": "自動偵測：Merge remote-tracking branch 'origin/main'"
+    },
+    {
+      "version": "1.1.32",
+      "build": 34,
+      "label": "1.1.32+34",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: organize eye colors and special eye tags"
+    },
+    {
+      "version": "1.1.31",
+      "build": 33,
+      "label": "1.1.31+33",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add hierarchical color selectors"
+    },
+    {
+      "version": "1.1.30",
+      "build": 32,
+      "label": "1.1.30+32",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: group person prompts and expand paizuri tags"
+    },
+    {
+      "version": "1.1.29",
+      "build": 31,
+      "label": "1.1.29+31",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add object-linked actions and remove avatar preview"
+    },
+    {
+      "version": "1.1.28",
+      "build": 30,
+      "label": "1.1.28+30",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add trim colors accessory placement and masturbation tags"
+    },
+    {
+      "version": "1.1.27",
+      "build": 29,
+      "label": "1.1.27+29",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add scoped randomization and avatar preview"
+    },
+    {
+      "version": "1.1.26",
+      "build": 28,
+      "label": "1.1.26+28",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: expand prompt tags and split hair colors"
+    },
+    {
+      "version": "1.1.25",
+      "build": 27,
+      "label": "1.1.25+27",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: preserve characters during reverse prompt import"
+    },
+    {
+      "version": "1.1.24",
+      "build": 26,
+      "label": "1.1.24+26",
+      "date": "2026-09-06",
+      "notes": "自動偵測：fix: repair category chip widget syntax"
+    },
+    {
+      "version": "1.1.23",
+      "build": 25,
+      "label": "1.1.23+25",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: reverse composed prompt tags"
+    },
+    {
+      "version": "1.1.22",
+      "build": 24,
+      "label": "1.1.22+24",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: add prompt tag reverse import"
+    },
+    {
+      "version": "1.1.21",
+      "build": 23,
+      "label": "1.1.21+23",
+      "date": "2026-09-06",
+      "notes": "自動偵測：feat: compose clothing color and detail tags"
+    },
+    {
+      "version": "1.1.20",
+      "build": 22,
+      "label": "1.1.20+22",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: group multi-character prompt tags"
+    },
+    {
+      "version": "1.1.19",
+      "build": 21,
+      "label": "1.1.19+21",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: make generated Chinese tags removable"
+    },
+    {
+      "version": "1.1.18",
+      "build": 20,
+      "label": "1.1.18+20",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: wrap category filters for small screens"
+    },
+    {
+      "version": "1.1.17",
+      "build": 19,
+      "label": "1.1.17+19",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: map imported characters to anime tags and close lookup"
+    },
+    {
+      "version": "1.1.16",
+      "build": 18,
+      "label": "1.1.16+18",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: show imported anime characters in prompt content"
+    },
+    {
+      "version": "1.1.15",
+      "build": 17,
+      "label": "1.1.15+17",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: improve button contrast and adaptive category widths"
+    },
+    {
+      "version": "1.1.14",
+      "build": 16,
+      "label": "1.1.14+16",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: support Chinese separators for extra tags"
+    },
+    {
+      "version": "1.1.13",
+      "build": 15,
+      "label": "1.1.13+15",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: translate extra positive tags and expand expression catalog"
+    },
+    {
+      "version": "1.1.12",
+      "build": 14,
+      "label": "1.1.12+14",
+      "date": "2026-09-05",
+      "notes": "自動偵測：fix: make tag controls responsive"
+    },
+    {
+      "version": "1.1.11",
+      "build": 13,
+      "label": "1.1.11+13",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: expand pose detail skirt lengths and anime aliases"
+    },
+    {
+      "version": "1.1.10",
+      "build": 12,
+      "label": "1.1.10+12",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: expand hairstyles actions and objects"
+    },
+    {
+      "version": "1.1.9",
+      "build": 11,
+      "label": "1.1.9+11",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add automatic hair length negative guards"
+    },
+    {
+      "version": "1.1.8",
+      "build": 10,
+      "label": "1.1.8+10",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: derive people count from character cards"
+    },
+    {
+      "version": "1.1.7",
+      "build": 9,
+      "label": "1.1.7+9",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add editable negative tag library"
+    },
+    {
+      "version": "1.1.6",
+      "build": 8,
+      "label": "1.1.6+8",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add scene catalog and random outfits"
+    },
+    {
+      "version": "1.1.5",
+      "build": 7,
+      "label": "1.1.5+7",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add gothic styles and innerwear layering"
+    },
+    {
+      "version": "1.1.4",
+      "build": 6,
+      "label": "1.1.4+6",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: split clothing colors and enforce outfit layers"
+    },
+    {
+      "version": "1.1.3",
+      "build": 5,
+      "label": "1.1.3+5",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: add reset control and section navigation"
+    },
+    {
+      "version": "1.1.2",
+      "build": 4,
+      "label": "1.1.2+4",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: refine character overrides and clothing filters"
+    },
+    {
+      "version": "1.1.1",
+      "build": 3,
+      "label": "1.1.1+3",
+      "date": "2026-09-05",
+      "notes": "自動偵測：feat: scope tags to each character"
+    },
+    {
+      "version": "1.1.0",
+      "build": 2,
+      "label": "1.1.0+2",
+      "date": "2026-09-05",
+      "notes": "加入版本顯示、更新提示、版本歷程與自動追加版本號工具。"
+    },
+    {
+      "version": "1.0.0",
+      "build": 1,
+      "label": "1.0.0+1",
+      "date": "2026-09-05",
+      "notes": "建立 BetterWaifu Amanatsu 1.1 提示標籤組合工具。"
+    }
+  ]
 }
