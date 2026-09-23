@@ -12935,8 +12935,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isClothingCombinationTags(Iterable<TagItem> tags) {
     final values = tags.toList();
-    return values.isNotEmpty &&
-        values.every((tag) => _isClothingGroup(tag.group));
+    final physicalLookGroups = <String>{
+      _animalTraitGroup,
+      _animalEarColorGroup,
+      _animalTailColorGroup,
+      _animalHandColorGroup,
+      _animalFootColorGroup,
+      _wingTypeGroup,
+      _wingColorGroup,
+    };
+    return values.any((tag) => _isClothingGroup(tag.group)) &&
+        values.every((tag) =>
+            _isClothingGroup(tag.group) ||
+            physicalLookGroups.contains(tag.group));
   }
 
   TagItem? _outfitReferenceExactTag(
@@ -13062,6 +13073,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         );
         addTag(color, '${piece.garment}／細節色 ${piece.detailColor}');
       }
+    }
+
+    for (final value in preset.featureTags) {
+      addTag(_outfitReferenceExactTag(_allTags, value), '角色特徵／$value');
     }
 
     void addOverall(String group, String? value) {
@@ -13634,6 +13649,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       target.add(tag.id);
     }
+    _removeOrphanedPhysicalTraitColors(target);
+    _syncAutoFurryIdentity(personIndex, target);
     _personCombinationIds
         .putIfAbsent(personIndex, () => <String>{})
         .add(combination.id);

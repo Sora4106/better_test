@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.124';
-const appBuildNumber = 126;
-const appVersionLabel = '1.1.124+126';
+﻿const appVersion = '1.1.125';
+const appBuildNumber = 127;
+const appVersionLabel = '1.1.125+127';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.125', 'build': '127', 'label': '1.1.125+127', 'date': '2026-09-23', 'notes': '新增粉白貓系蕾絲露肩套裝：可套用並調整粉白束腰露肩上衣、黑粉荷葉迷你裙、蕾絲內褲／長襪與厚底鞋，同時加入粉紅貓耳與貓尾角色特徵。'},
   {'version': '1.1.124', 'build': '126', 'label': '1.1.124+126', 'date': '2026-09-23', 'notes': '更新世界計畫髮型預設：星乃一歌改為深藍黑長直髮；天馬咲希預選金色→淡粉紅漸層與高雙馬尾，並新增深藍黑色髮標籤。'},
   {'version': '1.1.123', 'build': '125', 'label': '1.1.123+125', 'date': '2026-09-23', 'notes': '新增可勾選的髮型局部權重：髮長、髮型與髮色會一起加強；舊版髮色加強設定可自動沿用。'},
   {'version': '1.1.122', 'build': '124', 'label': '1.1.122+124', 'date': '2026-09-22', 'notes': '服裝配色改為色 1／色 2 直接依序選取；色 1 保持主色、色 2 保持次色／邊線語意，並解除髮色與服裝色調的既選色系篩選。'},

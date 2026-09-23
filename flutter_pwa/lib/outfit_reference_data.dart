@@ -48,6 +48,7 @@ class OutfitReferencePresetData {
     this.subStyle,
     this.mood,
     this.occasion,
+    this.featureTags = const <String>[],
   });
 
   final String id;
@@ -60,6 +61,10 @@ class OutfitReferencePresetData {
   final String? subStyle;
   final String? mood;
   final String? occasion;
+
+  /// Optional non-clothing traits that belong to the complete look, such as
+  /// coloured animal ears or a tail. They remain editable after applying.
+  final List<String> featureTags;
 
   String get combinationId => 'builtin_outfit_reference_$id';
 }
