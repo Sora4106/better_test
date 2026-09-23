@@ -2445,8 +2445,11 @@ class PersonSlot {
   // New prompt output and controls use [personPromptWeight].
   double characterPromptWeight = 1.05;
   double clothingPromptWeight = 1.05;
-  bool hairColorWeightEnabled = false;
-  double hairColorWeight = 1.15;
+  // This local emphasis applies to all selected hair characteristics (colour,
+  // length and style). The former colour-only saved fields are read below for
+  // backwards compatibility.
+  bool hairPromptWeightEnabled = false;
+  double hairPromptWeight = 1.15;
   List<String> hairGradientColorIds = <String>[];
   String hairGradientStyle = _defaultHairGradientStyle;
 
@@ -2473,8 +2476,12 @@ class PersonSlot {
         'personPromptWeight': personPromptWeight,
         'characterPromptWeight': characterPromptWeight,
         'clothingPromptWeight': clothingPromptWeight,
-        'hairColorWeightEnabled': hairColorWeightEnabled,
-        'hairColorWeight': hairColorWeight,
+        'hairPromptWeightEnabled': hairPromptWeightEnabled,
+        'hairPromptWeight': hairPromptWeight,
+        // Keep these two keys while old browser saves may still be opened by
+        // an earlier deployed build.
+        'hairColorWeightEnabled': hairPromptWeightEnabled,
+        'hairColorWeight': hairPromptWeight,
         'hairGradientColorIds': hairGradientColorIds,
         'hairGradientStyle': hairGradientStyle,
       };
@@ -2514,11 +2521,13 @@ class PersonSlot {
             (double.tryParse('${json['clothingPromptWeight'] ?? 1.05}') ?? 1.05)
                 .clamp(0.50, 1.50)
                 .toDouble()
-        ..hairColorWeightEnabled = json['hairColorWeightEnabled'] == true
-        ..hairColorWeight =
-            (double.tryParse('${json['hairColorWeight'] ?? 1.15}') ?? 1.15)
-                .clamp(0.50, 1.50)
-                .toDouble()
+        ..hairPromptWeightEnabled = json['hairPromptWeightEnabled'] == true ||
+            json['hairColorWeightEnabled'] == true
+        ..hairPromptWeight = (double.tryParse(
+                    '${json['hairPromptWeight'] ?? json['hairColorWeight'] ?? 1.15}') ??
+                1.15)
+            .clamp(0.50, 1.50)
+            .toDouble()
         ..hairGradientColorIds = (json['hairGradientColorIds'] as List? ?? [])
             .map((id) => '$id')
             .toList()
@@ -3551,6 +3560,7 @@ const _clothingColorShades = <List<String>>[
   ['light_blue', '\u6DFA\u85CD\u8272', 'light blue'],
   ['dark_blue', '\u6DF1\u85CD\u8272', 'dark blue'],
   ['navy', '\u6D77\u8ECD\u85CD', 'navy'],
+  ['navy_blue_black', '\u6DF1\u85CD\u9ED1\u8272', 'navy blue-black'],
   ['sky_blue', '\u5929\u85CD\u8272', 'sky blue'],
   ['pastel_blue', '\u7C89\u5F69\u85CD', 'pastel blue'],
   ['royal_blue', '\u5BF6\u85CD\u8272', 'royal blue'],
@@ -3632,96 +3642,6 @@ List<List<String>> _allClothingColorOptions() {
   return options;
 }
 
-const _mainPromptColorWords = <String>{
-  'black',
-  'white',
-  'red',
-  'blue',
-  'pink',
-  'purple',
-  'green',
-  'yellow',
-  'brown',
-  'gray',
-  'gold',
-  'silver',
-  'orange',
-  'multicolored',
-  'blonde',
-};
-
-const _promptColorFamilies = <String, String>{
-  'aqua': 'blue',
-  'light blue': 'blue',
-  'dark blue': 'blue',
-  'navy': 'blue',
-  'sky blue': 'blue',
-  'pastel blue': 'blue',
-  'royal blue': 'blue',
-  'azure': 'blue',
-  'cobalt blue': 'blue',
-  'sapphire blue': 'blue',
-  'steel blue': 'blue',
-  'midnight blue': 'blue',
-  'powder blue': 'blue',
-  'turquoise': 'blue',
-  'teal': 'blue',
-  'jet black': 'black',
-  'ebony': 'black',
-  'off-black': 'black',
-  'charcoal': 'black',
-  'light gray': 'gray',
-  'dark gray': 'gray',
-  'slate gray': 'gray',
-  'pewter': 'gray',
-  'ivory': 'white',
-  'cream': 'white',
-  'beige': 'white',
-  'light red': 'red',
-  'dark red': 'red',
-  'crimson': 'red',
-  'scarlet': 'red',
-  'maroon': 'red',
-  'burgundy': 'red',
-  'wine red': 'red',
-  'coral': 'red',
-  'light green': 'green',
-  'dark green': 'green',
-  'lime': 'green',
-  'mint green': 'green',
-  'emerald green': 'green',
-  'jade green': 'green',
-  'forest green': 'green',
-  'olive': 'green',
-  'sage green': 'green',
-  'light yellow': 'yellow',
-  'dark yellow': 'yellow',
-  'lemon yellow': 'yellow',
-  'mustard yellow': 'yellow',
-  'golden': 'gold',
-  'amber': 'gold',
-  'lavender': 'purple',
-  'lilac': 'purple',
-  'magenta': 'pink',
-  'hot pink': 'pink',
-  'light pink': 'pink',
-  'dark pink': 'pink',
-  'rose': 'pink',
-  'peach': 'pink',
-  'salmon': 'pink',
-  'light brown': 'brown',
-  'dark brown': 'brown',
-  'coffee': 'brown',
-  'tan': 'brown',
-  'camel': 'brown',
-  'chocolate': 'brown',
-  'chestnut': 'brown',
-  'khaki': 'brown',
-  'taupe': 'brown',
-  'copper': 'orange',
-  'rose gold': 'gold',
-};
-
 const _promptColorChinese = <String, String>{
   'multicolored': '\u591A\u5F69',
   'black': '\u9ED1\u8272',
@@ -3742,6 +3662,7 @@ const _promptColorChinese = <String, String>{
   'light blue': '\u6DFA\u85CD\u8272',
   'dark blue': '\u6DF1\u85CD\u8272',
   'navy': '\u6D77\u8ECD\u85CD',
+  'navy blue-black': '\u6DF1\u85CD\u9ED1\u8272',
   'sky blue': '\u5929\u85CD\u8272',
   'pastel blue': '\u7C89\u5F69\u85CD',
   'royal blue': '\u5BF6\u85CD\u8272',
@@ -3828,6 +3749,7 @@ const _promptColorValues = <String, Color>{
   'light blue': Color(0xff7dd3fc),
   'dark blue': Color(0xff1d4ed8),
   'navy': Color(0xff1e3a8a),
+  'navy blue-black': Color(0xff19213d),
   'sky blue': Color(0xff38bdf8),
   'pastel blue': Color(0xff93c5fd),
   'royal blue': Color(0xff4169e1),
@@ -6850,6 +6772,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     'sky blue',
     'light blue',
     'dark blue',
+    'navy blue-black',
     'wine red',
     'mustard yellow',
     'lemon yellow',
@@ -6958,42 +6881,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return value.isEmpty ? null : value.split(' ').first;
   }
 
-  String? _colorFamilyForTag(TagItem tag) {
-    final word = _clothingColorWord(tag);
-    if (word == null) return null;
-    return _promptColorFamilies[word] ??
-        (_mainPromptColorWords.contains(word) ? word : null);
-  }
-
-  bool _isShadeColorTag(TagItem tag) {
-    final word = _clothingColorWord(tag);
-    if (word == null || !_promptColorFamilies.containsKey(word)) return false;
-    return !_mainPromptColorWords.contains(word);
-  }
-
-  String? _colorPickerGroup(String group) {
-    if (group == '髮型') return '髮色';
-    return _isClothingColorGroup(group) ? group : null;
-  }
-
   bool _isColorPickerTag(TagItem tag) {
     if (tag.group == '髮色') return true;
     if (tag.group == '眼睛') return tag.conflictGroup == 'eye_color';
     return _isClothingColorGroup(tag.group);
-  }
-
-  String? _selectedColorFamily(String pickerGroup, Set<String> selectedIds) {
-    final colorGroup = _colorPickerGroup(pickerGroup);
-    if (colorGroup == null) return null;
-    for (final id in selectedIds) {
-      final tag = _tagsById[id];
-      if (tag == null || tag.group != colorGroup || !_isColorPickerTag(tag)) {
-        continue;
-      }
-      final family = _colorFamilyForTag(tag);
-      if (family != null) return family;
-    }
-    return null;
   }
 
   String _clothingColorPrefix(TagItem tag) {
@@ -7025,6 +6916,126 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return words
         .map((word) => _promptColorChinese[word] ?? colors[word] ?? word)
         .join('與');
+  }
+
+  String _clothingColorChoiceKey(TagItem tag) {
+    final colors = _clothingColorWords(tag);
+    if (colors.isNotEmpty) return colors.join('|');
+    return _englishTagKey(_clothingColorPrefix(tag));
+  }
+
+  bool _isSameClothingColorChoice(TagItem first, TagItem second) =>
+      _clothingColorChoiceKey(first) == _clothingColorChoiceKey(second);
+
+  TagItem? _selectedClothingColorForGroup(
+    Iterable<TagItem> selected,
+    String? group,
+  ) {
+    if (group == null) return null;
+    for (final tag in selected) {
+      if (tag.group == group && _isColorPickerTag(tag)) return tag;
+    }
+    return null;
+  }
+
+  TagItem? _matchingClothingColorForGroup(String? group, TagItem source) {
+    if (group == null) return null;
+    for (final tag in _tagsByGroup[group] ?? const <TagItem>[]) {
+      if (_isColorPickerTag(tag) && _isSameClothingColorChoice(tag, source)) {
+        return tag;
+      }
+    }
+    return null;
+  }
+
+  List<TagItem> _clothingColorChoices(
+    String? mainGroup,
+    String? secondaryGroup,
+  ) {
+    final choices = <TagItem>[];
+    final seen = <String>{};
+    for (final group in [mainGroup, secondaryGroup].whereType<String>()) {
+      for (final tag in _tagsByGroup[group] ?? const <TagItem>[]) {
+        if (!_isColorPickerTag(tag)) continue;
+        if (seen.add(_clothingColorChoiceKey(tag))) choices.add(tag);
+      }
+    }
+    choices.sort(_compareOutputTags);
+    return choices;
+  }
+
+  void _clearClothingColorSlot(int personIndex, String? group) {
+    if (personIndex < 0 ||
+        personIndex >= _personSlots.length ||
+        group == null) {
+      return;
+    }
+    setState(() {
+      _personTagIds(personIndex)
+          .removeWhere((id) => _tagsById[id]?.group == group);
+      _markClothingTemplateCustomized(personIndex);
+      _persist();
+    });
+  }
+
+  /// Clothing uses the same ordered two-colour interaction as hair gradients:
+  /// the first picked colour is slot 1 and the next is slot 2. Their generated
+  /// wording remains garment-aware: slot 1 is the main colour, slot 2 is trim.
+  void _toggleClothingColorPair(
+    int personIndex,
+    String? mainGroup,
+    String? secondaryGroup,
+    TagItem choice,
+  ) {
+    if (personIndex < 0 ||
+        personIndex >= _personSlots.length ||
+        mainGroup == null ||
+        secondaryGroup == null) {
+      return;
+    }
+    final selected = _selectedTagsForPerson(personIndex);
+    final main = _selectedClothingColorForGroup(selected, mainGroup);
+    final secondary = _selectedClothingColorForGroup(selected, secondaryGroup);
+    final isMain = main != null && _isSameClothingColorChoice(main, choice);
+    final isSecondary =
+        secondary != null && _isSameClothingColorChoice(secondary, choice);
+
+    setState(() {
+      final target = _personTagIds(personIndex);
+      if (isSecondary) {
+        target.removeWhere((id) => _tagsById[id]?.group == secondaryGroup);
+      } else if (isMain) {
+        target.removeWhere((id) => _tagsById[id]?.group == mainGroup);
+      } else {
+        final destination = main == null ? mainGroup : secondaryGroup;
+        final matched = _matchingClothingColorForGroup(destination, choice);
+        if (matched != null) {
+          target.removeWhere((id) => _tagsById[id]?.group == destination);
+          target.add(matched.id);
+        }
+      }
+      _markClothingTemplateCustomized(personIndex);
+      _persist();
+    });
+  }
+
+  int _clothingColorOrderForTag(TagItem tag) {
+    if (tag.group.endsWith('邊線色')) return 2;
+    const mainColorGroups = <String>{
+      '服裝顏色',
+      '上衣顏色',
+      '下身顏色',
+      '內衣顏色',
+      '胸罩顏色',
+      '內褲顏色',
+      '襪子顏色',
+      '鞋子顏色',
+      '外套顏色',
+      '配件顏色',
+      '帽子顏色',
+      '眼鏡顏色',
+    };
+    return mainColorGroups.contains(tag.group) ? 1 : 0;
   }
 
   String _clothingModifierEnglish(TagItem tag) {
@@ -8196,31 +8207,55 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .whereType<TagItem>()
           .toList();
 
-  /// Hair colour is normally part of the character-trait block. When the
-  /// per-character override is enabled, keep its composed hair description
-  /// (colour + length/style) together and emit that single description in a
-  /// dedicated weighted block.
-  bool _isSelectedHairColorOutputTag(
-      int personIndex, _GeneratedOutputTag output) {
+  bool _isHairPromptTag(TagItem tag) {
+    if (_hairColorWord(tag) != null ||
+        _hairLengthTag(tag.en) != null ||
+        _isHairStyleTag(tag)) {
+      return true;
+    }
+    return _traitOverrideGroups(tag.en).intersection(const {
+      'hair_color',
+      'hair_length',
+      'hair_style',
+    }).isNotEmpty;
+  }
+
+  bool _isHairPromptEnglish(String value) {
+    final normalized = _cleanTag(value).toLowerCase();
+    if (_traitOverrideGroups(normalized).intersection(const {
+      'hair_color',
+      'hair_length',
+      'hair_style',
+    }).isNotEmpty) {
+      return true;
+    }
+    return RegExp(r'\b(?:[a-z-]+\s+){0,4}hair$').hasMatch(normalized) ||
+        RegExp(r'\b(?:ahoge|cowlick|antenna hair)\b').hasMatch(normalized);
+  }
+
+  /// Hair characteristics are normally part of the character-trait block.
+  /// When local hair emphasis is enabled, keep colour, length, and hairstyle
+  /// together in a nested weighted block within that person's common block.
+  bool _isHairPromptOutputTag(int personIndex, _GeneratedOutputTag output) {
     if (personIndex < 0 || personIndex >= _personSlots.length) return false;
     final slot = _personSlots[personIndex];
-    if (!slot.hairColorWeightEnabled) return false;
-    final colors = _selectedHairColorTags(personIndex);
-    if (colors.isEmpty) return false;
+    if (!slot.hairPromptWeightEnabled) return false;
+    final hairIds = _selectedTagsForPerson(personIndex)
+        .where(_isHairPromptTag)
+        .map((tag) => tag.id)
+        .toSet();
 
-    final colorIds = colors.map((tag) => tag.id).toSet();
-    if (output.tagIds.any(colorIds.contains) ||
-        (output.tagId != null && colorIds.contains(output.tagId))) {
+    if (output.tagIds.any(hairIds.contains) ||
+        (output.tagId != null && hairIds.contains(output.tagId))) {
       return true;
     }
 
-    final outputValue = _cleanTag(output.en).toLowerCase();
-    return colors
-        .map(_hairColorWord)
-        .whereType<String>()
-        .map((color) => color.toLowerCase())
-        .any((color) =>
-            outputValue == '$color hair' || outputValue.startsWith('$color '));
+    // Catalogue character traits are generated directly instead of through a
+    // selectable TagItem, so they do not always have tag IDs. Only use the
+    // English fallback for those ID-less traits; this keeps hair accessories
+    // such as hair bows in the outfit block.
+    if (output.tagIds.isNotEmpty || output.tagId != null) return false;
+    return _isHairPromptEnglish(output.en);
   }
 
   bool _isClothingWeightOutputTag(_GeneratedOutputTag output) {
@@ -9060,6 +9095,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       ids.addAll(_characterTraitOptions(trait).map((tag) => tag.id));
     }
+    // Catalog revision: Ichika's old generic long-hair default is now the
+    // more precise `long straight hair` selection. Remove the stale automatic
+    // selection from saved sessions so both descriptors are not emitted.
+    if (character.id == 'project_sekai_hoshino_ichika') {
+      final oldLongHair = _tagByEnglish('long hair');
+      if (oldLongHair != null) ids.remove(oldLongHair.id);
+    }
+    _syncHairGradientColorIds(index, ids);
     _syncAutoFurryIdentity(index, ids);
   }
 
@@ -9809,11 +9852,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // Keep every person's stable identity, outfit, and individual actions
       // inside one outer block with one common weight. Garments keep their
       // own inner parentheses so their colours and details remain local.
-      final emphasizeHairColor =
-          personal.where((tag) => _isSelectedHairColorOutputTag(index, tag));
+      final emphasizeHair =
+          personal.where((tag) => _isHairPromptOutputTag(index, tag));
       final characterFeatures = personal.where((tag) =>
           _isCharacterWeightOutputTag(tag) &&
-          !_isSelectedHairColorOutputTag(index, tag));
+          !_isHairPromptOutputTag(index, tag));
       final clothing = personal.where(_isClothingWeightOutputTag).toList();
       final individualActions = personal
           .where((tag) =>
@@ -9822,10 +9865,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .toList();
       final segments = <String>[
         _promptTagBlock(characterFeatures),
-        if (emphasizeHairColor.isNotEmpty)
+        if (emphasizeHair.isNotEmpty)
           _promptTagBlock(
-            emphasizeHairColor,
-            weight: slot.hairColorWeightEnabled ? slot.hairColorWeight : null,
+            emphasizeHair,
+            weight: slot.hairPromptWeightEnabled ? slot.hairPromptWeight : null,
           ),
         _groupedClothingPromptBlock(clothing),
         _promptTagBlock(individualActions),
@@ -13940,7 +13983,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         : group == '臉部特徵'
             ? '表情'
             : group;
-    final selectedFamily = _selectedColorFamily(effectiveGroup, _selectedIds);
     final tags = _allTags.where((tag) {
       final hairColorInHairGroup = effectiveGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup = effectiveGroup == '表情' &&
@@ -13962,16 +14004,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
           tag.en.toLowerCase().contains(query);
-      final colorGroup = _colorPickerGroup(effectiveGroup);
-      final isPickerColor =
-          tag.group != '眼睛' || tag.conflictGroup == 'eye_color';
-      final colorMatch = group == '全部'
-          ? !_isShadeColorTag(tag) || (query.isNotEmpty && queryMatch)
-          : colorGroup == null || !isPickerColor || !_isShadeColorTag(tag)
-              ? true
-              : selectedFamily == _colorFamilyForTag(tag) ||
-                  (query.isNotEmpty && queryMatch);
-      return groupMatch && adultMatch && queryMatch && colorMatch;
+      return groupMatch && adultMatch && queryMatch;
     }).toList();
     return _sortPickerTags(tags, effectiveGroup);
   }
@@ -14183,7 +14216,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ? _selectedIds.contains(tag.id)
         : _personTagIds(personIndex).contains(tag.id);
     if (_isColorPickerTag(tag)) {
-      return _colorTagChip(tag, personIndex: personIndex, selected: selected);
+      final colorOrder = !selected || personIndex == null
+          ? 0
+          : tag.group == '髮色'
+              ? _hairGradientColorOrder(personIndex, tag.id)
+              : _clothingColorOrderForTag(tag);
+      return _colorTagChip(
+        tag,
+        personIndex: personIndex,
+        selected: selected,
+        colorOrder: colorOrder,
+      );
     }
     final tone = _pickerLayerTone(tag.group);
     final isHairStyle = tag.group == '髮型';
@@ -14251,13 +14294,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
-  Widget _colorTagChip(TagItem tag,
-      {required int? personIndex, required bool selected}) {
+  Widget _colorTagChip(
+    TagItem tag, {
+    required int? personIndex,
+    required bool selected,
+    int colorOrder = 0,
+    String? colorOrderLabel,
+    VoidCallback? onTap,
+  }) {
     final colorWord = _clothingColorWord(tag);
     final tone = _pickerLayerTone(tag.group);
-    final gradientOrder = personIndex != null && tag.group == '髮色'
-        ? _hairGradientColorOrder(personIndex, tag.id)
-        : 0;
     final swatch = SizedBox(
       width: 32,
       height: 32,
@@ -14292,7 +14338,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 ? const Icon(Icons.check, size: 17, color: Colors.white)
                 : null,
           ),
-          if (gradientOrder > 0)
+          if (colorOrder > 0)
             Positioned(
               right: 0,
               bottom: 0,
@@ -14306,7 +14352,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   border: Border.all(color: Colors.white, width: 1),
                 ),
                 child: Text(
-                  '$gradientOrder',
+                  '$colorOrder',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w800,
@@ -14319,8 +14365,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ),
     );
     return Tooltip(
-      message: gradientOrder > 0
-          ? '${tag.zh} · ${tag.en}｜漸層色 $gradientOrder'
+      message: colorOrder > 0
+          ? '${tag.zh} · ${tag.en}｜${colorOrderLabel ?? (tag.group == '髮色' ? '漸層色 $colorOrder' : '色 $colorOrder')}'
           : '${tag.zh} · ${tag.en}',
       child: ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 58, minHeight: 44),
@@ -14335,43 +14381,154 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           side: BorderSide(
             color: selected ? Colors.white : tone.withOpacity(.72),
           ),
-          onSelected: (_) => _toggle(tag, personIndex: personIndex),
+          onSelected: (_) {
+            if (onTap != null) {
+              onTap();
+            } else {
+              _toggle(tag, personIndex: personIndex);
+            }
+          },
         ),
+      ),
+    );
+  }
+
+  Widget _clothingColorPairControl(int personIndex, List<TagItem> bases) {
+    if (personIndex < 0 ||
+        personIndex >= _personSlots.length ||
+        bases.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final base = bases.first;
+    final mainGroup = _clothingColorGroupForBase(base);
+    final secondaryGroup = _clothingTrimColorGroupForBase(base);
+    if (mainGroup == null || secondaryGroup == null) {
+      return const SizedBox.shrink();
+    }
+    final selected = _selectedTagsForPerson(personIndex);
+    final main = _selectedClothingColorForGroup(selected, mainGroup);
+    final secondary = _selectedClothingColorForGroup(selected, secondaryGroup);
+    final choices = _clothingColorChoices(mainGroup, secondaryGroup);
+    if (choices.isEmpty) return const SizedBox.shrink();
+    const tone = Color(0xff818cf8);
+
+    Widget slotChip(int order, TagItem? color, String group, String role) {
+      final label = color == null
+          ? '色 $order：未選'
+          : '色 $order：${_clothingColorChinesePrefix(color)}';
+      return InputChip(
+        avatar: CircleAvatar(
+          radius: 10,
+          backgroundColor: tone,
+          child: Text('$order', style: const TextStyle(fontSize: 11)),
+        ),
+        label: Text(label),
+        tooltip: '色 $order（$role）',
+        backgroundColor: _pickerLayerSurface(tone, selected: color != null),
+        side: BorderSide(color: tone.withOpacity(.75)),
+        onDeleted: color == null
+            ? null
+            : () => _clearClothingColorSlot(personIndex, group),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+      decoration: BoxDecoration(
+        color: const Color(0xff202847),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: tone.withOpacity(.8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.palette_outlined, color: tone, size: 20),
+              SizedBox(width: 8),
+              Text('配色：色 1／色 2', style: TextStyle(fontWeight: FontWeight.w800)),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              slotChip(1, main, mainGroup, '主色'),
+              slotChip(2, secondary, secondaryGroup, '次色／邊線色'),
+            ],
+          ),
+          const SizedBox(height: 7),
+          const Text(
+            '依序點選顏色：第一色為主色、第二色為次色。兩色都選好後，再點新色只替換色 2；可用上方 X 分別清除。輸出敘述維持主色與邊線／細節色的原本規則。',
+            style: TextStyle(fontSize: 11),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: choices.map((choice) {
+              final isMain =
+                  main != null && _isSameClothingColorChoice(main, choice);
+              final isSecondary = secondary != null &&
+                  _isSameClothingColorChoice(secondary, choice);
+              final order = isSecondary ? 2 : (isMain ? 1 : 0);
+              return _colorTagChip(
+                choice,
+                personIndex: personIndex,
+                selected: order > 0,
+                colorOrder: order,
+                colorOrderLabel: order == 1
+                    ? '色 1（主色）'
+                    : order == 2
+                        ? '色 2（次色）'
+                        : null,
+                onTap: () => _toggleClothingColorPair(
+                  personIndex,
+                  mainGroup,
+                  secondaryGroup,
+                  choice,
+                ),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
 
   String _wizardGroupLabel(String group) {
     const clothingColorLabels = <String, String>{
-      '服裝顏色': '連身裝主色',
-      '上衣顏色': '上衣主色',
-      '下身顏色': '下身主色',
-      '內衣顏色': '內衣主色',
-      '胸罩顏色': '胸罩主色',
-      '內褲顏色': '內褲主色',
-      '襪子顏色': '襪子主色',
-      '鞋子顏色': '鞋子主色',
-      '外套顏色': '外套主色',
-      '配件顏色': '配件主色',
-      '帽子顏色': '帽子主色',
-      '眼鏡顏色': '眼鏡主色',
+      '服裝顏色': '連身裝色彩 1',
+      '上衣顏色': '上衣色彩 1',
+      '下身顏色': '下身色彩 1',
+      '內衣顏色': '內衣色彩 1',
+      '胸罩顏色': '胸罩色彩 1',
+      '內褲顏色': '內褲色彩 1',
+      '襪子顏色': '襪子色彩 1',
+      '鞋子顏色': '鞋子色彩 1',
+      '外套顏色': '外套色彩 1',
+      '配件顏色': '配件色彩 1',
+      '帽子顏色': '帽子色彩 1',
+      '眼鏡顏色': '眼鏡色彩 1',
       _animalEarColorGroup: '獸耳顏色',
       _animalTailColorGroup: '獸尾顏色',
       _animalHandColorGroup: '獸手顏色',
       _animalFootColorGroup: '獸足顏色',
       _wingColorGroup: '翅膀顏色',
-      '服裝邊線色': '連身裝次色',
-      '上衣邊線色': '上衣次色',
-      '下身邊線色': '下身次色',
-      '內衣邊線色': '內衣次色',
-      '胸罩邊線色': '胸罩次色',
-      '內褲邊線色': '內褲次色',
-      '襪子邊線色': '襪子次色',
-      '鞋子邊線色': '鞋子次色',
-      '外套邊線色': '外套次色',
-      '配件邊線色': '配件次色',
-      '帽子邊線色': '帽子次色',
-      '眼鏡邊線色': '眼鏡次色',
+      '服裝邊線色': '連身裝色彩 2',
+      '上衣邊線色': '上衣色彩 2',
+      '下身邊線色': '下身色彩 2',
+      '內衣邊線色': '內衣色彩 2',
+      '胸罩邊線色': '胸罩色彩 2',
+      '內褲邊線色': '內褲色彩 2',
+      '襪子邊線色': '襪子色彩 2',
+      '鞋子邊線色': '鞋子色彩 2',
+      '外套邊線色': '外套色彩 2',
+      '配件邊線色': '配件色彩 2',
+      '帽子邊線色': '帽子色彩 2',
+      '眼鏡邊線色': '眼鏡色彩 2',
     };
     final clothingColorLabel = clothingColorLabels[group];
     if (clothingColorLabel != null) return clothingColorLabel;
@@ -14424,9 +14581,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final pickerTagIds = searchAcrossGroups
         ? pickerTags.map((tag) => tag.id).toSet()
         : const <String>{};
-    final selectedIds =
-        personIndex == null ? _selectedIds : _personTagIds(personIndex);
-    final selectedFamily = _selectedColorFamily(pickerGroup, selectedIds);
     final selectedClothingScopes = personIndex == null
         ? const <String>{}
         : _clothingDesignBases(_selectedTagsForPerson(personIndex))
@@ -14515,17 +14669,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
           tag.en.toLowerCase().contains(query);
-      final colorGroup = _colorPickerGroup(pickerGroup);
-      final isPickerColor =
-          tag.group != '眼睛' || tag.conflictGroup == 'eye_color';
-      final colorMatch = searchAcrossGroups ||
-              (pickerGroup == '髮型' && tag.group == '髮色') ||
-              colorGroup == null ||
-              !isPickerColor ||
-              !_isShadeColorTag(tag)
-          ? true
-          : selectedFamily == _colorFamilyForTag(tag) ||
-              (query.isNotEmpty && queryMatch);
       final scopedKind = _scopedClothingKind(tag.group);
       final hiddenLegacyScopedDesign =
           tag.id.startsWith(_scopedClothingPrefix) &&
@@ -14534,7 +14677,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return inGroup &&
           adultMatch &&
           queryMatch &&
-          colorMatch &&
           !hiddenLegacyScopedDesign &&
           !hiddenTaxonomyDuplicate;
     }).toList();
@@ -14648,23 +14790,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
-  Widget _hairColorWeightControl(int personIndex) {
+  Widget _hairPromptWeightControl(int personIndex) {
     if (personIndex < 0 || personIndex >= _personSlots.length) {
       return const SizedBox.shrink();
     }
     final slot = _personSlots[personIndex];
-    final colors = _selectedHairColorTags(personIndex);
-    final hasColor = colors.isNotEmpty;
-    final value = _boundedPromptWeight(slot.hairColorWeight);
-    final colorLabel = !hasColor
-        ? '請先在上方選擇一種髮色'
-        : colors.length < 2
-            ? colors.first.zh
-            : '色 1：${colors[0].zh}、色 2：${colors[1].zh}（${_hairGradientStyleForSlot(slot).zh}）';
+    final hairTags =
+        _selectedTagsForPerson(personIndex).where(_isHairPromptTag).toList();
+    final hasHair = hairTags.isNotEmpty;
+    final value = _boundedPromptWeight(slot.hairPromptWeight);
+    final hairLabel = !hasHair
+        ? '請先在上方選擇髮長、髮型或髮色'
+        : hairTags.map((tag) => tag.zh).toSet().join('、');
 
     void updateEnabled(bool enabled) {
       setState(() {
-        slot.hairColorWeightEnabled = enabled;
+        slot.hairPromptWeightEnabled = enabled;
         _persist();
       });
     }
@@ -14682,32 +14823,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         children: [
           SwitchListTile.adaptive(
             contentPadding: EdgeInsets.zero,
-            value: slot.hairColorWeightEnabled,
-            onChanged: hasColor
+            value: slot.hairPromptWeightEnabled,
+            onChanged: hasHair
                 ? updateEnabled
                 : (enabled) {
                     if (!enabled) updateEnabled(false);
                   },
-            title: const Text('髮色單獨加強',
+            title: const Text('加強髮長／髮型／髮色',
                 style: TextStyle(fontWeight: FontWeight.w800)),
             subtitle: Text(
-              hasColor ? '目前髮色：$colorLabel。勾選後會將完整髮部描述獨立加權。' : colorLabel,
+              hasHair ? '將髮長、髮型與髮色（$hairLabel）一起獨立加強。' : hairLabel,
               style: const TextStyle(fontSize: 12),
             ),
           ),
-          if (slot.hairColorWeightEnabled && hasColor) ...[
+          if (slot.hairPromptWeightEnabled && hasHair) ...[
             const SizedBox(height: 3),
             Row(
               children: [
                 const Expanded(
-                  child: Text('髮色權重',
+                  child: Text('髮型權重',
                       style: TextStyle(fontWeight: FontWeight.w700)),
                 ),
                 SizedBox(
                   width: 92,
                   child: TextFormField(
                     key: ValueKey<String>(
-                        'hair-color-weight-$personIndex-${value.toStringAsFixed(2)}'),
+                        'hair-prompt-weight-$personIndex-${value.toStringAsFixed(2)}'),
                     initialValue: value.toStringAsFixed(2),
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
@@ -14719,14 +14860,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     onChanged: (input) {
                       final parsed = double.tryParse(input.trim());
                       if (parsed == null) return;
-                      slot.hairColorWeight = _boundedPromptWeight(parsed);
+                      slot.hairPromptWeight = _boundedPromptWeight(parsed);
                       _persist();
                     },
                     onFieldSubmitted: (input) {
                       final parsed = double.tryParse(input.trim());
                       if (parsed == null) return;
                       setState(() {
-                        slot.hairColorWeight = _boundedPromptWeight(parsed);
+                        slot.hairPromptWeight = _boundedPromptWeight(parsed);
                         _persist();
                       });
                     },
@@ -14741,12 +14882,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               value: value,
               label: value.toStringAsFixed(2),
               onChanged: (next) => setState(() {
-                slot.hairColorWeight = _boundedPromptWeight(next);
+                slot.hairPromptWeight = _boundedPromptWeight(next);
                 _persist();
               }),
             ),
             const Text(
-              '可輸入或拖曳設定 0.50–1.50；未勾選時髮色會維持在角色基本特徵權重區塊。',
+              '可輸入或拖曳設定 0.50–1.50；未勾選時髮長、髮型與髮色會維持在角色基本特徵權重區塊。',
               style: TextStyle(fontSize: 11),
             ),
           ],
@@ -15136,7 +15277,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           const SizedBox(height: 10),
           _hairGradientControl(personIndex),
           const SizedBox(height: 10),
-          _hairColorWeightControl(personIndex),
+          _hairPromptWeightControl(personIndex),
         ],
         const SizedBox(height: 10),
         TextField(
@@ -16709,7 +16850,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-            '服裝依頭部到腳部排列；先選衣種，再控制該部位可用的剪裁、版型、長度、材質、裝飾、圖案與顏色。多維度設計可同時勾選多項，主體衣種與同一色彩欄位則維持替換。官方標籤會優先輸出，描述詞則保留作進階補充。'),
+            '服裝依頭部到腳部排列；先選衣種，再控制該部位可用的剪裁、版型、長度、材質、裝飾、圖案與顏色。色彩依點選順序使用色 1／色 2；主體衣種與同一色彩欄位維持替換。官方標籤會優先輸出，描述詞則保留作進階補充。'),
         const SizedBox(height: 8),
         _clothingLayerLegend(),
         const SizedBox(height: 12),
@@ -16721,6 +16862,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               _activeClothingPickerGroup(index, garmentGroups);
           final adaptiveDetails =
               _clothingDetailGroups(index, activeGroup: activeClothingGroup);
+          final activeClothingBases =
+              _clothingBasesForActiveGroup(index, activeClothingGroup);
+          final colorPairBases = <TagItem>[];
+          final colorPairGroups = <String>{};
+          for (final base in activeClothingBases) {
+            final mainGroup = _clothingColorGroupForBase(base);
+            final secondaryGroup = _clothingTrimColorGroupForBase(base);
+            if (mainGroup == null || secondaryGroup == null) continue;
+            final key = '$mainGroup|$secondaryGroup';
+            if (colorPairGroups.add(key)) colorPairBases.add(base);
+          }
+          final colorGroups =
+              colorPairGroups.expand((key) => key.split('|')).toSet();
+          final nonColorAdaptiveDetails = adaptiveDetails
+              .where((group) => !colorGroups.contains(group))
+              .toList();
           final adaptiveWear = _clothingWearGroups(index);
           final activeClothingLabel = _wizardGroupLabel(activeClothingGroup);
           final title =
@@ -16789,13 +16946,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       tone: const Color(0xff60a5fa),
                       title: '2. $activeClothingLabel：多維度設計',
                       description:
-                          '只列出適用於目前衣種的選項；風格、剪裁、版型、長度、材質、細節與圖案皆可多選。主色、次色及細節色仍各自單選，換色會取代同欄位舊色。',
-                      child: _stepTagPicker(
-                        adaptiveDetails,
-                        nextLabel: '下一步',
-                        personIndex: index,
-                        showNext: false,
-                        showGroupClear: true,
+                          '色 1／色 2 直接依序選取，分別輸出主色與次色；所有色調均可直接選，不再依既選色系隱藏。風格、剪裁、版型、長度、材質、細節與圖案可多選。',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ...colorPairBases.map((base) =>
+                              _clothingColorPairControl(index, [base])),
+                          if (colorPairBases.isNotEmpty &&
+                              nonColorAdaptiveDetails.isNotEmpty)
+                            const SizedBox(height: 12),
+                          if (nonColorAdaptiveDetails.isNotEmpty)
+                            _stepTagPicker(
+                              nonColorAdaptiveDetails,
+                              nextLabel: '下一步',
+                              personIndex: index,
+                              showNext: false,
+                              showGroupClear: true,
+                            ),
+                        ],
                       ),
                     ),
                   _clothingCompatibilityStatus(index, activeClothingGroup),

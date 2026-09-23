@@ -4259,7 +4259,7 @@ final catalogCharacters = <CatalogCharacter>[
     unitPrompt: 'leo/need',
     traits: [
       _trait('ichika_navy_black_hair', '深藍黑髮', 'navy blue-black hair'),
-      _trait('ichika_long_hair', '長髮', 'long hair'),
+      _trait('ichika_long_straight_hair', '長直髮', 'long straight hair'),
       _trait('ichika_icy_blue_eyes', '冰藍色眼睛', 'icy-blue eyes'),
       _trait('ichika_calm', '沉穩表情', 'calm expression'),
     ],
@@ -4275,7 +4275,9 @@ final catalogCharacters = <CatalogCharacter>[
     unitPrompt: 'leo/need',
     traits: [
       _trait('pjsekai_saki_blonde_hair', '金髮', 'blonde hair'),
+      _trait('pjsekai_saki_light_pink_hair', '淡粉紅髮', 'light pink hair'),
       _trait('pjsekai_saki_long_hair', '長髮', 'long hair'),
+      _trait('pjsekai_saki_high_twintails', '高雙馬尾', 'high twintails'),
       _trait('pjsekai_saki_red_eyes', '紅色眼睛', 'red eyes'),
       _trait('pjsekai_saki_cheerful', '開朗表情', 'cheerful expression'),
     ],
