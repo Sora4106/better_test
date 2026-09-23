@@ -5565,6 +5565,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _stepIndex = 0;
   int _globalSearchPersonIndex = 0;
   int _stepScrollTicket = 0;
+  static const double _basePageBottomPadding = 24;
+  double _pageBottomPadding = _basePageBottomPadding;
   String _globalTagQuery = '';
   bool _showAdult = false;
   bool _isPreparingCatalog = true;
@@ -11542,6 +11544,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _peopleCount = 1;
       _gender = '女性';
       _stepIndex = 0;
+      _pageBottomPadding = _basePageBottomPadding;
       _activeGroup = '全部';
       _search.clear();
       _extraPositive.clear();
@@ -12891,6 +12894,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _stepIndex = nextStep;
+      _pageBottomPadding = _basePageBottomPadding;
       _activeGroup = '全部';
       _search.clear();
       _persist();
@@ -17056,6 +17060,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     await Future<void>.delayed(Duration.zero);
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted || ticket != _stepScrollTicket) return;
+    await _ensureScrollRoomForTop(_stepKey(index));
+    if (!mounted || ticket != _stepScrollTicket) return;
     await _scrollKeyToTop(
       _stepKey(index),
       duration: const Duration(milliseconds: 360),
@@ -17067,6 +17073,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     await Future<void>.delayed(const Duration(milliseconds: 260));
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted || ticket != _stepScrollTicket) return;
+    await _ensureScrollRoomForTop(_stepKey(index));
+    if (!mounted || ticket != _stepScrollTicket) return;
     await _scrollKeyToTop(
       _stepKey(index),
       duration: const Duration(milliseconds: 1),
@@ -17074,13 +17082,50 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _scrollToOutput() {
+    final ticket = ++_stepScrollTicket;
+    setState(() => _pageBottomPadding = _basePageBottomPadding);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      unawaited(_scrollKeyToTop(
-        _outputKey,
-        duration: const Duration(milliseconds: 280),
-      ));
+      unawaited(_scrollToOutputAfterLayout(ticket));
     });
+  }
+
+  Future<void> _scrollToOutputAfterLayout(int ticket) async {
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || ticket != _stepScrollTicket) return;
+    await _ensureScrollRoomForTop(_outputKey);
+    if (!mounted || ticket != _stepScrollTicket) return;
+    await _scrollKeyToTop(
+      _outputKey,
+      duration: const Duration(milliseconds: 280),
+    );
+  }
+
+  double? _unclampedScrollDestination(GlobalKey targetKey) {
+    if (!_pageScrollController.hasClients) return null;
+    final targetContext = targetKey.currentContext;
+    final scrollContext = _pageScrollKey.currentContext;
+    final targetBox = targetContext?.findRenderObject();
+    final scrollBox = scrollContext?.findRenderObject();
+    if (targetBox is! RenderBox || scrollBox is! RenderBox) return null;
+    return _pageScrollController.position.pixels +
+        targetBox.localToGlobal(Offset.zero).dy -
+        scrollBox.localToGlobal(Offset.zero).dy;
+  }
+
+  Future<void> _ensureScrollRoomForTop(GlobalKey targetKey) async {
+    final wanted = _unclampedScrollDestination(targetKey);
+    if (wanted == null || !_pageScrollController.hasClients) return;
+    final position = _pageScrollController.position;
+    final shortfall = wanted - position.maxScrollExtent;
+    if (shortfall <= 1) return;
+
+    // Only reserve exactly the trailing space needed by the current target.
+    // This lets the last cards reach the top without keeping a blank viewport
+    // below the page at all times.
+    setState(() {
+      _pageBottomPadding = (_pageBottomPadding + shortfall).ceilToDouble();
+    });
+    await WidgetsBinding.instance.endOfFrame;
   }
 
   Future<void> _scrollKeyToTop(
@@ -17088,17 +17133,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     required Duration duration,
   }) async {
     if (!_pageScrollController.hasClients) return;
-    final targetContext = targetKey.currentContext;
-    final scrollContext = _pageScrollKey.currentContext;
-    final targetBox = targetContext?.findRenderObject();
-    final scrollBox = scrollContext?.findRenderObject();
-    if (targetBox is! RenderBox || scrollBox is! RenderBox) return;
-
     double destination() {
-      final targetTop = targetBox.localToGlobal(Offset.zero).dy;
-      final viewportTop = scrollBox.localToGlobal(Offset.zero).dy;
       final position = _pageScrollController.position;
-      return (position.pixels + targetTop - viewportTop)
+      return (_unclampedScrollDestination(targetKey) ?? position.pixels)
           .clamp(position.minScrollExtent, position.maxScrollExtent)
           .toDouble();
     }
@@ -17122,6 +17159,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _stepIndex = index;
+      _pageBottomPadding = _basePageBottomPadding;
       _persist();
     });
     // Expansion is committed first; _scrollToStep waits for that frame before
@@ -18728,13 +18766,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ListView(
             key: _pageScrollKey,
             controller: _pageScrollController,
-            // Reserve a viewport below the content so even the last expanded
-            // section can place its heading at the very top when selected.
+            // The trailing room is calculated only when a selected step needs
+            // it to reach the top; keeping it small by default avoids a large
+            // blank area after the content.
             padding: EdgeInsets.fromLTRB(
               contentLeftPadding,
               16,
               16,
-              MediaQuery.sizeOf(context).height + 32,
+              _pageBottomPadding,
             ),
             children: [
               ConstrainedBox(
