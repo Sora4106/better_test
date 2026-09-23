@@ -15084,7 +15084,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       int? personIndex,
       bool showNext = true,
       bool showGroupClear = false,
-      List<String>? searchGroups}) {
+      List<String>? searchGroups,
+      String? pickerStateKey}) {
     if (groups.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
@@ -15092,8 +15093,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '\u8ACB\u5148\u9078\u64C7\u4E00\u7A2E\u670D\u88DD\u985E\u578B'),
       );
     }
-    final groupKey =
-        personIndex == null ? null : '$personIndex:${groups.join('|')}';
+    // Some pickers expose extra groups only after a prerequisite tag is
+    // selected (for example a clothing detail color after choosing a detail).
+    // Callers can provide a stable key so that change does not reset the user
+    // back to the first category.
+    final groupKey = personIndex == null
+        ? null
+        : '$personIndex:${pickerStateKey ?? groups.join('|')}';
     final storedGroup = personIndex == null
         ? _activeGroup
         : (_personActiveGroups[groupKey!] ?? groups.first);
@@ -16985,6 +16991,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               personIndex: index,
                               showNext: false,
                               showGroupClear: true,
+                              pickerStateKey:
+                                  'clothing-details:$activeClothingGroup',
                             ),
                         ],
                       ),
@@ -17015,6 +17023,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         personIndex: index,
                         showNext: false,
                         showGroupClear: true,
+                        pickerStateKey: 'clothing-wear:$activeClothingGroup',
                       ),
                     ),
                   if (adaptiveDetails.isEmpty && adaptiveWear.isEmpty)

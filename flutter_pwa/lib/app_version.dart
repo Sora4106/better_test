@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.129';
-const appBuildNumber = 131;
-const appVersionLabel = '1.1.129+131';
+﻿const appVersion = '1.1.130';
+const appBuildNumber = 132;
+const appVersionLabel = '1.1.130+132';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.130', 'build': '132', 'label': '1.1.130+132', 'date': '2026-09-23', 'notes': '修正服裝多維度分類跳轉：服裝細節與穿脫分類改用固定人物＋服裝部位狀態鍵，動態出現細節顏色時不再回退至剪裁。'},
   {'version': '1.1.129', 'build': '131', 'label': '1.1.129+131', 'date': '2026-09-23', 'notes': '改善大項跳轉與底部留白：改為先展開、等待版面穩定後精準置頂；僅依目前目標動態補足末端捲動空間，移除固定一整頁底部空白，提示詞跳轉同步套用。'},
   {'version': '1.1.128', 'build': '130', 'label': '1.1.128+130', 'date': '2026-09-23', 'notes': '新增貓系動作分類：補充14個單人貓系動作與10個多人貓系互動；既有伸展、歪頭、揹人、公主抱、坐肩、坐膝、牽手與額頭相貼標籤維持共用、不重複建立。'},
   {'version': '1.1.127', 'build': '129', 'label': '1.1.127+129', 'date': '2026-09-23', 'notes': '移除粉白貓系蕾絲露肩套裝中與服裝無關的城市街道提示；套裝僅保留服裝與角色獸人特徵。'},
