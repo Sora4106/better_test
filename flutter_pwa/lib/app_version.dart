@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.131';
-const appBuildNumber = 133;
-const appVersionLabel = '1.1.131+133';
+﻿const appVersion = '1.1.132';
+const appBuildNumber = 134;
+const appVersionLabel = '1.1.132+134';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.132', 'build': '134', 'label': '1.1.132+134', 'date': '2026-09-23', 'notes': 'Natural-language feline pose packages and shared action narratives'},
   {'version': '1.1.131', 'build': '133', 'label': '1.1.131+133', 'date': '2026-09-23', 'notes': '新增貓咪姿勢套件：15組單人玩耍／休息／撒嬌／警覺姿勢與16組多人抱持／依偎／撒嬌互動，可一鍵套用後個別調整。'},
   {'version': '1.1.130', 'build': '132', 'label': '1.1.130+132', 'date': '2026-09-23', 'notes': '修正服裝多維度分類跳轉：服裝細節與穿脫分類改用固定人物＋服裝部位狀態鍵，動態出現細節顏色時不再回退至剪裁。'},
   {'version': '1.1.129', 'build': '131', 'label': '1.1.129+131', 'date': '2026-09-23', 'notes': '改善大項跳轉與底部留白：改為先展開、等待版面穩定後精準置頂；僅依目前目標動態補足末端捲動空間，移除固定一整頁底部空白，提示詞跳轉同步套用。'},

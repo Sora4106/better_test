@@ -1,5 +1,10 @@
 ﻿# 更新紀錄
 
+## 1.1.132+134 - 2026-09-23
+
+- Natural-language feline pose packages and shared action narratives
+
+
 ## 1.1.131+133 - 2026-09-23
 
 - 新增貓咪姿勢套件：15組單人玩耍／休息／撒嬌／警覺姿勢與16組多人抱持／依偎／撒嬌互動，可一鍵套用後個別調整。

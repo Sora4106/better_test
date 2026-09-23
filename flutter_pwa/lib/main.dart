@@ -456,6 +456,7 @@ class _GeneratedOutputTag {
     this.characterTag = false,
     this.combinationId,
     this.personPoseExtraValue,
+    this.sharedPoseExtraValue,
     this.clothingBlockKey,
   });
 
@@ -467,6 +468,7 @@ class _GeneratedOutputTag {
   final bool characterTag;
   final String? combinationId;
   final String? personPoseExtraValue;
+  final String? sharedPoseExtraValue;
 
   /// Identifies the garment block that owns this generated clothing phrase.
   /// This is used only when rendering the English prompt, so its individual
@@ -5543,6 +5545,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final TextEditingController _search = TextEditingController();
   final TextEditingController _globalTagSearch = TextEditingController();
   final TextEditingController _extraPositive = TextEditingController();
+  final TextEditingController _sharedPoseExtra = TextEditingController();
   final TextEditingController _reversePrompt = TextEditingController();
   final TextEditingController _negative = TextEditingController(
     text: _defaultNegativeText,
@@ -8072,6 +8075,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  List<_GeneratedOutputTag> _sharedPoseExtraOutputTags() =>
+      _poseExtraPrompts(_sharedPoseExtra.text)
+          .map((value) => _GeneratedOutputTag(
+                zh: _positiveChineseTag(value),
+                en: _positiveEnglishTag(value),
+                sharedPoseExtraValue: value,
+              ))
+          .toList();
+
   List<_GeneratedOutputTag> _personPromptTags(int index) {
     final selected = _selectedTagsForPerson(index);
     final clothing = _clothingOutputTagsForPerson(index);
@@ -8388,6 +8400,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  void _updateSharedPoseExtra(String value) {
+    _poseExtraDebounce?.cancel();
+    _poseExtraDebounce = Timer(const Duration(milliseconds: 180), () {
+      if (!mounted) return;
+      _collectUnknownExtraPositiveTags();
+      _persist();
+      setState(() {});
+    });
+  }
+
   void _checkForVersionUpdate() {
     final previous = html.window.localStorage[_lastSeenVersionKey];
     html.window.localStorage[_lastSeenVersionKey] = appVersionLabel;
@@ -8488,6 +8510,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _search.dispose();
     _globalTagSearch.dispose();
     _extraPositive.dispose();
+    _sharedPoseExtra.dispose();
     _reversePrompt.dispose();
     _negative.dispose();
     _preprompt.dispose();
@@ -8677,6 +8700,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clipSkip = '${data['clipSkip'] ?? '2'}';
       _showAdult = data['showAdult'] == true;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
+      _sharedPoseExtra.text = '${data['sharedPoseExtra'] ?? ''}';
       _unregisteredPositiveTags
         ..clear()
         ..addAll((data['unregisteredPositiveTags'] as List? ?? [])
@@ -8730,6 +8754,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'clipSkip': _clipSkip,
         'showAdult': _showAdult,
         'extraPositive': _extraPositive.text,
+        'sharedPoseExtra': _sharedPoseExtra.text,
         'unregisteredPositiveTags': _isCompactMobileViewport
             ? const <String>[]
             : _unregisteredPositiveTags.toList(),
@@ -9354,6 +9379,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     result.addAll(_selectedTags.map(
         (tag) => _GeneratedOutputTag(zh: tag.zh, en: tag.en, tagId: tag.id)));
+    result.addAll(_sharedPoseExtraOutputTags());
     return _deduplicateGeneratedOutputTags(result);
   }
 
@@ -9381,6 +9407,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         combinationId: previous.combinationId,
         personPoseExtraValue:
             previous.personPoseExtraValue ?? tag.personPoseExtraValue,
+        sharedPoseExtraValue:
+            previous.sharedPoseExtraValue ?? tag.sharedPoseExtraValue,
         clothingBlockKey: previous.clothingBlockKey ?? tag.clothingBlockKey,
       );
     }
@@ -9412,6 +9440,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (outputTag.combinationId != null && outputTag.personIndex != null) {
         _personCombinationIds[outputTag.personIndex!]
             ?.remove(outputTag.combinationId);
+      } else if (outputTag.sharedPoseExtraValue != null) {
+        final prompts = _poseExtraPrompts(_sharedPoseExtra.text);
+        final target = _cleanTag(outputTag.sharedPoseExtraValue!).toLowerCase();
+        prompts.removeWhere(
+          (value) => _cleanTag(value).toLowerCase() == target,
+        );
+        _sharedPoseExtra.text = prompts.join('\n');
       } else if (outputTag.personPoseExtraValue != null &&
           outputTag.personIndex != null) {
         final personIndex = outputTag.personIndex!;
@@ -9511,6 +9546,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..._personSlots.expand(
         (slot) => _poseExtraPrompts(slot.poseExtraPositive),
       ),
+      ..._poseExtraPrompts(_sharedPoseExtra.text),
     ];
     for (final token in candidates) {
       if (_isRegisteredPositiveTag(token)) continue;
@@ -11548,6 +11584,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _activeGroup = '全部';
       _search.clear();
       _extraPositive.clear();
+      _sharedPoseExtra.clear();
       _reversePrompt.clear();
       _negative.text = _defaultNegativeText;
       _preprompt.clear();
@@ -15952,31 +15989,69 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  bool _hasPoseExtraPrompt(String value, String prompt) {
+    final target = _cleanTag(prompt).toLowerCase();
+    if (target.isEmpty) return true;
+    return _poseExtraPrompts(value)
+        .any((item) => _cleanTag(item).toLowerCase() == target);
+  }
+
+  String _addPoseExtraPrompt(String value, String prompt) {
+    final cleaned = _cleanTag(prompt);
+    if (cleaned.isEmpty || _hasPoseExtraPrompt(value, cleaned)) return value;
+    return [..._poseExtraPrompts(value), cleaned].join('\n');
+  }
+
+  String _removePoseExtraPrompt(String value, String prompt) {
+    final target = _cleanTag(prompt).toLowerCase();
+    if (target.isEmpty) return value;
+    return _poseExtraPrompts(value)
+        .where((item) => _cleanTag(item).toLowerCase() != target)
+        .join('\n');
+  }
+
   bool _promptPackageIsSelected(PromptPackageData package, int personIndex) {
     final tags = _promptPackageTags(package);
-    return tags.isNotEmpty &&
-        _personTagIds(personIndex).containsAll(tags.map((tag) => tag.id));
+    final hasTags = tags.isNotEmpty;
+    final natural = package.naturalPrompt.trim();
+    final hasNatural = natural.isNotEmpty;
+    if (!hasTags && !hasNatural) return false;
+    return (!hasTags ||
+            _personTagIds(personIndex)
+                .containsAll(tags.map((tag) => tag.id))) &&
+        (!hasNatural ||
+            _hasPoseExtraPrompt(
+                _personSlots[personIndex].poseExtraPositive, natural));
   }
 
   void _removePromptPackage(PromptPackageData package, int personIndex) {
     final tagIds = _promptPackageTags(package).map((tag) => tag.id);
     setState(() {
       _personTagIds(personIndex).removeAll(tagIds);
+      final updated = _removePoseExtraPrompt(
+        _personSlots[personIndex].poseExtraPositive,
+        package.naturalPrompt,
+      );
+      _personSlots[personIndex].poseExtraPositive = updated;
+      _personSearchControllers['$personIndex:pose-extra-positive']?.text =
+          updated;
+      _collectUnknownExtraPositiveTags();
       _persist();
     });
   }
 
   void _applyPromptPackage(PromptPackageData package, int personIndex) {
     final tags = _promptPackageTags(package);
-    final resolved = tags.map((tag) => _englishTagKey(tag.en)).toSet();
-    final missing = package.tags
-        .where((tag) => !resolved.contains(_englishTagKey(tag)))
-        .toList();
-    if (missing.isNotEmpty) {
-      return;
-    }
     setState(() {
       _personTagIds(personIndex).addAll(tags.map((tag) => tag.id));
+      final updated = _addPoseExtraPrompt(
+        _personSlots[personIndex].poseExtraPositive,
+        package.naturalPrompt,
+      );
+      _personSlots[personIndex].poseExtraPositive = updated;
+      _personSearchControllers['$personIndex:pose-extra-positive']?.text =
+          updated;
+      _collectUnknownExtraPositiveTags();
       _persist();
     });
   }
@@ -16049,7 +16124,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 children: visible.map((package) {
                   final applied =
                       _promptPackageIsSelected(package, personIndex);
-                  final english = package.tags.join(', ');
+                  final english = package.naturalPrompt.trim().isEmpty
+                      ? package.tags.join(', ')
+                      : package.naturalPrompt;
                   return SizedBox(
                     width: width,
                     child: Tooltip(
@@ -16114,18 +16191,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _sharedPromptPackageIsSelected(PromptPackageData package) {
     final tags = _promptPackageTags(package);
-    return tags.isNotEmpty &&
-        _selectedIds.containsAll(tags.map((tag) => tag.id));
+    final hasTags = tags.isNotEmpty;
+    final natural = package.naturalPrompt.trim();
+    final hasNatural = natural.isNotEmpty;
+    if (!hasTags && !hasNatural) return false;
+    return (!hasTags || _selectedIds.containsAll(tags.map((tag) => tag.id))) &&
+        (!hasNatural || _hasPoseExtraPrompt(_sharedPoseExtra.text, natural));
   }
 
   void _applySharedPromptPackage(PromptPackageData package) {
     final tags = _promptPackageTags(package);
-    final resolved = tags.map((tag) => _englishTagKey(tag.en)).toSet();
-    if (package.tags.any((tag) => !resolved.contains(_englishTagKey(tag)))) {
-      return;
-    }
     setState(() {
       _selectedIds.addAll(tags.map((tag) => tag.id));
+      _sharedPoseExtra.text =
+          _addPoseExtraPrompt(_sharedPoseExtra.text, package.naturalPrompt);
+      _collectUnknownExtraPositiveTags();
       _persist();
     });
   }
@@ -16133,6 +16213,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void _removeSharedPromptPackage(PromptPackageData package) {
     setState(() {
       _selectedIds.removeAll(_promptPackageTags(package).map((tag) => tag.id));
+      _sharedPoseExtra.text = _removePoseExtraPrompt(
+        _sharedPoseExtra.text,
+        package.naturalPrompt,
+      );
+      _collectUnknownExtraPositiveTags();
       _persist();
     });
   }
@@ -16202,7 +16287,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   return SizedBox(
                     width: width,
                     child: Tooltip(
-                      message: package.tags.join(', '),
+                      message: package.naturalPrompt.trim().isEmpty
+                          ? package.tags.join(', ')
+                          : package.naturalPrompt,
                       child: ChoiceChip(
                         selected: applied,
                         selectedColor: tone,
@@ -16255,6 +16342,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 }).toList(),
               );
             },
+          ),
+          const Divider(height: 24),
+          TextField(
+            controller: _sharedPoseExtra,
+            minLines: 2,
+            maxLines: 4,
+            onChanged: _updateSharedPoseExtra,
+            decoration: const InputDecoration(
+              labelText: '共用自然敘述動作',
+              hintText: '例如：walking together while playfully holding hands',
+              helperText: '套用於所有人物後方的共用動作；可直接輸入未收錄的英文自然敘述。',
+              prefixIcon: Icon(Icons.groups_outlined),
+              border: OutlineInputBorder(),
+            ),
           ),
         ],
       ),
