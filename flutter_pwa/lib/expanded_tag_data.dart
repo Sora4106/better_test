@@ -43,6 +43,7 @@ const expandedGeneralPoseGroups = <String>{
   '腿部姿勢',
   '動態姿勢',
   '身體動作',
+  '貓系・單人動作',
   '親吻動作',
   '多人互動',
   '角色姿勢',
@@ -138,6 +139,7 @@ const expandedTagPickerSections = <String, List<String>>{
     '動態姿勢',
     '動作',
     '身體動作',
+    '貓系・單人動作',
     '角色姿勢',
     '姿勢',
   ],
@@ -153,7 +155,7 @@ const expandedTagPickerSections = <String, List<String>>{
     '物件・交通／旅行',
     '物件・日常／裝飾',
   ],
-  '⑥ 周邊人物互動': ['親吻動作', '多人互動'],
+  '⑥ 周邊人物互動': ['親吻動作', '多人互動', '貓系・人物互動'],
   '⑦ 成人・性姿勢': [
     '性姿勢',
     '性姿勢・一般',
@@ -275,6 +277,32 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['身體顫動中', 'shaking'],
       ['動作線', 'motion lines'],
       ['動態模糊', 'motion blur'],
+    ],
+  ),
+  // Feline mannerisms are deliberately non-explicit and can be paired with
+  // the character's separately selected cat ears, tail, paws, or anthro tag.
+  // Existing general actions (stretching, sitting, head tilt, reaching, etc.)
+  // are reused instead of being duplicated here.
+  ..._expandedTags(
+    prefix: 'feline_solo_action',
+    group: '貓系・單人動作',
+    order: 4,
+    adult: false,
+    rows: const [
+      ['玩球預備姿勢', 'play bow pose'],
+      ['被摸下巴', 'chin being stroked'],
+      ['仰躺被摸肚子', 'belly being rubbed'],
+      ['洗臉整理動作', 'grooming gesture'],
+      ['低伏潛行姿勢', 'low stalking pose'],
+      ['高處蹲坐觀察', 'perched observing pose'],
+      ['輕甩尾巴', 'tail swishing'],
+      ['打哈欠', 'yawning'],
+      ['用爪撥弄玩具', 'pawing at toy'],
+      ['警覺回頭', 'looking back alertly'],
+      ['縮成一團休息', 'curled-up resting pose'],
+      ['輕跳伸手', 'light jumping pose'],
+      ['尾巴炸毛', 'fluffed tail'],
+      ['尾巴繞住腿', 'tail wrapped around leg'],
     ],
   ),
   CatalogTagData(
@@ -508,6 +536,28 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['公主抱', 'princess carry'],
       ['坐在肩膀上', 'sitting on shoulder'],
       ['站在肩膀上', 'standing on shoulder'],
+    ],
+  ),
+  // Existing tags such as piggyback, princess carry, sitting on shoulder,
+  // sitting on lap, holding hands, and forehead-to-forehead remain in
+  // 「多人互動」. This dedicated group only contains the missing cat-like
+  // relationship actions from the supplied reference.
+  ..._expandedTags(
+    prefix: 'feline_interaction',
+    group: '貓系・人物互動',
+    order: 4,
+    adult: false,
+    rows: const [
+      ['被抱在懷裡', 'being held in arms'],
+      ['用臉頰蹭對方', 'cheek rub'],
+      ['伏在對方腿上', 'resting on lap'],
+      ['抱著對方手臂', 'clinging to arm'],
+      ['依偎在對方肩膀', 'leaning on shoulder'],
+      ['被摸頭', 'head being petted'],
+      ['被抱起舉高', 'being lifted up'],
+      ['下巴被輕托', 'chin being held'],
+      ['趴在對方背上', "lying across another's back"],
+      ['躺在對方身邊', 'lying beside another'],
     ],
   ),
   ..._expandedTags(

@@ -182,6 +182,7 @@ bool _isSharedActionGroup(String group) =>
     const {
       '\u89aa\u543b\u52d5\u4f5c',
       '\u591a\u4eba\u4e92\u52d5',
+      '\u8c93\u7cfb\u30fb\u4eba\u7269\u4e92\u52d5',
       '\u89d2\u8272\u59ff\u52e2',
       '\u6027\u884c\u70ba',
       '\u6027\u59ff\u52e2',
@@ -5763,6 +5764,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<String> get _sharedActionPickerGroups => <String>[
         '\u89aa\u543b\u52d5\u4f5c',
         '\u591a\u4eba\u4e92\u52d5',
+        '\u8c93\u7cfb\u30fb\u4eba\u7269\u4e92\u52d5',
         '\u89d2\u8272\u59ff\u52e2',
         '\u6027\u884c\u70ba',
         '\u6027\u59ff\u52e2',

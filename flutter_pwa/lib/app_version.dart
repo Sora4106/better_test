@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.127';
-const appBuildNumber = 129;
-const appVersionLabel = '1.1.127+129';
+﻿const appVersion = '1.1.128';
+const appBuildNumber = 130;
+const appVersionLabel = '1.1.128+130';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.128', 'build': '130', 'label': '1.1.128+130', 'date': '2026-09-23', 'notes': '新增貓系動作分類：補充14個單人貓系動作與10個多人貓系互動；既有伸展、歪頭、揹人、公主抱、坐肩、坐膝、牽手與額頭相貼標籤維持共用、不重複建立。'},
   {'version': '1.1.127', 'build': '129', 'label': '1.1.127+129', 'date': '2026-09-23', 'notes': '移除粉白貓系蕾絲露肩套裝中與服裝無關的城市街道提示；套裝僅保留服裝與角色獸人特徵。'},
   {'version': '1.1.126', 'build': '128', 'label': '1.1.126+128', 'date': '2026-09-23', 'notes': '修正粉白貓系蕾絲露肩套裝：移除錯誤的城市服裝場合，城市街道改由場景選擇；粉白蕾絲內褲改為粉白蕾絲胸罩。'},
   {'version': '1.1.125', 'build': '127', 'label': '1.1.125+127', 'date': '2026-09-23', 'notes': '新增粉白貓系蕾絲露肩套裝：可套用並調整粉白束腰露肩上衣、黑粉荷葉迷你裙、蕾絲內褲／長襪與厚底鞋，同時加入粉紅貓耳與貓尾角色特徵。'},
