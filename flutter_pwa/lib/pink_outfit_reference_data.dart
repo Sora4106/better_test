@@ -8,7 +8,8 @@ const pinkOutfitReferencePresets = <OutfitReferencePresetData>[
     category: '甜美／浪漫',
     name: '粉白貓系蕾絲露肩套裝',
     palette: '白色 × 粉紅色 × 黑色',
-    description: '白色露肩束腰上衣配粉紅花邊，搭黑色荷葉迷你裙、粉白蕾絲內褲與長襪；粉紅貓耳、貓尾以角色獸人特徵加入，不使用裝飾品。',
+    description:
+        '白色露肩束腰上衣配粉紅花邊，搭黑色荷葉迷你裙、粉白蕾絲胸罩與長襪；粉紅貓耳、貓尾以角色獸人特徵加入，不使用裝飾品。',
     pieces: [
       OutfitPiecePresetData(
         scope: 'top',
@@ -37,10 +38,10 @@ const pinkOutfitReferencePresets = <OutfitReferencePresetData>[
         details: ['lace trim', 'frills', 'ruffles'],
       ),
       OutfitPiecePresetData(
-        scope: 'panties',
-        garment: 'lace panties',
-        mainColor: 'pink',
-        secondaryColor: 'white',
+        scope: 'bra',
+        garment: 'lace bra',
+        mainColor: 'white',
+        secondaryColor: 'pink',
       ),
       OutfitPiecePresetData(
         scope: 'socks',
@@ -59,7 +60,6 @@ const pinkOutfitReferencePresets = <OutfitReferencePresetData>[
     mainStyle: 'feminine',
     subStyle: 'sweet feminine style',
     mood: 'sweet mood',
-    occasion: 'city outfit',
     featureTags: [
       'cat ears',
       'pink animal ears',
