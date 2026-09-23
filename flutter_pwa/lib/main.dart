@@ -16112,6 +16112,155 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  bool _sharedPromptPackageIsSelected(PromptPackageData package) {
+    final tags = _promptPackageTags(package);
+    return tags.isNotEmpty &&
+        _selectedIds.containsAll(tags.map((tag) => tag.id));
+  }
+
+  void _applySharedPromptPackage(PromptPackageData package) {
+    final tags = _promptPackageTags(package);
+    final resolved = tags.map((tag) => _englishTagKey(tag.en)).toSet();
+    if (package.tags.any((tag) => !resolved.contains(_englishTagKey(tag)))) {
+      return;
+    }
+    setState(() {
+      _selectedIds.addAll(tags.map((tag) => tag.id));
+      _persist();
+    });
+  }
+
+  void _removeSharedPromptPackage(PromptPackageData package) {
+    setState(() {
+      _selectedIds.removeAll(_promptPackageTags(package).map((tag) => tag.id));
+      _persist();
+    });
+  }
+
+  Widget _sharedFelineInteractionPackagePanel() {
+    const tone = Color(0xfffbbf24);
+    final packages = felineInteractionPackages;
+    final categories =
+        packages.map((package) => package.category).toSet().toList();
+    const stateKey = 'shared-feline-interaction-package';
+    final stored = _personActiveGroups[stateKey];
+    final activeCategory = stored != null && categories.contains(stored)
+        ? stored
+        : categories.first;
+    final visible = packages
+        .where((package) => package.category == activeCategory)
+        .toList();
+    return Card(
+      margin: const EdgeInsets.only(top: 10),
+      color: tone.withOpacity(.08),
+      child: ExpansionTile(
+        key: const PageStorageKey<String>('shared-feline-interaction-package'),
+        leading: const Icon(Icons.pets_outlined, color: tone),
+        title: Text('貓咪多人互動套件（${packages.length} 組）',
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        subtitle: const Text('16 組抱持、依偎與撒嬌互動；套用後仍可個別調整。',
+            style: TextStyle(fontSize: 12)),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+        children: [
+          Align(
+            alignment: Alignment.centerLeft,
+            child: Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: categories.map((category) {
+                final selected = category == activeCategory;
+                return ChoiceChip(
+                  label: Text(category),
+                  selected: selected,
+                  selectedColor: tone,
+                  labelStyle: TextStyle(
+                    color: selected ? const Color(0xff171326) : Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  onSelected: (_) => setState(
+                    () => _personActiveGroups[stateKey] = category,
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 900
+                  ? 3
+                  : constraints.maxWidth >= 560
+                      ? 2
+                      : 1;
+              final width =
+                  (constraints.maxWidth - (columns - 1) * 8) / columns;
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: visible.map((package) {
+                  final applied = _sharedPromptPackageIsSelected(package);
+                  return SizedBox(
+                    width: width,
+                    child: Tooltip(
+                      message: package.tags.join(', '),
+                      child: ChoiceChip(
+                        selected: applied,
+                        selectedColor: tone,
+                        avatar: Icon(
+                          applied
+                              ? Icons.check_circle
+                              : Icons.auto_awesome_outlined,
+                          size: 18,
+                          color: applied ? const Color(0xff171326) : tone,
+                        ),
+                        label: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(package.name,
+                                  style: TextStyle(
+                                    color: applied
+                                        ? const Color(0xff171326)
+                                        : Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  )),
+                              const SizedBox(height: 2),
+                              Text(
+                                package.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: applied
+                                      ? const Color(0xff171326)
+                                      : Colors.white70,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 7),
+                        onSelected: (selected) {
+                          if (selected) {
+                            _applySharedPromptPackage(package);
+                          } else {
+                            _removeSharedPromptPackage(package);
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _sharedActionPicker() {
     final groups = _sharedActionPickerGroups
         .where((group) => (_tagsByGroup[group] ?? const <TagItem>[]).isNotEmpty)
@@ -16160,6 +16309,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               '這裡設定角色一起進行的互動、親吻或成人姿勢；輸出會放在所有角色資訊之後，不使用括號與角色權重。',
               style: TextStyle(fontSize: 12),
             ),
+            _sharedFelineInteractionPackagePanel(),
             const SizedBox(height: 10),
             _stepTagPicker(
               groups,
@@ -16278,6 +16428,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     icon: Icons.auto_awesome_outlined,
                     tone: const Color(0xfff472b6),
                     packages: sexyPosePackages,
+                  ),
+                  _promptPackagePanel(
+                    personIndex: index,
+                    panelId: 'feline-solo-pose',
+                    title: '貓咪單人姿勢套件',
+                    subtitle: '15 組貓系玩耍、休息、撒嬌與警覺姿態；不會自動加入獸耳、獸尾或 furry。',
+                    icon: Icons.pets_outlined,
+                    tone: const Color(0xfffbbf24),
+                    packages: felineSoloPosePackages,
                   ),
                   const SizedBox(height: 10),
                   Text(
