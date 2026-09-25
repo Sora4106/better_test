@@ -1,7 +1,10 @@
-﻿const appVersion = '1.1.132';
-const appBuildNumber = 134;
-const appVersionLabel = '1.1.132+134';
+﻿const appVersion = '1.1.135';
+const appBuildNumber = 137;
+const appVersionLabel = '1.1.135+137';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.135', 'build': '137', 'label': '1.1.135+137', 'date': '2026-09-25', 'notes': '預先登錄所有現有角色特徵，支援搜尋、反推與匯入角色即時辨識'},
+  {'version': '1.1.134', 'build': '136', 'label': '1.1.134+136', 'date': '2026-09-25', 'notes': 'Added Kanade dark dress templates with hats and face veils'},
+  {'version': '1.1.133', 'build': '135', 'label': '1.1.133+135', 'date': '2026-09-25', 'notes': 'Added one-piece midriff and navel exposure detail'},
   {'version': '1.1.132', 'build': '134', 'label': '1.1.132+134', 'date': '2026-09-23', 'notes': 'Natural-language feline pose packages and shared action narratives'},
   {'version': '1.1.131', 'build': '133', 'label': '1.1.131+133', 'date': '2026-09-23', 'notes': '新增貓咪姿勢套件：15組單人玩耍／休息／撒嬌／警覺姿勢與16組多人抱持／依偎／撒嬌互動，可一鍵套用後個別調整。'},
   {'version': '1.1.130', 'build': '132', 'label': '1.1.130+132', 'date': '2026-09-23', 'notes': '修正服裝多維度分類跳轉：服裝細節與穿脫分類改用固定人物＋服裝部位狀態鍵，動態出現細節顏色時不再回退至剪裁。'},

@@ -5130,6 +5130,7 @@ List<TagItem> _seedTags() => [
       _tag('nudity_bare_legs', '裸露', '裸腿', 'bare legs', 6),
       _tag('nudity_barefoot', '裸露', '赤腳', 'barefoot', 6),
       _tag('nudity_midriff', '裸露', '露腰', 'midriff', 6),
+      _tag('nudity_navel', '裸露', '露肚臍', 'navel', 6),
       _tag(
         'nudity_covering_breasts',
         '裸露',
@@ -5580,11 +5581,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<TagItem> get _allTags {
     final cached = _allTagsCache;
     if (cached != null) return cached;
+    // Character traits used to be materialized only after a character had been
+    // picked. Register every catalogued trait up front instead, so the global
+    // search, reverse prompt import, and normal category pickers can all find
+    // the same bilingual tag before a character is selected.
+    final catalogTraitTags = _catalogCharacterTraitTags();
     final unique = <String, TagItem>{};
     for (final tag in [
       ..._builtIns,
       ..._supplemental,
       ..._scopedClothingTags,
+      ...catalogTraitTags,
       ..._customTags,
     ]) {
       final englishKey = _englishTagKey(tag.en);
@@ -5645,6 +5652,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .map((tag) => tag.id)
         .toSet();
     return tags;
+  }
+
+  List<TagItem> _catalogCharacterTraitTags() {
+    return [
+      for (final character in _allCharacters)
+        for (final trait in character.traits)
+          if (_cleanTag(trait.en).isNotEmpty)
+            TagItem(
+              // Keep the same id that older sessions received when this trait
+              // was lazily created. Saved selections therefore continue to
+              // resolve to the now built-in catalog tag.
+              id: 'character_trait_${_slug(trait.en)}',
+              group: _characterTraitGroup(trait),
+              zh: trait.zh,
+              en: trait.en,
+              order: trait.order,
+              adult: trait.adult,
+              conflictGroup: trait.conflictGroup,
+              support: trait.support,
+            ),
+    ];
   }
 
   void _invalidateTagCaches() {
@@ -12356,6 +12384,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _customCharacters.add(discovered);
         }
       }
+      _invalidateTagCaches();
       setState(() {
         _remoteCharacters[slotIndex] = characters;
         _remoteLookupLoading.remove(slotIndex);
@@ -12591,6 +12620,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       imported.add(character);
     }
     if (imported.isNotEmpty) {
+      _invalidateTagCaches();
       final slot = _personSlots[slotIndex];
       _resetCharacterFeatureSelections(slotIndex, _characterForNew(slot));
       slot.mode = '動漫角色';
@@ -12895,6 +12925,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   (slot) => slot.mode == '動漫角色' && slot.characterId.isEmpty);
               final targetIndex = slotIndex < 0 ? 0 : slotIndex;
               _customCharacters.add(character);
+              _invalidateTagCaches();
               final target = _personSlots[targetIndex];
               _resetCharacterFeatureSelections(
                   targetIndex, _characterForNew(target));

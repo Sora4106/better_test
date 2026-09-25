@@ -1,5 +1,20 @@
 ﻿# 更新紀錄
 
+## 1.1.135+137 - 2026-09-25
+
+- 預先登錄所有現有角色特徵，支援搜尋、反推與匯入角色即時辨識
+
+
+## 1.1.134+136 - 2026-09-25
+
+- Added Kanade dark dress templates with hats and face veils
+
+
+## 1.1.133+135 - 2026-09-25
+
+- Added one-piece midriff and navel exposure detail
+
+
 ## 1.1.132+134 - 2026-09-23
 
 - Natural-language feline pose packages and shared action narratives
