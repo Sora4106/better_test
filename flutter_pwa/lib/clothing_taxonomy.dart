@@ -1076,6 +1076,7 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
     ('單肩', 'one-shoulder'),
     ('繞頸', 'halter neck'),
     ('無袖', 'sleeveless'),
+    ('短袖', 'short sleeves'),
     ('長袖', 'long sleeves'),
     ('泡泡袖', 'puffy sleeves'),
     ('喇叭袖', 'bell sleeves'),

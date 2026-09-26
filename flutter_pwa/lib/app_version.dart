@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.142';
-const appBuildNumber = 144;
-const appVersionLabel = '1.1.142+144';
+﻿const appVersion = '1.1.143';
+const appBuildNumber = 145;
+const appVersionLabel = '1.1.143+145';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.143', 'build': '145', 'label': '1.1.143+145', 'date': '2026-09-26', 'notes': '新增上衣短袖選項；短袖與可獨立配色的肘上袖可同時選擇。'},
   {'version': '1.1.142', 'build': '144', 'label': '1.1.142+144', 'date': '2026-09-26', 'notes': '修正服裝細節色輸出：顏色改直接修飾蝴蝶結、鈕扣、蕾絲與荷葉邊等細節，不再誤將整件服裝染色。'},
   {'version': '1.1.141', 'build': '143', 'label': '1.1.141+143', 'date': '2026-09-26', 'notes': '肘上袖改為上衣內的獨立可選部件，新增專屬色彩1／色彩2，與上衣主體顏色分開設定。'},
   {'version': '1.1.140', 'build': '142', 'label': '1.1.140+142', 'date': '2026-09-26', 'notes': '新增10套適合25時・奏的甜美柔和配色服裝套裝；避免輸出 cute 敏感詞，全部使用可編輯的現有服裝標籤。'},

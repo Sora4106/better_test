@@ -2954,8 +2954,6 @@ void _migrateClothingTaxonomyTagIds(Set<String> ids) {
         'catalog_taxonomy_onepiece_fit_tailored_fit',
     'catalog_taxonomy_outerwear_fit_slim_fit':
         'catalog_taxonomy_outerwear_fit_tailored_fit',
-    'catalog_taxonomy_top_cut_short_sleeves':
-        'catalog_taxonomy_sleeves_above_elbow_sleeves',
     'catalog_taxonomy_top_cut_above_elbow_sleeves':
         'catalog_taxonomy_sleeves_above_elbow_sleeves',
     'catalog_taxonomy_shorts_length_short_length':
