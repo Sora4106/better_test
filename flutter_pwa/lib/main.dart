@@ -4884,6 +4884,8 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'basic_pose'),
       _tag('pose_sitting_bench', '坐姿與跪姿', '坐在長椅上', 'sitting on bench', 4,
           conflictGroup: 'basic_pose'),
+      _tag('pose_sitting_table', '坐姿與跪姿', '坐在桌子上', 'sitting on table', 4,
+          conflictGroup: 'basic_pose'),
       _tag('pose_standing_straight', '站立與蹲姿', '立正站立', 'standing straight', 4,
           conflictGroup: 'basic_pose'),
       _tag('pose_standing_one_leg', '站立與蹲姿', '單腳站立', 'standing on one leg', 4,
@@ -4924,6 +4926,12 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'leg_detail'),
       _tag('pose_bent_leg', '腿部姿勢', '彎曲腿部', 'bent leg', 4,
           conflictGroup: 'leg_detail'),
+      // Furniture contact stays separate from the base seated pose so users
+      // can freely compose, for example: sitting on chair + feet on table.
+      _tag('pose_feet_on_table', '腿部姿勢', '雙腳放在桌上', 'feet on table', 4),
+      _tag('pose_feet_on_chair', '腿部姿勢', '雙腳放在椅子上', 'feet on chair', 4),
+      _tag('pose_feet_on_sofa', '腿部姿勢', '雙腳放在沙發上', 'feet on sofa', 4),
+      _tag('pose_feet_on_bed', '腿部姿勢', '雙腳放在床上', 'feet on bed', 4),
       _tag('pose_left_hand_up', '手臂姿勢', '抬起左手', 'left hand raised', 4,
           conflictGroup: 'left_arm_pose'),
       _tag('pose_right_hand_up', '手臂姿勢', '抬起右手', 'right hand raised', 4,
