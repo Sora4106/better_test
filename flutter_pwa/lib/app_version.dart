@@ -1,7 +1,9 @@
-﻿const appVersion = '1.1.140';
-const appBuildNumber = 142;
-const appVersionLabel = '1.1.140+142';
+﻿const appVersion = '1.1.142';
+const appBuildNumber = 144;
+const appVersionLabel = '1.1.142+144';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.142', 'build': '144', 'label': '1.1.142+144', 'date': '2026-09-26', 'notes': '修正服裝細節色輸出：顏色改直接修飾蝴蝶結、鈕扣、蕾絲與荷葉邊等細節，不再誤將整件服裝染色。'},
+  {'version': '1.1.141', 'build': '143', 'label': '1.1.141+143', 'date': '2026-09-26', 'notes': '肘上袖改為上衣內的獨立可選部件，新增專屬色彩1／色彩2，與上衣主體顏色分開設定。'},
   {'version': '1.1.140', 'build': '142', 'label': '1.1.140+142', 'date': '2026-09-26', 'notes': '新增10套適合25時・奏的甜美柔和配色服裝套裝；避免輸出 cute 敏感詞，全部使用可編輯的現有服裝標籤。'},
   {'version': '1.1.139', 'build': '141', 'label': '1.1.139+141', 'date': '2026-09-26', 'notes': '新增帽上垂紗與頭後方大蝴蝶結；25時・奏暗色禮服改用帽上垂紗，可各自選色。'},
   {'version': '1.1.138', 'build': '140', 'label': '1.1.138+140', 'date': '2026-09-26', 'notes': '新增 Project SEKAI 各團體初音未來；修正 25時・奏暗色禮服套裝的風格與帽子色階標籤，四套皆可套用。'},

@@ -722,6 +722,11 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('西裝背心', 'suit vest'),
     ('籃球球衣', 'basketball jersey'),
   ]),
+  // Sleeves remain in the top category, but are their own wearable part so
+  // they can use an independent colour instead of inheriting the shirt colour.
+  ..._garments('上衣', 'sleeves', const [
+    ('肘上袖', 'above-elbow sleeves'),
+  ]),
   ..._garments('褲子', 'pants', const [
     ('直筒褲', 'straight-leg pants'),
     ('窄管褲', 'narrow-leg pants'),
@@ -1071,7 +1076,6 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
     ('單肩', 'one-shoulder'),
     ('繞頸', 'halter neck'),
     ('無袖', 'sleeveless'),
-    ('肘上袖', 'above-elbow sleeves'),
     ('長袖', 'long sleeves'),
     ('泡泡袖', 'puffy sleeves'),
     ('喇叭袖', 'bell sleeves'),

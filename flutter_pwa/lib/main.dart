@@ -2955,7 +2955,9 @@ void _migrateClothingTaxonomyTagIds(Set<String> ids) {
     'catalog_taxonomy_outerwear_fit_slim_fit':
         'catalog_taxonomy_outerwear_fit_tailored_fit',
     'catalog_taxonomy_top_cut_short_sleeves':
-        'catalog_taxonomy_top_cut_above_elbow_sleeves',
+        'catalog_taxonomy_sleeves_above_elbow_sleeves',
+    'catalog_taxonomy_top_cut_above_elbow_sleeves':
+        'catalog_taxonomy_sleeves_above_elbow_sleeves',
     'catalog_taxonomy_shorts_length_short_length':
         'catalog_taxonomy_shorts_length_upper_thigh_length',
     'catalog_taxonomy_costume_maid_outfit': 'catalog_taxonomy_costume_maid',
@@ -4628,6 +4630,10 @@ List<TagItem> _seedTags() => [
       _tag('roller_skates', '鞋子', '溜冰鞋', 'roller skates', 2,
           conflictGroup: 'footwear'),
       ..._missingLegacyClothingColorTags(),
+      ..._clothingColorTags(
+          'top_sleeve_color', '上衣袖子顏色', '袖子', 'sleeves', 'top_sleeve_color'),
+      ..._clothingColorShadeTags('top_sleeve_shade_color', '上衣袖子顏色', '袖子',
+          'sleeves', 'top_sleeve_color'),
       ..._clothingColorTags('top_color', '上衣顏色', '上衣', 'top', 'top_color'),
       ..._clothingColorTags(
           'bottom_color', '下身顏色', '下身', 'bottoms', 'bottom_color'),
@@ -4700,6 +4706,8 @@ List<TagItem> _seedTags() => [
           'hat_trim_color', '帽子邊線色', '邊線', 'hat_trim_color'),
       ..._clothingTrimColorTags(
           'eyewear_trim_color', '眼鏡邊線色', '邊線', 'eyewear_trim_color'),
+      ..._clothingTrimColorTags(
+          'top_sleeve_trim_color', '上衣袖子次色', '次色', 'top_sleeve_trim_color'),
       ..._extraFeaturePositionTags(),
       ..._extraFeatureColorTags(),
       ..._accessoryPositionTags(),
@@ -6353,6 +6361,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _wingColorGroup,
         '服裝細節顏色',
       }.contains(group) ||
+      group == '上衣袖子顏色' ||
+      group == '上衣袖子次色' ||
       group.endsWith('邊線色') ||
       group == '額外特徵顏色';
 
@@ -6477,6 +6487,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _isCosplayTag(tag);
 
   String? _clothingScopeForBase(TagItem tag) {
+    if (tag.id.contains('taxonomy_sleeves_')) return 'sleeves';
     final displayGroup = _clothingBaseDisplayGroup(tag);
     if (displayGroup == _clothingGroupShorts) return 'shorts';
     if (displayGroup == _clothingGroupOuterwear) return 'outerwear';
@@ -6543,15 +6554,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return switch (scope) {
       'outerwear' => 10,
       'top' => 11,
-      'onepiece' || 'costume' => 12,
-      'pants' => 13,
-      'shorts' => 14,
-      'skirt' => 15,
-      'underwear' => 16,
-      'bra' => 17,
-      'panties' => 18,
-      'socks' => 19,
-      'shoes' => 20,
+      'sleeves' => 12,
+      'onepiece' || 'costume' => 13,
+      'pants' => 14,
+      'shorts' => 15,
+      'skirt' => 16,
+      'underwear' => 17,
+      'bra' => 18,
+      'panties' => 19,
+      'socks' => 20,
+      'shoes' => 21,
       _ => 99,
     };
   }
@@ -6575,6 +6587,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String? _clothingScopeForTag(TagItem tag) {
     if (_isScopedClothingGroup(tag.group)) {
       return _scopedClothingSlot(tag.group);
+    }
+    if (tag.group == '上衣袖子顏色' || tag.group == '上衣袖子次色') {
+      return 'sleeves';
     }
     if (_isClothingBaseTag(tag) || _isLegacyClothingStyleTag(tag)) {
       return _clothingScopeForBase(tag);
@@ -6830,6 +6845,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _clothingColorGroupForBase(TagItem base) =>
       switch (_clothingScopeForBase(base)) {
+        'sleeves' => '上衣袖子顏色',
         'onepiece' || 'costume' => '服裝顏色',
         'top' => '上衣顏色',
         'pants' || 'shorts' || 'skirt' => '下身顏色',
@@ -6849,6 +6865,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _clothingTrimColorGroupForBase(TagItem base) =>
       switch (_clothingScopeForBase(base)) {
+        'sleeves' => '上衣袖子次色',
         'onepiece' || 'costume' => '服裝邊線色',
         'top' => '上衣邊線色',
         'pants' || 'shorts' || 'skirt' => '下身邊線色',
@@ -7408,22 +7425,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final colorZh = detailColorZh ?? '';
 
     if (kind == 'detail') {
+      final hasDetailColor = color.isNotEmpty;
       final english = switch (raw.toLowerCase()) {
-        'lace trim' => '${color}lace-trimmed $noun',
-        'frills' => '${color}frilled $noun',
-        'ruffles' => '${color}ruffled $noun',
-        'pleats' => '${color}pleated $noun',
-        'bow' => '${color}$noun bow',
-        'ribbon' => '${color}$noun ribbon',
-        'fur trim' => '${color}fur-trimmed $noun',
-        'feather trim' => '${color}feather-trimmed $noun',
-        'embroidery' => '${color}embroidered $noun',
-        'floral embroidery' => '${color}floral embroidery on $noun',
-        'buttons' => '${color}buttoned $noun',
+        'lace trim' =>
+          hasDetailColor ? '${color}lace trim on $noun' : 'lace-trimmed $noun',
+        'frills' =>
+          hasDetailColor ? '${color}frills on $noun' : 'frilled $noun',
+        'ruffles' =>
+          hasDetailColor ? '${color}ruffles on $noun' : 'ruffled $noun',
+        'pleats' =>
+          hasDetailColor ? '${color}pleats on $noun' : 'pleated $noun',
+        'bow' => hasDetailColor ? '${color}bow on $noun' : '$noun bow',
+        'ribbon' => hasDetailColor ? '${color}ribbon on $noun' : '$noun ribbon',
+        'fur trim' =>
+          hasDetailColor ? '${color}fur trim on $noun' : 'fur-trimmed $noun',
+        'feather trim' => hasDetailColor
+            ? '${color}feather trim on $noun'
+            : 'feather-trimmed $noun',
+        'embroidery' =>
+          hasDetailColor ? '${color}embroidery on $noun' : 'embroidered $noun',
+        'floral embroidery' => hasDetailColor
+            ? '${color}floral embroidery on $noun'
+            : 'floral embroidery on $noun',
+        'buttons' =>
+          hasDetailColor ? '${color}buttons on $noun' : 'buttoned $noun',
         'piping' => '${color}piping on $noun',
         _ => '$color$raw on $noun',
       };
-      return ('$colorZh$zh$nounZh', english.trim());
+      final chinese = hasDetailColor ? '$nounZh上的$colorZh$zh' : '$zh$nounZh';
+      return (chinese, english.trim());
     }
 
     if (kind == 'pattern') {
@@ -14692,6 +14722,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String _wizardGroupLabel(String group) {
     const clothingColorLabels = <String, String>{
+      '上衣袖子顏色': '袖子色彩 1',
+      '上衣袖子次色': '袖子色彩 2',
       '服裝顏色': '連身裝色彩 1',
       '上衣顏色': '上衣色彩 1',
       '下身顏色': '下身色彩 1',
