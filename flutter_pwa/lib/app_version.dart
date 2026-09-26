@@ -1,7 +1,9 @@
-﻿const appVersion = '1.1.144';
-const appBuildNumber = 146;
-const appVersionLabel = '1.1.144+146';
+﻿const appVersion = '1.1.146';
+const appBuildNumber = 148;
+const appVersionLabel = '1.1.146+148';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.146', 'build': '148', 'label': '1.1.146+148', 'date': '2026-09-26', 'notes': '新增獸人動作分類：尾巴互動、尾巴姿態與耳朵動態共十種可組合動作。'},
+  {'version': '1.1.145', 'build': '147', 'label': '1.1.145+147', 'date': '2026-09-26', 'notes': '新增狼尾獸人角色特徵，可使用既有獸尾顏色選項與反推辨識。'},
   {'version': '1.1.144', 'build': '146', 'label': '1.1.144+146', 'date': '2026-09-26', 'notes': '新增家具腿腳互動：可坐在桌子上，並自由組合雙腳放在桌子、椅子、沙發或床上的姿勢。'},
   {'version': '1.1.143', 'build': '145', 'label': '1.1.143+145', 'date': '2026-09-26', 'notes': '新增上衣短袖選項；短袖與可獨立配色的肘上袖可同時選擇。'},
   {'version': '1.1.142', 'build': '144', 'label': '1.1.142+144', 'date': '2026-09-26', 'notes': '修正服裝細節色輸出：顏色改直接修飾蝴蝶結、鈕扣、蕾絲與荷葉邊等細節，不再誤將整件服裝染色。'},

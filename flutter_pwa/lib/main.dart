@@ -6004,7 +6004,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '全身姿勢' => 49,
         '動態姿勢' || '動作' || '身體動作' => 50,
         '物件' => 51,
-        '親吻動作' || '多人互動' || '角色姿勢' => 52,
+        '親吻動作' || '多人互動' || '獸人動作' || '角色姿勢' => 52,
         _ => 53,
       };
     }
@@ -14325,6 +14325,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '動態姿勢': Color(0xffff8a4c),
       '動作': Color(0xfffb923c),
       '身體動作': Color(0xfff97316),
+      '獸人動作': Color(0xff8b5cf6),
       '親吻動作': Color(0xfff9a8d4),
       '多人互動': Color(0xfffacc15),
       '角色姿勢': Color(0xffc084fc),

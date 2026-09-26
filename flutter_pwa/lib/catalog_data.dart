@@ -213,6 +213,12 @@ const supplementalTags = <CatalogTagData>[
       en: 'dog tail',
       order: 1),
   CatalogTagData(
+      id: 'trait_wolf_tail',
+      group: '獸化特徵',
+      zh: '狼尾（角色特徵）',
+      en: 'wolf tail',
+      order: 1),
+  CatalogTagData(
       id: 'trait_bunny_tail',
       group: '獸化特徵',
       zh: '兔尾（角色特徵）',
