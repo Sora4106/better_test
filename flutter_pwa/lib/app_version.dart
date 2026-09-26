@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.147';
-const appBuildNumber = 149;
-const appVersionLabel = '1.1.147+149';
+﻿const appVersion = '1.1.148';
+const appBuildNumber = 150;
+const appVersionLabel = '1.1.148+150';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.148', 'build': '150', 'label': '1.1.148+150', 'date': '2026-09-27', 'notes': '新增鏡頭床位視角：可選床側平視與床尾平視，將鏡頭位置、方向與平視描述整合成可選標籤。'},
   {'version': '1.1.147', 'build': '149', 'label': '1.1.147+149', 'date': '2026-09-26', 'notes': '擴充獸人耳朵動態：新增耳朵晃動、甩動、轉向、左右擺動與自然垂下。'},
   {'version': '1.1.146', 'build': '148', 'label': '1.1.146+148', 'date': '2026-09-26', 'notes': '新增獸人動作分類：尾巴互動、尾巴姿態與耳朵動態共十種可組合動作。'},
   {'version': '1.1.145', 'build': '147', 'label': '1.1.145+147', 'date': '2026-09-26', 'notes': '新增狼尾獸人角色特徵，可使用既有獸尾顏色選項與反推辨識。'},

@@ -47,6 +47,7 @@ const _cameraFramingGroup = '鏡頭・取景範圍';
 const _cameraFaceFocusGroup = '鏡頭・臉部（眼睛／嘴巴／表情）';
 const _cameraFocusGroup = '鏡頭・身體聚焦（頭到腳）';
 const _cameraCropGroup = '鏡頭・裁切構圖';
+const _cameraBedViewGroup = '鏡頭・床位視角';
 const _objectFurnitureGroup = '物件・家具／室內';
 const _objectDiningGroup = '物件・飲食／餐具';
 const _objectStudyGroup = '物件・學習／藝術／音樂';
@@ -164,6 +165,7 @@ bool _isCameraGroup(String group) => const {
       _cameraFaceFocusGroup,
       _cameraFocusGroup,
       _cameraCropGroup,
+      _cameraBedViewGroup,
       '畫面',
     }.contains(group);
 
@@ -5466,6 +5468,23 @@ List<TagItem> _seedTags() => [
       _tag('camera_rear_view', '畫面', '背面視角', 'rear view', 10),
       _tag('camera_three_quarter', '畫面', '三分之四視角', 'three-quarter view', 10),
       _tag('camera_over_shoulder', '畫面', '越肩視角', 'over-the-shoulder view', 10),
+      // A bundled natural-language instruction for a horizontal view from a
+      // bed's long side. Eye level avoids turning this into a feet-forward
+      // low-angle composition.
+      _tag(
+        'camera_bedside_eye_level',
+        _cameraBedViewGroup,
+        '床側平視（由床邊朝床面）',
+        'camera positioned beside the bed, facing across the bed, eye-level shot, side view',
+        10,
+      ),
+      _tag(
+        'camera_foot_of_bed_eye_level',
+        _cameraBedViewGroup,
+        '床尾平視（由床尾朝床頭）',
+        'camera positioned at foot of bed, facing toward headboard, eye-level shot, front view',
+        10,
+      ),
       _tag('quality_masterpiece', '品質', '傑作', 'masterpiece', 11),
       _tag('quality_best_quality', '品質', '最佳品質', 'best quality', 11),
       _tag('quality_newest', '品質', '最新風格', 'newest', 11),
@@ -5975,6 +5994,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _cameraFaceFocusGroup: 73,
       _cameraFocusGroup: 74,
       _cameraCropGroup: 75,
+      _cameraBedViewGroup: 76,
       '畫面': 76,
     };
     if (expandedAdultClothingGroups.contains(group)) return 36;
@@ -11635,6 +11655,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _cameraFaceFocusGroup,
       _cameraFocusGroup,
       _cameraCropGroup,
+      _cameraBedViewGroup,
       '畫面',
       '品質',
       '其他',
@@ -11811,6 +11832,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             _cameraFaceFocusGroup,
             _cameraFocusGroup,
             _cameraCropGroup,
+            _cameraBedViewGroup,
             '畫面',
           });
           _selectedIds.removeWhere(removable.contains);
@@ -14076,6 +14098,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     _cameraFaceFocusGroup,
                     _cameraFocusGroup,
                     _cameraCropGroup,
+                    _cameraBedViewGroup,
                     '其他',
                   ]
                       .map(
@@ -14377,6 +14400,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _cameraFaceFocusGroup) return const Color(0xfff472b6);
     if (group == _cameraFocusGroup) return const Color(0xfff472b6);
     if (group == _cameraCropGroup) return const Color(0xffa78bfa);
+    if (group == _cameraBedViewGroup) return const Color(0xff38bdf8);
     if (expandedSexualActGroups.contains(group)) {
       return const Color(0xfff97316);
     }
@@ -14772,6 +14796,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _cameraFaceFocusGroup) return '鏡頭・臉部（眼睛／嘴巴／表情）';
     if (group == _cameraFocusGroup) return '鏡頭・身體聚焦（頭到腳）';
     if (group == _cameraCropGroup) return '鏡頭・裁切構圖';
+    if (group == _cameraBedViewGroup) return '鏡頭・床位視角';
     if (group == _animalTraitGroup) return '獸人特徵（含顏色）';
     if (group == _wingTypeGroup) return '翅膀（含顏色）';
     if (group == _clothingGroupHat) return '帽子／頭戴';
@@ -18492,6 +18517,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   _cameraFaceFocusGroup,
                   _cameraFocusGroup,
                   _cameraCropGroup,
+                  _cameraBedViewGroup,
                   '畫面',
                 ],
                 nextLabel: '下一步：角色資料',
