@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.139';
-const appBuildNumber = 141;
-const appVersionLabel = '1.1.139+141';
+﻿const appVersion = '1.1.140';
+const appBuildNumber = 142;
+const appVersionLabel = '1.1.140+142';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.140', 'build': '142', 'label': '1.1.140+142', 'date': '2026-09-26', 'notes': '新增10套適合25時・奏的甜美柔和配色服裝套裝；避免輸出 cute 敏感詞，全部使用可編輯的現有服裝標籤。'},
   {'version': '1.1.139', 'build': '141', 'label': '1.1.139+141', 'date': '2026-09-26', 'notes': '新增帽上垂紗與頭後方大蝴蝶結；25時・奏暗色禮服改用帽上垂紗，可各自選色。'},
   {'version': '1.1.138', 'build': '140', 'label': '1.1.138+140', 'date': '2026-09-26', 'notes': '新增 Project SEKAI 各團體初音未來；修正 25時・奏暗色禮服套裝的風格與帽子色階標籤，四套皆可套用。'},
   {'version': '1.1.137', 'build': '139', 'label': '1.1.137+139', 'date': '2026-09-26', 'notes': '新增世界計畫 Leo/need、MORE MORE JUMP、Vivid BAD SQUAD 與 Wonderlands×Showtime 初音未來角色資料'},
