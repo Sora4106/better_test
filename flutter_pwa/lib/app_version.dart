@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.146';
-const appBuildNumber = 148;
-const appVersionLabel = '1.1.146+148';
+﻿const appVersion = '1.1.147';
+const appBuildNumber = 149;
+const appVersionLabel = '1.1.147+149';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.147', 'build': '149', 'label': '1.1.147+149', 'date': '2026-09-26', 'notes': '擴充獸人耳朵動態：新增耳朵晃動、甩動、轉向、左右擺動與自然垂下。'},
   {'version': '1.1.146', 'build': '148', 'label': '1.1.146+148', 'date': '2026-09-26', 'notes': '新增獸人動作分類：尾巴互動、尾巴姿態與耳朵動態共十種可組合動作。'},
   {'version': '1.1.145', 'build': '147', 'label': '1.1.145+147', 'date': '2026-09-26', 'notes': '新增狼尾獸人角色特徵，可使用既有獸尾顏色選項與反推辨識。'},
   {'version': '1.1.144', 'build': '146', 'label': '1.1.144+146', 'date': '2026-09-26', 'notes': '新增家具腿腳互動：可坐在桌子上，並自由組合雙腳放在桌子、椅子、沙發或床上的姿勢。'},

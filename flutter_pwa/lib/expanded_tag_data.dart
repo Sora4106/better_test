@@ -578,6 +578,11 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['耳朵豎起', 'ears perked'],
       ['耳朵向後壓平', 'ears flattened'],
       ['耳朵抽動', 'ear twitch'],
+      ['耳朵晃動中', 'ears shaking'],
+      ['甩動耳朵', 'shaking ears'],
+      ['耳朵轉向聲音', 'ears turning toward sound'],
+      ['耳朵左右擺動', 'ears swaying side to side'],
+      ['耳朵自然垂下', 'ears drooping'],
     ],
   ),
   ..._expandedTags(
