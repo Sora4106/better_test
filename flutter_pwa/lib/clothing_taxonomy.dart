@@ -933,6 +933,24 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('手套', 'gloves'),
     ('無指手套', 'fingerless gloves'),
   ]),
+  // Placement-specific descriptions remain separate from the generic veil
+  // and hair bow choices, so the intended placement stays explicit.
+  _clothingTag(
+    id: 'taxonomy_accessory_veil_attached_to_hat',
+    group: '配件',
+    zh: '帽上垂紗',
+    en: 'veil attached to hat',
+    conflictGroup: 'accessory_hat_veil',
+    support: 'description',
+  ),
+  _clothingTag(
+    id: 'taxonomy_accessory_large_bow_on_back_of_head',
+    group: '配件',
+    zh: '頭後方大蝴蝶結',
+    en: 'large bow on back of head',
+    conflictGroup: 'accessory_large_back_hair_bow',
+    support: 'description',
+  ),
   ..._garments('鞋子', 'shoes', const [
     // 基本／休閒鞋型
     ('鞋子', 'shoes'),

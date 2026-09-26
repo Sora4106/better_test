@@ -1135,7 +1135,7 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
       ),
       OutfitPiecePresetData(
         scope: 'accessory',
-        garment: 'face veil',
+        garment: 'veil attached to hat',
         mainColor: 'black',
       ),
       OutfitPiecePresetData(
@@ -1146,7 +1146,7 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
       ),
     ],
     mainStyle: 'goth fashion',
-    subStyle: 'elegant',
+    subStyle: 'romantic gothic style',
     mood: 'mysterious mood',
     occasion: 'formal event outfit',
   ),
@@ -1178,7 +1178,7 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
       ),
       OutfitPiecePresetData(
         scope: 'accessory',
-        garment: 'face veil',
+        garment: 'veil attached to hat',
         mainColor: 'black',
       ),
       OutfitPiecePresetData(
@@ -1189,7 +1189,7 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
       ),
     ],
     mainStyle: 'elegant',
-    subStyle: 'goth fashion',
+    subStyle: 'dark gothic style',
     mood: 'mysterious mood',
     occasion: 'formal event outfit',
   ),
@@ -1221,7 +1221,7 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
       ),
       OutfitPiecePresetData(
         scope: 'accessory',
-        garment: 'face veil',
+        garment: 'veil attached to hat',
         mainColor: 'black',
       ),
       OutfitPiecePresetData(
@@ -1232,7 +1232,7 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
       ),
     ],
     mainStyle: 'goth fashion',
-    subStyle: 'vintage',
+    subStyle: 'Victorian gothic style',
     mood: 'mysterious mood',
     occasion: 'formal event outfit',
   ),
@@ -1263,7 +1263,7 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
       ),
       OutfitPiecePresetData(
         scope: 'accessory',
-        garment: 'face veil',
+        garment: 'veil attached to hat',
         mainColor: 'black',
       ),
       OutfitPiecePresetData(
@@ -1274,7 +1274,7 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
       ),
     ],
     mainStyle: 'goth fashion',
-    subStyle: 'elegant',
+    subStyle: 'romantic gothic style',
     mood: 'mysterious mood',
     occasion: 'party outfit',
   ),

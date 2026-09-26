@@ -2799,8 +2799,12 @@ String _clothingAccessoryPickerGroup(TagItem tag) {
   ).hasMatch(english)) {
     return _clothingGroupAnimalAccessory;
   }
+  if (english.contains('veil attached to hat')) {
+    return _clothingGroupHat;
+  }
   if (RegExp(r'\b(hair|hairband|hairclip|hairpin|barrette|headband)\b')
-      .hasMatch(english)) {
+          .hasMatch(english) ||
+      english.contains('bow on back of head')) {
     return _clothingGroupHairAccessory;
   }
   if (RegExp(
@@ -4557,8 +4561,12 @@ List<TagItem> _seedTags() => [
       ..._clothingColorTags(
           'accessory_color', '配件顏色', '配件', 'accessory', 'accessory_color'),
       ..._clothingColorTags('hat_color', '帽子顏色', '帽子', 'hat', 'hat_color'),
+      ..._clothingColorShadeTags(
+          'hat_shade_color', '帽子顏色', '帽子', 'hat', 'hat_color'),
       ..._clothingColorTags(
           'eyewear_color', '眼鏡顏色', '眼鏡', 'eyewear', 'eyewear_color'),
+      ..._clothingColorShadeTags(
+          'eyewear_shade_color', '眼鏡顏色', '眼鏡', 'eyewear', 'eyewear_color'),
 
       // Additional underwear, sock and footwear styles.
       _tag('bra_underwire', '胸罩', '鋼圈胸罩', 'underwire bra', 2,
@@ -5586,12 +5594,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     // search, reverse prompt import, and normal category pickers can all find
     // the same bilingual tag before a character is selected.
     final catalogTraitTags = _catalogCharacterTraitTags();
+    final animalTraitHairColorTags = _animalTraitHairColorTags();
     final unique = <String, TagItem>{};
     for (final tag in [
       ..._builtIns,
       ..._supplemental,
       ..._scopedClothingTags,
       ...catalogTraitTags,
+      ...animalTraitHairColorTags,
       ..._customTags,
     ]) {
       final englishKey = _englishTagKey(tag.en);
@@ -5658,7 +5668,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return [
       for (final character in _allCharacters)
         for (final trait in character.traits)
-          if (_cleanTag(trait.en).isNotEmpty)
+          if (_cleanTag(trait.en).isNotEmpty &&
+              !_isCombinedHairLengthColorTrait(trait.en))
             TagItem(
               // Keep the same id that older sessions received when this trait
               // was lazily created. Saved selections therefore continue to
@@ -5672,6 +5683,84 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               conflictGroup: trait.conflictGroup,
               support: trait.support,
             ),
+    ];
+  }
+
+  /// Returns the colour part of a hair descriptor while rejecting lengths and
+  /// hairstyles. This also recognises catalogue-specific shades such as
+  /// `silver-white`, `dusty rose`, and `grayish-green`.
+  String? _hairColorPhrase(String value) {
+    final hair = _cleanTag(value).toLowerCase();
+    if (!hair.endsWith(' hair')) return null;
+    var phrase = hair.substring(0, hair.length - ' hair'.length).trim();
+    phrase = phrase.replaceFirst(
+      RegExp(
+        r'^(?:close-cropped|cropped|very short|very long|waist-length|long|medium|short)\s+',
+      ),
+      '',
+    );
+    if (phrase.isEmpty) return null;
+    if (RegExp(
+      r'\b(?:straight|wavy|curly|curled|messy|scruffy|spiky|drill|braid|braids|ponytail|twintails|bun|odango)\b',
+    ).hasMatch(phrase)) {
+      return null;
+    }
+    return phrase;
+  }
+
+  bool _isCombinedHairLengthColorTrait(String value) {
+    final normalized = _cleanTag(value).toLowerCase();
+    return _hairColorPhrase(normalized) != null &&
+        RegExp(
+          r'^(?:close-cropped|cropped|very short|very long|waist-length|long|medium|short)\s+.+\s+hair$',
+        ).hasMatch(normalized);
+  }
+
+  String _hairColorChinesePhrase(CatalogTagData trait, String fallback) {
+    final label = trait.zh.trim().replaceFirst(
+          RegExp(r'(?:髮色|頭髮|髮)$'),
+          '',
+        );
+    if (label.isNotEmpty) return label;
+    return _promptColorChinese[fallback] ?? fallback;
+  }
+
+  /// Every character hair shade can also be selected for biological animal
+  /// traits. Existing base colours are de-duplicated by the normal tag index;
+  /// this adds only character-specific shades that are otherwise unavailable.
+  List<TagItem> _animalTraitHairColorTags() {
+    final colors = <String, String>{};
+    for (final character in _allCharacters) {
+      for (final trait in character.traits) {
+        final color = _hairColorPhrase(trait.en);
+        if (color == null) continue;
+        colors.putIfAbsent(color, () => _hairColorChinesePhrase(trait, color));
+      }
+    }
+
+    List<TagItem> build(String idPrefix, String group, String zhSuffix,
+        String enSuffix, String conflictGroup) {
+      return colors.entries
+          .map((entry) => TagItem(
+                id: '${idPrefix}_${_slug(entry.key)}',
+                group: group,
+                zh: '${entry.value}$zhSuffix',
+                en: '${entry.key} $enSuffix',
+                order: 2,
+                conflictGroup: conflictGroup,
+              ))
+          .toList();
+    }
+
+    return [
+      ...build('animal_hair_color_ear', _animalEarColorGroup, '獸耳',
+          'animal ears', 'animal_ear_color'),
+      ...build('animal_hair_color_tail', _animalTailColorGroup, '獸尾',
+          'animal tail', 'animal_tail_color'),
+      ...build('animal_hair_color_hand', _animalHandColorGroup, '獸手',
+          'animal hands', 'animal_hand_color'),
+      ...build('animal_hair_color_foot', _animalFootColorGroup, '獸足',
+          'animal feet', 'animal_foot_color'),
     ];
   }
 
@@ -7655,10 +7744,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       );
 
   String? _hairColorWord(TagItem tag) {
-    final value = _cleanTag(tag.en).toLowerCase();
-    if (!value.endsWith(' hair')) return null;
-    final color = value.substring(0, value.length - ' hair'.length).trim();
-    return _clothingColorNames.contains(color) ? color : null;
+    final color = _hairColorPhrase(tag.en);
+    if (color == null) return null;
+    // Built-in and catalogued hair-colour entries both count here. The latter
+    // includes character-specific colours that are not in the clothing palette.
+    return tag.group == '髮色' || _clothingColorNames.contains(color)
+        ? color
+        : null;
   }
 
   bool _isHairStyleTag(TagItem tag) =>
@@ -7911,6 +8003,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return cleaned;
   }
 
+  String _physicalTraitColorChinesePrefix(TagItem tag) {
+    if (_clothingColorWords(tag).isNotEmpty) {
+      return _clothingColorChinesePrefix(tag);
+    }
+    // Character-specific hair shades generate labels such as
+    // "銀白獸耳". Only the colour portion belongs before the selected
+    // biological trait (for example "銀白貓耳"), so remove this picker
+    // label's suffix instead of emitting it twice.
+    return tag.zh.trim().replaceFirst(
+          RegExp(r'(?:獸耳|獸尾|獸手|獸足)$'),
+          '',
+        );
+  }
+
   List<_GeneratedOutputTag> _coloredPhysicalTraitOutputTagsForPerson(
     int personIndex, {
     required bool Function(TagItem tag) isType,
@@ -7927,7 +8033,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final baseEnglish = _withoutLeadingPromptColor(type.en);
       final baseChinese = _withoutLeadingChineseColor(type.zh);
       return _GeneratedOutputTag(
-        zh: '${color == null ? '' : _clothingColorChinesePrefix(color)}$baseChinese',
+        zh: '${color == null ? '' : _physicalTraitColorChinesePrefix(color)}$baseChinese',
         en: [
           if (color != null) _clothingColorPrefix(color),
           baseEnglish,
@@ -8862,10 +8968,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     final value = trait.en.toLowerCase();
     if (RegExp(r'\b(?:ahoge|cowlick)\b').hasMatch(value)) return '髮型';
-    if (value.endsWith(' hair')) {
-      final color = value.substring(0, value.length - ' hair'.length).trim();
-      if (_clothingColorNames.contains(color)) return '髮色';
-    }
+    if (_hairColorPhrase(value) != null) return '髮色';
     if (_hairLengthTag(value) != null) return '髮長';
     if (value.contains('hair')) return '髮型';
     if (RegExp(r'\bwings?\b').hasMatch(value)) return _wingTypeGroup;
@@ -8954,9 +9057,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<TagItem> _characterTraitOptions(CatalogTagData trait) {
-    final direct = _tagByEnglish(trait.en);
-    if (direct != null) return [direct];
-
     final value = _cleanTag(trait.en);
     final lengthFirst = RegExp(
       r'^(close-cropped|cropped|very short|very long|waist-length|long|medium|short)\s+(.+?)\s+hair$',
@@ -8967,7 +9067,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       caseSensitive: false,
     ).firstMatch(value);
     if (lengthFirst == null && colorFirst == null) {
-      return [_createCharacterTraitOption(trait)];
+      final direct = _tagByEnglish(trait.en);
+      return [direct ?? _createCharacterTraitOption(trait)];
     }
 
     final lengthWord = lengthFirst?.group(1) ?? colorFirst!.group(2)!;
@@ -15010,7 +15111,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final baseEnglish = _withoutLeadingPromptColor(type.en);
       final baseChinese = _withoutLeadingChineseColor(type.zh);
       final zh =
-          '${selectedColor == null ? '' : _clothingColorChinesePrefix(selectedColor)}$baseChinese';
+          '${selectedColor == null ? '' : _physicalTraitColorChinesePrefix(selectedColor)}$baseChinese';
       final en = [
         if (selectedColor != null) _clothingColorPrefix(selectedColor),
         baseEnglish,

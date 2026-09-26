@@ -1,7 +1,11 @@
-﻿const appVersion = '1.1.135';
-const appBuildNumber = 137;
-const appVersionLabel = '1.1.135+137';
+﻿const appVersion = '1.1.139';
+const appBuildNumber = 141;
+const appVersionLabel = '1.1.139+141';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.139', 'build': '141', 'label': '1.1.139+141', 'date': '2026-09-26', 'notes': '新增帽上垂紗與頭後方大蝴蝶結；25時・奏暗色禮服改用帽上垂紗，可各自選色。'},
+  {'version': '1.1.138', 'build': '140', 'label': '1.1.138+140', 'date': '2026-09-26', 'notes': '新增 Project SEKAI 各團體初音未來；修正 25時・奏暗色禮服套裝的風格與帽子色階標籤，四套皆可套用。'},
+  {'version': '1.1.137', 'build': '139', 'label': '1.1.137+139', 'date': '2026-09-26', 'notes': '新增世界計畫 Leo/need、MORE MORE JUMP、Vivid BAD SQUAD 與 Wonderlands×Showtime 初音未來角色資料'},
+  {'version': '1.1.136', 'build': '138', 'label': '1.1.136+138', 'date': '2026-09-26', 'notes': '獸人特徵顏色同步完整角色髮色，支援角色專屬色彩'},
   {'version': '1.1.135', 'build': '137', 'label': '1.1.135+137', 'date': '2026-09-25', 'notes': '預先登錄所有現有角色特徵，支援搜尋、反推與匯入角色即時辨識'},
   {'version': '1.1.134', 'build': '136', 'label': '1.1.134+136', 'date': '2026-09-25', 'notes': 'Added Kanade dark dress templates with hats and face veils'},
   {'version': '1.1.133', 'build': '135', 'label': '1.1.133+135', 'date': '2026-09-25', 'notes': 'Added one-piece midriff and navel exposure detail'},
