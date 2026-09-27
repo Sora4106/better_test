@@ -10509,6 +10509,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _isUnrestrictedCompositionTag(second)) {
       return false;
     }
+    // Hairstyle descriptors are also composable. For example, a character can
+    // intentionally have layered, windswept, braided long hair at once.
+    // Hair colour and hair length keep their own dedicated replacement logic.
+    if (_isHairStyleTag(first) && _isHairStyleTag(second)) return false;
     final firstGroup = _conflictGroup(first);
     final secondGroup = _conflictGroup(second);
     if (firstGroup != null && firstGroup == secondGroup) {
@@ -15340,13 +15344,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final gradientIds = _hairStylePackageGradientIds(package);
     setState(() {
       final selectedIds = _personTagIds(personIndex);
-      // Keep a character's ahoge/cowlick when replacing the rest of the hair
-      // design: it is a defining Lala trait rather than a hairstyle preset.
+      // A hairstyle package changes its colour and length settings but keeps
+      // all existing style descriptors. This makes layered, braided, windy,
+      // curled, and similar choices freely composable.
       selectedIds.removeWhere((id) {
         final tag = _tagsById[id];
         return tag != null &&
-            _isHairPromptTag(tag) &&
-            !const {'ahoge', 'cowlick', 'antenna hair'}.contains(tag.en);
+            (_hairColorWord(tag) != null || _hairLengthTag(tag.en) != null);
       });
       selectedIds.addAll(tags.map((tag) => tag.id));
       selectedIds.addAll(gradientIds);
@@ -15376,6 +15380,126 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  Future<void> _showHairStylePackagePreview(
+      HairStylePackageData package, int personIndex) async {
+    final tags = _hairStylePackageTags(package);
+    final gradient = _hairStylePackageGradientIds(package)
+        .map((id) => _tagsById[id])
+        .whereType<TagItem>()
+        .toList();
+    final style = _hairGradientStyles.firstWhere(
+      (item) => item.id == package.gradientStyle,
+      orElse: () => _hairGradientStyles.first,
+    );
+    final apply = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(package.name),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620, maxHeight: 560),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(package.description),
+                const SizedBox(height: 14),
+                const Text('漸層色彩',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                SelectableText(
+                  gradient.isEmpty
+                      ? '未設定漸層色彩'
+                      : '${gradient.map((tag) => '${tag.zh} · ${tag.en}').join('  →  ')}（${style.zh}）',
+                ),
+                const SizedBox(height: 14),
+                const Text('套件標籤',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                if (tags.isEmpty)
+                  const Text('此套件沒有其他標籤。')
+                else
+                  SelectableText(
+                    tags.map((tag) => '${tag.zh} · ${tag.en}').join('\n'),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('關閉'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.content_cut_outlined),
+            label: Text('套用到人物 ${personIndex + 1}'),
+          ),
+        ],
+      ),
+    );
+    if (apply == true && mounted) {
+      _applyHairStylePackage(package, personIndex);
+    }
+  }
+
+  Widget _hairStylePackageCard(
+      HairStylePackageData package, int personIndex, Color tone) {
+    final applied = _hairStylePackageIsSelected(package, personIndex);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: applied
+            ? tone.withOpacity(.24)
+            : Theme.of(context).colorScheme.surfaceVariant.withOpacity(.32),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: applied ? tone : tone.withOpacity(.56)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(package.name,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
+              ),
+              if (applied) Icon(Icons.check_circle, color: tone, size: 20),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(package.description, style: const TextStyle(fontSize: 12)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _showHairStylePackagePreview(package, personIndex),
+                icon: const Icon(Icons.visibility_outlined, size: 18),
+                label: const Text('預覽'),
+              ),
+              FilledButton.icon(
+                onPressed: () {
+                  if (applied) {
+                    _removeHairStylePackage(package, personIndex);
+                  } else {
+                    _applyHairStylePackage(package, personIndex);
+                  }
+                },
+                icon: Icon(applied ? Icons.check : Icons.content_cut_outlined,
+                    size: 18),
+                label: Text(applied ? '已套用・可修改' : '套用'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _hairStylePackagePanel(int personIndex) {
     const tone = Color(0xfff9a8d4);
     return Card(
@@ -15397,67 +15521,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               return Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: hairStylePackages.map((package) {
-                  final applied =
-                      _hairStylePackageIsSelected(package, personIndex);
-                  final preview = [
-                    ...package.gradientColors,
-                    ...package.tags,
-                  ].join(', ');
-                  return SizedBox(
-                    width: width,
-                    child: Tooltip(
-                      message: preview,
-                      child: ChoiceChip(
-                        selected: applied,
-                        selectedColor: tone,
-                        avatar: Icon(
-                          applied
-                              ? Icons.check_circle
-                              : Icons.auto_awesome_outlined,
-                          size: 18,
-                          color: applied ? const Color(0xff171326) : tone,
-                        ),
-                        label: SizedBox(
-                          width: double.infinity,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(package.name,
-                                  style: TextStyle(
-                                    color: applied
-                                        ? const Color(0xff171326)
-                                        : Colors.white,
-                                    fontWeight: FontWeight.w800,
-                                  )),
-                              const SizedBox(height: 2),
-                              Text(
-                                package.description,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: applied
-                                      ? const Color(0xff171326)
-                                      : Colors.white70,
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        labelPadding: const EdgeInsets.symmetric(
-                            horizontal: 7, vertical: 7),
-                        onSelected: (selected) {
-                          if (selected) {
-                            _applyHairStylePackage(package, personIndex);
-                          } else {
-                            _removeHairStylePackage(package, personIndex);
-                          }
-                        },
-                      ),
-                    ),
-                  );
-                }).toList(),
+                children: hairStylePackages
+                    .map((package) => SizedBox(
+                          width: width,
+                          child:
+                              _hairStylePackageCard(package, personIndex, tone),
+                        ))
+                    .toList(),
               );
             },
           ),
@@ -16596,6 +16666,124 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  Future<void> _showPromptPackagePreview(
+      PromptPackageData package, int personIndex) async {
+    final tags = _promptPackageTags(package);
+    final apply = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(package.name),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 620, maxHeight: 560),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(package.description),
+                const SizedBox(height: 14),
+                const Text('可選標籤',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                if (tags.isEmpty)
+                  const Text('此套件以完整自然敘述保留動作關係。')
+                else
+                  SelectableText(
+                    tags.map((tag) => '${tag.zh} · ${tag.en}').join('\n'),
+                  ),
+                if (package.naturalPrompt.trim().isNotEmpty) ...[
+                  const SizedBox(height: 14),
+                  const Text('英文自然敘述',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  SelectableText(package.naturalPrompt),
+                  const SizedBox(height: 14),
+                  const Text('中文對照',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  SelectableText(_positiveChineseTag(package.naturalPrompt)),
+                ],
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('關閉'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: Text('套用到人物 ${personIndex + 1}'),
+          ),
+        ],
+      ),
+    );
+    if (apply == true && mounted) {
+      _applyPromptPackage(package, personIndex);
+    }
+  }
+
+  Widget _promptPackagePreviewCard({
+    required PromptPackageData package,
+    required int personIndex,
+    required Color tone,
+  }) {
+    final applied = _promptPackageIsSelected(package, personIndex);
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: applied
+            ? tone.withOpacity(.24)
+            : Theme.of(context).colorScheme.surfaceVariant.withOpacity(.32),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: applied ? tone : tone.withOpacity(.56)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(package.name,
+                    style: const TextStyle(fontWeight: FontWeight.w800)),
+              ),
+              if (applied) Icon(Icons.check_circle, color: tone, size: 20),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(package.description, style: const TextStyle(fontSize: 12)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              OutlinedButton.icon(
+                onPressed: () =>
+                    _showPromptPackagePreview(package, personIndex),
+                icon: const Icon(Icons.visibility_outlined, size: 18),
+                label: const Text('預覽'),
+              ),
+              FilledButton.icon(
+                onPressed: () {
+                  if (applied) {
+                    _removePromptPackage(package, personIndex);
+                  } else {
+                    _applyPromptPackage(package, personIndex);
+                  }
+                },
+                icon: Icon(applied ? Icons.check : Icons.auto_awesome_outlined,
+                    size: 18),
+                label: Text(applied ? '已套用・可修改' : '套用'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _promptPackagePanel({
     required int personIndex,
     required String panelId,
@@ -16604,6 +16792,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     required IconData icon,
     required Color tone,
     required List<PromptPackageData> packages,
+    bool previewAsCards = false,
   }) {
     final categories =
         packages.map((package) => package.category).toSet().toList();
@@ -16662,6 +16851,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 spacing: 8,
                 runSpacing: 8,
                 children: visible.map((package) {
+                  if (previewAsCards) {
+                    return SizedBox(
+                      width: width,
+                      child: _promptPackagePreviewCard(
+                        package: package,
+                        personIndex: personIndex,
+                        tone: tone,
+                      ),
+                    );
+                  }
                   final applied =
                       _promptPackageIsSelected(package, personIndex);
                   final english = package.naturalPrompt.trim().isEmpty
@@ -17087,6 +17286,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     icon: Icons.pets_outlined,
                     tone: const Color(0xffff9fbb),
                     packages: lalaWolfGirlPosePackages,
+                    previewAsCards: true,
                   ),
                   const SizedBox(height: 10),
                   Text(
