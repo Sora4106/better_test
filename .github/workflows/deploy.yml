@@ -60,6 +60,7 @@ jobs:
           flutter analyze
           dart run tool/check_clothing_taxonomy.dart
           dart run tool/check_finger_gestures.dart
+          dart run tool/check_expression_catalog.dart
           dart run tool/check_single_person_poses.dart
           dart run tool/validate_outfit_references.dart
 

@@ -13,6 +13,7 @@ import 'app_version.dart';
 import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'expanded_tag_data.dart';
+import 'expression_catalog_data.dart';
 import 'hair_style_package_data.dart';
 import 'outfit_reference_catalog.dart';
 import 'object_catalog_data.dart';
@@ -5575,6 +5576,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   late final List<TagItem> _builtIns = _seedTags();
   late final List<TagItem> _supplemental = [
     ...supplementalTags,
+    ...expressionCatalogTags,
     ...expandedPromptTags,
     ...objectCatalogTags,
     ...clothingTaxonomyTags,
@@ -5683,18 +5685,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..._customTags,
     ]) {
       final englishKey = _englishTagKey(tag.en);
+      final preserveExpressionSymbol =
+          tag.id.startsWith('expression_catalog_symbols_') ||
+              const {
+                'expr_symbol_squeezed_face',
+                'expr_symbol_dizzy_face',
+                'expr_symbol_cheerful',
+                'expr_symbol_happy_eyes',
+                'expr_symbol_round_eyes',
+                'expr_symbol_x_eyes',
+                'expr_symbol_v_mouth',
+                'expr_symbol_playful',
+              }.contains(tag.id);
       // The same prompt word (for example "black trim") is valid for every
       // clothing slot, so color groups must not be deduplicated together.
       final preserveClothingColorGroup = _isClothingColorGroup(tag.group);
       final preserveTaxonomyGarment = tag.id.startsWith('catalog_taxonomy_') &&
           _isClothingBaseGroup(tag.group);
-      final key = englishKey.isEmpty
-          ? 'id:${tag.id}'
-          : (_isScopedClothingGroup(tag.group) ||
-                  preserveClothingColorGroup ||
-                  preserveTaxonomyGarment)
-              ? 'en:$englishKey:${tag.group}'
-              : 'en:$englishKey';
+      final key = preserveExpressionSymbol
+          ? 'expression-symbol:${tag.en.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ')}'
+          : englishKey.isEmpty
+              ? 'id:${tag.id}'
+              : (_isScopedClothingGroup(tag.group) ||
+                      preserveClothingColorGroup ||
+                      preserveTaxonomyGarment)
+                  ? 'en:$englishKey:${tag.group}'
+                  : 'en:$englishKey';
       unique.putIfAbsent(key, () => tag);
     }
     final tags = List<TagItem>.unmodifiable(unique.values);
@@ -5928,10 +5944,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ].where(_isDynamicHeadActionTag));
     }
     if (_isExpressionPickerGroup(group)) {
-      return _uniquePickerTags(<TagItem>[
-        ...?_tagsByGroupCache!['表情'],
-        ...?_tagsByGroupCache!['臉部特徵'],
-      ].where((tag) => _expressionSubgroupForTag(tag) == group));
+      return _uniquePickerTags(
+        _allTags.where((tag) => _expressionSubgroupForTag(tag) == group),
+      );
     }
     if (group == '動作') {
       return (_tagsByGroupCache!['動作'] ?? const <TagItem>[])
@@ -6311,9 +6326,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }.contains(group);
 
   String? _expressionSubgroupForTag(TagItem tag) {
-    if (!_isDynamicHeadActionTag(tag)) return null;
+    if (tag.id.startsWith('expression_catalog_symbols_')) {
+      return _expressionSymbolGroup;
+    }
+    if (tag.id.startsWith('expression_catalog_teasing_') ||
+        tag.id.startsWith('expression_catalog_teasing_adult_')) {
+      return _expressionTeasingGroup;
+    }
 
     final english = tag.en.toLowerCase();
+    // A few official face tags already live in another functional picker.
+    // Reuse the same tag in the expression workflow instead of registering a
+    // duplicate English token with a second ID.
+    if (const {'empty eyes', 'eye contact'}.contains(english)) {
+      return _expressionEyesGroup;
+    }
+    if (english == 'afterglow') return _expressionTeasingGroup;
+    if (english == 'facepalm') return _expressionOtherGroup;
+    if (!_isDynamicHeadActionTag(tag)) return null;
+
     const symbolExpressions = <String>{
       '>_<',
       '@_@',
@@ -6340,6 +6371,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'smug',
       'smirk',
       'evil smile',
+      'evil grin',
+      'crazy smile',
+      'doyagao',
     };
     if (teasingExpressions.contains(english)) {
       return _expressionTeasingGroup;
