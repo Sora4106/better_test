@@ -8,8 +8,7 @@ const pinkOutfitReferencePresets = <OutfitReferencePresetData>[
     category: '甜美／浪漫',
     name: '粉白貓系蕾絲露肩套裝',
     palette: '白色 × 粉紅色 × 黑色',
-    description:
-        '白色露肩束腰上衣配粉紅花邊，搭黑色荷葉迷你裙、粉白蕾絲胸罩與長襪；粉紅貓耳、貓尾以角色獸人特徵加入，不使用裝飾品。',
+    description: '白色露肩束腰上衣配粉紅花邊，搭黑色荷葉迷你裙、粉白蕾絲胸罩與長襪；粉紅貓耳、貓尾以角色獸人特徵加入，不使用裝飾品。',
     pieces: [
       OutfitPiecePresetData(
         scope: 'top',
@@ -131,5 +130,74 @@ const pinkOutfitReferencePresets = <OutfitReferencePresetData>[
     subStyle: 'romantic feminine style',
     mood: 'sweet mood',
     occasion: 'outdoor outfit',
+  ),
+  OutfitReferencePresetData(
+    id: 'lala_wolf_white_pink_cropped_hoodie',
+    category: '甜美／浪漫',
+    name: '白粉狼耳短版連帽套裝',
+    palette: '白色 × 粉紅色 × 淺粉紅',
+    description:
+        '白粉無袖短版連帽上衣搭配安全短褲、粉白百褶分層短裙、踝襪與運動鞋；附心形拉鍊拉環、胸前小愛心徽章與可編輯的白色大型蓬鬆狼尾。',
+    pieces: [
+      OutfitPiecePresetData(
+        scope: 'top',
+        garment: 'cropped hoodie',
+        mainColor: 'white',
+        secondaryColor: 'pink',
+        cut: 'sleeveless',
+        fit: 'fitted',
+        materials: ['cotton'],
+        details: [
+          'zipper',
+          'heart-shaped zipper pull',
+          'heart emblem on chest'
+        ],
+        patterns: ['heart pattern'],
+      ),
+      OutfitPiecePresetData(
+        scope: 'shorts',
+        garment: 'safety shorts',
+        mainColor: 'white',
+        secondaryColor: 'pink',
+        fit: 'fitted',
+        length: 'micro length',
+        materials: ['cotton'],
+      ),
+      OutfitPiecePresetData(
+        scope: 'skirt',
+        garment: 'pleated skirt',
+        mainColor: 'pink',
+        secondaryColor: 'white',
+        detailColor: 'light pink',
+        cut: 'high-waisted',
+        fit: 'fitted',
+        length: 'mini',
+        materials: ['cotton'],
+        details: ['layered', 'frills', 'pleats'],
+        patterns: ['gradient'],
+      ),
+      OutfitPiecePresetData(
+        scope: 'socks',
+        garment: 'ankle socks',
+        mainColor: 'white',
+        secondaryColor: 'pink',
+      ),
+      OutfitPiecePresetData(
+        scope: 'shoes',
+        garment: 'sneakers',
+        mainColor: 'white',
+        secondaryColor: 'pink',
+      ),
+    ],
+    mainStyle: 'feminine',
+    subStyle: 'sweet feminine style',
+    mood: 'sweet mood',
+    featureTags: [
+      'wolf ears',
+      'white animal ears',
+      'large fluffy wolf tail',
+      'white animal tail',
+      'soft pink fur accents',
+    ],
   ),
 ];

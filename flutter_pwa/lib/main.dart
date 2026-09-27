@@ -10,6 +10,7 @@ import 'app_version.dart';
 import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'expanded_tag_data.dart';
+import 'hair_style_package_data.dart';
 import 'outfit_reference_catalog.dart';
 import 'object_catalog_data.dart';
 import 'prompt_package_data.dart';
@@ -4088,7 +4089,14 @@ List<TagItem> _expandedHairStyleTags() {
     ['asymmetrical_bob', '不對稱短髮', 'asymmetrical bob'],
     ['blunt_bob', '齊切短髮', 'blunt bob'],
     ['layered_long_hair', '層次長髮', 'layered long hair'],
+    ['tousled_hair', '自然微亂髮', 'tousled hair'],
+    ['windswept_hair', '迎風飄動髮', 'windswept hair'],
+    ['separated_hair_strands', '分束髮絲', 'separated hair strands'],
     ['feathered_hair', '羽毛剪', 'feathered hair'],
+    ['voluminous_flowing_hair', '蓬鬆飄逸長髮', 'voluminous flowing hair'],
+    ['uneven_wispy_ends', '碎薄不規則髮尾', 'uneven wispy ends'],
+    ['loose_face_framing_strands', '臉旁散落髮絲', 'loose face-framing strands'],
+    ['pink_ribbon_tied_side_braid', '粉紅緞帶側辮', 'pink ribbon-tied side braid'],
     ['shaggy_hair', '碎剪長髮', 'shaggy hair'],
     ['fluffy_long_hair', '蓬鬆長髮', 'fluffy long hair'],
     ['fluffy_short_hair', '蓬鬆短髮', 'fluffy bob cut'],
@@ -5335,6 +5343,9 @@ List<TagItem> _seedTags() => [
       _tag('scene_bathroom', _indoorSceneGroup, '浴室', 'bathroom', 9),
       _tag('scene_classroom', _indoorSceneGroup, '教室', 'classroom', 9),
       _tag('scene_beach', _outdoorSceneGroup, '海灘', 'beach', 9),
+      _tag('scene_forest_clearing', _outdoorSceneGroup, '森林空地',
+          'forest clearing', 9,
+          conflictGroup: 'scene'),
       _tag('scene_cherry_blossoms', _outdoorSceneGroup, '櫻花樹下',
           'cherry blossoms', 9),
       _tag('scene_snowing', _outdoorSceneGroup, '下雪', 'snowing', 9),
@@ -5359,6 +5370,14 @@ List<TagItem> _seedTags() => [
       _tag('effect_black_fire', '畫面', '黑色火焰', 'black fire', 10),
       _tag('effect_high_contrast', '畫面', '高對比', 'high contrast', 10),
       _tag('effect_depth_of_field', '畫面', '景深', 'depth of field', 10),
+      _tag('effect_soft_depth_of_field', '畫面', '柔和景深', 'soft depth of field',
+          10),
+      _tag('effect_dappled_sunlight', '畫面', '斑駁日光', 'dappled sunlight', 10),
+      _tag('effect_wildflowers', '畫面', '野花環繞', 'wildflowers', 10),
+      _tag('effect_moss', '畫面', '苔蘚地面', 'moss', 10),
+      _tag('effect_forest_stream', '畫面', '森林小溪', 'stream', 10),
+      _tag('effect_scattered_petals', '畫面', '散落花瓣', 'scattered petals', 10),
+      _tag('effect_dreamy_atmosphere', '畫面', '夢幻氛圍', 'dreamy atmosphere', 10),
       _tag('effect_complementary_colors', '畫面', '互補色搭配', 'complementary colors',
           10),
       _tag('effect_foreshortening', '畫面', '透視縮短', 'foreshortening', 10),
@@ -7475,10 +7494,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             : 'floral embroidery on $noun',
         'buttons' =>
           hasDetailColor ? '${color}buttons on $noun' : 'buttoned $noun',
+        'heart-shaped zipper pull' =>
+          '${color}heart-shaped zipper pull on $noun',
+        'heart emblem on chest' => '${color}heart emblem on chest of $noun',
         'piping' => '${color}piping on $noun',
         _ => '$color$raw on $noun',
       };
-      final chinese = hasDetailColor ? '$nounZh上的$colorZh$zh' : '$zh$nounZh';
+      final chinese = switch (raw.toLowerCase()) {
+        'heart-shaped zipper pull' => '$nounZh上的${colorZh}心形拉鍊拉環',
+        'heart emblem on chest' => '$nounZh胸前的${colorZh}小愛心徽章',
+        _ => hasDetailColor ? '$nounZh上的$colorZh$zh' : '$zh$nounZh',
+      };
       return (chinese, english.trim());
     }
 
@@ -15152,6 +15178,171 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  List<TagItem> _hairStylePackageTags(HairStylePackageData package) {
+    final seen = <String>{};
+    return package.tags
+        .map(_tagByEnglish)
+        .whereType<TagItem>()
+        .where((tag) => seen.add(tag.id))
+        .toList();
+  }
+
+  List<String> _hairStylePackageGradientIds(HairStylePackageData package) =>
+      package.gradientColors
+          .map(_tagByEnglish)
+          .whereType<TagItem>()
+          .where((tag) => _hairColorWord(tag) != null)
+          .map((tag) => tag.id)
+          .toSet()
+          .take(2)
+          .toList();
+
+  bool _hairStylePackageIsSelected(
+      HairStylePackageData package, int personIndex) {
+    final tags = _hairStylePackageTags(package);
+    final tagIds = _personTagIds(personIndex);
+    if (!tagIds.containsAll(tags.map((tag) => tag.id))) return false;
+    final expectedGradient = _hairStylePackageGradientIds(package);
+    if (expectedGradient.isEmpty) return true;
+    final actualGradient = _hairGradientColorIdsForPerson(personIndex);
+    if (actualGradient.length != expectedGradient.length) return false;
+    for (var index = 0; index < expectedGradient.length; index++) {
+      if (actualGradient[index] != expectedGradient[index]) return false;
+    }
+    return _personSlots[personIndex].hairGradientStyle == package.gradientStyle;
+  }
+
+  void _applyHairStylePackage(HairStylePackageData package, int personIndex) {
+    final tags = _hairStylePackageTags(package);
+    final gradientIds = _hairStylePackageGradientIds(package);
+    setState(() {
+      final selectedIds = _personTagIds(personIndex);
+      // Keep a character's ahoge/cowlick when replacing the rest of the hair
+      // design: it is a defining Lala trait rather than a hairstyle preset.
+      selectedIds.removeWhere((id) {
+        final tag = _tagsById[id];
+        return tag != null &&
+            _isHairPromptTag(tag) &&
+            !const {'ahoge', 'cowlick', 'antenna hair'}.contains(tag.en);
+      });
+      selectedIds.addAll(tags.map((tag) => tag.id));
+      selectedIds.addAll(gradientIds);
+      final slot = _personSlots[personIndex];
+      slot.hairGradientColorIds = gradientIds;
+      slot.hairGradientStyle = gradientIds.length >= 2
+          ? package.gradientStyle
+          : _defaultHairGradientStyle;
+      _syncHairGradientColorIds(personIndex, selectedIds);
+      _persist();
+    });
+  }
+
+  void _removeHairStylePackage(HairStylePackageData package, int personIndex) {
+    final packageIds = <String>{
+      ..._hairStylePackageTags(package).map((tag) => tag.id),
+      ..._hairStylePackageGradientIds(package),
+    };
+    setState(() {
+      final selectedIds = _personTagIds(personIndex);
+      selectedIds.removeAll(packageIds);
+      _personSlots[personIndex].hairGradientColorIds.removeWhere(
+            (id) => packageIds.contains(id),
+          );
+      _syncHairGradientColorIds(personIndex, selectedIds);
+      _persist();
+    });
+  }
+
+  Widget _hairStylePackagePanel(int personIndex) {
+    const tone = Color(0xfff9a8d4);
+    return Card(
+      margin: const EdgeInsets.only(top: 8),
+      color: tone.withOpacity(.08),
+      child: ExpansionTile(
+        key: PageStorageKey<String>('hair-style-package-$personIndex'),
+        leading: const Icon(Icons.content_cut_outlined, color: tone),
+        title: Text('髮型套件（${hairStylePackages.length} 組）',
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        subtitle: const Text('套用後只是勾選既有髮色、髮長與髮型，可再自由修改。'),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
+        children: [
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 760 ? 3 : 1;
+              final width =
+                  (constraints.maxWidth - (columns - 1) * 8) / columns;
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: hairStylePackages.map((package) {
+                  final applied =
+                      _hairStylePackageIsSelected(package, personIndex);
+                  final preview = [
+                    ...package.gradientColors,
+                    ...package.tags,
+                  ].join(', ');
+                  return SizedBox(
+                    width: width,
+                    child: Tooltip(
+                      message: preview,
+                      child: ChoiceChip(
+                        selected: applied,
+                        selectedColor: tone,
+                        avatar: Icon(
+                          applied
+                              ? Icons.check_circle
+                              : Icons.auto_awesome_outlined,
+                          size: 18,
+                          color: applied ? const Color(0xff171326) : tone,
+                        ),
+                        label: SizedBox(
+                          width: double.infinity,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(package.name,
+                                  style: TextStyle(
+                                    color: applied
+                                        ? const Color(0xff171326)
+                                        : Colors.white,
+                                    fontWeight: FontWeight.w800,
+                                  )),
+                              const SizedBox(height: 2),
+                              Text(
+                                package.description,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: applied
+                                      ? const Color(0xff171326)
+                                      : Colors.white70,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        labelPadding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 7),
+                        onSelected: (selected) {
+                          if (selected) {
+                            _applyHairStylePackage(package, personIndex);
+                          } else {
+                            _removeHairStylePackage(package, personIndex);
+                          }
+                        },
+                      ),
+                    ),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _physicalTraitColorSection({
     required int personIndex,
     required String title,
@@ -15682,6 +15873,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                   const SizedBox(height: 8),
                   _personPromptWeightControls(index),
+                  if (groups.contains('髮型')) ...[
+                    _hairStylePackagePanel(index),
+                    const SizedBox(height: 8),
+                  ],
                   const SizedBox(height: 8),
                   _stepTagPicker(groups,
                       nextLabel: nextLabel,
@@ -16734,6 +16929,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     icon: Icons.pets_outlined,
                     tone: const Color(0xfffbbf24),
                     packages: felineSoloPosePackages,
+                  ),
+                  _promptPackagePanel(
+                    personIndex: index,
+                    panelId: 'wolf-girl-pose',
+                    title: '狼耳少女姿勢套件',
+                    subtitle: '文件整理的 7 組休息、撒嬌與森林用個人姿勢；不會自動加入獸化特徵。',
+                    icon: Icons.pets_outlined,
+                    tone: const Color(0xffff9fbb),
+                    packages: lalaWolfGirlPosePackages,
                   ),
                   const SizedBox(height: 10),
                   Text(

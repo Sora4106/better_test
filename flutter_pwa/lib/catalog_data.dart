@@ -219,6 +219,19 @@ const supplementalTags = <CatalogTagData>[
       en: 'wolf tail',
       order: 1),
   CatalogTagData(
+      id: 'trait_large_fluffy_wolf_tail',
+      group: '獸化特徵',
+      zh: '大型蓬鬆狼尾（角色特徵）',
+      en: 'large fluffy wolf tail',
+      order: 1),
+  CatalogTagData(
+      id: 'trait_soft_pink_fur_accents',
+      group: '獸化特徵',
+      zh: '柔粉毛色點綴（角色特徵）',
+      en: 'soft pink fur accents',
+      order: 1,
+      support: 'description'),
+  CatalogTagData(
       id: 'trait_bunny_tail',
       group: '獸化特徵',
       zh: '兔尾（角色特徵）',

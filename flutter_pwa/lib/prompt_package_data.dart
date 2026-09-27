@@ -198,6 +198,69 @@ const felineSoloPosePackages = <PromptPackageData>[
   ),
 ];
 
+/// A complete, editable pose set for the Lala-style wolf-girl prompt pack.
+/// These are natural descriptions on purpose: each kit preserves the intended
+/// relation between hands, tail, legs, and upper body without forcing animal
+/// traits onto a character who has not selected them.
+const lalaWolfGirlPosePackages = <PromptPackageData>[
+  PromptPackageData(
+    id: 'wolf_girl_kneeling_paws',
+    name: '雙膝跪地・可愛爪子',
+    description: '直身跪姿，雙手靠近臉側做可愛爪子手勢。',
+    category: '撒嬌與玩耍',
+    naturalPrompt:
+        'kneeling on both knees, knees together, upper body upright, both hands raised beside face in a playful pawing gesture, elbows slightly bent, head slightly tilted, bright gentle smile, light forward lean',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_side_lying_tail_hug',
+    name: '側躺蜷腿・抱尾巴',
+    description: '側躺蜷起雙腿，雙手抱住蓬鬆尾巴。',
+    category: '休息與撒嬌',
+    naturalPrompt:
+        'lying on side, body gently curled, knees bent, both arms hugging a large fluffy tail, relaxed shoulders, soft smile, calm sleepy expression',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_supine_stretch',
+    name: '仰躺・伸懶腰',
+    description: '仰躺伸展雙臂，一腿伸直、一腿微彎。',
+    category: '伸展與放鬆',
+    naturalPrompt:
+        'lying on back, both arms stretched above head, one leg straight and the other knee slightly bent, relaxed smile, full-body stretch',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_prone_looking_back',
+    name: '趴躺・回頭看',
+    description: '俯臥以手肘支撐，雙腳踝交叉並回頭望向鏡頭。',
+    category: '撒嬌與玩耍',
+    naturalPrompt:
+        'lying on stomach, elbows supporting upper body, ankles crossed, head turned back toward viewer, chin resting on one hand, gentle smile',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_half_side_lying',
+    name: '半側躺・撐起上身',
+    description: '單肘撐起上身，另一手自然放在大腿。',
+    category: '休息與撒嬌',
+    naturalPrompt:
+        'half side-lying pose, upper body propped up on one elbow, other hand resting on thigh, one knee bent, relaxed smile',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_curled_tail_rest',
+    name: '蜷成一團・抱尾巴休息',
+    description: '蜷縮抱住蓬鬆尾巴，以臉頰貼著尾巴休息。',
+    category: '休息與撒嬌',
+    naturalPrompt:
+        'curled-up resting pose, knees drawn close, both arms hugging a large fluffy tail, cheek resting against tail, peaceful sleepy expression',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_forest_supine_tail_hug',
+    name: '森林用・平躺抱尾巴',
+    description: '平躺抱尾巴的寧靜姿勢；可搭配森林空地、斑駁日光與柔和景深。',
+    category: '森林情境',
+    naturalPrompt:
+        'lying flat on back, both arms hugging a large fluffy tail across chest, legs relaxed, peaceful smile, relaxed forest-resting pose',
+  ),
+];
+
 /// Sixteen non-explicit shared interaction kits. These belong after all
 /// individual character blocks and only appear when at least two people exist.
 const felineInteractionPackages = <PromptPackageData>[
