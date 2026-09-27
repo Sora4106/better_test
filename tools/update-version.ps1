@@ -37,7 +37,11 @@ $newData = [ordered]@{
 $json = $newData | ConvertTo-Json -Depth 8
 Set-Content -LiteralPath $versionPath -Value $json -Encoding UTF8
 
-$dartHistory = ($history | ForEach-Object {
+# The app only displays the latest five releases. Keep the full audit trail in
+# version.json and CHANGELOG.md, but avoid embedding the entire history in the
+# browser bundle on every release.
+$appHistory = @($history | Select-Object -First 5)
+$dartHistory = ($appHistory | ForEach-Object {
   $safeNotes = $_.notes.Replace([string][char]39, ([string][char]92 + [string][char]39))
   "  {'version': '$($_.version)', 'build': '$($_.build)', 'label': '$($_.label)', 'date': '$($_.date)', 'notes': '$safeNotes'},"
 }) -join "`n"

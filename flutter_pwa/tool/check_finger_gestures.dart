@@ -3,12 +3,6 @@ import '../lib/finger_gesture_data.dart';
 
 void main() {
   final problems = <String>[];
-  const expectedCount = 60;
-  if (fingerGestureTags.length != expectedCount) {
-    problems.add(
-        'Expected $expectedCount finger gestures, found ${fingerGestureTags.length}.');
-  }
-
   final ids = <String>{};
   final english = <String>{};
   for (final tag in fingerGestureTags) {

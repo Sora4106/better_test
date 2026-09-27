@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
+// TODO: Migrate browser APIs to package:web after raising the minimum Flutter
+// toolchain. dart:html remains required by the current pinned Flutter release.
+// ignore: deprecated_member_use
 import 'dart:html' as html;
 import 'dart:math';
 
@@ -2625,14 +2628,6 @@ TagItem _catalogTag(CatalogTagData data, {String prefix = 'catalog'}) =>
       adult: data.adult,
       conflictGroup: data.conflictGroup,
       support: data.support,
-    );
-
-TagItem _characterTag(String id, String zh, String en) => TagItem(
-      id: 'character_$id',
-      group: '角色標籤',
-      zh: zh,
-      en: en,
-      order: 1,
     );
 
 TagItem _tag(
@@ -5644,6 +5639,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   );
   Timer? _searchDebounce;
   Timer? _poseExtraDebounce;
+  Timer? _pickerSearchDebounce;
+  Timer? _globalSearchDebounce;
+  Timer? _persistDebounce;
+  StreamSubscription<html.Event>? _beforeUnloadSubscription;
 
   String _activeGroup = '全部';
   String _gender = '女性';
@@ -8211,10 +8210,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       colorGroup,
     ).map((id) => _tagsById[id]).whereType<TagItem>().toList();
     return types.map((type) {
-      final baseEnglish = _withoutLeadingPromptColor(type.en);
-      final baseChinese = _withoutLeadingChineseColor(type.zh);
       final primary = colors.isEmpty ? null : colors.first;
       final secondary = colors.length >= 2 ? colors[1] : null;
+      // Preserve a type's built-in colour when no colour override was picked.
+      // Only strip it after a dedicated colour selection exists.
+      final baseEnglish = primary == null
+          ? _cleanTag(type.en)
+          : _withoutLeadingPromptColor(type.en);
+      final baseChinese = primary == null
+          ? type.zh.trim()
+          : _withoutLeadingChineseColor(type.zh);
       final english = primary == null
           ? baseEnglish
           : secondary == null
@@ -8730,6 +8735,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     super.initState();
     _checkForVersionUpdate();
     _search.addListener(_scheduleSearchRefresh);
+    _beforeUnloadSubscription = html.window.onBeforeUnload.listen((_) {
+      _collectUnknownExtraPositiveTags();
+      _persistNow();
+    });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future<void>.delayed(Duration.zero, () {
         if (!mounted) return;
@@ -8748,6 +8757,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _searchDebounce?.cancel();
     _searchDebounce = Timer(const Duration(milliseconds: 160), () {
       if (mounted) setState(() {});
+    });
+  }
+
+  void _schedulePickerSearch(String key, String value) {
+    _pickerSearchDebounce?.cancel();
+    _pickerSearchDebounce = Timer(const Duration(milliseconds: 140), () {
+      if (!mounted) return;
+      setState(() => _pickerTagQueries[key] = value);
+    });
+  }
+
+  void _scheduleGlobalSearch(String value) {
+    _globalSearchDebounce?.cancel();
+    _globalSearchDebounce = Timer(const Duration(milliseconds: 140), () {
+      if (!mounted) return;
+      setState(() => _globalTagQuery = value);
     });
   }
 
@@ -8883,8 +8908,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void dispose() {
     _searchDebounce?.cancel();
     _poseExtraDebounce?.cancel();
+    _pickerSearchDebounce?.cancel();
+    _globalSearchDebounce?.cancel();
+    _persistDebounce?.cancel();
     _collectUnknownExtraPositiveTags();
-    _persist();
+    _persistNow();
+    unawaited(_beforeUnloadSubscription?.cancel());
     _search.removeListener(_scheduleSearchRefresh);
     _search.dispose();
     _globalTagSearch.dispose();
@@ -8938,6 +8967,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _clearPickerQuery(List<String> groups, int? personIndex) {
+    _pickerSearchDebounce?.cancel();
     final key = _pickerQueryKey(groups, personIndex);
     _pickerTagQueries.remove(key);
     _pickerSearchControllers[key]?.clear();
@@ -9144,9 +9174,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       };
 
   void _persist() {
+    // localStorage and JSON encoding are synchronous in the browser. Most UI
+    // actions call this from setState, so coalescing rapid changes prevents a
+    // visible pause while still writing promptly and flushing on unload.
+    _persistDebounce?.cancel();
+    _persistDebounce = Timer(const Duration(milliseconds: 120), _persistNow);
+  }
+
+  void _persistNow() {
+    _persistDebounce?.cancel();
+    _persistDebounce = null;
     html.window.localStorage[_storageKey] = jsonEncode(_snapshot());
   }
 
+  // Kept to read and compare old prompt layouts during migrations.
+  // ignore: unused_element
   String _peopleTag() {
     if (_gender == '女性')
       return _peopleCount == 1 ? '1girl' : '${_peopleCount}girls';
@@ -9155,6 +9197,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _peopleCount == 1 ? '1person' : '${_peopleCount}people';
   }
 
+  // ignore: unused_element
   String _peopleZh() {
     final type = _gender == '女性'
         ? '女性角色'
@@ -9731,6 +9774,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return ['原創角色'];
   }
 
+  // ignore: unused_element
   List<String> _characterTokensNew() {
     final result = <String>[];
     for (var index = 0; index < _personSlots.length; index++) {
@@ -11155,6 +11199,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  // ignore: unused_element
   bool _isPhysicalAnimalTraitTag(TagItem tag) =>
       tag.group == _animalTraitGroup &&
       (_isAnimalEarTypeTag(tag) ||
@@ -11691,7 +11736,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _isAnimalHandTypeTag(tag) ||
           _isAnimalFootTypeTag(tag) ||
           _isWingTypeTag(tag);
-      return physicalType && _reverseKeyContainsPhrase(key, tag.en);
+      if (!physicalType) return false;
+      final base = _withoutLeadingPromptColor(tag.en);
+      return _reverseKeyContainsPhrase(key, tag.en) ||
+          (base.isNotEmpty && _reverseKeyContainsPhrase(key, base));
     }).toList()
       ..sort((a, b) =>
           _englishTagKey(b.en).length.compareTo(_englishTagKey(a.en).length));
@@ -11707,17 +11755,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 : _isAnimalFootTypeTag(type)
                     ? _animalFootColorGroup
                     : _wingColorGroup;
-    final colors = _allTags
-        .where((tag) => tag.group == colorGroup)
-        .where((tag) {
+    final colors =
+        _allTags.where((tag) => tag.group == colorGroup).where((tag) {
       final words = _clothingColorWords(tag);
       return words.isNotEmpty &&
           words.every((word) => _reverseKeyContainsPhrase(key, word));
     }).toList()
-      ..sort((a, b) => _clothingColorPrefix(b)
-          .length
-          .compareTo(_clothingColorPrefix(a).length));
-    return [type, if (colors.isNotEmpty) colors.first];
+          ..sort((a, b) {
+            final aPrefix = _englishTagKey(_clothingColorPrefix(a));
+            final bPrefix = _englishTagKey(_clothingColorPrefix(b));
+            final aIndex = key.indexOf(aPrefix);
+            final bIndex = key.indexOf(bPrefix);
+            if (aIndex != bIndex) return aIndex.compareTo(bIndex);
+            return bPrefix.length.compareTo(aPrefix.length);
+          });
+    return [type, ...colors.take(2)];
   }
 
   List<TagItem> _reverseTagCandidates(String value) {
@@ -11935,6 +11987,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    final reversePhysicalColorOrder = <String, List<String>>{};
+    for (final tag in recognized) {
+      if (!_physicalTraitColorGroups.contains(tag.group)) continue;
+      final ids = reversePhysicalColorOrder.putIfAbsent(
+        tag.group,
+        () => <String>[],
+      );
+      if (!ids.contains(tag.id) && ids.length < 2) ids.add(tag.id);
+    }
     final globalGroups = {
       _indoorSceneGroup,
       _outdoorSceneGroup,
@@ -11949,46 +12010,51 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '其他',
     };
     setState(() {
-      if (importedPeopleCount != null) {
-        while (_personSlots.length < importedPeopleCount!) {
+      final peopleCount = importedPeopleCount;
+      if (peopleCount != null) {
+        while (_personSlots.length < peopleCount) {
           _personSlots.add(PersonSlot());
         }
-        while (_personSlots.length > importedPeopleCount!) {
+        while (_personSlots.length > peopleCount) {
           _personSlots.removeLast();
         }
-        _personSelectedIds
-            .removeWhere((index, _) => index >= importedPeopleCount!);
-        _removedCharacterTags
-            .removeWhere((index, _) => index >= importedPeopleCount!);
-        _personTagQueries
-            .removeWhere((index, _) => index >= importedPeopleCount!);
+        _personSelectedIds.removeWhere((index, _) => index >= peopleCount);
+        _removedCharacterTags.removeWhere((index, _) => index >= peopleCount);
+        _personTagQueries.removeWhere((index, _) => index >= peopleCount);
         _personActiveGroups.removeWhere((key, _) =>
             int.tryParse(key.split(':').first) != null &&
-            int.parse(key.split(':').first) >= importedPeopleCount!);
-        _peopleCount = importedPeopleCount!;
+            int.parse(key.split(':').first) >= peopleCount);
+        _peopleCount = peopleCount;
         _gender = importedGender ?? _gender;
       }
 
-      if (detectedCharacter != null) {
+      final character = detectedCharacter;
+      if (character != null) {
         final slot = _personSlots[0];
         _resetCharacterFeatureSelections(0, _characterForNew(slot));
         slot.detailed = true;
         slot.mode = '動漫角色';
-        slot.characterId = detectedCharacter!.id;
-        slot.animeTag = detectedCharacter!.animeTag;
+        slot.characterId = character.id;
+        slot.animeTag = character.animeTag;
         _removedCharacterTags.remove(0);
         _syncCharacterTraitsForSlot(0);
         _recentCharacterIds
-          ..remove(detectedCharacter!.id)
-          ..insert(0, detectedCharacter!.id);
+          ..remove(character.id)
+          ..insert(0, character.id);
         if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
       } else if (detectedAnimeTag != null) {
         _personSlots[0]
           ..detailed = true
           ..mode = '動漫角色'
-          ..animeTag = detectedAnimeTag!;
+          ..animeTag = detectedAnimeTag;
       }
 
+      final personIds = _personTagIds(0);
+      for (final entry in reversePhysicalColorOrder.entries) {
+        personIds.removeWhere((id) => _tagsById[id]?.group == entry.key);
+        _personSlots[0].physicalTraitGradientColorIds[entry.key] =
+            List<String>.from(entry.value);
+      }
       for (final tag in recognized.toSet()) {
         if (tag.en == '1girl' || tag.en == '1boy' || tag.en == '1person') {
           continue;
@@ -11999,9 +12065,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 : _personTagIds(0);
         final current =
             target == _selectedIds ? _selectedTags : _selectedTagsForPerson(0);
-        for (final conflict
-            in current.where((item) => _tagsConflict(item, tag))) {
-          target.remove(conflict.id);
+        if (!_physicalTraitColorGroups.contains(tag.group)) {
+          for (final conflict
+              in current.where((item) => _tagsConflict(item, tag))) {
+            target.remove(conflict.id);
+          }
         }
         target.add(tag.id);
       }
@@ -14340,7 +14408,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 ),
                 const SizedBox(height: 10),
                 DropdownButtonFormField<String>(
-                  value: group,
+                  initialValue: group,
                   decoration: const InputDecoration(labelText: '分類與輸出順序'),
                   items: const [
                     '自訂角色',
@@ -14564,6 +14632,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _sortPickerTags(tags, effectiveGroup);
   }
 
+  // ignore: unused_element
   bool _isEyeColorTag(TagItem tag) => RegExp(
           r'\b(blonde|black|silver|blue|red|pink|white|purple|aqua|brown|green|orange|yellow|gray|gold|teal)\s+eyes?\b',
           caseSensitive: false)
@@ -14757,7 +14826,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Color _pickerLayerSurface(Color tone, {required bool selected}) =>
       Color.alphaBlend(
-        tone.withOpacity(selected ? .9 : .18),
+        tone.withValues(alpha: selected ? .9 : .18),
         selected ? const Color(0xff171326) : _buttonSurface,
       );
 
@@ -14844,7 +14913,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         selectedColor: _pickerLayerSurface(tone, selected: true),
         checkmarkColor: _pickerLayerText(tone, selected: true),
         side: BorderSide(
-          color: selected ? tone : tone.withOpacity(.7),
+          color: selected ? tone : tone.withValues(alpha: .7),
         ),
         onSelected: (_) => _toggle(tag, personIndex: personIndex),
       ),
@@ -14936,7 +15005,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           selectedColor: _pickerLayerSurface(tone, selected: true),
           checkmarkColor: Colors.transparent,
           side: BorderSide(
-            color: selected ? Colors.white : tone.withOpacity(.72),
+            color: selected ? Colors.white : tone.withValues(alpha: .72),
           ),
           onSelected: (_) {
             if (onTap != null) {
@@ -14982,7 +15051,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         label: Text(label),
         tooltip: '色 $order（$role）',
         backgroundColor: _pickerLayerSurface(tone, selected: color != null),
-        side: BorderSide(color: tone.withOpacity(.75)),
+        side: BorderSide(color: tone.withValues(alpha: .75)),
         onDeleted: color == null
             ? null
             : () => _clearClothingColorSlot(personIndex, group),
@@ -14995,7 +15064,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       decoration: BoxDecoration(
         color: const Color(0xff202847),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: tone.withOpacity(.8)),
+        border: Border.all(color: tone.withValues(alpha: .8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -15258,7 +15327,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         decoration: BoxDecoration(
           color: const Color(0xff2b2440),
           borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: tone.withOpacity(.72)),
+          border: Border.all(color: tone.withValues(alpha: .72)),
         ),
         child: Row(
           children: [
@@ -15289,7 +15358,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       decoration: BoxDecoration(
         color: const Color(0xff2b2440),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: tone.withOpacity(.8)),
+        border: Border.all(color: tone.withValues(alpha: .8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -15304,7 +15373,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   gradient: LinearGradient(
                     colors: [primaryColor, secondaryColor],
                   ),
-                  border: Border.all(color: Colors.white.withOpacity(.8)),
+                  border: Border.all(color: Colors.white.withValues(alpha: .8)),
                 ),
               ),
               const SizedBox(width: 9),
@@ -15335,7 +15404,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         side: BorderSide(
                           color: selectedStyle.id == style.id
                               ? tone
-                              : tone.withOpacity(.65),
+                              : tone.withValues(alpha: .65),
                         ),
                         onSelected: (_) => setState(() {
                           slot.hairGradientStyle = style.id;
@@ -15376,7 +15445,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       decoration: BoxDecoration(
         color: const Color(0xff153047),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xff38bdf8).withOpacity(.75)),
+        border: Border.all(
+          color: const Color(0xff38bdf8).withValues(alpha: .75),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -15602,10 +15673,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: applied
-            ? tone.withOpacity(.24)
-            : Theme.of(context).colorScheme.surfaceVariant.withOpacity(.32),
+            ? tone.withValues(alpha: .24)
+            : Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: .32),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: applied ? tone : tone.withOpacity(.56)),
+        border: Border.all(
+          color: applied ? tone : tone.withValues(alpha: .56),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -15655,7 +15731,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     const tone = Color(0xfff9a8d4);
     return Card(
       margin: const EdgeInsets.only(top: 8),
-      color: tone.withOpacity(.08),
+      color: tone.withValues(alpha: .08),
       child: ExpansionTile(
         key: PageStorageKey<String>('hair-style-package-$personIndex'),
         leading: const Icon(Icons.content_cut_outlined, color: tone),
@@ -15706,10 +15782,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
     final tone = _pickerLayerTone(colorGroup);
     final previews = types.map((type) {
-      final baseEnglish = _withoutLeadingPromptColor(type.en);
-      final baseChinese = _withoutLeadingChineseColor(type.zh);
       final primary = selectedColors.isEmpty ? null : selectedColors.first;
       final secondary = selectedColors.length >= 2 ? selectedColors[1] : null;
+      final baseEnglish = primary == null
+          ? _cleanTag(type.en)
+          : _withoutLeadingPromptColor(type.en);
+      final baseChinese = primary == null
+          ? type.zh.trim()
+          : _withoutLeadingChineseColor(type.zh);
       final zh = primary == null
           ? baseChinese
           : secondary == null
@@ -15730,7 +15810,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       decoration: BoxDecoration(
         color: _pickerLayerSurface(tone, selected: false),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: tone.withOpacity(.75)),
+        border: Border.all(color: tone.withValues(alpha: .75)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -15980,7 +16060,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     backgroundColor: _pickerLayerSurface(tone, selected: false),
                     selectedColor: _pickerLayerSurface(tone, selected: true),
                     side: BorderSide(
-                      color: isActive ? tone : tone.withOpacity(.72),
+                      color: isActive ? tone : tone.withValues(alpha: .72),
                     ),
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     onSelected: (_) => setState(() {
@@ -16007,7 +16087,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 selected: false),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: _pickerLayerTone(currentGroup).withOpacity(.7),
+              color: _pickerLayerTone(currentGroup).withValues(alpha: .7),
             ),
           ),
           child: Column(
@@ -16062,7 +16142,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             ),
                             side: BorderSide(
                               color: _pickerLayerTone(currentGroup)
-                                  .withOpacity(.75),
+                                  .withValues(alpha: .75),
                             ),
                             onDeleted: () =>
                                 _toggle(tag, personIndex: personIndex),
@@ -16120,13 +16200,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   : IconButton(
                       tooltip: '清除搜尋文字',
                       onPressed: () {
+                        _pickerSearchDebounce?.cancel();
                         setState(() =>
                             _clearPickerQuery(searchScopeGroups, personIndex));
                       },
                       icon: const Icon(Icons.clear))),
-          onChanged: (value) => setState(() {
-            _pickerTagQueries[pickerQueryKey] = value;
-          }),
+          onChanged: (value) => _schedulePickerSearch(pickerQueryKey, value),
         ),
         const SizedBox(height: 10),
         Row(
@@ -16223,8 +16302,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
           return Card(
             margin: const EdgeInsets.only(bottom: 10),
-            color:
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.28),
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: .28),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -16650,11 +16731,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: (inProgressActive || endPoseActive)
-                              ? tone.withOpacity(.15)
+                              ? tone.withValues(alpha: .15)
                               : Theme.of(context)
                                   .colorScheme
                                   .surfaceContainerHighest
-                                  .withOpacity(.46),
+                                  .withValues(alpha: .46),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: (inProgressActive || endPoseActive)
@@ -16917,10 +16998,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: applied
-            ? tone.withOpacity(.24)
-            : Theme.of(context).colorScheme.surfaceVariant.withOpacity(.32),
+            ? tone.withValues(alpha: .24)
+            : Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: .32),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: applied ? tone : tone.withOpacity(.56)),
+        border: Border.all(
+          color: applied ? tone : tone.withValues(alpha: .56),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -16988,7 +17074,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
     return Card(
       margin: const EdgeInsets.only(top: 10),
-      color: tone.withOpacity(.08),
+      color: tone.withValues(alpha: .08),
       child: ExpansionTile(
         key: PageStorageKey<String>('quick-package-$panelId-$personIndex'),
         leading: Icon(icon, color: tone),
@@ -17158,7 +17244,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
     return Card(
       margin: const EdgeInsets.only(top: 10),
-      color: tone.withOpacity(.08),
+      color: tone.withValues(alpha: .08),
       child: ExpansionTile(
         key: const PageStorageKey<String>('shared-feline-interaction-package'),
         leading: const Icon(Icons.pets_outlined, color: tone),
@@ -17298,7 +17384,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toSet();
     return Card(
       margin: const EdgeInsets.only(top: 10),
-      color: const Color(0xfff97316).withOpacity(.08),
+      color: const Color(0xfff97316).withValues(alpha: .08),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
@@ -17408,8 +17494,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   .length;
           return Card(
             margin: const EdgeInsets.only(bottom: 10),
-            color:
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.28),
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: .28),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -17524,7 +17612,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               selectedColor:
                                   _pickerLayerSurface(tone, selected: true),
                               side: BorderSide(
-                                color: selected ? tone : tone.withOpacity(.72),
+                                color: selected
+                                    ? tone
+                                    : tone.withValues(alpha: .72),
                               ),
                               padding:
                                   const EdgeInsets.symmetric(horizontal: 12),
@@ -17732,11 +17822,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: Color.alphaBlend(
-          tone.withOpacity(.08),
-          Theme.of(context).colorScheme.surface.withOpacity(.78),
+          tone.withValues(alpha: .08),
+          Theme.of(context).colorScheme.surface.withValues(alpha: .78),
         ),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: tone.withOpacity(.62)),
+        border: Border.all(color: tone.withValues(alpha: .62)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -17810,7 +17900,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               decoration: BoxDecoration(
                 color: _pickerLayerSurface(layer.$2, selected: false),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: layer.$2.withOpacity(.75)),
+                border: Border.all(color: layer.$2.withValues(alpha: .75)),
               ),
               child: Text(
                 layer.$1,
@@ -17865,7 +17955,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       decoration: BoxDecoration(
         color: _pickerLayerSurface(tone, selected: false),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: tone.withOpacity(.7)),
+        border: Border.all(color: tone.withValues(alpha: .7)),
       ),
       child: Row(
         children: [
@@ -17911,7 +18001,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return Card(
       margin: const EdgeInsets.only(top: 8, bottom: 12),
       clipBehavior: Clip.antiAlias,
-      color: tone.withOpacity(.08),
+      color: tone.withValues(alpha: .08),
       child: ExpansionTile(
         key: PageStorageKey<String>('outfit-reference-$personIndex'),
         leading: Icon(Icons.auto_awesome, color: tone),
@@ -17971,14 +18061,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
                         color: applied
-                            ? tone.withOpacity(.24)
+                            ? tone.withValues(alpha: .24)
                             : Theme.of(context)
                                 .colorScheme
-                                .surfaceVariant
-                                .withOpacity(.38),
+                                .surfaceContainerHighest
+                                .withValues(alpha: .38),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: applied ? tone : tone.withOpacity(.48),
+                          color: applied ? tone : tone.withValues(alpha: .48),
                           width: applied ? 2 : 1,
                         ),
                       ),
@@ -18115,8 +18205,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
           return Card(
             margin: const EdgeInsets.only(bottom: 10),
-            color:
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.28),
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: .28),
             child: Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
@@ -18226,8 +18318,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       decoration: BoxDecoration(
                         color: Theme.of(context)
                             .colorScheme
-                            .surfaceVariant
-                            .withOpacity(.3),
+                            .surfaceContainerHighest
+                            .withValues(alpha: .3),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Text('請先在上方目前部位選擇一件服裝，再設定其顏色、細節與穿脫狀態。'),
@@ -18448,6 +18540,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  // Legacy setup widgets are retained temporarily for saved-layout migration.
+  // ignore: unused_element
   Widget _stepPeople() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -18456,7 +18550,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             style: TextStyle(fontSize: 13)),
         const SizedBox(height: 14),
         DropdownButtonFormField<int>(
-          value: _personSlots.length,
+          initialValue: _personSlots.length,
           decoration: const InputDecoration(
               labelText: '人物數量（必填）', prefixIcon: Icon(Icons.groups_outlined)),
           items: List.generate(10, (index) => index + 1)
@@ -18521,8 +18615,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final matches = _matchingCharacters(slot);
           final selectedCharacter = _characterForNew(slot);
           return Card(
-            color:
-                Theme.of(context).colorScheme.surfaceVariant.withOpacity(.35),
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: .35),
             margin: const EdgeInsets.only(bottom: 10),
             child: Padding(
               padding: const EdgeInsets.all(12),
@@ -18553,7 +18649,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         SizedBox(
                             width: 150,
                             child: DropdownButtonFormField<String>(
-                                value: slot.gender,
+                                initialValue: slot.gender,
                                 decoration:
                                     const InputDecoration(labelText: '性別/類型'),
                                 items: const ['女性', '男性', '其他/異種']
@@ -18799,8 +18895,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       width: double.infinity,
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color:
-            Theme.of(context).colorScheme.secondaryContainer.withOpacity(.35),
+        color: Theme.of(context)
+            .colorScheme
+            .secondaryContainer
+            .withValues(alpha: .35),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Column(
@@ -18871,7 +18969,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       decoration: BoxDecoration(
         color: const Color(0xff1f2948),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xff818cf8).withOpacity(.72)),
+        border: Border.all(
+          color: const Color(0xff818cf8).withValues(alpha: .72),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -18931,7 +19031,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       decoration: BoxDecoration(
         color: const Color(0xff1f2948),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: const Color(0xff818cf8).withOpacity(.72)),
+        border: Border.all(
+          color: const Color(0xff818cf8).withValues(alpha: .72),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -19044,7 +19146,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               color: Theme.of(context)
                   .colorScheme
                   .secondaryContainer
-                  .withOpacity(.35),
+                  .withValues(alpha: .35),
               borderRadius: BorderRadius.circular(10)),
           child: const Row(children: [
             Icon(Icons.visibility_off_outlined, size: 18),
@@ -19137,7 +19239,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       backgroundColor: _pickerLayerSurface(tone, selected: false),
       selectedColor: _pickerLayerSurface(tone, selected: true),
       checkmarkColor: _pickerLayerText(tone, selected: true),
-      side: BorderSide(color: selected ? tone : tone.withOpacity(.7)),
+      side: BorderSide(
+        color: selected ? tone : tone.withValues(alpha: .7),
+      ),
       onSelected: (_) => _toggle(tag, personIndex: personIndex),
     );
   }
@@ -19198,6 +19302,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     : IconButton(
                         tooltip: '清除搜尋文字',
                         onPressed: () {
+                          _globalSearchDebounce?.cancel();
                           _globalTagSearch.clear();
                           setState(() => _globalTagQuery = '');
                         },
@@ -19205,7 +19310,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                 filled: true,
               ),
-              onChanged: (value) => setState(() => _globalTagQuery = value),
+              onChanged: _scheduleGlobalSearch,
             ),
             const SizedBox(height: 7),
             Text(
@@ -19388,6 +19493,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ]);
   }
 
+  // ignore: unused_element
   Widget _builderPanel() {
     final visible = _visibleTags(_activeGroup);
     return Card(
@@ -19482,6 +19588,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  // ignore: unused_element
   Widget _setupPanel() {
     return Card(
       margin: EdgeInsets.zero,
@@ -19774,7 +19881,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 color: Theme.of(context)
                     .colorScheme
                     .primaryContainer
-                    .withOpacity(.48),
+                    .withValues(alpha: .48),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -20213,29 +20320,29 @@ void main() {
         ),
         filledButtonTheme: FilledButtonThemeData(
           style: ButtonStyle(
-            backgroundColor: MaterialStatePropertyAll(_buttonSelectedSurface),
-            foregroundColor: MaterialStatePropertyAll(_buttonSelectedText),
-            side: MaterialStatePropertyAll(
+            backgroundColor: WidgetStatePropertyAll(_buttonSelectedSurface),
+            foregroundColor: WidgetStatePropertyAll(_buttonSelectedText),
+            side: WidgetStatePropertyAll(
               BorderSide(color: Color(0xfff0eaff)),
             ),
           ),
         ),
         outlinedButtonTheme: OutlinedButtonThemeData(
           style: ButtonStyle(
-            backgroundColor: MaterialStatePropertyAll(_buttonSurface),
-            foregroundColor: MaterialStatePropertyAll(Colors.white),
-            side: MaterialStatePropertyAll(BorderSide(color: _buttonBorder)),
+            backgroundColor: WidgetStatePropertyAll(_buttonSurface),
+            foregroundColor: WidgetStatePropertyAll(Colors.white),
+            side: WidgetStatePropertyAll(BorderSide(color: _buttonBorder)),
           ),
         ),
         textButtonTheme: TextButtonThemeData(
           style: ButtonStyle(
-            foregroundColor: MaterialStatePropertyAll(_buttonSelectedSurface),
+            foregroundColor: WidgetStatePropertyAll(_buttonSelectedSurface),
           ),
         ),
         iconButtonTheme: IconButtonThemeData(
           style: ButtonStyle(
-            foregroundColor: MaterialStatePropertyAll(Colors.white),
-            backgroundColor: MaterialStatePropertyAll(_buttonSurface),
+            foregroundColor: WidgetStatePropertyAll(Colors.white),
+            backgroundColor: WidgetStatePropertyAll(_buttonSurface),
           ),
         ),
         chipTheme: const ChipThemeData(

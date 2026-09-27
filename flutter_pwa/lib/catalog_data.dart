@@ -105,25 +105,6 @@ class CatalogCharacter {
       );
 }
 
-CatalogTagData _ct(
-  String id,
-  String group,
-  String zh,
-  String en,
-  int order, {
-  bool adult = false,
-  String? conflict,
-}) =>
-    CatalogTagData(
-      id: id,
-      group: group,
-      zh: zh,
-      en: en,
-      order: order,
-      adult: adult,
-      conflictGroup: conflict,
-    );
-
 const supplementalTags = <CatalogTagData>[
   // Face and body details.
   CatalogTagData(

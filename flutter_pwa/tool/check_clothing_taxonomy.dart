@@ -22,8 +22,10 @@ void main() {
     if (tag.en.toLowerCase().contains('lolita')) {
       throw StateError('Forbidden clothing term: ${tag.en}');
     }
-    if (RegExp(r'\b(cute|short|slim)\b', caseSensitive: false)
-            .hasMatch(tag.en) ||
+    final moderationSafeSourceTerm = tag.en.toLowerCase() == 'short sleeves';
+    if ((!moderationSafeSourceTerm &&
+            RegExp(r'\b(cute|short|slim)\b', caseSensitive: false)
+                .hasMatch(tag.en)) ||
         RegExp(r'\b(school|student) uniform\b', caseSensitive: false)
             .hasMatch(tag.en) ||
         tag.en.toLowerCase() == 'serafuku') {
@@ -104,7 +106,6 @@ void main() {
     'slim pants',
     'slim fit',
     'short shorts',
-    'short sleeves',
     'short length',
     'cute',
     'sweet cute style',

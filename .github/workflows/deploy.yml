@@ -53,11 +53,20 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Build Flutter PWA
+      - name: Validate code and prompt catalogs
         working-directory: flutter_pwa
         run: |
           flutter pub get
-          flutter build web --release --base-href "/${{ github.event.repository.name }}/"
+          flutter analyze
+          dart run tool/check_clothing_taxonomy.dart
+          dart run tool/check_finger_gestures.dart
+          dart run tool/check_single_person_poses.dart
+          dart run tool/validate_outfit_references.dart
+
+      - name: Build Flutter PWA
+        working-directory: flutter_pwa
+        run: |
+          flutter build web --release --no-pub --base-href "/${{ github.event.repository.name }}/"
 
       - name: Prepare versioned PWA cache
         shell: pwsh

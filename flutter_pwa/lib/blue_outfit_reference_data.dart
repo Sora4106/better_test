@@ -47,7 +47,7 @@ const blueOutfitReferencePresets = <OutfitReferencePresetData>[
         garment: 'blouse',
         mainColor: 'white',
         secondaryColor: 'sky blue',
-        cut: 'above-elbow sleeves',
+        cut: 'short sleeves',
         fit: 'fitted',
         length: 'waist length',
         materials: ['cotton'],
