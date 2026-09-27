@@ -2464,6 +2464,11 @@ class PersonSlot {
   double hairPromptWeight = 1.15;
   List<String> hairGradientColorIds = <String>[];
   String hairGradientStyle = _defaultHairGradientStyle;
+  // Animal traits and wings use the same two-colour order as hair.  The
+  // first colour is the base, while the optional second colour is emitted as
+  // a subtle gradient/accent instead of replacing the base colour.
+  Map<String, List<String>> physicalTraitGradientColorIds =
+      <String, List<String>>{};
 
   Map<String, dynamic> toJson() => {
         'gender': gender,
@@ -2498,6 +2503,7 @@ class PersonSlot {
         'hairColorWeight': hairPromptWeight,
         'hairGradientColorIds': hairGradientColorIds,
         'hairGradientStyle': hairGradientStyle,
+        'physicalTraitGradientColorIds': physicalTraitGradientColorIds,
       };
 
   factory PersonSlot.fromJson(Map<String, dynamic> json) => PersonSlot(
@@ -2548,7 +2554,18 @@ class PersonSlot {
             .map((id) => '$id')
             .toList()
         ..hairGradientStyle =
-            '${json['hairGradientStyle'] ?? _defaultHairGradientStyle}';
+            '${json['hairGradientStyle'] ?? _defaultHairGradientStyle}'
+        ..physicalTraitGradientColorIds =
+            json['physicalTraitGradientColorIds'] is Map
+                ? (json['physicalTraitGradientColorIds'] as Map).map(
+                    (key, value) => MapEntry(
+                      '$key',
+                      (value as List? ?? const <dynamic>[])
+                          .map((id) => '$id')
+                          .toList(),
+                    ),
+                  )
+                : <String, List<String>>{};
 }
 
 class _RemoteAnime {
@@ -7917,6 +7934,78 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return index < 0 ? 0 : index + 1;
   }
 
+  /// Animal ears, tails, hands, feet and wings can use up to two colours.
+  /// Their click order is meaningful: colour 1 is the base colour and colour
+  /// 2 is emitted only as a gradient/accent. Older saves that only have one
+  /// selected trait colour automatically treat that colour as colour 1.
+  List<String> _physicalTraitGradientColorIdsForPerson(
+    int personIndex,
+    String colorGroup,
+  ) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const <String>[];
+    }
+    final available = _selectedTagsForPerson(personIndex)
+        .where((tag) => tag.group == colorGroup)
+        .map((tag) => tag.id)
+        .toSet();
+    final configured = _personSlots[personIndex]
+            .physicalTraitGradientColorIds[colorGroup]
+            ?.where(available.contains)
+            .toList() ??
+        <String>[];
+    final remaining = available.where((id) => !configured.contains(id)).toList()
+      ..sort((a, b) {
+        final first = _tagsById[a];
+        final second = _tagsById[b];
+        if (first == null || second == null) return a.compareTo(b);
+        return _compareOutputTags(first, second);
+      });
+    configured.addAll(remaining);
+    return configured.take(2).toList();
+  }
+
+  void _syncPhysicalTraitGradientColorIds(
+    int personIndex,
+    Set<String> selectedIds,
+  ) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final slot = _personSlots[personIndex];
+    for (final colorGroup in _physicalTraitColorGroups) {
+      final available = selectedIds.where((id) {
+        return _tagsById[id]?.group == colorGroup;
+      }).toSet();
+      final ordered = (slot.physicalTraitGradientColorIds[colorGroup] ?? [])
+          .where(available.contains)
+          .toList();
+      final remaining = available.where((id) => !ordered.contains(id)).toList()
+        ..sort((a, b) {
+          final first = _tagsById[a];
+          final second = _tagsById[b];
+          if (first == null || second == null) return a.compareTo(b);
+          return _compareOutputTags(first, second);
+        });
+      ordered.addAll(remaining);
+      if (ordered.isEmpty) {
+        slot.physicalTraitGradientColorIds.remove(colorGroup);
+      } else {
+        slot.physicalTraitGradientColorIds[colorGroup] =
+            ordered.take(2).toList();
+      }
+    }
+  }
+
+  int _physicalTraitGradientColorOrder(
+    int personIndex,
+    String colorGroup,
+    String tagId,
+  ) {
+    final index =
+        _physicalTraitGradientColorIdsForPerson(personIndex, colorGroup)
+            .indexOf(tagId);
+    return index < 0 ? 0 : index + 1;
+  }
+
   ({String zh, String en}) _gradientHairDescription(
     TagItem primary,
     TagItem secondary,
@@ -8117,20 +8206,29 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final selected = _selectedTagsForPerson(personIndex);
     final types = selected.where(isType).toList();
     if (types.isEmpty) return const <_GeneratedOutputTag>[];
-    final color = selected.cast<TagItem?>().firstWhere(
-          (tag) => tag?.group == colorGroup,
-          orElse: () => null,
-        );
+    final colors = _physicalTraitGradientColorIdsForPerson(
+      personIndex,
+      colorGroup,
+    ).map((id) => _tagsById[id]).whereType<TagItem>().toList();
     return types.map((type) {
       final baseEnglish = _withoutLeadingPromptColor(type.en);
       final baseChinese = _withoutLeadingChineseColor(type.zh);
+      final primary = colors.isEmpty ? null : colors.first;
+      final secondary = colors.length >= 2 ? colors[1] : null;
+      final english = primary == null
+          ? baseEnglish
+          : secondary == null
+              ? '${_clothingColorPrefix(primary)} $baseEnglish'
+              : '${_clothingColorPrefix(primary)} $baseEnglish with ${_clothingColorPrefix(secondary)} gradient accents';
+      final chinese = primary == null
+          ? baseChinese
+          : secondary == null
+              ? '${_physicalTraitColorChinesePrefix(primary)}$baseChinese'
+              : '${_physicalTraitColorChinesePrefix(primary)}帶${_physicalTraitColorChinesePrefix(secondary)}漸層$baseChinese';
       return _GeneratedOutputTag(
-        zh: '${color == null ? '' : _physicalTraitColorChinesePrefix(color)}$baseChinese',
-        en: [
-          if (color != null) _clothingColorPrefix(color),
-          baseEnglish,
-        ].where((value) => value.isNotEmpty).join(' '),
-        tagIds: [type.id, if (color != null) color.id],
+        zh: chinese,
+        en: english,
+        tagIds: [type.id, ...colors.map((color) => color.id)],
         personIndex: personIndex,
       );
     }).toList();
@@ -9306,6 +9404,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
     _personSlots[index].hairGradientColorIds = <String>[];
     _personSlots[index].hairGradientStyle = _defaultHairGradientStyle;
+    _personSlots[index].physicalTraitGradientColorIds =
+        <String, List<String>>{};
     _personSlots[index].characterTraitsEnabled = true;
     _removedCharacterTags.remove(index);
   }
@@ -9408,6 +9508,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (oldLongHair != null) ids.remove(oldLongHair.id);
     }
     _syncHairGradientColorIds(index, ids);
+    _syncPhysicalTraitGradientColorIds(index, ids);
     _syncAutoFurryIdentity(index, ids);
   }
 
@@ -10794,7 +10895,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
-    _removeOrphanedPhysicalTraitColors(target);
+    _removeOrphanedPhysicalTraitColors(target, personIndex: personIndex);
     _syncHairGradientColorIds(personIndex, target);
     _syncAutoFurryIdentity(personIndex, target);
     setState(_persist);
@@ -11062,7 +11163,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _isAnimalFootTypeTag(tag)) &&
       !const {'catalog_trait_furry', 'catalog_trait_anthro'}.contains(tag.id);
 
-  void _removeOrphanedPhysicalTraitColors(Set<String> selectedIds) {
+  void _removeOrphanedPhysicalTraitColors(
+    Set<String> selectedIds, {
+    int? personIndex,
+  }) {
     final selected =
         selectedIds.map((id) => _tagsById[id]).whereType<TagItem>().toList();
     bool hasType(bool Function(TagItem tag) matcher) => selected.any(matcher);
@@ -11073,9 +11177,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (!hasType(_isAnimalFootTypeTag)) _animalFootColorGroup,
       if (!hasType(_isWingTypeTag)) _wingColorGroup,
     };
-    if (orphanGroups.isEmpty) return;
-    selectedIds
-        .removeWhere((id) => orphanGroups.contains(_tagsById[id]?.group));
+    if (orphanGroups.isNotEmpty) {
+      selectedIds
+          .removeWhere((id) => orphanGroups.contains(_tagsById[id]?.group));
+    }
+    if (personIndex != null) {
+      _syncPhysicalTraitGradientColorIds(personIndex, selectedIds);
+    }
   }
 
   void _syncAutoFurryIdentity(int personIndex, Set<String> selectedIds) {
@@ -11086,6 +11194,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Future<void> _toggle(TagItem tag, {int? personIndex}) async {
+    if (personIndex != null && _physicalTraitColorGroups.contains(tag.group)) {
+      await _togglePhysicalTraitColor(tag, personIndex);
+      return;
+    }
     if (personIndex != null && _hairColorWord(tag) != null) {
       await _toggleHairColor(tag, personIndex);
       return;
@@ -11116,7 +11228,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
         }
         if (personIndex != null) {
-          _removeOrphanedPhysicalTraitColors(targetIds);
+          _removeOrphanedPhysicalTraitColors(targetIds,
+              personIndex: personIndex);
           _syncAutoFurryIdentity(personIndex, targetIds);
         }
         _persist();
@@ -11187,7 +11300,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _autoFurryIdentityForPerson.remove(personIndex);
         }
         _syncAutoFurryIdentity(personIndex, targetIds);
-        _removeOrphanedPhysicalTraitColors(targetIds);
+        _removeOrphanedPhysicalTraitColors(targetIds, personIndex: personIndex);
         if (_isClothingGroup(tag.group)) {
           _markClothingTemplateCustomized(personIndex);
         }
@@ -11199,6 +11312,42 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
         }
       }
+      _persist();
+    });
+  }
+
+  Future<void> _togglePhysicalTraitColor(
+    TagItem tag,
+    int personIndex,
+  ) async {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final targetIds = _personTagIds(personIndex);
+    final slot = _personSlots[personIndex];
+    final colorGroup = tag.group;
+    final orderedIds =
+        _physicalTraitGradientColorIdsForPerson(personIndex, colorGroup);
+
+    setState(() {
+      if (targetIds.contains(tag.id)) {
+        targetIds.remove(tag.id);
+        orderedIds.remove(tag.id);
+      } else {
+        // Keep colour 1 stable. Picking a third colour replaces only colour 2
+        // so the user can quickly try alternate gradient accents.
+        if (orderedIds.length >= 2) {
+          targetIds.remove(orderedIds.last);
+          orderedIds.removeLast();
+        }
+        targetIds.add(tag.id);
+        orderedIds.add(tag.id);
+      }
+      if (orderedIds.isEmpty) {
+        slot.physicalTraitGradientColorIds.remove(colorGroup);
+      } else {
+        slot.physicalTraitGradientColorIds[colorGroup] =
+            orderedIds.take(2).toList();
+      }
+      _syncPhysicalTraitGradientColorIds(personIndex, targetIds);
       _persist();
     });
   }
@@ -11856,6 +12005,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
         target.add(tag.id);
       }
+      _syncPhysicalTraitGradientColorIds(0, _personTagIds(0));
       _syncAutoFurryIdentity(0, _personTagIds(0));
 
       final existingExtra = _extraTags(_extraPositive.text);
@@ -12030,6 +12180,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             }
             slot.hairGradientColorIds = <String>[];
             slot.hairGradientStyle = _defaultHairGradientStyle;
+            slot.physicalTraitGradientColorIds = <String, List<String>>{};
             slot.featureExtraPositive = '';
             _clearPersonSearchController(
               personIndex,
@@ -12204,7 +12355,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ids.removeWhere((id) => _tagsById[id]?.group == '髮色');
       }
       _syncHairGradientColorIds(personIndex, ids);
-      _removeOrphanedPhysicalTraitColors(ids);
+      _removeOrphanedPhysicalTraitColors(ids, personIndex: personIndex);
       _syncAutoFurryIdentity(personIndex, ids);
       _persist();
     });
@@ -14035,7 +14186,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       target.add(tag.id);
     }
-    _removeOrphanedPhysicalTraitColors(target);
+    _removeOrphanedPhysicalTraitColors(target, personIndex: personIndex);
     _syncAutoFurryIdentity(personIndex, target);
     _personCombinationIds
         .putIfAbsent(personIndex, () => <String>{})
@@ -15543,11 +15694,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     required List<TagItem> types,
   }) {
     final selectedIds = _personTagIds(personIndex);
-    final selectedColor =
-        _selectedTagsForPerson(personIndex).cast<TagItem?>().firstWhere(
-              (tag) => tag?.group == colorGroup,
-              orElse: () => null,
-            );
+    final selectedColors = _physicalTraitGradientColorIdsForPerson(
+      personIndex,
+      colorGroup,
+    ).map((id) => _tagsById[id]).whereType<TagItem>().toList();
     final colors = _stepVisibleTags(
       [colorGroup],
       queryText: '',
@@ -15558,12 +15708,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final previews = types.map((type) {
       final baseEnglish = _withoutLeadingPromptColor(type.en);
       final baseChinese = _withoutLeadingChineseColor(type.zh);
-      final zh =
-          '${selectedColor == null ? '' : _physicalTraitColorChinesePrefix(selectedColor)}$baseChinese';
-      final en = [
-        if (selectedColor != null) _clothingColorPrefix(selectedColor),
-        baseEnglish,
-      ].where((value) => value.isNotEmpty).join(' ');
+      final primary = selectedColors.isEmpty ? null : selectedColors.first;
+      final secondary = selectedColors.length >= 2 ? selectedColors[1] : null;
+      final zh = primary == null
+          ? baseChinese
+          : secondary == null
+              ? '${_physicalTraitColorChinesePrefix(primary)}$baseChinese'
+              : '${_physicalTraitColorChinesePrefix(primary)}帶${_physicalTraitColorChinesePrefix(secondary)}漸層$baseChinese';
+      final en = primary == null
+          ? baseEnglish
+          : secondary == null
+              ? '${_clothingColorPrefix(primary)} $baseEnglish'
+              : '${_clothingColorPrefix(primary)} $baseEnglish with ${_clothingColorPrefix(secondary)} gradient accents';
       return '$zh · $en';
     }).join('、');
 
@@ -15589,12 +15745,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   style: const TextStyle(fontWeight: FontWeight.w800),
                 ),
               ),
-              if (selectedColor != null)
+              if (selectedColors.isNotEmpty)
                 IconButton(
                   visualDensity: VisualDensity.compact,
                   tooltip: '清除$title',
-                  onPressed: () =>
-                      _toggle(selectedColor, personIndex: personIndex),
+                  onPressed: () {
+                    setState(() {
+                      selectedIds.removeWhere(
+                          (id) => _tagsById[id]?.group == colorGroup);
+                      _personSlots[personIndex]
+                          .physicalTraitGradientColorIds
+                          .remove(colorGroup);
+                      _syncPhysicalTraitGradientColorIds(
+                        personIndex,
+                        selectedIds,
+                      );
+                      _persist();
+                    });
+                  },
                   icon: const Icon(Icons.clear, size: 18),
                 ),
             ],
@@ -15602,6 +15770,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           const SizedBox(height: 4),
           Text(
             '輸出預覽：$previews',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '色 1 為主色；色 2 為次色漸層。選取第三色時會取代色 2。',
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -15616,6 +15792,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       tag,
                       personIndex: personIndex,
                       selected: selectedIds.contains(tag.id),
+                      colorOrder: _physicalTraitGradientColorOrder(
+                        personIndex,
+                        colorGroup,
+                        tag.id,
+                      ),
+                      colorOrderLabel: '獸人特徵色',
                     ))
                 .toList(),
           ),
