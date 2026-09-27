@@ -1,7 +1,8 @@
-﻿const appVersion = '1.1.149';
-const appBuildNumber = 151;
-const appVersionLabel = '1.1.149+151';
+﻿const appVersion = '1.1.150';
+const appBuildNumber = 152;
+const appVersionLabel = '1.1.150+152';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.150', 'build': '152', 'label': '1.1.150+152', 'date': '2026-09-27', 'notes': '新增每位人物的角色特徵、服裝／配件與姿勢／動作手動輸入欄位；各區內容會依輸出架構自動放入特徵、服裝或姿勢的括號區塊，並支援提示詞標籤移除與未收錄標籤記錄。'},
   {'version': '1.1.149', 'build': '151', 'label': '1.1.149+151', 'date': '2026-09-27', 'notes': '新增白粉狼耳短版連帽套裝、七組狼耳少女個人姿勢套件與三組可編輯髮型套件；補充大型蓬鬆狼尾、森林畫面、髮絲細節、短版連帽上衣與安全短褲等雙語標籤。'},
   {'version': '1.1.148', 'build': '150', 'label': '1.1.148+150', 'date': '2026-09-27', 'notes': '新增鏡頭床位視角：可選床側平視與床尾平視，將鏡頭位置、方向與平視描述整合成可選標籤。'},
   {'version': '1.1.147', 'build': '149', 'label': '1.1.147+149', 'date': '2026-09-26', 'notes': '擴充獸人耳朵動態：新增耳朵晃動、甩動、轉向、左右擺動與自然垂下。'},

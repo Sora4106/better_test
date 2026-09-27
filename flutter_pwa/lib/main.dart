@@ -458,6 +458,8 @@ class _GeneratedOutputTag {
     this.personIndex,
     this.characterTag = false,
     this.combinationId,
+    this.personFeatureExtraValue,
+    this.personClothingExtraValue,
     this.personPoseExtraValue,
     this.sharedPoseExtraValue,
     this.clothingBlockKey,
@@ -470,6 +472,8 @@ class _GeneratedOutputTag {
   final int? personIndex;
   final bool characterTag;
   final String? combinationId;
+  final String? personFeatureExtraValue;
+  final String? personClothingExtraValue;
   final String? personPoseExtraValue;
   final String? sharedPoseExtraValue;
 
@@ -2438,6 +2442,8 @@ class PersonSlot {
   String originalCharacterEn = '';
   String originalCharacterTag = '';
   String originalTraits = '';
+  String featureExtraPositive = '';
+  String clothingExtraPositive = '';
   String poseExtraPositive = '';
   // Anime character names are always kept.  This flag only controls the
   // character's automatically-applied, stable appearance traits.
@@ -2476,6 +2482,8 @@ class PersonSlot {
         'originalCharacterEn': originalCharacterEn,
         'originalCharacterTag': originalCharacterTag,
         'originalTraits': originalTraits,
+        'featureExtraPositive': featureExtraPositive,
+        'clothingExtraPositive': clothingExtraPositive,
         'poseExtraPositive': poseExtraPositive,
         'characterTraitsEnabled': characterTraitsEnabled,
         'promptWeightEnabled': promptWeightEnabled,
@@ -2510,6 +2518,8 @@ class PersonSlot {
         ..originalCharacterEn = '${json['originalCharacterEn'] ?? ''}'
         ..originalCharacterTag = '${json['originalCharacterTag'] ?? ''}'
         ..originalTraits = '${json['originalTraits'] ?? ''}'
+        ..featureExtraPositive = '${json['featureExtraPositive'] ?? ''}'
+        ..clothingExtraPositive = '${json['clothingExtraPositive'] ?? ''}'
         ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}'
         ..characterTraitsEnabled = json['characterTraitsEnabled'] != false
         ..promptWeightEnabled = json['promptWeightEnabled'] != false
@@ -8291,6 +8301,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  List<_GeneratedOutputTag> _featureExtraOutputTagsForPerson(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const <_GeneratedOutputTag>[];
+    }
+    final slot = _personSlots[personIndex];
+    if (!slot.detailed) return const <_GeneratedOutputTag>[];
+    return _poseExtraPrompts(slot.featureExtraPositive)
+        .map((value) => _GeneratedOutputTag(
+              zh: _positiveChineseTag(value),
+              en: _positiveEnglishTag(value),
+              personIndex: personIndex,
+              personFeatureExtraValue: value,
+            ))
+        .toList();
+  }
+
+  List<_GeneratedOutputTag> _clothingExtraOutputTagsForPerson(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const <_GeneratedOutputTag>[];
+    }
+    final slot = _personSlots[personIndex];
+    if (!slot.detailed) return const <_GeneratedOutputTag>[];
+    return _poseExtraPrompts(slot.clothingExtraPositive)
+        .map((value) => _GeneratedOutputTag(
+              zh: _positiveChineseTag(value),
+              en: _positiveEnglishTag(value),
+              personIndex: personIndex,
+              personClothingExtraValue: value,
+              clothingBlockKey: 'manual-clothing-$personIndex',
+            ))
+        .toList();
+  }
+
   List<_GeneratedOutputTag> _sharedPoseExtraOutputTags() =>
       _poseExtraPrompts(_sharedPoseExtra.text)
           .map((value) => _GeneratedOutputTag(
@@ -8309,6 +8352,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final extra = _extraFeatureOutputTagsForPerson(index);
     final objectInteractions = _objectInteractionOutputTagsForPerson(index);
     final combinationExtra = _combinationExtraOutputTagsForPerson(index);
+    final featureExtra = _featureExtraOutputTagsForPerson(index);
+    final clothingExtra = _clothingExtraOutputTagsForPerson(index);
     final poseExtra = _poseExtraOutputTagsForPerson(index);
     final covered = {
       ...clothing.expand((tag) => tag.tagIds),
@@ -8347,11 +8392,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
     return [
       ...beforeClothing,
+      ...featureExtra,
       ...extra,
       ...hair,
       ...animalTraits,
       ...wings,
       ...clothing,
+      ...clothingExtra,
       ...afterClothing,
       ...objectInteractions,
       ...poseExtra,
@@ -8417,6 +8464,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   };
 
   bool _isCharacterWeightOutputTag(_GeneratedOutputTag output) {
+    if (output.personFeatureExtraValue != null) return true;
     if (output.characterTag) return true;
     if (_isAnimalTraitOutputTag(output) || _isWingOutputTag(output)) {
       return true;
@@ -8491,6 +8539,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _isClothingWeightOutputTag(_GeneratedOutputTag output) {
+    if (output.personClothingExtraValue != null) return true;
     return output.tagIds.any((id) {
       final tag = _tagsById[id];
       return tag != null && _isClothingGroup(tag.group);
@@ -8607,6 +8656,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void _updatePersonPoseExtra(int personIndex, String value) {
     if (personIndex < 0 || personIndex >= _personSlots.length) return;
     _personSlots[personIndex].poseExtraPositive = value;
+    _schedulePersonExtraPersist();
+  }
+
+  void _updatePersonFeatureExtra(int personIndex, String value) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    _personSlots[personIndex].featureExtraPositive = value;
+    _schedulePersonExtraPersist();
+  }
+
+  void _updatePersonClothingExtra(int personIndex, String value) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    _personSlots[personIndex].clothingExtraPositive = value;
+    _schedulePersonExtraPersist();
+  }
+
+  void _schedulePersonExtraPersist() {
     _poseExtraDebounce?.cancel();
     _poseExtraDebounce = Timer(const Duration(milliseconds: 180), () {
       if (!mounted) return;
@@ -9599,8 +9664,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final result = <_GeneratedOutputTag>[];
     final positions = <String, int>{};
     for (final tag in tags) {
+      final owner = [
+        tag.combinationId ?? '',
+        tag.personFeatureExtraValue ?? '',
+        tag.personClothingExtraValue ?? '',
+        tag.personPoseExtraValue ?? '',
+        tag.sharedPoseExtraValue ?? '',
+      ].join('|');
       final key =
-          '${tag.personIndex ?? -1}|${tag.characterTag}|${tag.combinationId ?? ''}|${_cleanTag(tag.en).toLowerCase()}';
+          '${tag.personIndex ?? -1}|${tag.characterTag}|$owner|${_cleanTag(tag.en).toLowerCase()}';
       final position = positions[key];
       if (position == null) {
         positions[key] = result.length;
@@ -9616,6 +9688,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         personIndex: previous.personIndex,
         characterTag: previous.characterTag,
         combinationId: previous.combinationId,
+        personFeatureExtraValue:
+            previous.personFeatureExtraValue ?? tag.personFeatureExtraValue,
+        personClothingExtraValue:
+            previous.personClothingExtraValue ?? tag.personClothingExtraValue,
         personPoseExtraValue:
             previous.personPoseExtraValue ?? tag.personPoseExtraValue,
         sharedPoseExtraValue:
@@ -9672,6 +9748,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _personSlots[personIndex].poseExtraPositive = updated;
         final controller =
             _personSearchControllers['$personIndex:pose-extra-positive'];
+        if (controller != null) controller.text = updated;
+      } else if (outputTag.personFeatureExtraValue != null &&
+          outputTag.personIndex != null) {
+        final personIndex = outputTag.personIndex!;
+        final updated = _removePoseExtraPrompt(
+          _personSlots[personIndex].featureExtraPositive,
+          outputTag.personFeatureExtraValue!,
+        );
+        _personSlots[personIndex].featureExtraPositive = updated;
+        final controller =
+            _personSearchControllers['$personIndex:feature-extra-positive'];
+        if (controller != null) controller.text = updated;
+      } else if (outputTag.personClothingExtraValue != null &&
+          outputTag.personIndex != null) {
+        final personIndex = outputTag.personIndex!;
+        final updated = _removePoseExtraPrompt(
+          _personSlots[personIndex].clothingExtraPositive,
+          outputTag.personClothingExtraValue!,
+        );
+        _personSlots[personIndex].clothingExtraPositive = updated;
+        final controller =
+            _personSearchControllers['$personIndex:clothing-extra-positive'];
         if (controller != null) controller.text = updated;
       } else if (outputTag.characterTag) {
         if (outputTag.personIndex != null) {
@@ -9755,7 +9853,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final candidates = <String>[
       ..._extraTags(_extraPositive.text),
       ..._personSlots.expand(
-        (slot) => _poseExtraPrompts(slot.poseExtraPositive),
+        (slot) => [
+          ..._poseExtraPrompts(slot.featureExtraPositive),
+          ..._poseExtraPrompts(slot.clothingExtraPositive),
+          ..._poseExtraPrompts(slot.poseExtraPositive),
+        ],
       ),
       ..._poseExtraPrompts(_sharedPoseExtra.text),
     ];
@@ -9809,6 +9911,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (tag.zh == cleaned) return tag.en;
     }
     const replacements = <String, String>{
+      '銀色月亮圖形頸環項鍊': 'silver moon-shaped choker necklace',
+      '月亮圖形': 'moon-shaped',
+      '頸環項鍊': 'choker necklace',
       '超長髮': 'very long hair',
       '極短髮': 'close-cropped hair',
       '粉紅色': 'pink',
@@ -9875,6 +9980,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (tag.en.toLowerCase() == cleaned.toLowerCase()) return tag.zh;
     }
     const replacements = <String, String>{
+      'moon-shaped': '月亮圖形',
+      'choker necklace': '頸環項鍊',
+      'choker': '頸環',
+      'necklace': '項鍊',
       'very long hair': '超長髮',
       'close-cropped hair': '極短髮',
       'long hair': '長髮',
@@ -11917,10 +12026,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             }
             slot.hairGradientColorIds = <String>[];
             slot.hairGradientStyle = _defaultHairGradientStyle;
+            slot.featureExtraPositive = '';
+            _clearPersonSearchController(
+              personIndex,
+              'feature-extra-positive',
+            );
           }
           break;
         case 4:
           removePersonTagsWhere((tag) => _isClothingGroup(tag.group));
+          for (var personIndex = 0;
+              personIndex < _personSlots.length;
+              personIndex++) {
+            _personSlots[personIndex].clothingExtraPositive = '';
+            _clearPersonSearchController(
+              personIndex,
+              'clothing-extra-positive',
+            );
+          }
           break;
         case 5:
           _removeAdultPosePackageTags();
@@ -15882,6 +16005,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       nextLabel: nextLabel,
                       personIndex: index,
                       showNext: false),
+                  if (groups.contains('髮型') &&
+                      groups.contains(_animalTraitGroup)) ...[
+                    const SizedBox(height: 14),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _personSearchController(
+                        index,
+                        'feature-extra-positive',
+                        slot.featureExtraPositive,
+                      ),
+                      minLines: 2,
+                      maxLines: 4,
+                      onChanged: (value) =>
+                          _updatePersonFeatureExtra(index, value),
+                      decoration: const InputDecoration(
+                        labelText: '自行加入角色特徵標籤',
+                        hintText:
+                            '例如：silver facial markings, delicate freckles',
+                        helperText:
+                            '每行或句點分隔一段；會併入此人物的「特徵」括號區塊，英文原樣保留，中文會依內建對照轉換。',
+                        prefixIcon: Icon(Icons.face_retouching_natural),
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -17032,10 +17181,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     maxLines: 4,
                     onChanged: (value) => _updatePersonPoseExtra(index, value),
                     decoration: const InputDecoration(
-                      labelText: '自行加入姿勢正向標籤／自然敘述',
+                      labelText: '自行加入姿勢／動作標籤',
                       hintText:
                           '例如：swinging a sword in a wide arc while stepping forward',
-                      helperText: '內容只套用到此人物；每行或句點分隔一段。英文會原樣保留，中文會依內建對照轉成英文。',
+                      helperText:
+                          '內容只套用到此人物；每行或句點分隔一段，會併入此人物的「姿勢」括號區塊。英文會原樣保留，中文會依內建對照轉成英文。',
                       prefixIcon: Icon(Icons.edit_note_outlined),
                       border: OutlineInputBorder(),
                     ),
@@ -17700,6 +17850,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                       child: const Text('請先在上方目前部位選擇一件服裝，再設定其顏色、細節與穿脫狀態。'),
                     ),
+                  const SizedBox(height: 14),
+                  const Divider(),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: _personSearchController(
+                      index,
+                      'clothing-extra-positive',
+                      slot.clothingExtraPositive,
+                    ),
+                    minLines: 2,
+                    maxLines: 4,
+                    onChanged: (value) =>
+                        _updatePersonClothingExtra(index, value),
+                    decoration: const InputDecoration(
+                      labelText: '自行加入服裝／配件標籤',
+                      hintText: '例如：silver moon-shaped choker necklace',
+                      helperText:
+                          '每行或句點分隔一段；會放入此人物服裝的大括號，與既有服裝部位同層分組，不會跑到姿勢或場景。',
+                      prefixIcon: Icon(Icons.add_circle_outline),
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
                 ],
               ),
             ),
