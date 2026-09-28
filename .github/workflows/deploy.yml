@@ -64,6 +64,7 @@ jobs:
           dart run tool/check_expression_catalog.dart
           dart run tool/check_single_person_poses.dart
           dart run tool/check_prompt_package_translations.dart
+          dart run tool/check_pwa_update_flow.dart
           dart run tool/validate_outfit_references.dart
 
       - name: Build Flutter PWA

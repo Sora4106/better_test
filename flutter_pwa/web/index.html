@@ -48,15 +48,28 @@
     (() => {
       if (!('serviceWorker' in navigator)) return;
       const cacheVersion = '__PWA_CACHE_VERSION__';
+      let reloadingForNewWorker = false;
+
+      // A newly activated worker has already finished clearing the old
+      // versioned cache. Reload once so this page immediately boots the new
+      // Flutter bundle instead of waiting for a second manual refresh.
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (reloadingForNewWorker) return;
+        reloadingForNewWorker = true;
+        window.location.reload();
+      });
+
       navigator.serviceWorker
         .register(`pwa_cache_worker.js?v=${encodeURIComponent(cacheVersion)}`, {
           scope: './',
+          updateViaCache: 'none',
         })
+        .then((registration) => registration.update().catch(() => registration))
         .catch(() => {
           // The prompt builder works online even if the browser blocks PWA cache.
         });
     })();
   </script>
-  <script src="flutter_bootstrap.js" async></script>
+  <script src="flutter_bootstrap.js?v=__PWA_CACHE_VERSION__" async></script>
 </body>
 </html>

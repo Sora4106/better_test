@@ -16,11 +16,12 @@ if ([string]::IsNullOrWhiteSpace($cacheVersion)) {
 
 $buildPath = [IO.Path]::GetFullPath((Join-Path $repoRoot $BuildDirectory))
 $indexPath = Join-Path $buildPath 'index.html'
+$bootstrapPath = Join-Path $buildPath 'flutter_bootstrap.js'
 $workerPath = Join-Path $buildPath 'pwa_cache_worker.js'
 $marker = '__PWA_CACHE_VERSION__'
 $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
 
-foreach ($path in @($indexPath, $workerPath)) {
+foreach ($path in @($indexPath, $bootstrapPath, $workerPath)) {
   if (-not (Test-Path -LiteralPath $path)) {
     throw "Expected PWA cache file was not built: $path"
   }

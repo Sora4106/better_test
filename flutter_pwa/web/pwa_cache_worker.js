@@ -20,6 +20,9 @@ const isReleaseCheckRequest = (request) => {
   return request.mode === 'navigate' ||
       url.pathname.endsWith('/index.html') ||
       url.pathname.endsWith('/flutter_bootstrap.js') ||
+      url.pathname.endsWith('/main.dart.js') ||
+      url.pathname.endsWith('/main.dart.mjs') ||
+      url.pathname.endsWith('/main.dart.wasm') ||
       url.pathname.endsWith('/pwa_cache_worker.js') ||
       url.pathname.endsWith('/version.json');
 };
@@ -35,7 +38,7 @@ const networkFirst = async (request) => {
   try {
     return await cacheResponse(request, await fetch(request));
   } catch (_) {
-    return (await caches.match(request)) || Response.error();
+    return (await caches.match(request, {ignoreSearch: true})) || Response.error();
   }
 };
 
