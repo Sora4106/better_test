@@ -595,8 +595,6 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['動物姿勢', 'animal pose'],
       ['兔子姿勢', 'rabbit pose'],
       ['角狀手勢姿勢', 'horns pose'],
-      ['獸爪姿勢', 'paw pose'],
-      ['利爪姿勢', 'claw pose'],
       ['弓箭手姿勢', 'archer pose'],
       ['法式鄙視手勢', "bras d'honneur"],
       ['身體橋式', 'body bridge'],

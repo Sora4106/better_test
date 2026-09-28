@@ -41,6 +41,20 @@ void main() {
     }
   }
 
+  const requiredHandShapeTags = {
+    'claw pose',
+    'paw pose',
+    'open hand',
+    'spread fingers'
+  };
+  final availableTags =
+      fingerGestureTags.map((tag) => tag.en.toLowerCase()).toSet();
+  for (final tag in requiredHandShapeTags) {
+    if (!availableTags.contains(tag)) {
+      problems.add('Missing required hand-shape tag: $tag.');
+    }
+  }
+
   if (problems.isNotEmpty) throw StateError(problems.join('\n'));
   print('Finger gestures OK: ${fingerGestureTags.length} tags in '
       '${fingerGestureGroups.length} groups.');
