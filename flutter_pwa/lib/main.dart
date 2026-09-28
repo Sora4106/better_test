@@ -21,6 +21,8 @@ import 'prompt_package_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
+const _unregisteredPositiveTagInboxEnabled = false;
+const _showPersonFeatureGuidance = false;
 const _stepLayoutVersion = 3;
 const _wingTypeGroup = '翅膀類型';
 const _wingColorGroup = '翅膀顏色';
@@ -5621,8 +5623,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Map<String, List<TagItem>>? _clothingBasesByDisplayGroupCache;
   Set<String>? _hiddenTaxonomyDuplicateIdsCache;
   List<TagItem>? _allClothingWearTagsCache;
-  // Extra positive tags that the catalog does not know yet. Keep these in a
-  // separate local list so they can be reviewed and added to the catalog later.
+  // Temporarily disabled inbox for unregistered extra-positive tags. Keep the
+  // state field only to clear records created by older app versions safely.
   final Set<String> _unregisteredPositiveTags = <String>{};
   final List<CatalogCharacter> _customCharacters = <CatalogCharacter>[];
   final Map<int, List<_RemoteAnime>> _remoteAnimeResults =
@@ -9225,11 +9227,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _showAdult = data['showAdult'] == true;
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _sharedPoseExtra.text = '${data['sharedPoseExtra'] ?? ''}';
-      _unregisteredPositiveTags
-        ..clear()
-        ..addAll((data['unregisteredPositiveTags'] as List? ?? [])
-            .map((value) => _cleanTag('$value'))
-            .where((value) => value.isNotEmpty));
+      _unregisteredPositiveTags.clear();
+      if (_unregisteredPositiveTagInboxEnabled) {
+        _unregisteredPositiveTags.addAll(
+          (data['unregisteredPositiveTags'] as List? ?? [])
+              .map((value) => _cleanTag('$value'))
+              .where((value) => value.isNotEmpty),
+        );
+      }
       _collectUnknownExtraPositiveTags();
       _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
       _negative.text = '${data['negative'] ?? _negative.text}';
@@ -9279,9 +9284,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'showAdult': _showAdult,
         'extraPositive': _extraPositive.text,
         'sharedPoseExtra': _sharedPoseExtra.text,
-        'unregisteredPositiveTags': _isCompactMobileViewport
-            ? const <String>[]
-            : _unregisteredPositiveTags.toList(),
+        if (_unregisteredPositiveTagInboxEnabled)
+          'unregisteredPositiveTags': _isCompactMobileViewport
+              ? const <String>[]
+              : _unregisteredPositiveTags.toList(),
         'reversePrompt': _reversePrompt.text,
         'negative': _negative.text,
         'customNegativeTranslations': _customNegativeTranslations,
@@ -10065,9 +10071,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .replaceAll(RegExp(r'^[,，。.;\s]+|[,，。.;\s]+$'), '')
       .replaceAll(RegExp(r'\s+'), ' ');
 
-  /// The unregistered-tag inbox is useful on desktop, but occupies too much
-  /// of a phone screen and is hard to manage there. Do not retain it in the
-  /// compact mobile layout.
+  /// The unregistered-tag inbox is hidden in compact mobile layouts.
   bool get _isCompactMobileViewport => (html.window.innerWidth ?? 999) < 600;
 
   List<String> _extraTags(String value) {
@@ -10106,7 +10110,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _collectUnknownExtraPositiveTags() {
-    if (_isCompactMobileViewport) {
+    if (!_unregisteredPositiveTagInboxEnabled || _isCompactMobileViewport) {
       _unregisteredPositiveTags.clear();
       return;
     }
@@ -16429,8 +16433,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(instruction),
-        if (groups.contains(_animalTraitGroup)) ...[
+        if (_showPersonFeatureGuidance && instruction.trim().isNotEmpty)
+          Text(instruction),
+        if (_showPersonFeatureGuidance &&
+            groups.contains(_animalTraitGroup)) ...[
           const SizedBox(height: 6),
           Text(
             '獸耳、獸尾、獸手與獸足在此代表角色本身的生理特徵，不會自動加入 furry。只選部位時會偏人形；需要全身毛茸茸獸人時，請在此分類另外勾選「全身毛茸茸獸人（furry）」。擬人獸可自行勾選 anthro。選好類型後，顏色會直接顯示在該特徵下方並合併輸出；服裝造型用的耳飾、尾飾與翅飾請在服裝的「獸耳／尾飾／翅飾」設定。',
@@ -17030,7 +17036,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final target = _cleanTag(value).toLowerCase();
     if (target.isEmpty) return null;
     for (final package in lalaWolfGirlPosePackages) {
-      if (_cleanTag(package.naturalPrompt).toLowerCase() == target &&
+      if (_promptPackageNaturalPromptVariants(package)
+              .map((prompt) => _cleanTag(prompt).toLowerCase())
+              .contains(target) &&
           package.naturalPromptZh.trim().isNotEmpty) {
         return package.naturalPromptZh.trim();
       }
@@ -17059,28 +17067,36 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .join('\n');
   }
 
+  List<String> _promptPackageNaturalPromptVariants(PromptPackageData package) {
+    final seen = <String>{};
+    return [package.naturalPrompt, ...package.legacyNaturalPrompts]
+        .map(_cleanTag)
+        .where((prompt) => prompt.isNotEmpty && seen.add(prompt.toLowerCase()))
+        .toList();
+  }
+
   bool _promptPackageIsSelected(PromptPackageData package, int personIndex) {
     final tags = _promptPackageTags(package);
     final hasTags = tags.isNotEmpty;
-    final natural = package.naturalPrompt.trim();
-    final hasNatural = natural.isNotEmpty;
+    final naturalPrompts = _promptPackageNaturalPromptVariants(package);
+    final hasNatural = naturalPrompts.isNotEmpty;
     if (!hasTags && !hasNatural) return false;
     return (!hasTags ||
             _personTagIds(personIndex)
                 .containsAll(tags.map((tag) => tag.id))) &&
         (!hasNatural ||
-            _hasPoseExtraPrompt(
-                _personSlots[personIndex].poseExtraPositive, natural));
+            naturalPrompts.any((prompt) => _hasPoseExtraPrompt(
+                _personSlots[personIndex].poseExtraPositive, prompt)));
   }
 
   void _removePromptPackage(PromptPackageData package, int personIndex) {
     final tagIds = _promptPackageTags(package).map((tag) => tag.id);
     setState(() {
       _personTagIds(personIndex).removeAll(tagIds);
-      final updated = _removePoseExtraPrompt(
-        _personSlots[personIndex].poseExtraPositive,
-        package.naturalPrompt,
-      );
+      var updated = _personSlots[personIndex].poseExtraPositive;
+      for (final prompt in _promptPackageNaturalPromptVariants(package)) {
+        updated = _removePoseExtraPrompt(updated, prompt);
+      }
       _personSlots[personIndex].poseExtraPositive = updated;
       _personSearchControllers['$personIndex:pose-extra-positive']?.text =
           updated;
@@ -17093,10 +17109,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final tags = _promptPackageTags(package);
     setState(() {
       _personTagIds(personIndex).addAll(tags.map((tag) => tag.id));
-      final updated = _addPoseExtraPrompt(
-        _personSlots[personIndex].poseExtraPositive,
-        package.naturalPrompt,
-      );
+      var updated = _personSlots[personIndex].poseExtraPositive;
+      for (final legacyPrompt in package.legacyNaturalPrompts) {
+        updated = _removePoseExtraPrompt(updated, legacyPrompt);
+      }
+      updated = _addPoseExtraPrompt(updated, package.naturalPrompt);
       _personSlots[personIndex].poseExtraPositive = updated;
       _personSearchControllers['$personIndex:pose-extra-positive']?.text =
           updated;
@@ -17375,19 +17392,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _sharedPromptPackageIsSelected(PromptPackageData package) {
     final tags = _promptPackageTags(package);
     final hasTags = tags.isNotEmpty;
-    final natural = package.naturalPrompt.trim();
-    final hasNatural = natural.isNotEmpty;
+    final naturalPrompts = _promptPackageNaturalPromptVariants(package);
+    final hasNatural = naturalPrompts.isNotEmpty;
     if (!hasTags && !hasNatural) return false;
     return (!hasTags || _selectedIds.containsAll(tags.map((tag) => tag.id))) &&
-        (!hasNatural || _hasPoseExtraPrompt(_sharedPoseExtra.text, natural));
+        (!hasNatural ||
+            naturalPrompts.any((prompt) =>
+                _hasPoseExtraPrompt(_sharedPoseExtra.text, prompt)));
   }
 
   void _applySharedPromptPackage(PromptPackageData package) {
     final tags = _promptPackageTags(package);
     setState(() {
       _selectedIds.addAll(tags.map((tag) => tag.id));
+      var updated = _sharedPoseExtra.text;
+      for (final legacyPrompt in package.legacyNaturalPrompts) {
+        updated = _removePoseExtraPrompt(updated, legacyPrompt);
+      }
       _sharedPoseExtra.text =
-          _addPoseExtraPrompt(_sharedPoseExtra.text, package.naturalPrompt);
+          _addPoseExtraPrompt(updated, package.naturalPrompt);
       _collectUnknownExtraPositiveTags();
       _persist();
     });
@@ -17396,10 +17419,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void _removeSharedPromptPackage(PromptPackageData package) {
     setState(() {
       _selectedIds.removeAll(_promptPackageTags(package).map((tag) => tag.id));
-      _sharedPoseExtra.text = _removePoseExtraPrompt(
-        _sharedPoseExtra.text,
-        package.naturalPrompt,
-      );
+      var updated = _sharedPoseExtra.text;
+      for (final prompt in _promptPackageNaturalPromptVariants(package)) {
+        updated = _removePoseExtraPrompt(updated, prompt);
+      }
+      _sharedPoseExtra.text = updated;
       _collectUnknownExtraPositiveTags();
       _persist();
     });
@@ -19071,7 +19095,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _unregisteredPositiveTagsPanel() {
-    if (_isCompactMobileViewport) return const SizedBox.shrink();
+    if (!_unregisteredPositiveTagInboxEnabled || _isCompactMobileViewport) {
+      return const SizedBox.shrink();
+    }
     final tags = _unregisteredPositiveTags.toList();
     if (tags.isEmpty) return const SizedBox.shrink();
     return Container(

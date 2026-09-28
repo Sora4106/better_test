@@ -12,6 +12,7 @@ class PromptPackageData {
     this.tags = const <String>[],
     this.naturalPrompt = '',
     this.naturalPromptZh = '',
+    this.legacyNaturalPrompts = const <String>[],
   });
 
   final String id;
@@ -21,6 +22,7 @@ class PromptPackageData {
   final List<String> tags;
   final String naturalPrompt;
   final String naturalPromptZh;
+  final List<String> legacyNaturalPrompts;
 }
 
 class _PackagePart {
@@ -208,12 +210,15 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
   PromptPackageData(
     id: 'wolf_girl_kneeling_paws',
     name: '雙膝跪地・可愛爪子',
-    description: '直身跪姿，雙手靠近臉側做可愛爪子手勢。',
+    description: '直身跪姿，雙手在臉側張開、掌心朝前，手指微彎做爪子動作。',
     category: '撒嬌與玩耍',
     naturalPrompt:
-        'kneeling on both knees, knees together, upper body upright, both hands raised beside face in a playful pawing gesture, elbows slightly bent, head slightly tilted, bright gentle smile, light forward lean',
+        'kneeling on both knees, knees together, upper body upright, both hands open beside face, open palms facing forward, fingers spread apart and slightly curled like animal paws, elbows slightly bent, head slightly tilted, bright gentle smile, light forward lean',
     naturalPromptZh:
-        '雙膝跪地，膝蓋併攏，上身直立，雙手抬到臉側做出俏皮的爪子手勢，手肘微彎，頭部微微傾斜，露出明亮溫柔的笑容，身體輕微前傾',
+        '雙膝跪地，膝蓋併攏，上身直立，雙手在臉側張開、掌心朝前，手指分開並微彎成動物爪子的樣子，手肘微彎，頭部微微傾斜，露出明亮溫柔的笑容，身體輕微前傾',
+    legacyNaturalPrompts: [
+      'kneeling on both knees, knees together, upper body upright, both hands raised beside face in a playful pawing gesture, elbows slightly bent, head slightly tilted, bright gentle smile, light forward lean',
+    ],
   ),
   PromptPackageData(
     id: 'wolf_girl_side_lying_tail_hug',

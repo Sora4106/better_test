@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.159';
-const appBuildNumber = 161;
-const appVersionLabel = '1.1.159+161';
+﻿const appVersion = '1.1.160';
+const appBuildNumber = 162;
+const appVersionLabel = '1.1.160+162';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.160', 'build': '162', 'label': '1.1.160+162', 'date': '2026-09-28', 'notes': '隱藏固定外觀說明與待收錄標籤紀錄，雙膝跪地爪子套件改為張手掌爪子動作'},
   {'version': '1.1.159', 'build': '161', 'label': '1.1.159+161', 'date': '2026-09-28', 'notes': '回復無袖帽T與側面鏤空的原始提示詞排列，移除自動袖子負面詞；保留 PWA 自動更新與快取版本修正'},
   {'version': '1.1.158', 'build': '160', 'label': '1.1.158+160', 'date': '2026-09-28', 'notes': '強化 PWA 自動版本更新：主程式與啟動檔使用版本化網址、強制略過舊快取檢查新版 worker，接管後自動重新載入一次'},
   {'version': '1.1.157', 'build': '159', 'label': '1.1.157+159', 'date': '2026-09-28', 'notes': '修正無袖帽T提示詞結構：將無袖綁定主衣物、明確側乳與衣身側邊鏤空，單人無獨立袖時自動排除長袖與分離袖'},
   {'version': '1.1.156', 'build': '158', 'label': '1.1.156+158', 'date': '2026-09-28', 'notes': '補齊狼耳少女姿勢套件的完整中文動作內容，中文記憶欄位與預覽改為中英分離顯示，並新增雙語資料驗證'},
-  {'version': '1.1.155', 'build': '157', 'label': '1.1.155+157', 'date': '2026-09-28', 'notes': '拆分長褲、短褲與裙子的獨立主次色槽並遷移舊資料，新增露側乳剪裁與大腿環帶／鏈條配件'},
 ];

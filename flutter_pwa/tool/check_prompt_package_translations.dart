@@ -23,6 +23,19 @@ void main() {
     }
   }
 
+  final openPawPackage = lalaWolfGirlPosePackages.firstWhere(
+    (package) => package.id == 'wolf_girl_kneeling_paws',
+  );
+  if (!openPawPackage.naturalPrompt.contains('open palms facing forward') ||
+      !openPawPackage.naturalPrompt
+          .contains('fingers spread apart and slightly curled') ||
+      openPawPackage.naturalPrompt.contains('playful pawing gesture')) {
+    problems.add('Wolf-girl paw package must use the open-palm paw action.');
+  }
+  if (openPawPackage.legacyNaturalPrompts.length != 1) {
+    problems.add('Wolf-girl paw package must retain one legacy prompt.');
+  }
+
   if (problems.isNotEmpty) throw StateError(problems.join('\n'));
   print(
     'Wolf-girl package translations OK: '
