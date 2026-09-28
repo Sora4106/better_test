@@ -11,6 +11,7 @@ class PromptPackageData {
     required this.category,
     this.tags = const <String>[],
     this.naturalPrompt = '',
+    this.naturalPromptZh = '',
   });
 
   final String id;
@@ -19,6 +20,7 @@ class PromptPackageData {
   final String category;
   final List<String> tags;
   final String naturalPrompt;
+  final String naturalPromptZh;
 }
 
 class _PackagePart {
@@ -210,6 +212,8 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
     category: '撒嬌與玩耍',
     naturalPrompt:
         'kneeling on both knees, knees together, upper body upright, both hands raised beside face in a playful pawing gesture, elbows slightly bent, head slightly tilted, bright gentle smile, light forward lean',
+    naturalPromptZh:
+        '雙膝跪地，膝蓋併攏，上身直立，雙手抬到臉側做出俏皮的爪子手勢，手肘微彎，頭部微微傾斜，露出明亮溫柔的笑容，身體輕微前傾',
   ),
   PromptPackageData(
     id: 'wolf_girl_side_lying_tail_hug',
@@ -218,6 +222,7 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
     category: '休息與撒嬌',
     naturalPrompt:
         'lying on side, body gently curled, knees bent, both arms hugging a large fluffy tail, relaxed shoulders, soft smile, calm sleepy expression',
+    naturalPromptZh: '側躺，身體輕輕蜷曲，雙膝彎曲，雙臂抱著一條蓬鬆的大尾巴，肩膀放鬆，輕柔微笑，表情平靜而睏倦',
   ),
   PromptPackageData(
     id: 'wolf_girl_supine_stretch',
@@ -226,6 +231,7 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
     category: '伸展與放鬆',
     naturalPrompt:
         'lying on back, both arms stretched above head, one leg straight and the other knee slightly bent, relaxed smile, full-body stretch',
+    naturalPromptZh: '仰躺，雙臂伸展到頭頂上方，一腿伸直、另一腿膝蓋微彎，放鬆微笑並伸展全身',
   ),
   PromptPackageData(
     id: 'wolf_girl_prone_looking_back',
@@ -234,6 +240,7 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
     category: '撒嬌與玩耍',
     naturalPrompt:
         'lying on stomach, elbows supporting upper body, ankles crossed, head turned back toward viewer, chin resting on one hand, gentle smile',
+    naturalPromptZh: '俯臥，以雙肘撐起上半身，雙腳踝交叉，回頭望向觀者，下巴靠在一隻手上並溫柔微笑',
   ),
   PromptPackageData(
     id: 'wolf_girl_half_side_lying',
@@ -242,6 +249,7 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
     category: '休息與撒嬌',
     naturalPrompt:
         'half side-lying pose, upper body propped up on one elbow, other hand resting on thigh, one knee bent, relaxed smile',
+    naturalPromptZh: '半側躺，上半身以單肘撐起，另一手放在大腿上，一側膝蓋彎曲並放鬆微笑',
   ),
   PromptPackageData(
     id: 'wolf_girl_curled_tail_rest',
@@ -250,6 +258,7 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
     category: '休息與撒嬌',
     naturalPrompt:
         'curled-up resting pose, knees drawn close, both arms hugging a large fluffy tail, cheek resting against tail, peaceful sleepy expression',
+    naturalPromptZh: '蜷縮休息，雙膝靠近身體，雙臂抱著一條蓬鬆的大尾巴，臉頰靠在尾巴上，露出平靜睏倦的表情',
   ),
   PromptPackageData(
     id: 'wolf_girl_forest_supine_tail_hug',
@@ -258,6 +267,7 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
     category: '森林情境',
     naturalPrompt:
         'lying flat on back, both arms hugging a large fluffy tail across chest, legs relaxed, peaceful smile, relaxed forest-resting pose',
+    naturalPromptZh: '平躺仰臥，雙臂把一條蓬鬆的大尾巴抱在胸前，雙腿放鬆並平靜微笑，呈現森林中休息的放鬆姿勢',
   ),
 ];
 

@@ -10236,6 +10236,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (cleaned.isEmpty || RegExp(r'[\u4e00-\u9fff]').hasMatch(cleaned)) {
       return cleaned;
     }
+    final knownNaturalPrompt = _knownNaturalPromptZh(cleaned);
+    if (knownNaturalPrompt != null) return knownNaturalPrompt;
     for (final tag in _allTags) {
       if (tag.en.toLowerCase() == cleaned.toLowerCase()) return tag.zh;
     }
@@ -17017,6 +17019,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  String _promptPackageNaturalPromptZh(PromptPackageData package) {
+    final translated = package.naturalPromptZh.trim();
+    return translated.isNotEmpty
+        ? translated
+        : _positiveChineseTag(package.naturalPrompt);
+  }
+
+  String? _knownNaturalPromptZh(String value) {
+    final target = _cleanTag(value).toLowerCase();
+    if (target.isEmpty) return null;
+    for (final package in lalaWolfGirlPosePackages) {
+      if (_cleanTag(package.naturalPrompt).toLowerCase() == target &&
+          package.naturalPromptZh.trim().isNotEmpty) {
+        return package.naturalPromptZh.trim();
+      }
+    }
+    return null;
+  }
+
   bool _hasPoseExtraPrompt(String value, String prompt) {
     final target = _cleanTag(prompt).toLowerCase();
     if (target.isEmpty) return true;
@@ -17111,15 +17132,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                 if (package.naturalPrompt.trim().isNotEmpty) ...[
                   const SizedBox(height: 14),
-                  const Text('英文自然敘述',
+                  const Text('中文動作內容',
+                      style: TextStyle(fontWeight: FontWeight.w700)),
+                  const SizedBox(height: 6),
+                  SelectableText(_promptPackageNaturalPromptZh(package)),
+                  const SizedBox(height: 14),
+                  const Text('英文提示詞（實際輸出）',
                       style: TextStyle(fontWeight: FontWeight.w700)),
                   const SizedBox(height: 6),
                   SelectableText(package.naturalPrompt),
-                  const SizedBox(height: 14),
-                  const Text('中文對照',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 6),
-                  SelectableText(_positiveChineseTag(package.naturalPrompt)),
                 ],
               ],
             ),
