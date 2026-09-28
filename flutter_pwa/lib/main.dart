@@ -2671,6 +2671,7 @@ const _clothingGroupAnimalAccessory = '配件・獸飾';
 const _clothingGroupNeckAccessory = '配件・頸肩';
 const _clothingGroupHandAccessory = '配件・手臂';
 const _clothingGroupWaistAccessory = '配件・腰部';
+const _clothingGroupLegAccessory = '配件・腿部';
 const _clothingGroupOtherAccessory = '配件・其他';
 const _clothingAccessoryPickerGroups = <String>{
   _clothingGroupHat,
@@ -2682,6 +2683,7 @@ const _clothingAccessoryPickerGroups = <String>{
   _clothingGroupNeckAccessory,
   _clothingGroupHandAccessory,
   _clothingGroupWaistAccessory,
+  _clothingGroupLegAccessory,
   _clothingGroupOtherAccessory,
 };
 const _cosplayGroup = '角色扮演';
@@ -2716,6 +2718,7 @@ const _clothingGarmentPickerGroups = <String>[
   _clothingGroupPanties,
   _clothingGroupHandAccessory,
   _clothingGroupWaistAccessory,
+  _clothingGroupLegAccessory,
   _clothingGroupSocks,
   _clothingGroupShoes,
   _clothingGroupOtherAccessory,
@@ -2855,6 +2858,9 @@ String _clothingAccessoryPickerGroup(TagItem tag) {
   if (RegExp(r'\b(glove|arm guard|bracelet|wrist|sleeve)\b')
       .hasMatch(english)) {
     return _clothingGroupHandAccessory;
+  }
+  if (RegExp(r'\b(thigh|leg garter)\b').hasMatch(english)) {
+    return _clothingGroupLegAccessory;
   }
   if (RegExp(r'\b(belt|sash|waist|garter)\b').hasMatch(english)) {
     return _clothingGroupWaistAccessory;
@@ -4667,7 +4673,11 @@ List<TagItem> _seedTags() => [
           'sleeves', 'top_sleeve_color'),
       ..._clothingColorTags('top_color', '上衣顏色', '上衣', 'top', 'top_color'),
       ..._clothingColorTags(
-          'bottom_color', '下身顏色', '下身', 'bottoms', 'bottom_color'),
+          'pants_color', '褲子顏色', '褲子', 'pants color', 'pants_color'),
+      ..._clothingColorTags(
+          'shorts_color', '短褲顏色', '短褲', 'shorts color', 'shorts_color'),
+      ..._clothingColorTags(
+          'skirt_color', '裙子顏色', '裙子', 'skirt color', 'skirt_color'),
       ..._clothingColorTags(
           'underwear_color', '內衣顏色', '內衣', 'underwear', 'underwear_top_color',
           adult: true),
@@ -4693,7 +4703,11 @@ List<TagItem> _seedTags() => [
       ..._clothingColorShadeTags(
           'top_shade_color', '上衣顏色', '上衣', 'top', 'top_color'),
       ..._clothingColorShadeTags(
-          'bottom_shade_color', '下身顏色', '下身', 'bottoms', 'bottom_color'),
+          'pants_shade_color', '褲子顏色', '褲子', 'pants color', 'pants_color'),
+      ..._clothingColorShadeTags(
+          'shorts_shade_color', '短褲顏色', '短褲', 'shorts color', 'shorts_color'),
+      ..._clothingColorShadeTags(
+          'skirt_shade_color', '裙子顏色', '裙子', 'skirt color', 'skirt_color'),
       ..._clothingColorShadeTags('underwear_shade_color', '內衣顏色', '內衣',
           'underwear', 'underwear_top_color',
           adult: true),
@@ -4718,7 +4732,11 @@ List<TagItem> _seedTags() => [
       ..._clothingTrimColorTags(
           'top_trim_color', '上衣邊線色', '邊線', 'top_trim_color'),
       ..._clothingTrimColorTags(
-          'bottom_trim_color', '下身邊線色', '邊線', 'bottom_trim_color'),
+          'pants_trim_color', '褲子邊線色', '邊線', 'pants_trim_color'),
+      ..._clothingTrimColorTags(
+          'shorts_trim_color', '短褲邊線色', '邊線', 'shorts_trim_color'),
+      ..._clothingTrimColorTags(
+          'skirt_trim_color', '裙子邊線色', '邊線', 'skirt_trim_color'),
       ..._clothingTrimColorTags(
           'underwear_trim_color', '內衣邊線色', '邊線', 'underwear_trim_color'),
       ..._clothingTrimColorTags(
@@ -6023,6 +6041,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '裙子': 29,
       '下身風格': 30,
       '下身顏色': 31,
+      '褲子顏色': 31,
+      '短褲顏色': 31,
+      '裙子顏色': 31,
       '內衣': 32,
       '內衣顏色': 33,
       '胸罩': 33,
@@ -6142,9 +6163,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '服裝顏色',
         '上衣顏色',
         '下身顏色',
+        '褲子顏色',
+        '短褲顏色',
+        '裙子顏色',
         '服裝邊線色',
         '上衣邊線色',
         '下身邊線色',
+        '褲子邊線色',
+        '短褲邊線色',
+        '裙子邊線色',
         '內衣邊線色',
         '胸罩邊線色',
         '內褲邊線色',
@@ -6450,6 +6477,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '服裝顏色',
         '上衣顏色',
         '下身顏色',
+        '褲子顏色',
+        '短褲顏色',
+        '裙子顏色',
         '內衣顏色',
         '胸罩顏色',
         '內褲顏色',
@@ -6652,8 +6682,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _clothingGroupNeckAccessory => 6,
         _clothingGroupHandAccessory => 7,
         _clothingGroupWaistAccessory => 8,
-        _clothingGroupOtherAccessory => 9,
-        _ => 9,
+        _clothingGroupLegAccessory => 9,
+        _clothingGroupOtherAccessory => 10,
+        _ => 10,
       };
     }
     return switch (scope) {
@@ -6727,7 +6758,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (scope == null) return const <String>[];
     final groups = <String>[_scopedClothingGroup(scope, 'style')];
     if (scope == 'top') groups.add('\u4E0A\u8863\u98A8\u683C');
-    if (scope == 'pants' || scope == 'skirt') {
+    if (scope == 'pants' || scope == 'shorts' || scope == 'skirt') {
       groups.add('\u4E0B\u8EAB\u98A8\u683C');
     }
     if (scope == 'onepiece' || scope == 'costume') {
@@ -6884,7 +6915,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return switch (scopedSlot) {
         'onepiece' => '服裝顏色',
         'top' => '上衣顏色',
-        'pants' || 'shorts' || 'skirt' => '下身顏色',
+        'pants' => '褲子顏色',
+        'shorts' => '短褲顏色',
+        'skirt' => '裙子顏色',
         'outerwear' => '外套顏色',
         'costume' => '服裝顏色',
         'underwear' => '內衣顏色',
@@ -6900,9 +6933,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return '服裝顏色';
     }
     if (group == '上衣') return '上衣顏色';
-    if (group == '褲子' || group == '短褲' || group == '裙子') {
-      return '下身顏色';
-    }
+    if (group == '褲子') return '褲子顏色';
+    if (group == '短褲') return '短褲顏色';
+    if (group == '裙子') return '裙子顏色';
     if (group == '外套') return '外套顏色';
     if (group == '內衣') return '內衣顏色';
     if (group == '胸罩') return '胸罩顏色';
@@ -6919,7 +6952,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return switch (scopedSlot) {
         'onepiece' => '服裝邊線色',
         'top' => '上衣邊線色',
-        'pants' || 'shorts' || 'skirt' => '下身邊線色',
+        'pants' => '褲子邊線色',
+        'shorts' => '短褲邊線色',
+        'skirt' => '裙子邊線色',
         'outerwear' => '外套邊線色',
         'costume' => '服裝邊線色',
         'underwear' => '內衣邊線色',
@@ -6935,9 +6970,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return '服裝邊線色';
     }
     if (group == '上衣') return '上衣邊線色';
-    if (group == '褲子' || group == '短褲' || group == '裙子') {
-      return '下身邊線色';
-    }
+    if (group == '褲子') return '褲子邊線色';
+    if (group == '短褲') return '短褲邊線色';
+    if (group == '裙子') return '裙子邊線色';
     if (group == '外套') return '外套邊線色';
     if (group == '內衣') return '內衣邊線色';
     if (group == '胸罩') return '胸罩邊線色';
@@ -6953,7 +6988,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'sleeves' => '上衣袖子顏色',
         'onepiece' || 'costume' => '服裝顏色',
         'top' => '上衣顏色',
-        'pants' || 'shorts' || 'skirt' => '下身顏色',
+        'pants' => '褲子顏色',
+        'shorts' => '短褲顏色',
+        'skirt' => '裙子顏色',
         'outerwear' => '外套顏色',
         'underwear' => '內衣顏色',
         'bra' => '胸罩顏色',
@@ -6973,7 +7010,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'sleeves' => '上衣袖子次色',
         'onepiece' || 'costume' => '服裝邊線色',
         'top' => '上衣邊線色',
-        'pants' || 'shorts' || 'skirt' => '下身邊線色',
+        'pants' => '褲子邊線色',
+        'shorts' => '短褲邊線色',
+        'skirt' => '裙子邊線色',
         'outerwear' => '外套邊線色',
         'underwear' => '內衣邊線色',
         'bra' => '胸罩邊線色',
@@ -7003,7 +7042,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _clothingStyleGroup(String group) {
     if (group == '上衣') return '上衣風格';
-    if (group == '褲子' || group == '裙子') return '下身風格';
+    if (group == '褲子' || group == '短褲' || group == '裙子') {
+      return '下身風格';
+    }
     return null;
   }
 
@@ -7271,6 +7312,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝顏色',
       '上衣顏色',
       '下身顏色',
+      '褲子顏色',
+      '短褲顏色',
+      '裙子顏色',
       '內衣顏色',
       '胸罩顏色',
       '內褲顏色',
@@ -9007,6 +9051,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _pickerSearchControllers[key]?.clear();
   }
 
+  /// Older versions stored pants, shorts, and skirts in one shared colour
+  /// channel. Copy that colour into every selected lower-body garment so old
+  /// saved prompts keep their appearance while all future edits stay separate.
+  void _migrateLegacyLowerBodyColorIds(Set<String> ids) {
+    final scopes = ids
+        .map((id) => _tagsById[id])
+        .whereType<TagItem>()
+        .where(_isClothingBaseTag)
+        .map(_clothingScopeForBase)
+        .whereType<String>()
+        .where(const {'pants', 'shorts', 'skirt'}.contains)
+        .toSet();
+    for (final id in ids.toList()) {
+      String? color;
+      String? channel;
+      if (id.startsWith('bottom_shade_color_')) {
+        color = id.substring('bottom_shade_color_'.length);
+        channel = 'shade_color';
+      } else if (id.startsWith('bottom_trim_color_')) {
+        color = id.substring('bottom_trim_color_'.length);
+        channel = 'trim_color';
+      } else if (id.startsWith('bottom_color_')) {
+        color = id.substring('bottom_color_'.length);
+        channel = 'color';
+      }
+      if (color == null || color.isEmpty || channel == null) continue;
+      ids.remove(id);
+      for (final scope in scopes) {
+        final migratedId = '${scope}_${channel}_$color';
+        if (_tagsById.containsKey(migratedId)) ids.add(migratedId);
+      }
+    }
+  }
+
   void _restore() {
     final raw = html.window.localStorage[_storageKey];
     if (raw == null) return;
@@ -9088,13 +9166,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _migrateConsolidatedWearTagIds(_selectedIds);
       _migrateClothingTaxonomyTagIds(_selectedIds);
+      _migrateLegacyLowerBodyColorIds(_selectedIds);
       for (final ids in _personSelectedIds.values) {
         _migrateConsolidatedWearTagIds(ids);
         _migrateClothingTaxonomyTagIds(ids);
+        _migrateLegacyLowerBodyColorIds(ids);
       }
       for (final combination in _combinations) {
         final migrated = combination.tagIds.toSet();
         _migrateClothingTaxonomyTagIds(migrated);
+        _migrateLegacyLowerBodyColorIds(migrated);
         combination.tagIds
           ..clear()
           ..addAll(migrated);
@@ -11078,6 +11159,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final clothingGroups = {
       '上衣',
       '褲子',
+      '短褲',
       '裙子',
       '內衣',
       '胸罩',
@@ -11092,6 +11174,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝邊線色',
       '上衣邊線色',
       '下身邊線色',
+      '褲子邊線色',
+      '短褲邊線色',
+      '裙子邊線色',
       '內衣邊線色',
       '胸罩邊線色',
       '內褲邊線色',
@@ -11107,6 +11192,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '下身風格',
       '上衣顏色',
       '下身顏色',
+      '褲子顏色',
+      '短褲顏色',
+      '裙子顏色',
       '服裝顏色',
       '服裝細節',
       '服裝細節顏色',
@@ -11145,11 +11233,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       add(_randomClothingTag(['服裝顏色'], random));
     } else {
       add(_randomClothingTag(['上衣'], random));
-      add(_randomClothingTag(['褲子', '裙子'], random));
+      final lowerBody = _randomClothingTag(['褲子', '短褲', '裙子'], random);
+      add(lowerBody);
       if (random.nextBool()) add(_randomClothingTag(['上衣風格'], random));
       if (random.nextBool()) add(_randomClothingTag(['下身風格'], random));
       if (random.nextBool()) add(_randomClothingTag(['上衣顏色'], random));
-      if (random.nextBool()) add(_randomClothingTag(['下身顏色'], random));
+      if (lowerBody != null && random.nextBool()) {
+        final colorGroup = _clothingColorGroupForBase(lowerBody);
+        if (colorGroup != null) {
+          add(_randomClothingTag([colorGroup], random));
+        }
+      }
     }
     if (random.nextBool()) add(_randomClothingTag(['胸罩'], random));
     if (random.nextBool()) add(_randomClothingTag(['內衣'], random));
@@ -11203,8 +11297,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (hasTargetGroup('上衣') && random.nextBool()) {
       add(_randomClothingTag(['上衣邊線色'], random));
     }
-    if ((hasTargetGroup('褲子') || hasTargetGroup('裙子')) && random.nextBool()) {
-      add(_randomClothingTag(['下身邊線色'], random));
+    for (final lowerBody in const [
+      ('褲子', '褲子邊線色'),
+      ('短褲', '短褲邊線色'),
+      ('裙子', '裙子邊線色'),
+    ]) {
+      if (hasTargetGroup(lowerBody.$1) && random.nextBool()) {
+        add(_randomClothingTag([lowerBody.$2], random));
+      }
     }
     if (hasTargetGroup('內衣') && random.nextBool()) {
       add(_randomClothingTag(['內衣邊線色'], random));
@@ -12334,9 +12434,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return switch (group) {
       '服裝' || _cosplayGroup || '服裝顏色' || '服裝邊線色' => 'onepiece',
       '上衣' || '上衣風格' || '上衣顏色' || '上衣邊線色' => 'top',
-      '褲子' => 'pants',
-      '短褲' => 'shorts',
-      '裙子' => 'skirt',
+      '褲子' || '褲子顏色' || '褲子邊線色' => 'pants',
+      '短褲' || '短褲顏色' || '短褲邊線色' => 'shorts',
+      '裙子' || '裙子顏色' || '裙子邊線色' => 'skirt',
       '下身風格' || '下身顏色' || '下身邊線色' => 'bottom',
       '外套' || '外套顏色' || '外套邊線色' => 'outerwear',
       '特殊服裝' => 'costume',
@@ -12354,6 +12454,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupNeckAccessory ||
       _clothingGroupHandAccessory ||
       _clothingGroupWaistAccessory ||
+      _clothingGroupLegAccessory ||
       _clothingGroupOtherAccessory ||
       '配件' ||
       '配件顏色' ||
@@ -14455,6 +14556,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '髮型',
                     '上衣',
                     '褲子',
+                    '短褲',
                     '裙子',
                     '內衣',
                     '胸罩',
@@ -14475,11 +14577,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '上衣風格',
                     '下身風格',
                     '上衣顏色',
-                    '下身顏色',
+                    '褲子顏色',
+                    '短褲顏色',
+                    '裙子顏色',
                     '服裝顏色',
                     '服裝邊線色',
                     '上衣邊線色',
-                    '下身邊線色',
+                    '褲子邊線色',
+                    '短褲邊線色',
+                    '裙子邊線色',
                     '內衣邊線色',
                     '胸罩邊線色',
                     '內褲邊線色',
@@ -14578,6 +14684,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '髮型',
                     '上衣',
                     '褲子',
+                    '短褲',
                     '裙子',
                     '內衣',
                     '胸罩',
@@ -14594,10 +14701,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '下身風格',
                     '上衣顏色',
                     '下身顏色',
+                    '褲子顏色',
+                    '短褲顏色',
+                    '裙子顏色',
                     '服裝顏色',
                     '服裝邊線色',
                     '上衣邊線色',
                     '下身邊線色',
+                    '褲子邊線色',
+                    '短褲邊線色',
+                    '裙子邊線色',
                     '內衣邊線色',
                     '胸罩邊線色',
                     '內褲邊線色',
@@ -14821,6 +14934,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupNeckAccessory: Color(0xffc084fc),
       _clothingGroupHandAccessory: Color(0xff38bdf8),
       _clothingGroupWaistAccessory: Color(0xfffacc15),
+      _clothingGroupLegAccessory: Color(0xff2dd4bf),
       _clothingGroupOtherAccessory: Color(0xff94a3b8),
     };
     final accessoryTone = accessoryTones[group];
@@ -15165,6 +15279,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝顏色': '連身裝色彩 1',
       '上衣顏色': '上衣色彩 1',
       '下身顏色': '下身色彩 1',
+      '褲子顏色': '長褲色彩 1',
+      '短褲顏色': '短褲色彩 1',
+      '裙子顏色': '裙子色彩 1',
       '內衣顏色': '內衣色彩 1',
       '胸罩顏色': '胸罩色彩 1',
       '內褲顏色': '內褲色彩 1',
@@ -15182,6 +15299,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝邊線色': '連身裝色彩 2',
       '上衣邊線色': '上衣色彩 2',
       '下身邊線色': '下身色彩 2',
+      '褲子邊線色': '長褲色彩 2',
+      '短褲邊線色': '短褲色彩 2',
+      '裙子邊線色': '裙子色彩 2',
       '內衣邊線色': '內衣色彩 2',
       '胸罩邊線色': '胸罩色彩 2',
       '內褲邊線色': '內褲色彩 2',
@@ -15211,6 +15331,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _clothingGroupEyewear) return '眼鏡／眼罩';
     if (group == _clothingGroupHeadAccessory) return '其他頭部配件';
     if (group == _clothingGroupAnimalAccessory) return '獸耳／尾飾／翅飾';
+    if (group == _clothingGroupLegAccessory) return '腿部飾品';
     if (group == '褲子') return '下身／褲子';
     if (group == '短褲') return '下身／短褲';
     if (group == '服裝') return '連身裙／洋裝';
@@ -17765,6 +17886,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupNeckAccessory ||
       _clothingGroupHandAccessory ||
       _clothingGroupWaistAccessory ||
+      _clothingGroupLegAccessory ||
       _clothingGroupOtherAccessory =>
         'accessory',
       _ => null,
@@ -17828,8 +17950,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (has('上衣')) {
         groups.insertAll(0, ['上衣風格', '上衣顏色', '上衣邊線色']);
       }
-      if (has('褲子') || has('裙子')) {
-        groups.insertAll(0, ['下身風格', '下身顏色', '下身邊線色']);
+      if (has('褲子')) {
+        groups.insertAll(0, ['下身風格', '褲子顏色', '褲子邊線色']);
+      }
+      if (has('短褲')) {
+        groups.insertAll(0, ['下身風格', '短褲顏色', '短褲邊線色']);
+      }
+      if (has('裙子')) {
+        groups.insertAll(0, ['下身風格', '裙子顏色', '裙子邊線色']);
       }
     }
     if (has('內衣')) groups.insertAll(0, ['內衣顏色', '內衣邊線色']);
@@ -19472,6 +19600,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   [
                     '上衣',
                     '褲子',
+                    '短褲',
                     '裙子',
                     '內衣',
                     '胸罩',
@@ -19488,7 +19617,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     '下身風格',
                     '上衣顏色',
                     '下身顏色',
+                    '褲子顏色',
+                    '短褲顏色',
+                    '裙子顏色',
                     '服裝顏色',
+                    '褲子邊線色',
+                    '短褲邊線色',
+                    '裙子邊線色',
                     '帽子邊線色',
                     '眼鏡邊線色',
                     '服裝細節',

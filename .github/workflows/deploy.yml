@@ -59,6 +59,7 @@ jobs:
           flutter pub get
           flutter analyze
           dart run tool/check_clothing_taxonomy.dart
+          dart run tool/check_lower_body_color_channels.dart
           dart run tool/check_finger_gestures.dart
           dart run tool/check_expression_catalog.dart
           dart run tool/check_single_person_poses.dart

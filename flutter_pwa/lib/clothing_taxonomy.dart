@@ -226,6 +226,7 @@ const _officialClothingDimensionEnglish = <String>{
   'front slit',
   'high slit',
   'off-shoulder',
+  'sideboob',
   'one-shoulder',
   'halter neck',
   'sleeveless',
@@ -942,11 +943,20 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('圍巾', 'scarf'),
     ('披肩', 'shawl'),
     ('腰帶', 'belt'),
+    ('大腿環帶', 'thigh strap'),
     ('手套', 'gloves'),
     ('無指手套', 'fingerless gloves'),
   ]),
   // Placement-specific descriptions remain separate from the generic veil
   // and hair bow choices, so the intended placement stays explicit.
+  _clothingTag(
+    id: 'taxonomy_accessory_thigh_chain',
+    group: '配件',
+    zh: '大腿鏈條',
+    en: 'thigh chain',
+    conflictGroup: 'accessory_thigh_chain',
+    support: 'description',
+  ),
   _clothingTag(
     id: 'taxonomy_accessory_veil_attached_to_hat',
     group: '配件',
@@ -1080,6 +1090,7 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
     ('立領', 'stand collar'),
     ('一字領', 'boat neck'),
     ('露肩', 'off-shoulder'),
+    ('露側乳', 'sideboob'),
     ('單肩', 'one-shoulder'),
     ('繞頸', 'halter neck'),
     ('無袖', 'sleeveless'),
