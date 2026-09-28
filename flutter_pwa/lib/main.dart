@@ -7601,14 +7601,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'heart-shaped zipper pull' =>
           '${color}heart-shaped zipper pull on $noun',
         'heart emblem on chest' => '${color}heart emblem on chest of $noun',
-        'side cutout' => '${color}side cutout on torso of $noun',
         'piping' => '${color}piping on $noun',
         _ => '$color$raw on $noun',
       };
       final chinese = switch (raw.toLowerCase()) {
         'heart-shaped zipper pull' => '$nounZh上的${colorZh}心形拉鍊拉環',
         'heart emblem on chest' => '$nounZh胸前的${colorZh}小愛心徽章',
-        'side cutout' => '$nounZh衣身側邊的${colorZh}鏤空',
         _ => hasDetailColor ? '$nounZh上的$colorZh$zh' : '$zh$nounZh',
       };
       return (chinese, english.trim());
@@ -7647,7 +7645,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     if (kind == 'cut') {
       final english = switch (raw.toLowerCase()) {
-        'sideboob' => 'sideboob through wide armholes of $noun',
         'off-shoulder' => 'off-shoulder $noun',
         'one-shoulder' => 'one-shoulder $noun',
         'halter neck' => 'halter $noun',
@@ -7660,9 +7657,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'drop waist' => 'drop-waist $noun',
         _ => raw,
       };
-      final chinese =
-          raw.toLowerCase() == 'sideboob' ? '$nounZh的大袖籠露側乳' : '$zh$nounZh';
-      return (chinese, english);
+      return ('$zh$nounZh', english);
     }
 
     return ('$zh$nounZh', '$raw $noun');
@@ -7789,22 +7784,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               : canonicalBase;
       final baseChinese =
           isStyleBase ? _clothingModifierChinese(base) : base.zh;
-      final hasSleevelessCut = cuts.any(
-        (tag) =>
-            _canonicalClothingEnglish(_clothingModifierEnglish(tag))
-                .toLowerCase() ==
-            'sleeveless',
-      );
-      final structuredBaseEnglish =
-          hasSleevelessCut ? 'sleeveless $baseEnglish' : baseEnglish;
-      final structuredBaseChinese =
-          hasSleevelessCut ? '無袖$baseChinese' : baseChinese;
-      final mainEnglish = colorPrefix.isEmpty
-          ? structuredBaseEnglish
-          : '$colorPrefix $structuredBaseEnglish';
-      final mainChinese = colorChinese.isEmpty
-          ? structuredBaseChinese
-          : '$colorChinese$structuredBaseChinese';
+      final mainEnglish =
+          colorPrefix.isEmpty ? baseEnglish : '$colorPrefix $baseEnglish';
+      final mainChinese =
+          colorChinese.isEmpty ? baseChinese : '$colorChinese$baseChinese';
 
       final detailUsesSecondary = details.isNotEmpty &&
           effectiveDetailColor != null &&
@@ -7844,12 +7827,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ('pattern', patterns),
       ]) {
         for (final tag in entry.$2) {
-          if (entry.$1 == 'cut' &&
-              _canonicalClothingEnglish(_clothingModifierEnglish(tag))
-                      .toLowerCase() ==
-                  'sleeveless') {
-            continue;
-          }
           final piece =
               _clothingDimensionPromptPiece(scope, entry.$1, tag, noun, nounZh);
           addPiece(piece.$1, piece.$2);
@@ -10375,34 +10352,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return result.where((tag) => seen.add(tag)).toList();
   }
 
-  List<String> get _sleeveGuardNegativeTags {
-    // Negative prompts are shared by the complete image. Keep this automatic
-    // guard limited to a single character so it cannot remove another
-    // character's intended sleeves.
-    if (_personSlots.length != 1 || !_personSlots.first.detailed) {
-      return const <String>[];
-    }
-    final selected = _selectedTagsForPerson(0);
-    final cuts = selected
-        .where((tag) => _scopedClothingKind(tag.group) == 'cut')
-        .map((tag) => _canonicalClothingEnglish(_clothingModifierEnglish(tag))
-            .toLowerCase())
-        .toSet();
-    if (!cuts.contains('sleeveless')) return const <String>[];
-
-    final hasAnotherSleeveCut = cuts.any(
-      (cut) => cut != 'sleeveless' && cut.contains('sleeve'),
-    );
-    final hasSeparateSleeves = selected.any(
-      (tag) =>
-          _isClothingBaseTag(tag) && _clothingScopeForBase(tag) == 'sleeves',
-    );
-    if (hasAnotherSleeveCut || hasSeparateSleeves) {
-      return const <String>[];
-    }
-    return const <String>['long sleeves', 'detached sleeves'];
-  }
-
   String _moderationSafePromptTag(String value) {
     var result = _cleanTag(value);
     const phraseReplacements = <String, String>{
@@ -10456,11 +10405,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> get _negativeTokens {
     final seen = <String>{};
-    return [
-      ..._extraTags(_negative.text),
-      ..._hairGuardNegativeTags,
-      ..._sleeveGuardNegativeTags,
-    ]
+    return [..._extraTags(_negative.text), ..._hairGuardNegativeTags]
         .map(_moderationSafePromptTag)
         .where((tag) => tag.isNotEmpty && seen.add(tag.toLowerCase()))
         .toList();
