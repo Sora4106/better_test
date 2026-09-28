@@ -404,6 +404,10 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['背部後彎', 'bent back'],
       ['向後倚靠', 'leaning back'],
       ['向前傾', 'leaning forward'],
+      [
+        '腰部約45度前彎',
+        'slightly bent forward at the waist, upper body tilted forward about 45 degrees'
+      ],
       ['駝背', 'slouching'],
       ['腰部後擺', 'sway back'],
       ['扭轉軀幹', 'twisted torso'],

@@ -6556,6 +6556,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return !styleOnlyIds.contains(tagKey);
   }
 
+  bool _isClothingAbsenceBase(TagItem tag) =>
+      _englishTagKey(tag.en) == 'no bra';
+
   String _clothingBaseDisplayGroup(TagItem tag) {
     if (tag.group == _clothingGroupShorts ||
         (tag.group == _clothingGroupPants &&
@@ -6756,6 +6759,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> _clothingStyleGroupsForBase(TagItem base) {
+    if (_isClothingAbsenceBase(base)) return const <String>[];
     final scope = _clothingScopeForBase(base);
     if (scope == null) return const <String>[];
     final groups = <String>[_scopedClothingGroup(scope, 'style')];
@@ -6770,6 +6774,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> _clothingDetailGroupsForBase(TagItem base) {
+    if (_isClothingAbsenceBase(base)) return const <String>[];
     final scope = _clothingScopeForBase(base);
     if (scope == null) return const <String>[];
     final groups = <String>[
@@ -6789,6 +6794,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> _clothingWearGroupsForBase(TagItem base) {
+    if (_isClothingAbsenceBase(base)) return const <String>[];
     final scope = _clothingScopeForBase(base);
     return scope == null
         ? const <String>[]
@@ -6985,49 +6991,53 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
-  String? _clothingColorGroupForBase(TagItem base) =>
-      switch (_clothingScopeForBase(base)) {
-        'sleeves' => '上衣袖子顏色',
-        'onepiece' || 'costume' => '服裝顏色',
-        'top' => '上衣顏色',
-        'pants' => '褲子顏色',
-        'shorts' => '短褲顏色',
-        'skirt' => '裙子顏色',
-        'outerwear' => '外套顏色',
-        'underwear' => '內衣顏色',
-        'bra' => '胸罩顏色',
-        'panties' => '內褲顏色',
-        'socks' => '襪子顏色',
-        'shoes' => '鞋子顏色',
-        'accessory' => switch (_clothingAccessoryPickerGroup(base)) {
-            _clothingGroupHat => '帽子顏色',
-            _clothingGroupEyewear => '眼鏡顏色',
-            _ => '配件顏色',
-          },
-        _ => _clothingColorGroup(base.group),
-      };
+  String? _clothingColorGroupForBase(TagItem base) {
+    if (_isClothingAbsenceBase(base)) return null;
+    return switch (_clothingScopeForBase(base)) {
+      'sleeves' => '上衣袖子顏色',
+      'onepiece' || 'costume' => '服裝顏色',
+      'top' => '上衣顏色',
+      'pants' => '褲子顏色',
+      'shorts' => '短褲顏色',
+      'skirt' => '裙子顏色',
+      'outerwear' => '外套顏色',
+      'underwear' => '內衣顏色',
+      'bra' => '胸罩顏色',
+      'panties' => '內褲顏色',
+      'socks' => '襪子顏色',
+      'shoes' => '鞋子顏色',
+      'accessory' => switch (_clothingAccessoryPickerGroup(base)) {
+          _clothingGroupHat => '帽子顏色',
+          _clothingGroupEyewear => '眼鏡顏色',
+          _ => '配件顏色',
+        },
+      _ => _clothingColorGroup(base.group),
+    };
+  }
 
-  String? _clothingTrimColorGroupForBase(TagItem base) =>
-      switch (_clothingScopeForBase(base)) {
-        'sleeves' => '上衣袖子次色',
-        'onepiece' || 'costume' => '服裝邊線色',
-        'top' => '上衣邊線色',
-        'pants' => '褲子邊線色',
-        'shorts' => '短褲邊線色',
-        'skirt' => '裙子邊線色',
-        'outerwear' => '外套邊線色',
-        'underwear' => '內衣邊線色',
-        'bra' => '胸罩邊線色',
-        'panties' => '內褲邊線色',
-        'socks' => '襪子邊線色',
-        'shoes' => '鞋子邊線色',
-        'accessory' => switch (_clothingAccessoryPickerGroup(base)) {
-            _clothingGroupHat => '帽子邊線色',
-            _clothingGroupEyewear => '眼鏡邊線色',
-            _ => '配件邊線色',
-          },
-        _ => _clothingTrimColorGroup(base.group),
-      };
+  String? _clothingTrimColorGroupForBase(TagItem base) {
+    if (_isClothingAbsenceBase(base)) return null;
+    return switch (_clothingScopeForBase(base)) {
+      'sleeves' => '上衣袖子次色',
+      'onepiece' || 'costume' => '服裝邊線色',
+      'top' => '上衣邊線色',
+      'pants' => '褲子邊線色',
+      'shorts' => '短褲邊線色',
+      'skirt' => '裙子邊線色',
+      'outerwear' => '外套邊線色',
+      'underwear' => '內衣邊線色',
+      'bra' => '胸罩邊線色',
+      'panties' => '內褲邊線色',
+      'socks' => '襪子邊線色',
+      'shoes' => '鞋子邊線色',
+      'accessory' => switch (_clothingAccessoryPickerGroup(base)) {
+          _clothingGroupHat => '帽子邊線色',
+          _clothingGroupEyewear => '眼鏡邊線色',
+          _ => '配件邊線色',
+        },
+      _ => _clothingTrimColorGroup(base.group),
+    };
+  }
 
   String _betterWaifuTrimEnglish(TagItem tag) {
     // BetterWaifu's animal-content check can interpret the color word

@@ -129,7 +129,7 @@ void main() {
     throw StateError('Cashmere leaked into an incompatible clothing slot.');
   }
 
-  const requiredEnglish = {'sideboob', 'thigh strap', 'thigh chain'};
+  const requiredEnglish = {'sideboob', 'thigh strap', 'thigh chain', 'no bra'};
   final missingEnglish = requiredEnglish.difference(
     tags.map((tag) => tag.en.toLowerCase()).toSet(),
   );

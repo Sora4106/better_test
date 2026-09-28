@@ -846,6 +846,7 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
       '胸罩',
       'bra',
       const [
+        ('無胸罩', 'no bra'),
         ('胸罩', 'bra'),
         ('運動胸罩', 'sports bra'),
         ('無肩帶胸罩', 'strapless bra'),
