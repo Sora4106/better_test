@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.156';
-const appBuildNumber = 158;
-const appVersionLabel = '1.1.156+158';
+﻿const appVersion = '1.1.157';
+const appBuildNumber = 159;
+const appVersionLabel = '1.1.157+159';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.157', 'build': '159', 'label': '1.1.157+159', 'date': '2026-09-28', 'notes': '修正無袖帽T提示詞結構：將無袖綁定主衣物、明確側乳與衣身側邊鏤空，單人無獨立袖時自動排除長袖與分離袖'},
   {'version': '1.1.156', 'build': '158', 'label': '1.1.156+158', 'date': '2026-09-28', 'notes': '補齊狼耳少女姿勢套件的完整中文動作內容，中文記憶欄位與預覽改為中英分離顯示，並新增雙語資料驗證'},
   {'version': '1.1.155', 'build': '157', 'label': '1.1.155+157', 'date': '2026-09-28', 'notes': '拆分長褲、短褲與裙子的獨立主次色槽並遷移舊資料，新增露側乳剪裁與大腿環帶／鏈條配件'},
   {'version': '1.1.154', 'build': '156', 'label': '1.1.154+156', 'date': '2026-09-27', 'notes': '新增122個官方中英表情標籤，重整眼睛、嘴型、挑逗、符號與情緒分類，修正符號表情唯一ID並加入自動驗證'},
   {'version': '1.1.153', 'build': '155', 'label': '1.1.153+155', 'date': '2026-09-27', 'notes': '系統全面健檢：修正雙色獸人特徵反推與原始毛色輸出、修復粉白貓系套裝、降低搜尋與儲存卡頓、更新 Flutter API 並新增部署前自動驗證'},
-  {'version': '1.1.152', 'build': '154', 'label': '1.1.152+154', 'date': '2026-09-27', 'notes': '獸人特徵支援主色與漸層次色'},
 ];
