@@ -10186,6 +10186,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     const replacements = <String, String>{
       '銀色月亮圖形頸環項鍊': 'silver moon-shaped choker necklace',
+      '銀月項鍊': 'silver moon-shaped choker necklace',
       '月亮圖形': 'moon-shaped',
       '頸環項鍊': 'choker necklace',
       '超長髮': 'very long hair',
@@ -10256,6 +10257,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (tag.en.toLowerCase() == cleaned.toLowerCase()) return tag.zh;
     }
     const replacements = <String, String>{
+      'silver moon-shaped choker necklace': '銀月項鍊',
+      'silver moon necklace': '銀月項鍊',
       'moon-shaped': '月亮圖形',
       'choker necklace': '頸環項鍊',
       'choker': '頸環',

@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.162",
-    "build":  164,
-    "label":  "1.1.162+164",
+    "version":  "1.1.163",
+    "build":  165,
+    "label":  "1.1.163+165",
     "history":  [
+                    {
+                        "version":  "1.1.163",
+                        "build":  165,
+                        "label":  "1.1.163+165",
+                        "date":  "2026-09-29",
+                        "notes":  "修正銀月項鍊的中英文對照，支援 silver moon necklace 與既有月亮頸環寫法"
+                    },
                     {
                         "version":  "1.1.162",
                         "build":  164,
