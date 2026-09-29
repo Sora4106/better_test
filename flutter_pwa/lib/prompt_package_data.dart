@@ -274,6 +274,96 @@ const lalaWolfGirlPosePackages = <PromptPackageData>[
         'lying flat on back, both arms hugging a large fluffy tail across chest, legs relaxed, peaceful smile, relaxed forest-resting pose',
     naturalPromptZh: '平躺仰臥，雙臂把一條蓬鬆的大尾巴抱在胸前，雙腿放鬆並平靜微笑，呈現森林中休息的放鬆姿勢',
   ),
+  PromptPackageData(
+    id: 'wolf_girl_howling',
+    name: '仰頭嚎叫',
+    description: '站立仰頭張口嚎叫，尾巴向後延伸。',
+    category: '聲音與耳尾動態',
+    naturalPrompt:
+        'standing, head tilted up, open mouth, howling, chest lifted, arms relaxed at sides, tail extended behind',
+    naturalPromptZh: '站立，頭部仰起，張開嘴巴嚎叫，胸口挺起，雙臂自然垂在兩側，尾巴向後延伸。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_alert_ear_wiggle',
+    name: '立耳側聽・耳朵晃動',
+    description: '豎起耳朵聆聽側方聲音，一手放到耳後。',
+    category: '聲音與耳尾動態',
+    naturalPrompt:
+        'standing still, ears perked and wiggling, head turned to the side, one hand cupped behind ear, alert eyes, tail held still',
+    naturalPromptZh: '站定不動，耳朵豎起並微微晃動，頭轉向側邊，一手攏在耳後，眼神警覺，尾巴保持不動。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_sniffing_ground',
+    name: '低身嗅聞・追蹤氣味',
+    description: '壓低身體靠近地面嗅聞，做出追蹤氣味的動作。',
+    category: '警覺與偵察',
+    naturalPrompt:
+        'crouching low, leaning forward, sniffing the ground, one hand near the floor, attentive eyes, tail held level behind body',
+    naturalPromptZh: '低身蹲伏，向前傾靠近地面嗅聞，一手靠近地板，眼神專注，尾巴平舉在身體後方。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_pouncing_forward',
+    name: '向前飛撲・張爪',
+    description: '躍起向前撲出，雙手伸向前方做張開的爪子動作。',
+    category: '奔跑與追逐',
+    naturalPrompt:
+        'midair, pouncing forward, both hands reaching ahead with open claw pose, knees bent, tail lifted high, excited expression',
+    naturalPromptZh: '躍在半空中向前飛撲，雙手向前伸出做張開的爪子姿勢，膝蓋彎曲，尾巴高高揚起，神情興奮。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_running_chase',
+    name: '快速奔跑・追逐',
+    description: '身體前傾快速奔跑，尾巴隨動作向後飄揚。',
+    category: '奔跑與追逐',
+    naturalPrompt:
+        'running, body leaning forward, arms pumping, ears swept back, tail streaming behind, determined expression',
+    naturalPromptZh: '快速奔跑，身體向前傾，雙臂擺動，耳朵稍微往後，尾巴在身後飄揚，神情堅定。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_play_bow',
+    name: '玩耍鞠躬・尾巴翹起',
+    description: '前身壓低、後身微抬的邀玩姿勢，尾巴揚起。',
+    category: '撒嬌與玩耍',
+    naturalPrompt:
+        'playful bow, knees bent low, upper body lowered, hips raised slightly, both hands on ground, tail raised, bright smile',
+    naturalPromptZh: '做出邀請玩耍的鞠躬姿勢，膝蓋壓低，上身放低，臀部微微抬起，雙手放在地面，尾巴揚起，露出明亮笑容。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_scratching_ear',
+    name: '抓耳朵・歪頭',
+    description: '坐姿抓撓其中一側耳後，耳朵隨動作微晃。',
+    category: '聲音與耳尾動態',
+    naturalPrompt:
+        'sitting, scratching behind one ear, head tilted, ear wiggle, relaxed smile, tail curled beside body',
+    naturalPromptZh: '坐著，抓撓其中一側耳朵後方，頭微微傾斜，耳朵晃動，露出放鬆的笑容，尾巴捲在身側。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_chasing_tail',
+    name: '追著尾巴轉圈',
+    description: '轉身伸手追向自己的尾巴，呈現活潑玩耍感。',
+    category: '撒嬌與玩耍',
+    naturalPrompt:
+        'turning around, one hand reaching toward own tail, tail wagging in a loose curve, playful smile, light stepping motion',
+    naturalPromptZh: '轉身，一手伸向自己的尾巴，尾巴以鬆弛弧線搖動，露出俏皮笑容，腳步輕快地移動。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_holding_tail_standing',
+    name: '站立抱尾巴・害羞',
+    description: '站姿雙手抱著尾巴，一腿微彎的靦腆動作。',
+    category: '撒嬌與玩耍',
+    naturalPrompt:
+        'standing, holding own tail with both hands in front, one knee slightly bent, shoulders drawn in, bashful smile',
+    naturalPromptZh: '站立，雙手在身前抱住自己的尾巴，一側膝蓋微彎，肩膀微微內收，露出靦腆笑容。',
+  ),
+  PromptPackageData(
+    id: 'wolf_girl_tail_wag_greeting',
+    name: '搖尾迎接・揮手',
+    description: '開心搖尾巴並抬手揮動的迎接動作。',
+    category: '聲音與耳尾動態',
+    naturalPrompt:
+        'standing, tail wagging, one hand waving, other hand at side, ears perked, bright welcoming smile',
+    naturalPromptZh: '站立，尾巴搖動，一手揮手、另一手自然垂下，耳朵豎起，露出明亮親切的笑容。',
+  ),
 ];
 
 /// Sixteen non-explicit shared interaction kits. These belong after all
