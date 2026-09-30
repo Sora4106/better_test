@@ -4231,6 +4231,28 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('aya_elegant', '優雅氣質', 'elegant'),
     ],
   ),
+  // Keep these entries identity-only until a verified visual-trait profile is
+  // available. Selecting either one still emits the canonical Danbooru tag.
+  CatalogCharacter(
+    id: 'to_love_ru_momioka_risa',
+    animeZh: '出包王女',
+    animeEn: 'To LOVE-Ru',
+    animeTag: 'to_love-ru',
+    characterZh: '籾岡里紗',
+    characterEn: 'Risa Momioka',
+    characterTag: 'momioka_risa',
+    traits: const [],
+  ),
+  CatalogCharacter(
+    id: 'to_love_ru_mikado_ryouko',
+    animeZh: '出包王女',
+    animeEn: 'To LOVE-Ru',
+    animeTag: 'to_love-ru',
+    characterZh: '御門涼子',
+    characterEn: 'Ryouko Mikado',
+    characterTag: 'mikado_ryouko',
+    traits: const [],
+  ),
   _projectSekaiCharacter(
     id: 'project_sekai_hatsune_miku',
     characterZh: '初音未來',

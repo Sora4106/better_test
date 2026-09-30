@@ -75,6 +75,7 @@ const _objectPickerGroups = <String>{
   _objectTravelGroup,
   _objectDailyGroup,
 };
+const _sceneEffectsGroup = '場景效果／渲染';
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
@@ -182,6 +183,7 @@ bool _isCameraGroup(String group) => const {
 bool _isSceneVisualPromptGroup(String group) =>
     _isScenePickerGroup(group) ||
     group == _outdoorTimeGroup ||
+    group == _sceneEffectsGroup ||
     _isCameraGroup(group);
 
 /// Shared actions describe what multiple characters do together. They are
@@ -4364,6 +4366,20 @@ List<TagItem> _seedTags() => [
       _tag('trait_tattoo', '額外特徵', '刺青', 'tattoo', 1),
       _tag('trait_nail_polish', '額外特徵', '指甲油', 'nail polish', 1),
 
+      // General male appearance traits. These are intentionally non-explicit
+      // so they work with adult male characters without changing pose or
+      // clothing selections.
+      _tag('male_broad_shoulders', '男性外觀特徵', '寬肩', 'broad shoulders', 1),
+      _tag('male_muscular_build', '男性外觀特徵', '健壯體格', 'muscular build', 1),
+      _tag('male_athletic_build', '男性外觀特徵', '運動型體格', 'athletic build', 1),
+      _tag('male_defined_abs', '男性外觀特徵', '明顯腹肌', 'defined abs', 1),
+      _tag('male_masculine_jawline', '男性外觀特徵', '陽剛下顎線', 'masculine jawline', 1),
+      _tag('male_adams_apple', '男性外觀特徵', '喉結', "Adam's apple", 1),
+      _tag('male_beard', '男性外觀特徵', '鬍鬚', 'beard', 1),
+      _tag('male_mustache', '男性外觀特徵', '八字鬍', 'mustache', 1),
+      _tag('male_chest_hair', '男性外觀特徵', '胸毛', 'chest hair', 1),
+      _tag('male_body_hair', '男性外觀特徵', '體毛', 'body hair', 1),
+
       // Hair length.
       _tag('hair_very_short', '髮長', '極短髮', 'close-cropped hair', 1,
           conflictGroup: 'hair_length'),
@@ -5379,6 +5395,27 @@ List<TagItem> _seedTags() => [
           adult: true),
 
       // Scene, camera and model-friendly quality terms.
+      _tag('scene_indoors', _indoorSceneGroup, '室內', 'indoors', 9),
+      // Visual rendering and scene effects stay in the scene step so they can
+      // be combined with a location, framing, and camera angle.
+      _tag('scene_effect_game_3d_render', _sceneEffectsGroup, '3D 遊戲渲染',
+          'game 3d render', 10),
+      _tag('scene_effect_3d_render', _sceneEffectsGroup, '3D 渲染', '3d render',
+          10),
+      _tag('scene_effect_cel_shaded', _sceneEffectsGroup, '賽璐璐著色', 'cel shaded',
+          10),
+      _tag('scene_effect_unreal_engine_5', _sceneEffectsGroup,
+          'Unreal Engine 5 渲染', 'Unreal Engine 5', 10),
+      _tag('scene_effect_genshin_style', _sceneEffectsGroup, '原神風格',
+          'Genshin Impact style', 10),
+      _tag('scene_effect_detailed_face', _sceneEffectsGroup, '精緻臉部',
+          'detailed face', 10),
+      _tag('scene_effect_cinematic_lighting', _sceneEffectsGroup, '電影感光線',
+          'cinematic lighting', 10),
+      _tag('scene_effect_ray_tracing', _sceneEffectsGroup, '光線追蹤',
+          'ray tracing', 10),
+      _tag('scene_effect_realtime_game', _sceneEffectsGroup, '即時遊戲畫面',
+          'real-time game graphics', 10),
       _tag('scene_bedroom', _indoorSceneGroup, '臥室', 'bedroom', 9),
       _tag('scene_in_a_room', _indoorSceneGroup, '在房間內', 'in a room', 9),
       _tag('scene_wet_bed', _indoorSceneGroup, '濕床（成年角色）', 'wet bed', 9,
@@ -11106,6 +11143,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           tag.id == id &&
           (_isScenePickerGroup(tag.group) ||
               tag.group == _outdoorTimeGroup ||
+              tag.group == _sceneEffectsGroup ||
               _isCameraGroup(tag.group))));
       if (sceneCandidates.isNotEmpty) {
         final scene = sceneCandidates.first;
@@ -11756,6 +11794,30 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   CatalogCharacter? _reverseCharacterMatch(String token) {
+    const characterTagAliases = <String, String>{
+      'konjiki no yami': 'golden_darkness',
+      'yami': 'golden_darkness',
+      'lala satalin deviluke': 'lala_satalin_deviluke',
+      'momo velia deviluke': 'momo_belia_deviluke',
+      'momo belia deviluke': 'momo_belia_deviluke',
+      'nana asta deviluke': 'nana_asta_deviluke',
+      'yuuki mikan': 'yuuki_mikan',
+      'mikan yuuki': 'yuuki_mikan',
+      'sairenji haruna': 'sairenji_haruna',
+      'haruna sairenji': 'sairenji_haruna',
+      'kotegawa yui': 'kotegawa_yui',
+      'yui kotegawa': 'kotegawa_yui',
+      'momioka risa': 'momioka_risa',
+      'risa momioka': 'momioka_risa',
+      'mikado ryouko': 'mikado_ryouko',
+      'ryouko mikado': 'mikado_ryouko',
+    };
+    final canonicalTag = characterTagAliases[_englishTagKey(token)];
+    if (canonicalTag != null) {
+      for (final character in _allCharacters) {
+        if (character.characterTag == canonicalTag) return character;
+      }
+    }
     CatalogCharacter? bestCharacter;
     var bestScore = 0.0;
     for (final character in _allCharacters) {
@@ -12153,6 +12215,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _indoorSceneGroup,
       _outdoorSceneGroup,
       _outdoorTimeGroup,
+      _sceneEffectsGroup,
       _cameraFramingGroup,
       _cameraFaceFocusGroup,
       _cameraFocusGroup,
@@ -12338,6 +12401,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             _indoorSceneGroup,
             _outdoorSceneGroup,
             _outdoorTimeGroup,
+            _sceneEffectsGroup,
             _cameraFramingGroup,
             _cameraFaceFocusGroup,
             _cameraFocusGroup,
@@ -14935,6 +14999,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _indoorSceneGroup) return const Color(0xff38bdf8);
     if (group == _outdoorSceneGroup) return const Color(0xff4ade80);
     if (group == _outdoorTimeGroup) return const Color(0xfffbbf24);
+    if (group == _sceneEffectsGroup) return const Color(0xffe879f9);
     if (group == _cameraFramingGroup) return const Color(0xff60a5fa);
     if (group == _cameraFaceFocusGroup) return const Color(0xfff472b6);
     if (group == _cameraFocusGroup) return const Color(0xfff472b6);
@@ -19598,6 +19663,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   _indoorSceneGroup,
                   _outdoorSceneGroup,
                   _outdoorTimeGroup,
+                  _sceneEffectsGroup,
                   _cameraFramingGroup,
                   _cameraFaceFocusGroup,
                   _cameraFocusGroup,
@@ -19639,6 +19705,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '眼睛',
             _staticFaceAppearanceGroup,
             _animalTraitGroup,
+            '男性外觀特徵',
             _wingTypeGroup,
             '額外特徵',
             '額外特徵位置',

@@ -29,7 +29,10 @@ List<CatalogTagData> _expandedTags({
             ))
         .toList();
 
+const _maleActionPoseGroup = '男性動作姿勢';
+
 const expandedGeneralPoseGroups = <String>{
+  _maleActionPoseGroup,
   ...singlePersonPoseGroups,
   '站立與蹲姿',
   '坐姿與跪姿',
@@ -102,6 +105,7 @@ const expandedPickerTagGroups = <String>{
 };
 
 const expandedTagPickerSections = <String, List<String>>{
+  '男性動作姿勢': [_maleActionPoseGroup],
   // Pick in anatomical order first, then move to object/person interaction,
   // and keep adult actions at the end. This mirrors the prompt output order.
   '① 頭部・表情動態': [
@@ -198,6 +202,26 @@ const expandedTagPickerSections = <String, List<String>>{
 final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
   ...singlePersonPoseTags,
   ...fingerGestureTags,
+  ..._expandedTags(
+    prefix: 'male_action_pose',
+    group: _maleActionPoseGroup,
+    order: 4,
+    adult: false,
+    rows: const [
+      ['交叉手臂', 'arms crossed'],
+      ['整理領帶', 'adjusting tie'],
+      ['整理衣領', 'straightening collar'],
+      ['捲起袖子', 'rolling up sleeves'],
+      ['單手插口袋', 'one hand in pocket'],
+      ['查看手錶', 'checking wristwatch'],
+      ['外套搭在肩上', 'holding jacket over shoulder'],
+      ['手托下巴思考', 'hand on chin'],
+      ['自信站姿', 'confident standing pose'],
+      ['單肩靠牆', 'leaning on wall with one shoulder'],
+      ['扣上襯衫鈕扣', 'buttoning shirt'],
+      ['鬆開領帶', 'loosening necktie'],
+    ],
+  ),
   ..._expandedTags(
     prefix: 'basic_pose',
     group: '坐姿與跪姿',
