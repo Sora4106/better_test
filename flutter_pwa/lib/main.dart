@@ -76,6 +76,15 @@ const _objectPickerGroups = <String>{
   _objectDailyGroup,
 };
 const _sceneEffectsGroup = '場景效果／渲染';
+const _sceneStyleGroup = '畫面風格／媒材';
+const _sceneLightingGroup = '光影效果';
+const _sceneAtmosphereGroup = '畫面氛圍';
+const _sceneEffectPickerGroups = <String>{
+  _sceneEffectsGroup,
+  _sceneStyleGroup,
+  _sceneLightingGroup,
+  _sceneAtmosphereGroup,
+};
 const _buttonSurface = Color(0xff34344d);
 const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
@@ -183,7 +192,7 @@ bool _isCameraGroup(String group) => const {
 bool _isSceneVisualPromptGroup(String group) =>
     _isScenePickerGroup(group) ||
     group == _outdoorTimeGroup ||
-    group == _sceneEffectsGroup ||
+    _sceneEffectPickerGroups.contains(group) ||
     _isCameraGroup(group);
 
 /// Shared actions describe what multiple characters do together. They are
@@ -5416,6 +5425,58 @@ List<TagItem> _seedTags() => [
           'ray tracing', 10),
       _tag('scene_effect_realtime_game', _sceneEffectsGroup, '即時遊戲畫面',
           'real-time game graphics', 10),
+      // Official BetterWaifu prompting examples use these media/style terms.
+      _tag('scene_style_anime_coloring', _sceneStyleGroup, '動漫上色',
+          'anime coloring', 10),
+      _tag('scene_style_realistic', _sceneStyleGroup, '寫實風格', 'realistic', 10),
+      _tag('scene_style_oil_painting', _sceneStyleGroup, '油畫風格', 'oil painting',
+          10),
+      _tag('scene_style_sketch', _sceneStyleGroup, '素描草圖風格', 'sketch', 10),
+      _tag('scene_style_photo', _sceneStyleGroup, '攝影風格', 'photo', 10),
+      _tag('scene_style_manga_page', _sceneStyleGroup, '漫畫頁風格', 'manga page',
+          10),
+      _tag('scene_style_illustration', _sceneStyleGroup, '插畫風格', 'illustration',
+          10),
+      _tag('scene_style_semi_real_2_5d', _sceneStyleGroup, '2.5D 半寫實風格',
+          '2.5d semi-real style', 10),
+      // Lighting and rendering effects are intentionally composable. The
+      // official guide recommends using a restrained combination instead of
+      // stacking every lighting term in one prompt.
+      _tag('scene_light_ambient_occlusion', _sceneLightingGroup, '環境光遮蔽',
+          'ambient occlusion', 10),
+      _tag('scene_light_raytracing', _sceneLightingGroup, '光線追蹤渲染',
+          'raytracing', 10),
+      _tag('scene_light_hollywood', _sceneLightingGroup, '好萊塢打光',
+          'Hollywood Lighting', 10),
+      _tag('scene_light_backlighting', _sceneLightingGroup, '背光',
+          'Backlighting', 10),
+      _tag('scene_light_rim', _sceneLightingGroup, '輪廓光', 'Rim lighting', 10),
+      _tag('scene_light_harsh', _sceneLightingGroup, '強烈光線', 'harsh lighting',
+          10),
+      _tag('scene_light_dramatic', _sceneLightingGroup, '戲劇性打光',
+          'dramatic light', 10),
+      _tag('scene_light_film_contrast', _sceneLightingGroup, '電影感對比',
+          'film-style contrast', 10),
+      _tag('scene_light_harsh_shadows', _sceneLightingGroup, '強烈陰影',
+          'harsh shadows', 10),
+      _tag('scene_light_volumetric', _sceneLightingGroup, '體積光',
+          'volumetric lighting', 10),
+      _tag(
+          'scene_light_neon', _sceneLightingGroup, '霓虹光線', 'neon lighting', 10),
+      _tag('scene_light_warm_ambient', _sceneLightingGroup, '溫暖環境光',
+          'warm ambient lighting', 10),
+      _tag('scene_light_golden_hour', _sceneLightingGroup, '黃金時刻光線',
+          'golden hour lighting', 10),
+      _tag('scene_atmosphere_haze', _sceneAtmosphereGroup, '大氣薄霧',
+          'atmospheric haze', 10),
+      _tag('scene_atmosphere_dynamic_clouds', _sceneAtmosphereGroup, '動態雲層',
+          'dynamic clouds', 10),
+      _tag('scene_atmosphere_detailed_architecture', _sceneAtmosphereGroup,
+          '細緻建築背景', 'detailed architecture', 10),
+      _tag('scene_atmosphere_detailed_landscape', _sceneAtmosphereGroup,
+          '細緻景觀背景', 'detailed landscape', 10),
+      _tag('scene_atmosphere_detailed_foliage', _sceneAtmosphereGroup, '細緻植被',
+          'detailed foliage', 10),
       _tag('scene_bedroom', _indoorSceneGroup, '臥室', 'bedroom', 9),
       _tag('scene_in_a_room', _indoorSceneGroup, '在房間內', 'in a room', 9),
       _tag('scene_wet_bed', _indoorSceneGroup, '濕床（成年角色）', 'wet bed', 9,
@@ -11143,7 +11204,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           tag.id == id &&
           (_isScenePickerGroup(tag.group) ||
               tag.group == _outdoorTimeGroup ||
-              tag.group == _sceneEffectsGroup ||
+              _sceneEffectPickerGroups.contains(tag.group) ||
               _isCameraGroup(tag.group))));
       if (sceneCandidates.isNotEmpty) {
         final scene = sceneCandidates.first;
@@ -12215,7 +12276,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _indoorSceneGroup,
       _outdoorSceneGroup,
       _outdoorTimeGroup,
-      _sceneEffectsGroup,
+      ..._sceneEffectPickerGroups,
       _cameraFramingGroup,
       _cameraFaceFocusGroup,
       _cameraFocusGroup,
@@ -12401,7 +12462,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             _indoorSceneGroup,
             _outdoorSceneGroup,
             _outdoorTimeGroup,
-            _sceneEffectsGroup,
+            ..._sceneEffectPickerGroups,
             _cameraFramingGroup,
             _cameraFaceFocusGroup,
             _cameraFocusGroup,
@@ -15000,6 +15061,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _outdoorSceneGroup) return const Color(0xff4ade80);
     if (group == _outdoorTimeGroup) return const Color(0xfffbbf24);
     if (group == _sceneEffectsGroup) return const Color(0xffe879f9);
+    if (group == _sceneStyleGroup) return const Color(0xffa78bfa);
+    if (group == _sceneLightingGroup) return const Color(0xfffacc15);
+    if (group == _sceneAtmosphereGroup) return const Color(0xff2dd4bf);
     if (group == _cameraFramingGroup) return const Color(0xff60a5fa);
     if (group == _cameraFaceFocusGroup) return const Color(0xfff472b6);
     if (group == _cameraFocusGroup) return const Color(0xfff472b6);
@@ -19663,7 +19727,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   _indoorSceneGroup,
                   _outdoorSceneGroup,
                   _outdoorTimeGroup,
-                  _sceneEffectsGroup,
+                  ..._sceneEffectPickerGroups,
                   _cameraFramingGroup,
                   _cameraFaceFocusGroup,
                   _cameraFocusGroup,
