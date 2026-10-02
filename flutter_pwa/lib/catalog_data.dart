@@ -2967,7 +2967,7 @@ const supplementalTags = <CatalogTagData>[
   CatalogTagData(
       id: 'quality_soft_shading',
       group: '品質',
-      zh: '柔和陰影',
+      zh: '柔和上色',
       en: 'soft shading',
       order: 11),
   CatalogTagData(
@@ -3204,7 +3204,7 @@ final catalogCharacters = <CatalogCharacter>[
         CatalogTagData(
             id: 'miku_headset',
             group: '角色標籤',
-            zh: '耳機',
+            zh: '頭戴式耳機',
             en: 'headset',
             order: 1),
         CatalogTagData(
@@ -3578,7 +3578,7 @@ final catalogCharacters = <CatalogCharacter>[
         CatalogTagData(
             id: 'rei_short_hair',
             group: '角色標籤',
-            zh: '短髮',
+            zh: '俐落短髮',
             en: 'cropped hair',
             order: 1)
       ]),
@@ -4153,7 +4153,7 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('mea_slender', '纖細體態', 'slender build'),
       _trait('mea_playful', '俏皮表情', 'playful expression'),
       _trait('mea_cheerful', '開朗表情', 'cheerful expression'),
-      _trait('mea_lively', '活潑表情', 'lively'),
+      _trait('mea_lively', '活潑氣質', 'lively'),
     ],
   ),
   CatalogCharacter(

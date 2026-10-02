@@ -104,9 +104,10 @@ const objectCatalogTags = <CatalogTagData>[
   CatalogTagData(id: 'obj_fantasy_treasure_chest', group: '物件', zh: '寶箱', en: 'treasure chest', order: 4),
   CatalogTagData(id: 'obj_fantasy_crown', group: '物件', zh: '王冠', en: 'crown', order: 4),
 
-  // 交通／旅行（11）
+  // 交通／旅行（12）
   CatalogTagData(id: 'obj_travel_suitcase', group: '物件', zh: '行李箱', en: 'suitcase', order: 4),
   CatalogTagData(id: 'obj_travel_rolling_suitcase', group: '物件', zh: '拉桿行李箱', en: 'rolling suitcase', order: 4),
+  CatalogTagData(id: 'obj_travel_rectangular_satchel', group: '物件', zh: '長方形書包', en: 'rectangular satchel', order: 4, support: 'description'),
   CatalogTagData(id: 'obj_travel_shopping_bag', group: '物件', zh: '購物袋', en: 'shopping bag', order: 4),
   CatalogTagData(id: 'obj_travel_passport', group: '物件', zh: '護照', en: 'passport', order: 4),
   CatalogTagData(id: 'obj_travel_boarding_pass', group: '物件', zh: '登機證', en: 'boarding pass', order: 4),

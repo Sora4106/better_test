@@ -4182,6 +4182,127 @@ const _promptColorChinese = <String, String>{
   'rose gold': '\u73AB\u7470\u91D1',
 };
 
+// Keep every colour picker visually grouped by colour family instead of the
+// English prompt spelling. Within each family the order moves roughly from
+// dark/saturated shades to light/pastel shades. Character-specific hair and
+// eye colours are included so imported characters follow the same layout.
+const _promptColorTypeOrder = <String>[
+  // Black, gray and white.
+  'jet black',
+  'black',
+  'ebony',
+  'off-black',
+  'charcoal',
+  'dark gray',
+  'slate gray',
+  'gray',
+  'pewter',
+  'silver-gray',
+  'silver',
+  'silver-white',
+  'light gray',
+  'white',
+  'ivory',
+  'cream',
+  'beige',
+
+  // Red and pink.
+  'maroon',
+  'burgundy',
+  'wine red',
+  'dark red',
+  'crimson',
+  'red',
+  'scarlet',
+  'light red',
+  'red-brown',
+  'red-violet',
+  'coral',
+  'salmon',
+  'dark pink',
+  'rose',
+  'dusty rose',
+  'hot pink',
+  'magenta',
+  'pink',
+  'light pink',
+  'peach',
+  'rose gold',
+
+  // Orange and brown.
+  'dark brown',
+  'coffee',
+  'chocolate',
+  'chestnut',
+  'brown',
+  'orange-brown',
+  'copper',
+  'orange',
+  'camel',
+  'tan',
+  'light brown',
+  'taupe',
+  'khaki',
+
+  // Yellow and gold.
+  'dark yellow',
+  'mustard yellow',
+  'orange-yellow',
+  'yellow',
+  'golden',
+  'gold',
+  'blonde',
+  'amber',
+  'lemon yellow',
+  'light yellow',
+
+  // Green.
+  'forest green',
+  'dark green',
+  'olive',
+  'emerald green',
+  'jade green',
+  'green',
+  'grayish-green',
+  'sage green',
+  'lime',
+  'mint green',
+  'light green',
+
+  // Blue, cyan and aqua.
+  'navy blue-black',
+  'midnight blue',
+  'navy',
+  'dark blue',
+  'cobalt blue',
+  'sapphire blue',
+  'royal blue',
+  'blue',
+  'azure',
+  'silver-blue',
+  'blue-gray',
+  'steel blue',
+  'teal',
+  'turquoise',
+  'aqua',
+  'icy-blue',
+  'sky blue',
+  'light blue',
+  'powder blue',
+  'pastel blue',
+  'two-tone blue',
+
+  // Purple.
+  'dark purple',
+  'purple',
+  'violet',
+  'lavender',
+  'lilac',
+
+  // Mixed colours always stay at the end.
+  'multicolored',
+];
+
 const _promptColorValues = <String, Color>{
   'black': Color(0xff17171c),
   'white': Color(0xfff5f5f5),
@@ -4674,7 +4795,7 @@ List<TagItem> _seedTags() => [
       // Appearance and body.
       _tag('trait_long_hair', '髮長', '長髮', 'long hair', 1,
           conflictGroup: 'hair_length'),
-      _tag('trait_short_hair', '髮長', '短髮', 'cropped hair', 1,
+      _tag('trait_short_hair', '髮長', '俐落短髮', 'cropped hair', 1,
           conflictGroup: 'hair_length'),
       _tag('trait_hair_between_eyes', '髮型', '瀏海遮眼', 'hair between eyes', 1),
       _tag('trait_blonde_hair', '髮色', '金髮', 'blonde hair', 1,
@@ -9850,6 +9971,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             )
             .map(_normalizeImportedAnime),
       );
+      final restoredCustomTagCount = _customTags.length;
+      final restoredTagRedirects = _consolidateRestoredCustomTagDuplicates();
+      final restoredCustomDuplicatesRemoved =
+          _customTags.length != restoredCustomTagCount;
       _personSlots
         ..clear()
         ..addAll(
@@ -9916,6 +10041,44 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           if (index == null) continue;
           _personSelectedIds[index] =
               (entry.value as List? ?? []).map((id) => '$id').toSet();
+        }
+      }
+      var restoredDuplicatesMigrated = restoredCustomDuplicatesRemoved;
+      if (restoredTagRedirects.isNotEmpty) {
+        restoredDuplicatesMigrated =
+            _migrateRestoredTagIds(_selectedIds, restoredTagRedirects);
+        for (final ids in _personSelectedIds.values) {
+          restoredDuplicatesMigrated =
+              _migrateRestoredTagIds(ids, restoredTagRedirects) ||
+                  restoredDuplicatesMigrated;
+        }
+        for (final slot in _personSlots) {
+          final hairIds = slot.hairGradientColorIds.toSet();
+          if (_migrateRestoredTagIds(hairIds, restoredTagRedirects)) {
+            slot.hairGradientColorIds = hairIds.toList();
+            restoredDuplicatesMigrated = true;
+          }
+          for (final entry in slot.physicalTraitGradientColorIds.entries) {
+            final colorIds = entry.value.toSet();
+            if (_migrateRestoredTagIds(colorIds, restoredTagRedirects)) {
+              entry.value
+                ..clear()
+                ..addAll(colorIds);
+              restoredDuplicatesMigrated = true;
+            }
+          }
+        }
+        for (final preset in _presets) {
+          _migrateRestoredPresetTagIds(preset, restoredTagRedirects);
+        }
+        for (final combination in _combinations) {
+          final migrated = combination.tagIds.toSet();
+          if (_migrateRestoredTagIds(migrated, restoredTagRedirects)) {
+            combination.tagIds
+              ..clear()
+              ..addAll(migrated);
+            restoredDuplicatesMigrated = true;
+          }
         }
       }
       _migrateConsolidatedWearTagIds(_selectedIds);
@@ -10001,6 +10164,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       for (var index = 0; index < _personSlots.length; index++) {
         _syncCharacterTraitsForSlot(index);
       }
+      if (restoredDuplicatesMigrated) _persistNow();
     } catch (_) {
       // A malformed local record should never stop the builder from opening.
     }
@@ -10196,6 +10360,109 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       builtIn: tag.builtIn,
       conflictGroup: tag.conflictGroup,
     );
+  }
+
+  String _restoredTagLabelKey(TagItem tag) {
+    final english = _cleanTag(tag.en).toLowerCase();
+    final group = tag.group.trim();
+    final family = const {'髮色', '髮長', '髮型'}.contains(group) ||
+            RegExp(r'\bhair\b').hasMatch(english)
+        ? 'hair'
+        : group == '眼睛' || RegExp(r'\b(?:eyes?|pupils?)\b').hasMatch(english)
+            ? 'eyes'
+            : group;
+    final chinese =
+        tag.zh.trim().toLowerCase().replaceAll(RegExp(r'[\s·・_/／()（）-]+'), '');
+    return chinese.isEmpty ? '' : '$family:$chinese';
+  }
+
+  /// Old builds could save a lazily-created character trait as a custom tag.
+  /// Once the same trait became part of the complete catalogue, both IDs were
+  /// restored and identical Chinese chips could appear side by side. Prefer
+  /// the catalogue entry and return an ID redirect map for existing saves.
+  Map<String, String> _consolidateRestoredCustomTagDuplicates() {
+    if (_customTags.isEmpty) return const <String, String>{};
+    final canonical = <TagItem>[
+      ..._builtIns,
+      ..._supplemental,
+      ..._scopedClothingTags,
+      ..._catalogCharacterTraitTags(),
+      ..._animalTraitHairColorTags(),
+    ];
+    final byId = <String, TagItem>{};
+    final byGroupAndEnglish = <String, TagItem>{};
+    final byUnscopedEnglish = <String, TagItem>{};
+    final byLabel = <String, TagItem>{};
+    for (final tag in canonical) {
+      byId.putIfAbsent(tag.id, () => tag);
+      final english = _englishTagKey(tag.en);
+      if (english.isNotEmpty) {
+        byGroupAndEnglish.putIfAbsent('${tag.group}:$english', () => tag);
+        if (!_isScopedClothingGroup(tag.group)) {
+          byUnscopedEnglish.putIfAbsent(english, () => tag);
+        }
+      }
+      final label = _restoredTagLabelKey(tag);
+      if (label.isNotEmpty) byLabel.putIfAbsent(label, () => tag);
+    }
+
+    final redirects = <String, String>{};
+    final retained = <TagItem>[];
+    for (final custom in _customTags) {
+      final english = _englishTagKey(custom.en);
+      final label = _restoredTagLabelKey(custom);
+      final match = byId[custom.id] ??
+          byGroupAndEnglish['${custom.group}:$english'] ??
+          (!_isScopedClothingGroup(custom.group)
+              ? byUnscopedEnglish[english]
+              : null) ??
+          (label.isEmpty ? null : byLabel[label]);
+      if (match == null) {
+        retained.add(custom);
+        continue;
+      }
+      if (custom.id != match.id) redirects[custom.id] = match.id;
+    }
+    if (retained.length != _customTags.length) {
+      _customTags
+        ..clear()
+        ..addAll(retained);
+      _invalidateTagCaches();
+    }
+    return redirects;
+  }
+
+  bool _migrateRestoredTagIds(Set<String> ids, Map<String, String> redirects) {
+    var changed = false;
+    for (final redirect in redirects.entries) {
+      if (!ids.remove(redirect.key)) continue;
+      ids.add(redirect.value);
+      changed = true;
+    }
+    return changed;
+  }
+
+  void _migrateRestoredPresetTagIds(
+      Preset preset, Map<String, String> redirects) {
+    final payload = preset.payload;
+    final selected = (payload['selectedIds'] as List? ?? const <dynamic>[])
+        .map((id) => '$id')
+        .toSet();
+    _migrateRestoredTagIds(selected, redirects);
+    payload['selectedIds'] = selected.toList();
+
+    final people = payload['personSelectedIds'] as Map?;
+    if (people == null) return;
+    payload['personSelectedIds'] = <String, List<String>>{
+      for (final entry in people.entries)
+        '${entry.key}': (() {
+          final ids = (entry.value as List? ?? const <dynamic>[])
+              .map((id) => '$id')
+              .toSet();
+          _migrateRestoredTagIds(ids, redirects);
+          return ids.toList();
+        })(),
+    };
   }
 
   TagItem _createCharacterTraitOption(CatalogTagData trait) {
@@ -15602,6 +15869,41 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           caseSensitive: false)
       .hasMatch(tag.en);
 
+  String? _pickerColorSortPhrase(TagItem tag) {
+    if (!_isColorPickerTag(tag)) return null;
+    final normalized = _cleanTag(tag.en)
+        .toLowerCase()
+        .replaceAll('_', ' ')
+        .replaceAll(RegExp(r'\s+'), ' ');
+    if (normalized.isEmpty) return null;
+
+    // Prefer the longest match so `navy blue-black` is not reduced to `navy`
+    // and `light blue` is not reduced to `blue`.
+    String? match;
+    for (final color in _promptColorTypeOrder) {
+      final pattern = RegExp(
+        r'(^|\s)' + RegExp.escape(color) + r'(?=\s|$)',
+        caseSensitive: false,
+      );
+      if (!pattern.hasMatch(normalized)) continue;
+      if (match == null || color.length > match.length) match = color;
+    }
+    return match;
+  }
+
+  int _compareColorPickerTags(TagItem a, TagItem b) {
+    final aColor = _pickerColorSortPhrase(a);
+    final bColor = _pickerColorSortPhrase(b);
+    final aOrder = aColor == null
+        ? _promptColorTypeOrder.length
+        : _promptColorTypeOrder.indexOf(aColor);
+    final bOrder = bColor == null
+        ? _promptColorTypeOrder.length
+        : _promptColorTypeOrder.indexOf(bColor);
+    final orderCompare = aOrder.compareTo(bOrder);
+    return orderCompare == 0 ? _compareOutputTags(a, b) : orderCompare;
+  }
+
   List<TagItem> _sortPickerTags(List<TagItem> tags, String activeGroup) {
     tags.sort((a, b) {
       if (activeGroup == _allClothingWearGroup) {
@@ -15638,7 +15940,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
 
       final rankCompare = rank(a).compareTo(rank(b));
-      return rankCompare == 0 ? _compareOutputTags(a, b) : rankCompare;
+      if (rankCompare != 0) return rankCompare;
+      if (_isColorPickerTag(a) && _isColorPickerTag(b)) {
+        return _compareColorPickerTags(a, b);
+      }
+      return _compareOutputTags(a, b);
     });
     return tags;
   }
