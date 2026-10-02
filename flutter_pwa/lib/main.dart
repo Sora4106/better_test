@@ -23,7 +23,7 @@ const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
 const _unregisteredPositiveTagInboxEnabled = false;
 const _showPersonFeatureGuidance = false;
-const _stepLayoutVersion = 3;
+const _stepLayoutVersion = 4;
 const _wingTypeGroup = '翅膀類型';
 const _wingColorGroup = '翅膀顏色';
 const _animalEarColorGroup = '獸耳顏色';
@@ -666,6 +666,191 @@ _AdultPosePackage _adultPosePack(
       personTags: personTags,
       frameTags: frameTags,
     );
+
+class _AnimationOption {
+  const _AnimationOption(this.zh, this.en);
+
+  final String zh;
+  final String en;
+}
+
+class _AnimationBeat {
+  _AnimationBeat({
+    String? id,
+    this.personIndex = 0,
+    this.scene = 'same location as the source image',
+    this.camera = 'static full-body shot',
+    this.pose = 'standing',
+    this.armAction = 'arms at sides',
+    this.torsoAction = 'relaxed upright torso',
+    this.legAction = 'feet planted',
+    this.motion = 'makes a small natural movement',
+    this.endPose = 'holds the pose',
+    this.sound = 'soft ambient sound',
+    this.adultMotion = '',
+    this.adultSound = '',
+    this.extraDirection = '',
+  }) : id = id ??
+            'beat_${DateTime.now().microsecondsSinceEpoch}_${Random().nextInt(1 << 20)}';
+
+  final String id;
+  int personIndex;
+  String scene;
+  String camera;
+  String pose;
+  String armAction;
+  String torsoAction;
+  String legAction;
+  String motion;
+  String endPose;
+  String sound;
+  String adultMotion;
+  String adultSound;
+  String extraDirection;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'personIndex': personIndex,
+        'scene': scene,
+        'camera': camera,
+        'pose': pose,
+        'armAction': armAction,
+        'torsoAction': torsoAction,
+        'legAction': legAction,
+        'motion': motion,
+        'endPose': endPose,
+        'sound': sound,
+        'adultMotion': adultMotion,
+        'adultSound': adultSound,
+        'extraDirection': extraDirection,
+      };
+
+  factory _AnimationBeat.fromJson(Map<String, dynamic> json) => _AnimationBeat(
+        id: '${json['id'] ?? ''}'.trim().isEmpty ? null : '${json['id']}',
+        personIndex: (json['personIndex'] as num?)?.toInt() ?? 0,
+        scene: '${json['scene'] ?? 'same location as the source image'}',
+        camera: '${json['camera'] ?? 'static full-body shot'}',
+        pose: '${json['pose'] ?? 'standing'}',
+        armAction: '${json['armAction'] ?? 'arms at sides'}',
+        torsoAction: '${json['torsoAction'] ?? 'relaxed upright torso'}',
+        legAction: '${json['legAction'] ?? 'feet planted'}',
+        motion: '${json['motion'] ?? 'makes a small natural movement'}',
+        endPose: '${json['endPose'] ?? 'holds the pose'}',
+        sound: '${json['sound'] ?? 'soft ambient sound'}',
+        adultMotion: '${json['adultMotion'] ?? ''}',
+        adultSound: '${json['adultSound'] ?? ''}',
+        extraDirection: '${json['extraDirection'] ?? ''}',
+      );
+}
+
+const _animationSceneOptions = <_AnimationOption>[
+  _AnimationOption('沿用來源圖片場景', 'same location as the source image'),
+  _AnimationOption('室內房間', 'indoor room'),
+  _AnimationOption('臥室', 'bedroom'),
+  _AnimationOption('訓練室', 'training room'),
+  _AnimationOption('城市街道', 'city street'),
+  _AnimationOption('森林', 'forest'),
+  _AnimationOption('海邊', 'beach'),
+  _AnimationOption('屋頂', 'rooftop'),
+];
+
+const _animationCameraOptions = <_AnimationOption>[
+  _AnimationOption('固定全身鏡頭', 'static full-body shot'),
+  _AnimationOption('緩慢推近', 'slow push-in'),
+  _AnimationOption('緩慢拉遠', 'slow pull-back'),
+  _AnimationOption('鏡頭向左平移', 'slow pan left'),
+  _AnimationOption('鏡頭向右平移', 'slow pan right'),
+  _AnimationOption('緩慢環繞鏡頭', 'slow orbiting camera'),
+  _AnimationOption('低角度跟拍', 'low-angle tracking shot'),
+  _AnimationOption('肩後視角', 'over-the-shoulder shot'),
+  _AnimationOption('臉部近景', 'close-up on face'),
+];
+
+const _animationPoseOptions = <_AnimationOption>[
+  _AnimationOption('站立', 'standing'),
+  _AnimationOption('坐在椅子上', 'sitting on chair'),
+  _AnimationOption('跪姿', 'kneeling'),
+  _AnimationOption('仰躺', 'lying on back'),
+  _AnimationOption('側躺', 'lying on side'),
+  _AnimationOption('緩步行走', 'walking'),
+];
+
+const _animationArmOptions = <_AnimationOption>[
+  _AnimationOption('雙臂自然放身側', 'arms at sides'),
+  _AnimationOption('單手舉起', 'raises one hand'),
+  _AnimationOption('向前伸出單手', 'extends one arm forward'),
+  _AnimationOption('雙臂交叉', 'crosses arms'),
+  _AnimationOption('單手撥髮', 'brushes hair with one hand'),
+  _AnimationOption('單手放髖部', 'rests one hand on hip'),
+  _AnimationOption('雙手放在膝上', 'rests hands on knees'),
+  _AnimationOption('雙臂伸展', 'extends both arms'),
+];
+
+const _animationTorsoOptions = <_AnimationOption>[
+  _AnimationOption('軀幹自然挺立', 'relaxed upright torso'),
+  _AnimationOption('上身微向前傾', 'leans forward slightly'),
+  _AnimationOption('上身微向後傾', 'leans back slightly'),
+  _AnimationOption('扭轉軀幹', 'twists torso'),
+  _AnimationOption('重心轉移', 'shifts weight in contrapposto'),
+  _AnimationOption('背部微弓', 'arches back slightly'),
+  _AnimationOption('腰臀輕柔擺動', 'gently sways hips'),
+];
+
+const _animationLegOptions = <_AnimationOption>[
+  _AnimationOption('雙腳站穩', 'feet planted'),
+  _AnimationOption('向前踏小步', 'takes a small step forward'),
+  _AnimationOption('腳踝交叉', 'crosses ankles'),
+  _AnimationOption('膝蓋微彎', 'bends knees slightly'),
+  _AnimationOption('抬起單腿', 'raises one leg'),
+  _AnimationOption('抬起單邊腳跟', 'lifts one heel'),
+  _AnimationOption('腳尖指向', 'points toes'),
+  _AnimationOption('重心放在單腳', 'shifts weight onto one leg'),
+];
+
+const _animationMotionOptions = <_AnimationOption>[
+  _AnimationOption('短暫停留', 'pauses naturally'),
+  _AnimationOption('緩慢轉身', 'turns slowly'),
+  _AnimationOption('向鏡頭走近', 'walks slowly toward the camera'),
+  _AnimationOption('向後退半步', 'takes a small step back'),
+  _AnimationOption('輕柔旋轉', 'spins gently'),
+  _AnimationOption('自然揮手', 'waves naturally'),
+  _AnimationOption('細微呼吸動作', 'breathes softly'),
+];
+
+const _animationEndingOptions = <_AnimationOption>[
+  _AnimationOption('維持最後姿勢', 'holds the pose'),
+  _AnimationOption('回到自然姿勢', 'returns to a neutral pose'),
+  _AnimationOption('面向鏡頭停留', 'faces the camera and holds still'),
+  _AnimationOption('視線望向側邊', 'settles into a sideways glance'),
+  _AnimationOption('定格結束', 'ends on a clean still frame'),
+];
+
+const _animationSoundOptions = <_AnimationOption>[
+  _AnimationOption('柔和環境音', 'soft ambient sound'),
+  _AnimationOption('輕微腳步聲', 'soft footsteps'),
+  _AnimationOption('衣料摩擦聲', 'gentle fabric rustling'),
+  _AnimationOption('微風吹拂聲', 'light wind ambience'),
+  _AnimationOption('平穩呼吸聲', 'quiet breathing'),
+  _AnimationOption('城市環境音', 'distant city ambience'),
+  _AnimationOption('輕柔音樂', 'soft background music'),
+];
+
+const _animationAdultMotionOptions = <_AnimationOption>[
+  _AnimationOption('維持既有成人姿勢', 'maintains the selected adult pose'),
+  _AnimationOption('緩慢轉換成人姿勢', 'slowly transitions between adult poses'),
+  _AnimationOption('成人親密互動', 'adult intimate interaction'),
+  _AnimationOption('成人單人親密動作', 'adult solo intimate motion'),
+  _AnimationOption('緩慢律動', 'slow rhythmic body motion'),
+];
+
+const _animationAdultSoundOptions = <_AnimationOption>[
+  _AnimationOption('輕柔呻吟', 'soft moans'),
+  _AnimationOption('急促喘息', 'breathy gasps'),
+  _AnimationOption('沉重呼吸', 'heavy breathing'),
+  _AnimationOption('節奏性呼吸', 'rhythmic breathing'),
+  _AnimationOption('床墊細微聲響', 'soft bed creaking'),
+  _AnimationOption('衣料摩擦聲', 'gentle fabric rustling'),
+];
 
 final _adultPosePackages = <_AdultPosePackage>[
   _AdultPosePackage(
@@ -4944,8 +5129,7 @@ List<TagItem> _seedTags() => [
       _tag('pose_knees_bent', '站立與蹲姿', '膝蓋微蹲', 'knees bent', 4,
           conflictGroup: 'leg_detail'),
       _tag('pose_arms_up', '手臂姿勢', '雙手舉起', 'arms up', 4),
-      _tag('pose_hand_on_hip', '軀幹・腰臀動態', '手放在自己的髖部',
-          'hand on own hip', 4),
+      _tag('pose_hand_on_hip', '軀幹・腰臀動態', '手放在自己的髖部', 'hand on own hip', 4),
       _tag('pose_leaning', '軀幹姿勢', '倚靠', 'leaning', 4),
       _tag('pose_bent_over', '軀幹姿勢', '彎腰', 'bent over', 4, adult: true),
       _tag('pose_presenting', '全身姿勢', '展示姿勢（成年角色）', 'presenting', 4,
@@ -5737,6 +5921,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final List<String> _recentCharacterIds = <String>[];
   final List<Preset> _presets = <Preset>[];
   final List<PromptCombination> _combinations = <PromptCombination>[];
+  final List<_AnimationBeat> _animationBeats = <_AnimationBeat>[
+    _AnimationBeat(),
+  ];
   final Map<int, Set<String>> _personCombinationIds = <int, Set<String>>{};
   final Map<String, _OutfitReferenceResolution> _outfitReferenceCache =
       <String, _OutfitReferenceResolution>{};
@@ -6186,7 +6373,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return switch (group) {
         '頭部姿勢' => 43,
         '手臂姿勢' => 44,
-        '手部姿勢' || '手部・接觸位置' || '手指・指向方向' || '手指・手勢形狀' || '手指・嘴臉互動' || '手指・細節動作' => 45,
+        '手部姿勢' ||
+        '手部・接觸位置' ||
+        '手指・指向方向' ||
+        '手指・手勢形狀' ||
+        '手指・嘴臉互動' ||
+        '手指・細節動作' =>
+          45,
         '軀幹姿勢' || '軀幹・腰臀動態' => 46,
         '腿部姿勢' || '大腿・膝蓋動態' || '小腿・腳踝動態' || '腳掌・腳趾動態' => 47,
         '單人・站姿' ||
@@ -9252,6 +9445,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               Map<String, dynamic>.from(item as Map)),
         ),
       );
+      _animationBeats
+        ..clear()
+        ..addAll(
+          (data['animationBeats'] as List? ?? []).map(
+            (item) => _AnimationBeat.fromJson(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          ),
+        );
+      if (_animationBeats.isEmpty) _animationBeats.add(_AnimationBeat());
       _selectedIds.addAll(
         (data['selectedIds'] as List? ?? []).map((id) => '$id'),
       );
@@ -9322,11 +9525,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           savedStep -= 1;
         }
       }
-      if (savedLayoutVersion < _stepLayoutVersion && savedStep >= 2) {
+      if (savedLayoutVersion < 3 && savedStep >= 2) {
         // Version 3 inserted the reusable-combinations step after characters.
         savedStep += 1;
       }
-      _stepIndex = savedStep.clamp(0, 6).toInt();
+      _stepIndex = savedStep.clamp(0, 7).toInt();
       _gender = '${data['gender'] ?? '女性'}';
       _model = '${data['model'] ?? 'Amanatsu 1.1'}';
       _sampler = '${data['sampler'] ?? 'Euler a'}';
@@ -9378,6 +9581,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'presets': _presets.map((preset) => preset.toJson()).toList(),
         'combinations':
             _combinations.map((combination) => combination.toJson()).toList(),
+        'animationBeats': _animationBeats.map((beat) => beat.toJson()).toList(),
         'personCombinationIds': _personCombinationIds.map(
           (index, ids) => MapEntry('$index', ids.toList()),
         ),
@@ -12406,6 +12610,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _search.clear();
       _extraPositive.clear();
       _sharedPoseExtra.clear();
+      _animationBeats
+        ..clear()
+        ..add(_AnimationBeat());
       _reversePrompt.clear();
       _negative.text = _defaultNegativeText;
       _preprompt.clear();
@@ -12423,6 +12630,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       4: '服裝與穿脫狀態',
       5: '姿勢、互動與成人分類',
       6: '品質、額外與負面',
+      7: '動畫分鏡與動態語句',
     };
     final title = titles[index] ?? '本大項';
     final confirmed = await showDialog<bool>(
@@ -12568,6 +12776,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _reversePrompt.clear();
           _negative.text = _defaultNegativeText;
           _preprompt.clear();
+          break;
+        case 7:
+          _animationBeats
+            ..clear()
+            ..add(_AnimationBeat());
           break;
       }
       _persist();
@@ -12809,6 +13022,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               int.parse('${entry.key}'):
                   (entry.value as List? ?? []).map((id) => '$id').toSet(),
         });
+      _animationBeats
+        ..clear()
+        ..addAll((data['animationBeats'] as List? ?? []).map((item) =>
+            _AnimationBeat.fromJson(Map<String, dynamic>.from(item as Map))));
+      if (_animationBeats.isEmpty) _animationBeats.add(_AnimationBeat());
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
       _gender = '${data['gender'] ?? _gender}';
       _model = '${data['model'] ?? _model}';
@@ -12827,6 +13045,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           data['customNegativeTranslations'] as Map? ?? <String, dynamic>{},
         ).map((key, value) => MapEntry(key.toLowerCase(), '$value')));
       _preprompt.text = '${data['preprompt'] ?? _preprompt.text}';
+      _normalizeAnimationBeatPeople();
       _persist();
     });
   }
@@ -12846,8 +13065,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           int.tryParse(key.split(':').first) != null &&
           int.parse(key.split(':').first) >= count);
       _peopleCount = count;
+      _normalizeAnimationBeatPeople();
       _persist();
     });
+  }
+
+  void _normalizeAnimationBeatPeople() {
+    final maxPersonIndex = max(0, _personSlots.length - 1);
+    for (final beat in _animationBeats) {
+      beat.personIndex = beat.personIndex.clamp(0, maxPersonIndex).toInt();
+    }
   }
 
   Future<void> _removePersonAt(int index) async {
@@ -12949,6 +13176,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _personSearchControllers.clear();
       _peopleCount = _personSlots.length;
+      _normalizeAnimationBeatPeople();
       _persist();
     });
   }
@@ -13769,7 +13997,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (_stepIndex == 1 && !_charactersComplete()) {
       return;
     }
-    final nextStep = _stepIndex < 6 ? _stepIndex + 1 : _stepIndex;
+    final nextStep = _stepIndex < 7 ? _stepIndex + 1 : _stepIndex;
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _stepIndex = nextStep;
@@ -18895,6 +19123,441 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  int _safeAnimationPersonIndex(int personIndex) =>
+      personIndex.clamp(0, max(0, _personSlots.length - 1)).toInt();
+
+  String _animationPersonLabel(int personIndex) {
+    final safeIndex = _safeAnimationPersonIndex(personIndex);
+    final names = _characterChineseForSlot(_personSlots[safeIndex], safeIndex);
+    return names.isEmpty
+        ? '人物 ${safeIndex + 1}'
+        : '人物 ${safeIndex + 1}・${names.first}';
+  }
+
+  String _animationPersonPromptName(int personIndex) {
+    final safeIndex = _safeAnimationPersonIndex(personIndex);
+    final character = _characterForNew(_personSlots[safeIndex]);
+    final label = character?.characterTag.trim() ?? '';
+    return label.isEmpty ? 'Character ${safeIndex + 1}' : label;
+  }
+
+  void _updateAnimationBeat(_AnimationBeat beat, VoidCallback update) {
+    setState(() {
+      update();
+      _persist();
+    });
+  }
+
+  void _addAnimationBeat() {
+    final personIndex = _animationBeats.isEmpty
+        ? 0
+        : _safeAnimationPersonIndex(_animationBeats.last.personIndex);
+    setState(() {
+      _animationBeats.add(_AnimationBeat(personIndex: personIndex));
+      _persist();
+    });
+  }
+
+  void _moveAnimationBeat(int index, int offset) {
+    final next = index + offset;
+    if (index < 0 || next < 0 || next >= _animationBeats.length) return;
+    setState(() {
+      final beat = _animationBeats.removeAt(index);
+      _animationBeats.insert(next, beat);
+      _persist();
+    });
+  }
+
+  void _removeAnimationBeat(int index) {
+    if (index < 0 || index >= _animationBeats.length) return;
+    setState(() {
+      if (_animationBeats.length == 1) {
+        _animationBeats[index] = _AnimationBeat();
+      } else {
+        _animationBeats.removeAt(index);
+      }
+      _persist();
+    });
+  }
+
+  String _animationPrompt() {
+    final scenes = _animationBeats.asMap().entries.map((entry) {
+      final number = entry.key + 1;
+      final beat = entry.value;
+      final person = _animationPersonPromptName(beat.personIndex);
+      final adultDirection = _showAdult && beat.adultMotion.trim().isNotEmpty
+          ? ' Adult motion: ${beat.adultMotion.trim()}.'
+          : '';
+      final adultSound = _showAdult && beat.adultSound.trim().isNotEmpty
+          ? ' Adult audio: ${beat.adultSound.trim()}.'
+          : '';
+      final extra = beat.extraDirection.trim().isEmpty
+          ? ''
+          : ' Additional direction: ${beat.extraDirection.trim()}.';
+      return 'Scene $number. Location: ${beat.scene}. Camera: ${beat.camera}. '
+          '$person: start pose ${beat.pose}; arm action ${beat.armAction}; '
+          'torso and waist action ${beat.torsoAction}; leg and foot action '
+          '${beat.legAction}. Movement: ${beat.motion}. Ending: '
+          '${beat.endPose}. Audio: ${beat.sound}.$adultDirection$adultSound$extra';
+    }).join('\n\n');
+    return 'Create a short animated clip with clear continuous movement and '
+        'consistent character design.\n\n$scenes';
+  }
+
+  Widget _animationOptionPicker({
+    required String label,
+    required String value,
+    required List<_AnimationOption> options,
+    required ValueChanged<String> onChanged,
+    required IconData icon,
+  }) {
+    final current =
+        options.any((option) => option.en == value) ? value : options.first.en;
+    return DropdownButtonFormField<String>(
+      initialValue: current,
+      isExpanded: true,
+      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
+      items: options
+          .map((option) => DropdownMenuItem(
+                value: option.en,
+                child: Text('${option.zh}・${option.en}'),
+              ))
+          .toList(),
+      onChanged: (next) {
+        if (next != null) onChanged(next);
+      },
+    );
+  }
+
+  Widget _stepAnimationStoryboard() {
+    final people = List.generate(_personSlots.length, (index) => index);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '以場景順序建立短片提示。每個分鏡會輸出英文自然語句，可貼到 BetterWaifu 的影片／動畫提示欄；不會加入下方的靜態生圖提示詞。',
+          style: TextStyle(
+            fontSize: 13,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 10),
+        if (_showAdult)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xfff97316).withValues(alpha: .14),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: const Color(0xfff97316).withValues(alpha: .7),
+              ),
+            ),
+            child: const Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Color(0xfffb923c)),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '成人動態與聲音僅限成年角色。請依 BetterWaifu 的內容規範與所選影片模型限制使用。',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context)
+                  .colorScheme
+                  .surfaceContainerHighest
+                  .withValues(alpha: .42),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text(
+              '成人動態與相關聲音已隱藏；需要時請先在第 7 項開啟「顯示 18+ 標籤」。',
+              style: TextStyle(fontSize: 12),
+            ),
+          ),
+        const SizedBox(height: 12),
+        ..._animationBeats.asMap().entries.map((entry) {
+          final beatIndex = entry.key;
+          final beat = entry.value;
+          final personIndex = _safeAnimationPersonIndex(beat.personIndex);
+          return Card(
+            key: ValueKey<String>(beat.id),
+            margin: const EdgeInsets.only(bottom: 12),
+            color: Theme.of(context)
+                .colorScheme
+                .secondaryContainer
+                .withValues(alpha: .24),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(child: Text('${beatIndex + 1}')),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          '場景 ${beatIndex + 1}・${_animationPersonLabel(personIndex)}',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                      IconButton(
+                        tooltip: '往前移動',
+                        onPressed: beatIndex == 0
+                            ? null
+                            : () => _moveAnimationBeat(beatIndex, -1),
+                        icon: const Icon(Icons.arrow_upward),
+                      ),
+                      IconButton(
+                        tooltip: '往後移動',
+                        onPressed: beatIndex == _animationBeats.length - 1
+                            ? null
+                            : () => _moveAnimationBeat(beatIndex, 1),
+                        icon: const Icon(Icons.arrow_downward),
+                      ),
+                      IconButton(
+                        tooltip:
+                            _animationBeats.length == 1 ? '重設此場景' : '刪除此場景',
+                        onPressed: () => _removeAnimationBeat(beatIndex),
+                        icon: const Icon(Icons.delete_outline),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<int>(
+                    initialValue: personIndex,
+                    decoration: const InputDecoration(
+                      labelText: '這個分鏡的主要人物',
+                      prefixIcon: Icon(Icons.person_outline),
+                    ),
+                    items: people
+                        .map((index) => DropdownMenuItem(
+                              value: index,
+                              child: Text(_animationPersonLabel(index)),
+                            ))
+                        .toList(),
+                    onChanged: (next) {
+                      if (next == null) return;
+                      _updateAnimationBeat(
+                        beat,
+                        () => beat.personIndex = next,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '場景／地點',
+                    value: beat.scene,
+                    options: _animationSceneOptions,
+                    icon: Icons.landscape_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.scene = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '鏡頭運動',
+                    value: beat.camera,
+                    options: _animationCameraOptions,
+                    icon: Icons.videocam_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.camera = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '起始姿勢',
+                    value: beat.pose,
+                    options: _animationPoseOptions,
+                    icon: Icons.accessibility_new,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.pose = next,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('部位動作',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  _animationOptionPicker(
+                    label: '手臂／手部',
+                    value: beat.armAction,
+                    options: _animationArmOptions,
+                    icon: Icons.front_hand_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.armAction = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '軀幹／腰臀',
+                    value: beat.torsoAction,
+                    options: _animationTorsoOptions,
+                    icon: Icons.accessibility_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.torsoAction = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '腿部／腳部',
+                    value: beat.legAction,
+                    options: _animationLegOptions,
+                    icon: Icons.directions_walk_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.legAction = next,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('動作流程與聲音',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  _animationOptionPicker(
+                    label: '主要動態',
+                    value: beat.motion,
+                    options: _animationMotionOptions,
+                    icon: Icons.motion_photos_on_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.motion = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '結束姿勢',
+                    value: beat.endPose,
+                    options: _animationEndingOptions,
+                    icon: Icons.flag_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.endPose = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '一般音訊／環境音',
+                    value: beat.sound,
+                    options: _animationSoundOptions,
+                    icon: Icons.volume_up_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.sound = next,
+                    ),
+                  ),
+                  if (_showAdult) ...[
+                    const SizedBox(height: 12),
+                    const Text('成人動態（僅限成年角色）',
+                        style: TextStyle(
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xfffb923c))),
+                    const SizedBox(height: 8),
+                    _animationOptionPicker(
+                      label: '成人姿勢／動態',
+                      value: beat.adultMotion.isEmpty
+                          ? _animationAdultMotionOptions.first.en
+                          : beat.adultMotion,
+                      options: _animationAdultMotionOptions,
+                      icon: Icons.favorite_outline,
+                      onChanged: (next) => _updateAnimationBeat(
+                        beat,
+                        () => beat.adultMotion = next,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _animationOptionPicker(
+                      label: '成人相關聲音',
+                      value: beat.adultSound.isEmpty
+                          ? _animationAdultSoundOptions.first.en
+                          : beat.adultSound,
+                      options: _animationAdultSoundOptions,
+                      icon: Icons.graphic_eq,
+                      onChanged: (next) => _updateAnimationBeat(
+                        beat,
+                        () => beat.adultSound = next,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: 10),
+                  TextFormField(
+                    initialValue: beat.extraDirection,
+                    minLines: 2,
+                    maxLines: 4,
+                    onChanged: (value) {
+                      beat.extraDirection = value;
+                      _persist();
+                    },
+                    decoration: const InputDecoration(
+                      labelText: '補充動態敘述（可選）',
+                      hintText: '中文或英文皆可；建議描述節奏、視線、物件互動或不在選項中的細節。',
+                      prefixIcon: Icon(Icons.edit_note_outlined),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+        Align(
+          alignment: Alignment.centerLeft,
+          child: OutlinedButton.icon(
+            onPressed: _addAnimationBeat,
+            icon: const Icon(Icons.add),
+            label: const Text('新增下一個場景'),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withValues(alpha: .4),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Expanded(
+                    child: Text('動畫動態語句（英文）',
+                        style: TextStyle(fontWeight: FontWeight.w800)),
+                  ),
+                  IconButton(
+                    tooltip: '複製動畫動態語句',
+                    onPressed: () => _copy(_animationPrompt(), '動畫動態語句'),
+                    icon: const Icon(Icons.copy_outlined),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              SelectableText(
+                _animationPrompt(),
+                style: const TextStyle(fontSize: 12, height: 1.45),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
   // Legacy setup widgets are retained temporarily for saved-layout migration.
   // ignore: unused_element
   Widget _stepPeople() {
@@ -19856,6 +20519,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal(),
           onClear: () => _clearStepTags(6)),
+      _stepCard(
+        7,
+        '動畫分鏡與動態語句',
+        '${_animationBeats.length} 個場景・鏡頭、人物動作與聲音流程',
+        Icons.movie_creation_outlined,
+        _stepAnimationStoryboard(),
+        onClear: () => _clearStepTags(7),
+      ),
     ]);
   }
 
@@ -20423,6 +21094,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝',
       '姿勢',
       '品質',
+      '動畫',
     ];
     return Scaffold(
       appBar: AppBar(
@@ -20508,7 +21180,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
                     child: Column(
                       children: [
-                        ...List.generate(7, (index) {
+                        ...List.generate(8, (index) {
                           return Padding(
                             padding: const EdgeInsets.only(bottom: 3),
                             child: showSideStepNames
