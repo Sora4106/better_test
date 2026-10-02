@@ -15874,9 +15874,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               : const Color(0xfffbbf24),
                     )
                   : null,
-          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
           labelPadding: EdgeInsets.zero,
-          visualDensity: VisualDensity.standard,
+          visualDensity: VisualDensity.compact,
           backgroundColor: _pickerLayerSurface(tone, selected: false),
           selectedColor: _pickerLayerSurface(tone, selected: true),
           checkmarkColor: _pickerLayerText(tone, selected: true),
@@ -17195,9 +17195,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               primary: false,
               child: _uniformButtonGrid(
                 minItemWidth: visible.every(_isColorPickerTag) ? 58 : 205,
-                itemHeight: visible.every(_isColorPickerTag) ? 48 : 62,
+                itemHeight: visible.every(_isColorPickerTag) ? 48 : 54,
                 maxColumns: visible.every(_isColorPickerTag) ? 12 : 4,
-                scaleItemHeight: !visible.every(_isColorPickerTag),
+                scaleItemHeight: false,
                 children: visible
                     .map((tag) => _tagChip(tag, personIndex: personIndex))
                     .toList(),
@@ -21172,6 +21172,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     minItemWidth: 220,
                     itemHeight: 72,
                     maxColumns: 4,
+                    scaleItemHeight: false,
                     children: displayed
                         .map((tag) =>
                             _globalSearchTagChip(tag, targetPersonIndex))
