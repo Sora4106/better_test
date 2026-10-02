@@ -808,6 +808,7 @@ const _animationLegOptions = <_AnimationOption>[
 ];
 
 const _animationMotionOptions = <_AnimationOption>[
+  _AnimationOption('自然小動作', 'makes a small natural movement'),
   _AnimationOption('短暫停留', 'pauses naturally'),
   _AnimationOption('緩慢轉身', 'turns slowly'),
   _AnimationOption('向鏡頭走近', 'walks slowly toward the camera'),
@@ -836,6 +837,7 @@ const _animationSoundOptions = <_AnimationOption>[
 ];
 
 const _animationAdultMotionOptions = <_AnimationOption>[
+  _AnimationOption('不加入成人動態', ''),
   _AnimationOption('維持既有成人姿勢', 'maintains the selected adult pose'),
   _AnimationOption('緩慢轉換成人姿勢', 'slowly transitions between adult poses'),
   _AnimationOption('成人親密互動', 'adult intimate interaction'),
@@ -844,6 +846,7 @@ const _animationAdultMotionOptions = <_AnimationOption>[
 ];
 
 const _animationAdultSoundOptions = <_AnimationOption>[
+  _AnimationOption('不加入成人聲音', ''),
   _AnimationOption('輕柔呻吟', 'soft moans'),
   _AnimationOption('急促喘息', 'breathy gasps'),
   _AnimationOption('沉重呼吸', 'heavy breathing'),
@@ -19432,19 +19435,114 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }) {
     final current =
         options.any((option) => option.en == value) ? value : options.first.en;
-    return DropdownButtonFormField<String>(
-      initialValue: current,
-      isExpanded: true,
-      decoration: InputDecoration(labelText: label, prefixIcon: Icon(icon)),
-      items: options
-          .map((option) => DropdownMenuItem(
-                value: option.en,
-                child: Text('${option.zh}・${option.en}'),
-              ))
-          .toList(),
-      onChanged: (next) {
-        if (next != null) onChanged(next);
-      },
+    final selected = options.firstWhere((option) => option.en == current);
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+      decoration: BoxDecoration(
+        color: colors.surfaceContainerHighest.withValues(alpha: .34),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 19, color: colors.primary),
+              const SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  label,
+                  style: const TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: options.map((option) {
+              final isSelected = option.en == current;
+              return ChoiceChip(
+                label: Text(option.zh),
+                selected: isSelected,
+                showCheckmark: true,
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                onSelected: (_) {
+                  if (!isSelected) onChanged(option.en);
+                },
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 7),
+          Text(
+            selected.en.isEmpty ? '英文：不輸出此項' : '英文：${selected.en}',
+            style: TextStyle(
+              fontSize: 11,
+              color: colors.onSurfaceVariant,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _animationPersonPicker({
+    required _AnimationBeat beat,
+    required List<int> people,
+  }) {
+    final current = _safeAnimationPersonIndex(beat.personIndex);
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+      decoration: BoxDecoration(
+        color: colors.primaryContainer.withValues(alpha: .26),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: colors.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.person_outline, size: 19),
+              SizedBox(width: 7),
+              Text(
+                '這個分鏡的主要人物',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: people.map((index) {
+              final isSelected = index == current;
+              return ChoiceChip(
+                avatar: Icon(
+                  Icons.person,
+                  size: 17,
+                  color: isSelected ? colors.onPrimaryContainer : null,
+                ),
+                label: Text(_animationPersonLabel(index)),
+                selected: isSelected,
+                visualDensity: VisualDensity.compact,
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                onSelected: (_) {
+                  if (isSelected) return;
+                  _updateAnimationBeat(beat, () => beat.personIndex = index);
+                },
+              );
+            }).toList(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -19552,26 +19650,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  DropdownButtonFormField<int>(
-                    initialValue: personIndex,
-                    decoration: const InputDecoration(
-                      labelText: '這個分鏡的主要人物',
-                      prefixIcon: Icon(Icons.person_outline),
-                    ),
-                    items: people
-                        .map((index) => DropdownMenuItem(
-                              value: index,
-                              child: Text(_animationPersonLabel(index)),
-                            ))
-                        .toList(),
-                    onChanged: (next) {
-                      if (next == null) return;
-                      _updateAnimationBeat(
-                        beat,
-                        () => beat.personIndex = next,
-                      );
-                    },
-                  ),
+                  _animationPersonPicker(beat: beat, people: people),
                   const SizedBox(height: 10),
                   _animationOptionPicker(
                     label: '場景／地點',
@@ -19686,9 +19765,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     const SizedBox(height: 8),
                     _animationOptionPicker(
                       label: '成人姿勢／動態',
-                      value: beat.adultMotion.isEmpty
-                          ? _animationAdultMotionOptions.first.en
-                          : beat.adultMotion,
+                      value: beat.adultMotion,
                       options: _animationAdultMotionOptions,
                       icon: Icons.favorite_outline,
                       onChanged: (next) => _updateAnimationBeat(
@@ -19699,9 +19776,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     const SizedBox(height: 10),
                     _animationOptionPicker(
                       label: '成人相關聲音',
-                      value: beat.adultSound.isEmpty
-                          ? _animationAdultSoundOptions.first.en
-                          : beat.adultSound,
+                      value: beat.adultSound,
                       options: _animationAdultSoundOptions,
                       icon: Icons.graphic_eq,
                       onChanged: (next) => _updateAnimationBeat(
@@ -19885,10 +19960,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         ?.copyWith(fontWeight: FontWeight.w800),
                   ),
                 ),
-                IconButton(
-                  tooltip: '清除所有分鏡',
+                OutlinedButton.icon(
                   onPressed: () => _clearStepTags(7),
-                  icon: const Icon(Icons.delete_outline),
+                  icon: const Icon(Icons.delete_outline, size: 18),
+                  label: const Text('清除分鏡'),
                 ),
               ],
             ),
@@ -19901,15 +19976,31 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
             ),
             const SizedBox(height: 10),
-            SwitchListTile.adaptive(
-              contentPadding: EdgeInsets.zero,
-              value: _showAdult,
-              title: const Text('顯示 18+ 動態選項'),
-              subtitle: const Text('只使用成年角色，並遵守 BetterWaifu 內容規範。'),
-              onChanged: (value) => setState(() {
-                _showAdult = value;
-                _persist();
-              }),
+            SizedBox(
+              width: double.infinity,
+              child: _showAdult
+                  ? FilledButton.tonalIcon(
+                      onPressed: () => setState(() {
+                        _showAdult = false;
+                        _persist();
+                      }),
+                      icon: const Icon(Icons.visibility),
+                      label: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        child: Text('18+ 動態選項：已顯示（按下可隱藏）'),
+                      ),
+                    )
+                  : OutlinedButton.icon(
+                      onPressed: () => setState(() {
+                        _showAdult = true;
+                        _persist();
+                      }),
+                      icon: const Icon(Icons.visibility_off_outlined),
+                      label: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        child: Text('18+ 動態選項：已隱藏（按下可顯示）'),
+                      ),
+                    ),
             ),
             const SizedBox(height: 6),
             _stepAnimationStoryboard(),
