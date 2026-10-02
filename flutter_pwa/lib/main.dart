@@ -17090,7 +17090,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 const SizedBox(height: 4),
                 Wrap(
                   spacing: 4,
-                  runSpacing: 4,
+                  runSpacing: 2,
                   children: selectedInCurrentGroup
                       .map(
                         (tag) => Tooltip(
@@ -19620,6 +19620,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     double itemHeight = 48,
     int maxColumns = 5,
     double spacing = 4,
+    double verticalSpacing = 2,
     bool scaleItemHeight = true,
   }) {
     if (children.isEmpty) return const SizedBox.shrink();
@@ -19637,7 +19638,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             scaleItemHeight ? 1 + (max(1, textScale) - 1) * .65 : 1.0;
         return Wrap(
           spacing: spacing,
-          runSpacing: spacing,
+          runSpacing: verticalSpacing,
           children: children
               .map((child) => SizedBox(
                     width: width,
