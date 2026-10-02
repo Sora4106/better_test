@@ -17197,6 +17197,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 minItemWidth: visible.every(_isColorPickerTag) ? 58 : 205,
                 itemHeight: visible.every(_isColorPickerTag) ? 48 : 62,
                 maxColumns: visible.every(_isColorPickerTag) ? 12 : 4,
+                scaleItemHeight: !visible.every(_isColorPickerTag),
                 children: visible
                     .map((tag) => _tagChip(tag, personIndex: personIndex))
                     .toList(),
@@ -19619,6 +19620,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     double itemHeight = 48,
     int maxColumns = 5,
     double spacing = 4,
+    bool scaleItemHeight = true,
   }) {
     if (children.isEmpty) return const SizedBox.shrink();
     return LayoutBuilder(
@@ -19630,13 +19632,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ((availableWidth + spacing) / (minItemWidth + spacing)).floor();
         final columns = calculated.clamp(1, maxColumns);
         final width = (availableWidth - spacing * (columns - 1)) / columns;
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final heightScale =
+            scaleItemHeight ? 1 + (max(1, textScale) - 1) * .65 : 1.0;
         return Wrap(
           spacing: spacing,
           runSpacing: spacing,
           children: children
               .map((child) => SizedBox(
                     width: width,
-                    height: itemHeight,
+                    height: itemHeight * heightScale,
                     child: child,
                   ))
               .toList(),
@@ -21890,7 +21895,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final showSideStepNames =
         isImageWorkspace && MediaQuery.sizeOf(context).width >= 900;
     final sideStepRailWidth =
-        isImageWorkspace ? (showSideStepNames ? 126.0 : 46.0) : 0.0;
+        isImageWorkspace ? (showSideStepNames ? 158.0 : 50.0) : 0.0;
     final contentLeftPadding =
         isImageWorkspace ? max(sideStepRailWidth + 14, 72.0) : 16.0;
     const sideStepNames = <String>[
@@ -22008,8 +22013,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               padding: const EdgeInsets.only(bottom: 3),
                               child: showSideStepNames
                                   ? SizedBox(
-                                      width: 114,
-                                      height: 34,
+                                      width: 146,
+                                      height: 44,
                                       child: FilledButton(
                                         style: FilledButton.styleFrom(
                                           padding: const EdgeInsets.symmetric(
@@ -22045,7 +22050,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                   : IconButton.filled(
                                       constraints:
                                           const BoxConstraints.tightFor(
-                                              width: 34, height: 32),
+                                              width: 38, height: 38),
                                       padding: EdgeInsets.zero,
                                       visualDensity: VisualDensity.compact,
                                       tooltip:
@@ -22061,8 +22066,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           const Divider(height: 8),
                           showSideStepNames
                               ? SizedBox(
-                                  width: 114,
-                                  height: 34,
+                                  width: 146,
+                                  height: 44,
                                   child: FilledButton.tonalIcon(
                                     style: FilledButton.styleFrom(
                                       padding: const EdgeInsets.symmetric(
@@ -22080,7 +22085,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 )
                               : IconButton.filled(
                                   constraints: const BoxConstraints.tightFor(
-                                      width: 34, height: 32),
+                                      width: 38, height: 38),
                                   padding: EdgeInsets.zero,
                                   visualDensity: VisualDensity.compact,
                                   tooltip: '前往中英文提示詞輸出',
@@ -22171,6 +22176,15 @@ void main() {
     MaterialApp(
       title: 'BetterWaifu Prompt Atelier',
       debugShowCheckedModeBanner: false,
+      builder: (context, child) {
+        final mediaQuery = MediaQuery.of(context);
+        return MediaQuery(
+          data: mediaQuery.copyWith(
+            textScaler: const TextScaler.linear(1.5),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
