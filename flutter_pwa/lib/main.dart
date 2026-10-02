@@ -679,7 +679,11 @@ class _AnimationBeat {
     String? id,
     this.personIndex = 0,
     this.scene = 'same location as the source image',
-    this.camera = 'static full-body shot',
+    this.cameraFraming = 'full body',
+    this.cameraAngle = 'straight-on',
+    this.cameraPerspective = '',
+    this.cameraFocus = '',
+    this.cameraMovement = 'static camera',
     this.pose = 'standing',
     this.armAction = 'arms at sides',
     this.torsoAction = 'relaxed upright torso',
@@ -696,7 +700,11 @@ class _AnimationBeat {
   final String id;
   int personIndex;
   String scene;
-  String camera;
+  String cameraFraming;
+  String cameraAngle;
+  String cameraPerspective;
+  String cameraFocus;
+  String cameraMovement;
   String pose;
   String armAction;
   String torsoAction;
@@ -712,7 +720,11 @@ class _AnimationBeat {
         'id': id,
         'personIndex': personIndex,
         'scene': scene,
-        'camera': camera,
+        'cameraFraming': cameraFraming,
+        'cameraAngle': cameraAngle,
+        'cameraPerspective': cameraPerspective,
+        'cameraFocus': cameraFocus,
+        'cameraMovement': cameraMovement,
         'pose': pose,
         'armAction': armAction,
         'torsoAction': torsoAction,
@@ -729,7 +741,15 @@ class _AnimationBeat {
         id: '${json['id'] ?? ''}'.trim().isEmpty ? null : '${json['id']}',
         personIndex: (json['personIndex'] as num?)?.toInt() ?? 0,
         scene: '${json['scene'] ?? 'same location as the source image'}',
-        camera: '${json['camera'] ?? 'static full-body shot'}',
+        cameraFraming:
+            '${json['cameraFraming'] ?? _legacyAnimationCameraFraming('${json['camera'] ?? ''}')}',
+        cameraAngle:
+            '${json['cameraAngle'] ?? _legacyAnimationCameraAngle('${json['camera'] ?? ''}')}',
+        cameraPerspective: '${json['cameraPerspective'] ?? ''}',
+        cameraFocus:
+            '${json['cameraFocus'] ?? _legacyAnimationCameraFocus('${json['camera'] ?? ''}')}',
+        cameraMovement:
+            '${json['cameraMovement'] ?? _legacyAnimationCameraMovement('${json['camera'] ?? ''}')}',
         pose: '${json['pose'] ?? 'standing'}',
         armAction: '${json['armAction'] ?? 'arms at sides'}',
         torsoAction: '${json['torsoAction'] ?? 'relaxed upright torso'}',
@@ -743,6 +763,51 @@ class _AnimationBeat {
       );
 }
 
+String _legacyAnimationCameraFraming(String camera) {
+  if (camera == 'close-up on face') return 'close-up';
+  if (camera == 'over-the-shoulder shot') return 'upper body';
+  return 'full body';
+}
+
+String _legacyAnimationCameraAngle(String camera) {
+  if (camera == 'low-angle tracking shot') return 'from below';
+  if (camera == 'over-the-shoulder shot') return 'from behind';
+  return 'straight-on';
+}
+
+String _legacyAnimationCameraFocus(String camera) =>
+    camera == 'close-up on face' ? 'face focus' : '';
+
+String _legacyAnimationCameraMovement(String camera) => switch (camera) {
+      'slow push-in' => 'slow push-in',
+      'slow pull-back' => 'slow pull-back',
+      'slow pan left' => 'slow pan left',
+      'slow pan right' => 'slow pan right',
+      'slow orbiting camera' => 'slow orbiting camera',
+      'low-angle tracking shot' => 'forward tracking shot',
+      _ => 'static camera',
+    };
+
+class _AnimationCameraPreset {
+  const _AnimationCameraPreset({
+    required this.zh,
+    required this.description,
+    required this.framing,
+    required this.angle,
+    this.perspective = '',
+    this.focus = '',
+    required this.movement,
+  });
+
+  final String zh;
+  final String description;
+  final String framing;
+  final String angle;
+  final String perspective;
+  final String focus;
+  final String movement;
+}
+
 const _animationSceneOptions = <_AnimationOption>[
   _AnimationOption('沿用來源圖片場景', 'same location as the source image'),
   _AnimationOption('室內房間', 'indoor room'),
@@ -754,16 +819,163 @@ const _animationSceneOptions = <_AnimationOption>[
   _AnimationOption('屋頂', 'rooftop'),
 ];
 
-const _animationCameraOptions = <_AnimationOption>[
-  _AnimationOption('固定全身鏡頭', 'static full-body shot'),
+// Framing and viewpoint use Danbooru-style tags understood by Illustrious
+// models. Camera movement remains a natural-language video direction.
+const _animationCameraFramingOptions = <_AnimationOption>[
+  _AnimationOption('臉部特寫', 'close-up'),
+  _AnimationOption('頭肩人像', 'portrait'),
+  _AnimationOption('上半身', 'upper body'),
+  _AnimationOption('下半身', 'lower body'),
+  _AnimationOption('大腿以上', 'cowboy shot'),
+  _AnimationOption('腳踝以上', 'feet out of frame'),
+  _AnimationOption('完整全身', 'full body'),
+  _AnimationOption('遠景全身', 'wide shot'),
+  _AnimationOption('超遠景全身', 'very wide shot'),
+];
+
+const _animationCameraAngleOptions = <_AnimationOption>[
+  _AnimationOption('正面平視', 'straight-on'),
+  _AnimationOption('由上往下', 'from above'),
+  _AnimationOption('由下往上', 'from below'),
+  _AnimationOption('側面', 'from side'),
+  _AnimationOption('背面', 'from behind'),
+  _AnimationOption('四分之三視角', 'three-quarter view'),
+  _AnimationOption('第一人稱', 'pov'),
+  _AnimationOption('傾斜鏡頭', 'dutch angle'),
+  _AnimationOption('上下顛倒', 'upside-down'),
+];
+
+const _animationCameraPerspectiveOptions = <_AnimationOption>[
+  _AnimationOption('一般透視', ''),
+  _AnimationOption('透視感', 'perspective'),
+  _AnimationOption('廣角魚眼', 'fisheye'),
+  _AnimationOption('消失點構圖', 'vanishing point'),
+  _AnimationOption('近大遠小透視', 'foreshortening'),
+  _AnimationOption('空氣遠近感', 'atmospheric perspective'),
+];
+
+const _animationCameraFocusOptions = <_AnimationOption>[
+  _AnimationOption('不指定焦點', ''),
+  _AnimationOption('臉部聚焦', 'face focus'),
+  _AnimationOption('眼睛聚焦', 'eye focus'),
+  _AnimationOption('手部聚焦', 'hand focus'),
+  _AnimationOption('腳部聚焦', 'foot focus'),
+  _AnimationOption('大腿聚焦', 'thigh focus'),
+  _AnimationOption('背部聚焦', 'back focus'),
+  _AnimationOption('武器聚焦', 'weapon focus'),
+  _AnimationOption('物件聚焦', 'object focus'),
+  _AnimationOption('單人主焦點', 'solo focus'),
+];
+
+const _animationCameraMovementOptions = <_AnimationOption>[
+  _AnimationOption('固定鏡頭', 'static camera'),
   _AnimationOption('緩慢推近', 'slow push-in'),
   _AnimationOption('緩慢拉遠', 'slow pull-back'),
-  _AnimationOption('鏡頭向左平移', 'slow pan left'),
-  _AnimationOption('鏡頭向右平移', 'slow pan right'),
-  _AnimationOption('緩慢環繞鏡頭', 'slow orbiting camera'),
-  _AnimationOption('低角度跟拍', 'low-angle tracking shot'),
-  _AnimationOption('肩後視角', 'over-the-shoulder shot'),
-  _AnimationOption('臉部近景', 'close-up on face'),
+  _AnimationOption('向左平移', 'slow pan left'),
+  _AnimationOption('向右平移', 'slow pan right'),
+  _AnimationOption('向上仰拍', 'slow tilt up'),
+  _AnimationOption('向下俯拍', 'slow tilt down'),
+  _AnimationOption('緩慢環繞', 'slow orbiting camera'),
+  _AnimationOption('向前跟拍', 'forward tracking shot'),
+  _AnimationOption('側向跟拍', 'side tracking shot'),
+  _AnimationOption('手持運鏡', 'gentle handheld camera motion'),
+  _AnimationOption('滑動變焦', 'slow dolly zoom'),
+];
+
+const _animationCameraPresets = <_AnimationCameraPreset>[
+  _AnimationCameraPreset(
+    zh: '全身正面定鏡',
+    description: '完整全身、正面平視、固定鏡頭',
+    framing: 'full body',
+    angle: 'straight-on',
+    movement: 'static camera',
+  ),
+  _AnimationCameraPreset(
+    zh: '上半身緩慢推近',
+    description: '上半身、正面平視、臉部聚焦、緩慢推近',
+    framing: 'upper body',
+    angle: 'straight-on',
+    focus: 'face focus',
+    movement: 'slow push-in',
+  ),
+  _AnimationCameraPreset(
+    zh: '臉部情緒特寫',
+    description: '臉部特寫、正面平視、眼睛聚焦、固定鏡頭',
+    framing: 'close-up',
+    angle: 'straight-on',
+    focus: 'eye focus',
+    movement: 'static camera',
+  ),
+  _AnimationCameraPreset(
+    zh: '大腿以上側向跟拍',
+    description: '大腿以上、側面、側向跟拍',
+    framing: 'cowboy shot',
+    angle: 'from side',
+    movement: 'side tracking shot',
+  ),
+  _AnimationCameraPreset(
+    zh: '低角度全身環繞',
+    description: '完整全身、由下往上、透視感、緩慢環繞',
+    framing: 'full body',
+    angle: 'from below',
+    perspective: 'perspective',
+    movement: 'slow orbiting camera',
+  ),
+  _AnimationCameraPreset(
+    zh: '高角度全身拉遠',
+    description: '完整全身、由上往下、緩慢拉遠',
+    framing: 'full body',
+    angle: 'from above',
+    movement: 'slow pull-back',
+  ),
+  _AnimationCameraPreset(
+    zh: '背面向前跟拍',
+    description: '完整全身、背面、向前跟拍',
+    framing: 'full body',
+    angle: 'from behind',
+    movement: 'forward tracking shot',
+  ),
+  _AnimationCameraPreset(
+    zh: '第一人稱手持鏡頭',
+    description: '上半身、第一人稱、輕微手持運鏡',
+    framing: 'upper body',
+    angle: 'pov',
+    movement: 'gentle handheld camera motion',
+  ),
+  _AnimationCameraPreset(
+    zh: '傾斜動態推近',
+    description: '大腿以上、傾斜鏡頭、近大遠小透視、緩慢推近',
+    framing: 'cowboy shot',
+    angle: 'dutch angle',
+    perspective: 'foreshortening',
+    movement: 'slow push-in',
+  ),
+  _AnimationCameraPreset(
+    zh: '超廣角建立鏡頭',
+    description: '超遠景全身、正面平視、空氣遠近感、緩慢推近',
+    framing: 'very wide shot',
+    angle: 'straight-on',
+    perspective: 'atmospheric perspective',
+    movement: 'slow push-in',
+  ),
+  _AnimationCameraPreset(
+    zh: '手部動作細節',
+    description: '臉部特寫、四分之三視角、手部聚焦、緩慢推近',
+    framing: 'close-up',
+    angle: 'three-quarter view',
+    perspective: 'foreshortening',
+    focus: 'hand focus',
+    movement: 'slow push-in',
+  ),
+  _AnimationCameraPreset(
+    zh: '低位腳步跟拍',
+    description: '下半身、由下往上、腳部聚焦、向前跟拍',
+    framing: 'lower body',
+    angle: 'from below',
+    perspective: 'perspective',
+    focus: 'foot focus',
+    movement: 'forward tracking shot',
+  ),
 ];
 
 const _animationPoseOptions = <_AnimationOption>[
@@ -15633,51 +15845,58 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ? '官方｜'
             : '描述｜'
         : clothingSupport;
-    return ConstrainedBox(
-      constraints: BoxConstraints(
-        minWidth: _adaptiveChipLabelWidth(context) + (tag.adult ? 28 : 14),
-      ),
-      child: FilterChip(
-        selected: selected,
-        label: Text(
-          '$labelPrefix${tag.zh}  ·  ${tag.en}',
-          softWrap: true,
-          style: TextStyle(
-            color: _pickerLayerText(tone, selected: selected),
-            fontWeight: FontWeight.w600,
+    return Tooltip(
+      message: '${tag.zh} · ${tag.en}',
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          minWidth: _adaptiveChipLabelWidth(context) + (tag.adult ? 28 : 14),
+        ),
+        child: FilterChip(
+          selected: selected,
+          label: Text(
+            '$labelPrefix${tag.zh}  ·  ${tag.en}',
+            softWrap: true,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: _pickerLayerText(tone, selected: selected),
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+            ),
           ),
+          avatar: tag.adult
+              ? Icon(Icons.eighteen_mp,
+                  size: 15,
+                  color: selected
+                      ? _pickerLayerText(tone, selected: true)
+                      : const Color(0xffffa7b7))
+              : isHairStyle || isClothing
+                  ? Icon(
+                      (isHairStyle && officialHairStyle) ||
+                              (isClothing && tag.support == 'official')
+                          ? Icons.verified_outlined
+                          : Icons.auto_awesome_outlined,
+                      size: 16,
+                      color: selected
+                          ? _pickerLayerText(tone, selected: true)
+                          : (isHairStyle && officialHairStyle) ||
+                                  (isClothing && tag.support == 'official')
+                              ? const Color(0xff4ade80)
+                              : const Color(0xfffbbf24),
+                    )
+                  : null,
+          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+          labelPadding: EdgeInsets.zero,
+          visualDensity: VisualDensity.standard,
+          backgroundColor: _pickerLayerSurface(tone, selected: false),
+          selectedColor: _pickerLayerSurface(tone, selected: true),
+          checkmarkColor: _pickerLayerText(tone, selected: true),
+          side: BorderSide(
+            color: selected ? tone : tone.withValues(alpha: .7),
+          ),
+          onSelected: (_) => _toggle(tag, personIndex: personIndex),
         ),
-        avatar: tag.adult
-            ? Icon(Icons.eighteen_mp,
-                size: 15,
-                color: selected
-                    ? _pickerLayerText(tone, selected: true)
-                    : const Color(0xffffa7b7))
-            : isHairStyle || isClothing
-                ? Icon(
-                    (isHairStyle && officialHairStyle) ||
-                            (isClothing && tag.support == 'official')
-                        ? Icons.verified_outlined
-                        : Icons.auto_awesome_outlined,
-                    size: 16,
-                    color: selected
-                        ? _pickerLayerText(tone, selected: true)
-                        : (isHairStyle && officialHairStyle) ||
-                                (isClothing && tag.support == 'official')
-                            ? const Color(0xff4ade80)
-                            : const Color(0xfffbbf24),
-                  )
-                : null,
-        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
-        labelPadding: EdgeInsets.zero,
-        visualDensity: VisualDensity.standard,
-        backgroundColor: _pickerLayerSurface(tone, selected: false),
-        selectedColor: _pickerLayerSurface(tone, selected: true),
-        checkmarkColor: _pickerLayerText(tone, selected: true),
-        side: BorderSide(
-          color: selected ? tone : tone.withValues(alpha: .7),
-        ),
-        onSelected: (_) => _toggle(tag, personIndex: personIndex),
       ),
     );
   }
@@ -15957,12 +16176,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return '${_clothingScopeLabel(scopedSlot)} ${_clothingScopedKindLabel(scopedKind)}';
     }
     return group;
-  }
-
-  double _wizardGroupChipWidth(String group, double availableWidth) {
-    final label = _wizardGroupLabel(group);
-    final idealWidth = 38 + label.runes.length * 17.0;
-    return idealWidth.clamp(76.0, availableWidth).toDouble();
   }
 
   List<TagItem> _stepVisibleTags(List<String> groups,
@@ -16798,54 +17011,48 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ),
         ),
         const SizedBox(height: 7),
-        LayoutBuilder(
-          builder: (context, constraints) => Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: groups.map((group) {
-              final selectedCount = selectedCountForGroup(group);
-              final tone = _pickerLayerTone(group);
-              final isActive = group == currentGroup;
-              final width = _wizardGroupChipWidth(group, constraints.maxWidth) +
-                  (selectedCount > 0 ? 30 : 0);
-              return ConstrainedBox(
-                constraints: BoxConstraints(maxWidth: constraints.maxWidth),
-                child: SizedBox(
-                  width: min(width, constraints.maxWidth),
-                  child: ChoiceChip(
-                    label: Text(
-                      selectedCount == 0
-                          ? _wizardGroupLabel(group)
-                          : '${_wizardGroupLabel(group)}  $selectedCount',
-                      softWrap: true,
-                      maxLines: 2,
-                      overflow: TextOverflow.clip,
-                      style: TextStyle(
-                        color: _pickerLayerText(tone, selected: isActive),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    selected: isActive,
-                    backgroundColor: _pickerLayerSurface(tone, selected: false),
-                    selectedColor: _pickerLayerSurface(tone, selected: true),
-                    side: BorderSide(
-                      color: isActive ? tone : tone.withValues(alpha: .72),
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    onSelected: (_) => setState(() {
-                      _clearPickerQuery(searchScopeGroups, personIndex);
-                      if (personIndex == null) {
-                        _activeGroup = group;
-                      } else {
-                        _personActiveGroups[groupKey!] = group;
-                        _personTagQueries[personIndex] = '';
-                      }
-                    }),
+        _uniformButtonGrid(
+          minItemWidth: 132,
+          itemHeight: 48,
+          maxColumns: 6,
+          children: groups.map((group) {
+            final selectedCount = selectedCountForGroup(group);
+            final tone = _pickerLayerTone(group);
+            final isActive = group == currentGroup;
+            return ChoiceChip(
+              label: Center(
+                child: Text(
+                  selectedCount == 0
+                      ? _wizardGroupLabel(group)
+                      : '${_wizardGroupLabel(group)}  $selectedCount',
+                  softWrap: true,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: _pickerLayerText(tone, selected: isActive),
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-              );
-            }).toList(),
-          ),
+              ),
+              selected: isActive,
+              backgroundColor: _pickerLayerSurface(tone, selected: false),
+              selectedColor: _pickerLayerSurface(tone, selected: true),
+              side: BorderSide(
+                color: isActive ? tone : tone.withValues(alpha: .72),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              onSelected: (_) => setState(() {
+                _clearPickerQuery(searchScopeGroups, personIndex);
+                if (personIndex == null) {
+                  _activeGroup = group;
+                } else {
+                  _personActiveGroups[groupKey!] = group;
+                  _personTagQueries[personIndex] = '';
+                }
+              }),
+            );
+          }).toList(),
         ),
         const SizedBox(height: 12),
         Container(
@@ -17000,9 +17207,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             constraints: BoxConstraints(maxHeight: maxOptionsHeight),
             child: SingleChildScrollView(
               primary: false,
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
+              child: _uniformButtonGrid(
+                minItemWidth: visible.every(_isColorPickerTag) ? 58 : 205,
+                itemHeight: visible.every(_isColorPickerTag) ? 52 : 70,
+                maxColumns: visible.every(_isColorPickerTag) ? 12 : 4,
                 children: visible
                     .map((tag) => _tagChip(tag, personIndex: personIndex))
                     .toList(),
@@ -18366,65 +18574,51 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ),
                   ),
                   const SizedBox(height: 7),
-                  LayoutBuilder(
-                    builder: (context, constraints) => Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: sectionNames.map((section) {
-                        final selected = section == currentSection;
-                        final sectionGroups =
-                            sections[section] ?? const <String>[];
-                        final tone = _pickerLayerTone(sectionGroups.first);
-                        final selectedCount = sectionGroups.fold<int>(
-                          0,
-                          (total, group) =>
-                              total + selectedCountForPickerGroup(group),
-                        );
-                        final width = _wizardGroupChipWidth(
-                              section,
-                              constraints.maxWidth,
-                            ) +
-                            (selectedCount > 0 ? 30 : 0);
-                        return ConstrainedBox(
-                          constraints:
-                              BoxConstraints(maxWidth: constraints.maxWidth),
-                          child: SizedBox(
-                            width: min(width, constraints.maxWidth),
-                            child: ChoiceChip(
-                              label: Text(
-                                selectedCount == 0
-                                    ? section
-                                    : '$section  $selectedCount',
-                                softWrap: true,
-                                maxLines: 2,
-                                overflow: TextOverflow.clip,
-                                style: TextStyle(
-                                  color: _pickerLayerText(tone,
-                                      selected: selected),
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              selected: selected,
-                              backgroundColor:
-                                  _pickerLayerSurface(tone, selected: false),
-                              selectedColor:
-                                  _pickerLayerSurface(tone, selected: true),
-                              side: BorderSide(
-                                color: selected
-                                    ? tone
-                                    : tone.withValues(alpha: .72),
-                              ),
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
-                              onSelected: (_) => setState(() {
-                                _personActiveGroups[sectionKey] = section;
-                                _personTagQueries[index] = '';
-                              }),
+                  _uniformButtonGrid(
+                    minItemWidth: 150,
+                    itemHeight: 50,
+                    maxColumns: 5,
+                    children: sectionNames.map((section) {
+                      final selected = section == currentSection;
+                      final sectionGroups =
+                          sections[section] ?? const <String>[];
+                      final tone = _pickerLayerTone(sectionGroups.first);
+                      final selectedCount = sectionGroups.fold<int>(
+                        0,
+                        (total, group) =>
+                            total + selectedCountForPickerGroup(group),
+                      );
+                      return ChoiceChip(
+                        label: Center(
+                          child: Text(
+                            selectedCount == 0
+                                ? section
+                                : '$section  $selectedCount',
+                            softWrap: true,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: _pickerLayerText(tone, selected: selected),
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        );
-                      }).toList(),
-                    ),
+                        ),
+                        selected: selected,
+                        backgroundColor:
+                            _pickerLayerSurface(tone, selected: false),
+                        selectedColor:
+                            _pickerLayerSurface(tone, selected: true),
+                        side: BorderSide(
+                          color: selected ? tone : tone.withValues(alpha: .72),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        onSelected: (_) => setState(() {
+                          _personActiveGroups[sectionKey] = section;
+                          _personTagQueries[index] = '';
+                        }),
+                      );
+                    }).toList(),
                   ),
                   const SizedBox(height: 12),
                   _stepTagPicker(
@@ -19416,7 +19610,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final extra = beat.extraDirection.trim().isEmpty
           ? ''
           : ' Additional direction: ${beat.extraDirection.trim()}.';
-      return 'Scene $number. Location: ${beat.scene}. Camera: ${beat.camera}. '
+      final camera = <String>[
+        beat.cameraFraming,
+        beat.cameraAngle,
+        beat.cameraPerspective,
+        beat.cameraFocus,
+        beat.cameraMovement,
+      ].where((part) => part.trim().isNotEmpty).join(', ');
+      return 'Scene $number. Location: ${beat.scene}. Camera: $camera. '
           '$person: start pose ${beat.pose}; arm action ${beat.armAction}; '
           'torso and waist action ${beat.torsoAction}; leg and foot action '
           '${beat.legAction}. Movement: ${beat.motion}. Ending: '
@@ -19424,6 +19625,114 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }).join('\n\n');
     return 'Create a short animated clip with clear continuous movement and '
         'consistent character design.\n\n$scenes';
+  }
+
+  Widget _uniformButtonGrid({
+    required List<Widget> children,
+    double minItemWidth = 150,
+    double itemHeight = 48,
+    int maxColumns = 5,
+    double spacing = 7,
+  }) {
+    if (children.isEmpty) return const SizedBox.shrink();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : MediaQuery.sizeOf(context).width;
+        final calculated =
+            ((availableWidth + spacing) / (minItemWidth + spacing)).floor();
+        final columns = calculated.clamp(1, maxColumns);
+        final width = (availableWidth - spacing * (columns - 1)) / columns;
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: children
+              .map((child) => SizedBox(
+                    width: width,
+                    height: itemHeight,
+                    child: child,
+                  ))
+              .toList(),
+        );
+      },
+    );
+  }
+
+  Widget _animationCameraPresetPicker(_AnimationBeat beat) {
+    bool matches(_AnimationCameraPreset preset) =>
+        beat.cameraFraming == preset.framing &&
+        beat.cameraAngle == preset.angle &&
+        beat.cameraPerspective == preset.perspective &&
+        beat.cameraFocus == preset.focus &&
+        beat.cameraMovement == preset.movement;
+
+    final colors = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xff38bdf8).withValues(alpha: .1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: const Color(0xff38bdf8).withValues(alpha: .7),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.video_camera_back_outlined,
+                  size: 19, color: Color(0xff38bdf8)),
+              SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  '快速鏡頭配置',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '套用後仍可在下方分別修改構圖、方向、透視、焦點與運鏡。',
+            style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
+          ),
+          const SizedBox(height: 8),
+          _uniformButtonGrid(
+            minItemWidth: 170,
+            itemHeight: 54,
+            maxColumns: 4,
+            children: _animationCameraPresets.map((preset) {
+              final selected = matches(preset);
+              return Tooltip(
+                message: preset.description,
+                child: ChoiceChip(
+                  selected: selected,
+                  showCheckmark: true,
+                  label: Center(
+                    child: Text(
+                      preset.zh,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  onSelected: (_) => _updateAnimationBeat(beat, () {
+                    beat.cameraFraming = preset.framing;
+                    beat.cameraAngle = preset.angle;
+                    beat.cameraPerspective = preset.perspective;
+                    beat.cameraFocus = preset.focus;
+                    beat.cameraMovement = preset.movement;
+                  }),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _animationOptionPicker({
@@ -19461,20 +19770,31 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ],
           ),
           const SizedBox(height: 7),
-          Wrap(
-            spacing: 7,
-            runSpacing: 7,
+          _uniformButtonGrid(
+            minItemWidth: 130,
+            itemHeight: 46,
+            maxColumns: 5,
             children: options.map((option) {
               final isSelected = option.en == current;
-              return ChoiceChip(
-                label: Text(option.zh),
-                selected: isSelected,
-                showCheckmark: true,
-                visualDensity: VisualDensity.compact,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                onSelected: (_) {
-                  if (!isSelected) onChanged(option.en);
-                },
+              return Tooltip(
+                message: option.en.isEmpty ? '不輸出此項' : option.en,
+                child: ChoiceChip(
+                  label: Center(
+                    child: Text(
+                      option.zh,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  selected: isSelected,
+                  showCheckmark: true,
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  onSelected: (_) {
+                    if (!isSelected) onChanged(option.en);
+                  },
+                ),
               );
             }).toList(),
           ),
@@ -19519,9 +19839,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ],
           ),
           const SizedBox(height: 7),
-          Wrap(
-            spacing: 7,
-            runSpacing: 7,
+          _uniformButtonGrid(
+            minItemWidth: 150,
+            itemHeight: 46,
+            maxColumns: 5,
             children: people.map((index) {
               final isSelected = index == current;
               return ChoiceChip(
@@ -19530,7 +19851,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   size: 17,
                   color: isSelected ? colors.onPrimaryContainer : null,
                 ),
-                label: Text(_animationPersonLabel(index)),
+                label: Center(
+                  child: Text(
+                    _animationPersonLabel(index),
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
                 selected: isSelected,
                 visualDensity: VisualDensity.compact,
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -19662,15 +19990,61 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.scene = next,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  _animationCameraPresetPicker(beat),
                   const SizedBox(height: 10),
                   _animationOptionPicker(
-                    label: '鏡頭運動',
-                    value: beat.camera,
-                    options: _animationCameraOptions,
+                    label: '鏡頭構圖／取景範圍（官方標籤）',
+                    value: beat.cameraFraming,
+                    options: _animationCameraFramingOptions,
+                    icon: Icons.crop_free_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.cameraFraming = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '觀看方向／鏡頭角度（官方標籤）',
+                    value: beat.cameraAngle,
+                    options: _animationCameraAngleOptions,
+                    icon: Icons.threesixty_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.cameraAngle = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '透視效果（官方標籤）',
+                    value: beat.cameraPerspective,
+                    options: _animationCameraPerspectiveOptions,
+                    icon: Icons.grid_4x4_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.cameraPerspective = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '畫面焦點（官方標籤）',
+                    value: beat.cameraFocus,
+                    options: _animationCameraFocusOptions,
+                    icon: Icons.center_focus_strong_outlined,
+                    onChanged: (next) => _updateAnimationBeat(
+                      beat,
+                      () => beat.cameraFocus = next,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  _animationOptionPicker(
+                    label: '影片運鏡（自然語句）',
+                    value: beat.cameraMovement,
+                    options: _animationCameraMovementOptions,
                     icon: Icons.videocam_outlined,
                     onChanged: (next) => _updateAnimationBeat(
                       beat,
-                      () => beat.camera = next,
+                      () => beat.cameraMovement = next,
                     ),
                   ),
                   const SizedBox(height: 10),
@@ -19885,19 +20259,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           children: [
             const Text('製作類型', style: TextStyle(fontWeight: FontWeight.w800)),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
+            _uniformButtonGrid(
+              minItemWidth: 150,
+              itemHeight: 48,
+              maxColumns: 2,
               children: [
                 ChoiceChip(
                   avatar: const Icon(Icons.image_outlined, size: 18),
-                  label: const Text('圖片提示詞'),
+                  label: const Center(child: Text('圖片提示詞')),
                   selected: !video,
                   onSelected: (_) => _setWorkspaceMode('image'),
                 ),
                 ChoiceChip(
                   avatar: const Icon(Icons.movie_creation_outlined, size: 18),
-                  label: const Text('影片動態分鏡'),
+                  label: const Center(child: Text('影片動態分鏡')),
                   selected: video,
                   onSelected: (_) => _setWorkspaceMode('video'),
                 ),
@@ -20679,32 +21054,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ? _selectedIds.contains(tag.id)
         : _personTagIds(personIndex).contains(tag.id);
     final tone = _pickerLayerTone(tag.group);
-    return FilterChip(
-      selected: selected,
-      avatar: tag.adult
-          ? Icon(
-              Icons.eighteen_mp,
-              size: 15,
-              color: selected
-                  ? _pickerLayerText(tone, selected: true)
-                  : const Color(0xffffa7b7),
-            )
-          : null,
-      label: Text(
-        '${_wizardGroupLabel(tag.group)}｜${tag.zh}  ·  ${tag.en}',
-        softWrap: true,
-        style: TextStyle(
-          color: _pickerLayerText(tone, selected: selected),
-          fontWeight: FontWeight.w600,
+    return Tooltip(
+      message: '${_wizardGroupLabel(tag.group)}｜${tag.zh} · ${tag.en}',
+      child: FilterChip(
+        selected: selected,
+        avatar: tag.adult
+            ? Icon(
+                Icons.eighteen_mp,
+                size: 15,
+                color: selected
+                    ? _pickerLayerText(tone, selected: true)
+                    : const Color(0xffffa7b7),
+              )
+            : null,
+        label: Text(
+          '${_wizardGroupLabel(tag.group)}｜${tag.zh}  ·  ${tag.en}',
+          softWrap: true,
+          maxLines: 3,
+          overflow: TextOverflow.ellipsis,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: _pickerLayerText(tone, selected: selected),
+            fontWeight: FontWeight.w600,
+            fontSize: 12,
+          ),
         ),
+        backgroundColor: _pickerLayerSurface(tone, selected: false),
+        selectedColor: _pickerLayerSurface(tone, selected: true),
+        checkmarkColor: _pickerLayerText(tone, selected: true),
+        side: BorderSide(
+          color: selected ? tone : tone.withValues(alpha: .7),
+        ),
+        onSelected: (_) => _toggle(tag, personIndex: personIndex),
       ),
-      backgroundColor: _pickerLayerSurface(tone, selected: false),
-      selectedColor: _pickerLayerSurface(tone, selected: true),
-      checkmarkColor: _pickerLayerText(tone, selected: true),
-      side: BorderSide(
-        color: selected ? tone : tone.withValues(alpha: .7),
-      ),
-      onSelected: (_) => _toggle(tag, personIndex: personIndex),
     );
   }
 
@@ -20794,9 +21176,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 constraints: const BoxConstraints(maxHeight: 360),
                 child: SingleChildScrollView(
                   primary: false,
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
+                  child: _uniformButtonGrid(
+                    minItemWidth: 220,
+                    itemHeight: 72,
+                    maxColumns: 4,
                     children: displayed
                         .map((tag) =>
                             _globalSearchTagChip(tag, targetPersonIndex))
