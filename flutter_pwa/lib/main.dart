@@ -15833,18 +15833,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final officialHairStyle =
         isHairStyle ? _isOfficialHairStyleTag(tag) : false;
     final isClothing = _isClothingGroup(tag.group);
-    final clothingSupport = isClothing
-        ? tag.support == 'official'
-            ? '官方｜'
-            : tag.support == 'description'
-                ? '描述｜'
-                : '既有｜'
-        : '';
-    final labelPrefix = isHairStyle
-        ? officialHairStyle
-            ? '官方｜'
-            : '描述｜'
-        : clothingSupport;
     return Tooltip(
       message: '${tag.zh} · ${tag.en}',
       child: ConstrainedBox(
@@ -15854,9 +15842,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         child: FilterChip(
           selected: selected,
           label: Text(
-            '$labelPrefix${tag.zh}  ·  ${tag.en}',
+            '${tag.zh}  ·  ${tag.en}',
             softWrap: true,
-            maxLines: 3,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -15886,7 +15874,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               : const Color(0xfffbbf24),
                     )
                   : null,
-          padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
           labelPadding: EdgeInsets.zero,
           visualDensity: VisualDensity.standard,
           backgroundColor: _pickerLayerSurface(tone, selected: false),
@@ -17010,10 +16998,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
-        const SizedBox(height: 7),
+        const SizedBox(height: 5),
         _uniformButtonGrid(
           minItemWidth: 132,
-          itemHeight: 48,
+          itemHeight: 44,
           maxColumns: 6,
           children: groups.map((group) {
             final selectedCount = selectedCountForGroup(group);
@@ -17041,7 +17029,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               side: BorderSide(
                 color: isActive ? tone : tone.withValues(alpha: .72),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               onSelected: (_) => setState(() {
                 _clearPickerQuery(searchScopeGroups, personIndex);
                 if (personIndex == null) {
@@ -17054,7 +17042,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8),
         Container(
           width: double.infinity,
           padding: const EdgeInsets.fromLTRB(12, 10, 10, 12),
@@ -17099,18 +17087,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 ],
               ),
               if (selectedInCurrentGroup.isNotEmpty) ...[
-                const SizedBox(height: 7),
+                const SizedBox(height: 4),
                 Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
+                  spacing: 4,
+                  runSpacing: 4,
                   children: selectedInCurrentGroup
                       .map(
                         (tag) => Tooltip(
                           message: tag.en,
                           child: InputChip(
-                            label: Text(tag.group == '髮型'
-                                ? '${_isOfficialHairStyleTag(tag) ? '官方' : '描述'}｜${tag.zh}'
-                                : tag.zh),
+                            label: Text(tag.zh),
                             visualDensity: VisualDensity.compact,
                             backgroundColor: _pickerLayerSurface(
                               _pickerLayerTone(currentGroup),
@@ -17163,7 +17149,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           const SizedBox(height: 10),
           _hairPromptWeightControl(personIndex),
         ],
-        const SizedBox(height: 10),
+        const SizedBox(height: 7),
         TextField(
           controller: _pickerSearchController(searchScopeGroups, personIndex),
           decoration: InputDecoration(
@@ -17209,7 +17195,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               primary: false,
               child: _uniformButtonGrid(
                 minItemWidth: visible.every(_isColorPickerTag) ? 58 : 205,
-                itemHeight: visible.every(_isColorPickerTag) ? 52 : 70,
+                itemHeight: visible.every(_isColorPickerTag) ? 48 : 62,
                 maxColumns: visible.every(_isColorPickerTag) ? 12 : 4,
                 children: visible
                     .map((tag) => _tagChip(tag, personIndex: personIndex))
@@ -19632,7 +19618,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     double minItemWidth = 150,
     double itemHeight = 48,
     int maxColumns = 5,
-    double spacing = 7,
+    double spacing = 4,
   }) {
     if (children.isEmpty) return const SizedBox.shrink();
     return LayoutBuilder(
@@ -19670,7 +19656,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final colors = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+      padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
       decoration: BoxDecoration(
         color: const Color(0xff38bdf8).withValues(alpha: .1),
         borderRadius: BorderRadius.circular(12),
@@ -19699,10 +19685,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '套用後仍可在下方分別修改構圖、方向、透視、焦點與運鏡。',
             style: TextStyle(fontSize: 11, color: colors.onSurfaceVariant),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 5),
           _uniformButtonGrid(
             minItemWidth: 170,
-            itemHeight: 54,
+            itemHeight: 48,
             maxColumns: 4,
             children: _animationCameraPresets.map((preset) {
               final selected = matches(preset);
@@ -19748,7 +19734,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final colors = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+      padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
       decoration: BoxDecoration(
         color: colors.surfaceContainerHighest.withValues(alpha: .34),
         borderRadius: BorderRadius.circular(12),
@@ -19769,10 +19755,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
             ],
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 5),
           _uniformButtonGrid(
             minItemWidth: 130,
-            itemHeight: 46,
+            itemHeight: 42,
             maxColumns: 5,
             children: options.map((option) {
               final isSelected = option.en == current;
@@ -19798,7 +19784,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               );
             }).toList(),
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 4),
           Text(
             selected.en.isEmpty ? '英文：不輸出此項' : '英文：${selected.en}',
             style: TextStyle(
@@ -19819,7 +19805,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final colors = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(10, 9, 10, 10),
+      padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
       decoration: BoxDecoration(
         color: colors.primaryContainer.withValues(alpha: .26),
         borderRadius: BorderRadius.circular(12),
@@ -19838,10 +19824,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
             ],
           ),
-          const SizedBox(height: 7),
+          const SizedBox(height: 5),
           _uniformButtonGrid(
             minItemWidth: 150,
-            itemHeight: 46,
+            itemHeight: 42,
             maxColumns: 5,
             children: people.map((index) {
               final isSelected = index == current;
@@ -19977,9 +19963,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _animationPersonPicker(beat: beat, people: people),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
                     label: '場景／地點',
                     value: beat.scene,
@@ -19990,11 +19976,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.scene = next,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   _animationCameraPresetPicker(beat),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
-                    label: '鏡頭構圖／取景範圍（官方標籤）',
+                    label: '鏡頭構圖／取景範圍',
                     value: beat.cameraFraming,
                     options: _animationCameraFramingOptions,
                     icon: Icons.crop_free_outlined,
@@ -20003,9 +19989,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.cameraFraming = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
-                    label: '觀看方向／鏡頭角度（官方標籤）',
+                    label: '觀看方向／鏡頭角度',
                     value: beat.cameraAngle,
                     options: _animationCameraAngleOptions,
                     icon: Icons.threesixty_outlined,
@@ -20014,9 +20000,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.cameraAngle = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
-                    label: '透視效果（官方標籤）',
+                    label: '透視效果',
                     value: beat.cameraPerspective,
                     options: _animationCameraPerspectiveOptions,
                     icon: Icons.grid_4x4_outlined,
@@ -20025,9 +20011,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.cameraPerspective = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
-                    label: '畫面焦點（官方標籤）',
+                    label: '畫面焦點',
                     value: beat.cameraFocus,
                     options: _animationCameraFocusOptions,
                     icon: Icons.center_focus_strong_outlined,
@@ -20036,7 +20022,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.cameraFocus = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
                     label: '影片運鏡（自然語句）',
                     value: beat.cameraMovement,
@@ -20047,7 +20033,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.cameraMovement = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
                     label: '起始姿勢',
                     value: beat.pose,
@@ -20058,10 +20044,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.pose = next,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   const Text('部位動作',
                       style: TextStyle(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 5),
                   _animationOptionPicker(
                     label: '手臂／手部',
                     value: beat.armAction,
@@ -20072,7 +20058,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.armAction = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
                     label: '軀幹／腰臀',
                     value: beat.torsoAction,
@@ -20083,7 +20069,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.torsoAction = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
                     label: '腿部／腳部',
                     value: beat.legAction,
@@ -20094,10 +20080,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.legAction = next,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
                   const Text('動作流程與聲音',
                       style: TextStyle(fontWeight: FontWeight.w800)),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 5),
                   _animationOptionPicker(
                     label: '主要動態',
                     value: beat.motion,
@@ -20108,7 +20094,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.motion = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
                     label: '結束姿勢',
                     value: beat.endPose,
@@ -20119,7 +20105,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       () => beat.endPose = next,
                     ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   _animationOptionPicker(
                     label: '一般音訊／環境音',
                     value: beat.sound,
@@ -20131,12 +20117,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ),
                   ),
                   if (_showAdult) ...[
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                     const Text('成人動態（僅限成年角色）',
                         style: TextStyle(
                             fontWeight: FontWeight.w800,
                             color: Color(0xfffb923c))),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 5),
                     _animationOptionPicker(
                       label: '成人姿勢／動態',
                       value: beat.adultMotion,
@@ -20147,7 +20133,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         () => beat.adultMotion = next,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 6),
                     _animationOptionPicker(
                       label: '成人相關聲音',
                       value: beat.adultSound,
@@ -20159,7 +20145,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                     ),
                   ],
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 6),
                   TextFormField(
                     initialValue: beat.extraDirection,
                     minLines: 2,
