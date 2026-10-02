@@ -18023,16 +18023,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(instruction),
-        SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          value: _showAdult,
-          title: const Text('顯示 18+ 分類'),
-          subtitle: const Text('成人姿勢、情趣服飾與成人道具預設隱藏。'),
-          onChanged: (value) => setState(() {
-            _showAdult = value;
-            _persist();
-          }),
-        ),
         const SizedBox(height: 8),
         if (_showAdult) _adultPosePackagePanel(),
         ..._personSlots.asMap().entries.map((entry) {
@@ -19284,7 +19274,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Text(
-              '成人動態與相關聲音已隱藏；需要時請開啟下方的「顯示 18+ 標籤」。',
+              '成人動態與相關聲音已隱藏；需要時請開啟上方的「顯示 18+ 動態選項」。',
               style: TextStyle(fontSize: 12),
             ),
           ),
@@ -19626,6 +19616,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _imageAdultVisibilityControl() {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: SwitchListTile.adaptive(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        secondary: const Icon(Icons.no_adult_content_outlined),
+        value: _showAdult,
+        title: const Text(
+          '顯示圖片 18+ 標籤',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: const Text('成人姿勢、裸露、情趣服飾與成人道具預設隱藏；只使用成年角色。'),
+        onChanged: (value) => setState(() {
+          _showAdult = value;
+          _persist();
+        }),
       ),
     );
   }
@@ -20308,16 +20318,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant)),
-      const SizedBox(height: 12),
-      SwitchListTile.adaptive(
-          contentPadding: EdgeInsets.zero,
-          value: _showAdult,
-          title: const Text('顯示 18+ 標籤'),
-          subtitle: const Text('只使用成年角色，並遵守 BetterWaifu 內容規範。'),
-          onChanged: (value) => setState(() {
-                _showAdult = value;
-                _persist();
-              })),
     ]);
   }
 
@@ -20462,7 +20462,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             const SizedBox(height: 7),
             Text(
               _globalTagQuery.trim().isEmpty
-                  ? '輸入關鍵字後會搜尋整個系統；18+ 標籤會依「顯示 18+ 分類」設定顯示。'
+                  ? '輸入關鍵字後會搜尋整個系統；18+ 標籤會依最上方「顯示圖片 18+ 標籤」設定顯示。'
                   : results.isEmpty
                       ? '找不到符合的標籤。'
                       : results.length > displayLimit
@@ -21273,6 +21273,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
               const SizedBox(height: 12),
               if (isImageWorkspace) ...[
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _imageAdultVisibilityControl(),
+                ),
+                const SizedBox(height: 12),
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1120),
                   child: _globalTagSearchPanel(),
