@@ -4944,7 +4944,8 @@ List<TagItem> _seedTags() => [
       _tag('pose_knees_bent', '站立與蹲姿', '膝蓋微蹲', 'knees bent', 4,
           conflictGroup: 'leg_detail'),
       _tag('pose_arms_up', '手臂姿勢', '雙手舉起', 'arms up', 4),
-      _tag('pose_hand_on_hip', '手部姿勢', '手放在腰上', 'hand on hip', 4),
+      _tag('pose_hand_on_hip', '軀幹・腰臀動態', '手放在自己的髖部',
+          'hand on own hip', 4),
       _tag('pose_leaning', '軀幹姿勢', '倚靠', 'leaning', 4),
       _tag('pose_bent_over', '軀幹姿勢', '彎腰', 'bent over', 4, adult: true),
       _tag('pose_presenting', '全身姿勢', '展示姿勢（成年角色）', 'presenting', 4,
@@ -5000,9 +5001,9 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'leg_raise'),
       _tag('pose_thigh_raised', '腿部姿勢', '抬起大腿', 'raised thigh', 4,
           conflictGroup: 'leg_detail'),
-      _tag('pose_lower_leg_raised', '腿部姿勢', '抬起小腿', 'raised lower leg', 4,
+      _tag('pose_lower_leg_raised', '小腿・腳踝動態', '抬起小腿', 'raised lower leg', 4,
           conflictGroup: 'leg_detail'),
-      _tag('pose_bent_leg', '腿部姿勢', '彎曲腿部', 'bent leg', 4,
+      _tag('pose_bent_leg', '大腿・膝蓋動態', '彎曲腿部', 'bent leg', 4,
           conflictGroup: 'leg_detail'),
       // Furniture contact stays separate from the base seated pose so users
       // can freely compose, for example: sitting on chair + feet on table.
@@ -6185,9 +6186,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return switch (group) {
         '頭部姿勢' => 43,
         '手臂姿勢' => 44,
-        '手部姿勢' || '手指・指向方向' || '手指・手勢形狀' || '手指・嘴臉互動' || '手指・細節動作' => 45,
-        '軀幹姿勢' => 46,
-        '腿部姿勢' => 47,
+        '手部姿勢' || '手部・接觸位置' || '手指・指向方向' || '手指・手勢形狀' || '手指・嘴臉互動' || '手指・細節動作' => 45,
+        '軀幹姿勢' || '軀幹・腰臀動態' => 46,
+        '腿部姿勢' || '大腿・膝蓋動態' || '小腿・腳踝動態' || '腳掌・腳趾動態' => 47,
         '單人・站姿' ||
         '單人・靠牆姿勢' ||
         '站立與蹲姿' ||
@@ -15004,11 +15005,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _staticFaceAppearanceGroup: Color(0xff60a5fa),
       '手臂姿勢': Color(0xff60a5fa),
       '手部姿勢': Color(0xffa3e635),
+      '手部・接觸位置': Color(0xff84cc16),
       '手指・指向方向': Color(0xfffacc15),
       '手指・手勢形狀': Color(0xffa3e635),
       '手指・嘴臉互動': Color(0xfff472b6),
       '手指・細節動作': Color(0xff2dd4bf),
       '腿部姿勢': Color(0xff34d399),
+      '大腿・膝蓋動態': Color(0xff10b981),
+      '小腿・腳踝動態': Color(0xff22c55e),
+      '腳掌・腳趾動態': Color(0xff14b8a6),
+      '軀幹・腰臀動態': Color(0xff0d9488),
       '動態姿勢': Color(0xffff8a4c),
       '動作': Color(0xfffb923c),
       '身體動作': Color(0xfff97316),

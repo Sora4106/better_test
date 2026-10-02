@@ -30,6 +30,11 @@ List<CatalogTagData> _expandedTags({
         .toList();
 
 const _maleActionPoseGroup = '男性動作姿勢';
+const _handContactGroup = '手部・接觸位置';
+const _torsoWaistHipGroup = '軀幹・腰臀動態';
+const _thighKneeGroup = '大腿・膝蓋動態';
+const _lowerLegAnkleGroup = '小腿・腳踝動態';
+const _footToeGroup = '腳掌・腳趾動態';
 
 const expandedGeneralPoseGroups = <String>{
   _maleActionPoseGroup,
@@ -42,8 +47,13 @@ const expandedGeneralPoseGroups = <String>{
   '頭部姿勢',
   '手臂姿勢',
   '手部姿勢',
+  _handContactGroup,
   ...fingerGestureGroups,
+  _torsoWaistHipGroup,
   '腿部姿勢',
+  _thighKneeGroup,
+  _lowerLegAnkleGroup,
+  _footToeGroup,
   '動態姿勢',
   '身體動作',
   '貓系・單人動作',
@@ -119,13 +129,20 @@ const expandedTagPickerSections = <String, List<String>>{
   '② 上半身・手勢動態': [
     '手臂姿勢',
     '手部姿勢',
+    _handContactGroup,
     '手指・指向方向',
     '手指・手勢形狀',
     '手指・嘴臉互動',
     '手指・細節動作',
     '軀幹姿勢',
+    _torsoWaistHipGroup,
   ],
-  '③ 下半身・腿腳動態': ['腿部姿勢'],
+  '③ 下半身・腿腳動態': [
+    '腿部姿勢',
+    _thighKneeGroup,
+    _lowerLegAnkleGroup,
+    _footToeGroup,
+  ],
   '④ 全身姿勢・移動': [
     '站立與蹲姿',
     '坐姿與跪姿',
@@ -437,6 +454,33 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['扭轉軀幹', 'twisted torso'],
     ],
   ),
+  // Keep torso, waist, hip and butt placement separate from facial/hand
+  // gestures. These are canonical Danbooru posture tags and can be layered
+  // with a base standing, sitting, or lying pose.
+  CatalogTagData(
+    id: 'character_pose_contrapposto',
+    group: _torsoWaistHipGroup,
+    zh: '對立式重心站姿',
+    en: 'contrapposto',
+    order: 4,
+  ),
+  CatalogTagData(
+    id: 'character_pose_head_and_hip_pose',
+    group: _torsoWaistHipGroup,
+    zh: '頭與髖部反向姿勢',
+    en: 'head and hip pose',
+    order: 4,
+  ),
+  ..._expandedTags(
+    prefix: 'torso_waist_hip',
+    group: _torsoWaistHipGroup,
+    order: 4,
+    adult: false,
+    rows: const [
+      ['手臂橫過腰部', 'arm across waist'],
+      ['自我環抱', 'self hug'],
+    ],
+  ),
   ..._expandedTags(
     prefix: 'head_pose',
     group: '頭部姿勢',
@@ -495,6 +539,30 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['V字手勢', 'v'],
     ],
   ),
+  // Precise, non-explicit self-contact tags. These are kept in a separate
+  // picker so a hand location can be combined with an independent gesture.
+  ..._expandedTags(
+    prefix: 'hand_contact',
+    group: _handContactGroup,
+    order: 4,
+    adult: false,
+    rows: const [
+      ['單手托自己的臉頰', 'hand on own cheek'],
+      ['雙手托自己的臉頰', 'hands on own cheeks'],
+      ['單手遮自己的臉', 'hand on own face'],
+      ['雙手遮自己的臉', 'hands on own face'],
+      ['手放在自己的頸部', 'hand on own neck'],
+      ['手放在自己的胸前', 'hand on own chest'],
+      ['手插在自己的頭髮中', 'hand in own hair'],
+      ['抓住自己的頭髮', 'holding own hair'],
+      ['手掌放在地面', 'hand on floor'],
+      ['手肘支撐', 'elbow rest'],
+      ['手臂支撐身體', 'arm support'],
+      ['手放在自己的膝蓋', 'hand on own knee'],
+      ['雙手放在自己的膝蓋', 'hands on own knees'],
+      ['雙手放在腿上', 'hands on lap'],
+    ],
+  ),
   ..._expandedTags(
     prefix: 'leg_pose',
     group: '腿部姿勢',
@@ -502,7 +570,6 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     adult: false,
     defaultConflictGroup: 'leg_pose',
     rows: const [
-      ['腳踝交叉', 'crossed ankles'],
       ['抬起單腿', 'leg up'],
       ['抬腿', 'leg lift'],
       ['伸出腿', 'outstretched leg'],
@@ -516,10 +583,54 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['膝蓋併攏腳分開', 'knees together feet apart'],
       ['抬起單膝', 'knee up'],
       ['抬起雙膝', 'knees up'],
-      ['足背屈', 'dorsiflexion'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'thigh_knee_detail',
+    group: _thighKneeGroup,
+    order: 4,
+    adult: false,
+    rows: const [
+      ['單手放在自己的大腿', 'hand on own thigh'],
+      ['雙手放在自己的大腿', 'hands on own thighs'],
+      ['單手放在自己的小腿', 'hand on own calf'],
+      ['單手放在自己的腿上', 'hand on own leg'],
+      ['抓住自己的大腿', 'grabbing own thigh'],
+      ['抱住自己的單腿', 'hugging own leg'],
+      ['抱住自己的雙腿', 'hugging own legs'],
+      ['抓住自己的腳踝', 'holding own ankle'],
+      ['抓住自己的雙腳踝', 'holding own ankles'],
+      ['抓住自己的腿', 'holding own leg'],
+      ['雙腿併攏', 'legs together'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'leg_pose',
+    group: _lowerLegAnkleGroup,
+    order: 4,
+    adult: false,
+    rows: const [
+      ['腳踝交叉', 'crossed ankles'],
+      ['抬起腳跟', 'heel up'],
       ['內八腳', 'pigeon-toed'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'leg_pose',
+    group: _footToeGroup,
+    order: 4,
+    adult: false,
+    rows: const [
+      ['腳掌可見', 'soles'],
+      ['腳趾可見', 'toes'],
+      ['腳掌拱起', 'arched soles'],
+      ['腳尖指向', 'toe-point'],
+      ['芭蕾腳尖站姿', 'en pointe'],
+      ['足背屈', 'dorsiflexion'],
       ['足底屈', 'plantar flexion'],
       ['腳趾蜷曲', 'toe scrunch'],
+      ['腳趾張開', 'spread toes'],
+      ['用腳趾抓取', 'toe grab'],
       ['踮腳', 'tiptoes'],
     ],
   ),
@@ -626,10 +737,8 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['弓箭手姿勢', 'archer pose'],
       ['法式鄙視手勢', "bras d'honneur"],
       ['身體橋式', 'body bridge'],
-      ['對立式站姿', 'contrapposto'],
       ['冒失娘姿勢', 'dojikko pose'],
       ['幽靈姿勢', 'ghost pose'],
-      ['頭與髖部姿勢', 'head and hip pose'],
       ['大小姐姿勢', 'ojou-sama pose'],
       ['仙人掌姿勢', 'saboten pose'],
       ['對稱手勢', 'symmetrical hand pose'],
