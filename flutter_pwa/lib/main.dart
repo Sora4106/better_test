@@ -23,7 +23,7 @@ const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
 const _unregisteredPositiveTagInboxEnabled = false;
 const _showPersonFeatureGuidance = false;
-const _stepLayoutVersion = 4;
+const _stepLayoutVersion = 5;
 const _wingTypeGroup = '翅膀類型';
 const _wingColorGroup = '翅膀顏色';
 const _animalEarColorGroup = '獸耳顏色';
@@ -5961,6 +5961,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _clipSkip = '2';
   int _peopleCount = 1;
   int _stepIndex = 0;
+  String _workspaceMode = 'image';
   int _globalSearchPersonIndex = 0;
   int _stepScrollTicket = 0;
   static const double _basePageBottomPadding = 24;
@@ -9529,7 +9530,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         // Version 3 inserted the reusable-combinations step after characters.
         savedStep += 1;
       }
-      _stepIndex = savedStep.clamp(0, 7).toInt();
+      _stepIndex = savedStep.clamp(0, 6).toInt();
+      _workspaceMode = data['workspaceMode'] == 'video' ? 'video' : 'image';
       _gender = '${data['gender'] ?? '女性'}';
       _model = '${data['model'] ?? 'Amanatsu 1.1'}';
       _sampler = '${data['sampler'] ?? 'Euler a'}';
@@ -9588,6 +9590,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'peopleCount': _peopleCount,
         'stepIndex': _stepIndex,
         'stepLayoutVersion': _stepLayoutVersion,
+        'workspaceMode': _workspaceMode,
         'gender': _gender,
         'model': _model,
         'sampler': _sampler,
@@ -12605,6 +12608,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _peopleCount = 1;
       _gender = '女性';
       _stepIndex = 0;
+      _workspaceMode = 'image';
       _pageBottomPadding = _basePageBottomPadding;
       _activeGroup = '全部';
       _search.clear();
@@ -13027,6 +13031,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..addAll((data['animationBeats'] as List? ?? []).map((item) =>
             _AnimationBeat.fromJson(Map<String, dynamic>.from(item as Map))));
       if (_animationBeats.isEmpty) _animationBeats.add(_AnimationBeat());
+      _workspaceMode = data['workspaceMode'] == 'video' ? 'video' : 'image';
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
       _gender = '${data['gender'] ?? _gender}';
       _model = '${data['model'] ?? _model}';
@@ -13997,7 +14002,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (_stepIndex == 1 && !_charactersComplete()) {
       return;
     }
-    final nextStep = _stepIndex < 7 ? _stepIndex + 1 : _stepIndex;
+    final nextStep = _stepIndex < 6 ? _stepIndex + 1 : _stepIndex;
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _stepIndex = nextStep;
@@ -19279,7 +19284,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Text(
-              '成人動態與相關聲音已隱藏；需要時請先在第 7 項開啟「顯示 18+ 標籤」。',
+              '成人動態與相關聲音已隱藏；需要時請開啟下方的「顯示 18+ 標籤」。',
               style: TextStyle(fontSize: 12),
             ),
           ),
@@ -19555,6 +19560,128 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ),
         ),
       ],
+    );
+  }
+
+  void _setWorkspaceMode(String mode) {
+    if (mode == _workspaceMode) return;
+    FocusManager.instance.primaryFocus?.unfocus();
+    setState(() {
+      _workspaceMode = mode == 'video' ? 'video' : 'image';
+      _pageBottomPadding = _basePageBottomPadding;
+      _persist();
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_pageScrollController.hasClients) return;
+      if (_workspaceMode == 'image') {
+        unawaited(_scrollToStep(_stepIndex));
+      } else {
+        _pageScrollController.animateTo(
+          _pageScrollController.position.minScrollExtent,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
+
+  Widget _workspaceModeSelector() {
+    final video = _workspaceMode == 'video';
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('製作類型', style: TextStyle(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                ChoiceChip(
+                  avatar: const Icon(Icons.image_outlined, size: 18),
+                  label: const Text('圖片提示詞'),
+                  selected: !video,
+                  onSelected: (_) => _setWorkspaceMode('image'),
+                ),
+                ChoiceChip(
+                  avatar: const Icon(Icons.movie_creation_outlined, size: 18),
+                  label: const Text('影片動態分鏡'),
+                  selected: video,
+                  onSelected: (_) => _setWorkspaceMode('video'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            Text(
+              video
+                  ? '以場景順序、角色部位動作、鏡頭與音訊組合影片用自然語句。'
+                  : '建立可貼到 Amanatsu 1.1 的圖片提示詞與負面提示詞。',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _videoWorkspacePanel() {
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.movie_creation_outlined),
+                const SizedBox(width: 9),
+                Expanded(
+                  child: Text(
+                    '影片動態分鏡',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleLarge
+                        ?.copyWith(fontWeight: FontWeight.w800),
+                  ),
+                ),
+                IconButton(
+                  tooltip: '清除所有分鏡',
+                  onPressed: () => _clearStepTags(7),
+                  icon: const Icon(Icons.delete_outline),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '此頁內容會獨立儲存，不會變更圖片提示詞；完成後複製最下方英文動態語句。',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 10),
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              value: _showAdult,
+              title: const Text('顯示 18+ 動態選項'),
+              subtitle: const Text('只使用成年角色，並遵守 BetterWaifu 內容規範。'),
+              onChanged: (value) => setState(() {
+                _showAdult = value;
+                _persist();
+              }),
+            ),
+            const SizedBox(height: 6),
+            _stepAnimationStoryboard(),
+          ],
+        ),
+      ),
     );
   }
 
@@ -20519,14 +20646,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
           _stepFinal(),
           onClear: () => _clearStepTags(6)),
-      _stepCard(
-        7,
-        '動畫分鏡與動態語句',
-        '${_animationBeats.length} 個場景・鏡頭、人物動作與聲音流程',
-        Icons.movie_creation_outlined,
-        _stepAnimationStoryboard(),
-        onClear: () => _clearStepTags(7),
-      ),
     ]);
   }
 
@@ -21083,9 +21202,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ),
       );
     }
-    final showSideStepNames = MediaQuery.sizeOf(context).width >= 900;
-    final sideStepRailWidth = showSideStepNames ? 126.0 : 46.0;
-    final contentLeftPadding = max(sideStepRailWidth + 14, 72.0);
+    final isImageWorkspace = _workspaceMode == 'image';
+    final showSideStepNames =
+        isImageWorkspace && MediaQuery.sizeOf(context).width >= 900;
+    final sideStepRailWidth =
+        isImageWorkspace ? (showSideStepNames ? 126.0 : 46.0) : 0.0;
+    final contentLeftPadding =
+        isImageWorkspace ? max(sideStepRailWidth + 14, 72.0) : 16.0;
     const sideStepNames = <String>[
       '場景',
       '角色',
@@ -21094,7 +21217,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '服裝',
       '姿勢',
       '品質',
-      '動畫',
     ];
     return Scaffold(
       appBar: AppBar(
@@ -21147,129 +21269,143 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             children: [
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 1120),
-                child: _globalTagSearchPanel(),
+                child: _workspaceModeSelector(),
               ),
               const SizedBox(height: 12),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
-                child: _progressiveBuilder(),
-              ),
-              const SizedBox(height: 6),
-              ConstrainedBox(
-                key: _outputKey,
-                constraints: const BoxConstraints(maxWidth: 1120),
-                child: _outputPanel(),
-              ),
-              const SizedBox(height: 16),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 1120),
-                child: _memoryPanel(),
-              ),
+              if (isImageWorkspace) ...[
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _globalTagSearchPanel(),
+                ),
+                const SizedBox(height: 12),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _progressiveBuilder(),
+                ),
+                const SizedBox(height: 6),
+                ConstrainedBox(
+                  key: _outputKey,
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _outputPanel(),
+                ),
+                const SizedBox(height: 16),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _memoryPanel(),
+                ),
+              ] else
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _videoWorkspacePanel(),
+                ),
             ],
           ),
-          Positioned(
-            left: 6,
-            top: 112,
-            child: SafeArea(
-              child: SizedBox(
-                width: sideStepRailWidth,
-                child: Card(
-                  margin: EdgeInsets.zero,
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 3, vertical: 6),
-                    child: Column(
-                      children: [
-                        ...List.generate(8, (index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 3),
-                            child: showSideStepNames
-                                ? SizedBox(
-                                    width: 114,
-                                    height: 34,
-                                    child: FilledButton(
-                                      style: FilledButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                            horizontal: 9),
-                                        backgroundColor: _stepIndex == index
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .primaryContainer
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .surfaceContainerHighest,
-                                        foregroundColor: _stepIndex == index
-                                            ? Theme.of(context)
-                                                .colorScheme
-                                                .onPrimaryContainer
-                                            : Theme.of(context)
-                                                .colorScheme
-                                                .onSurfaceVariant,
-                                      ),
-                                      onPressed: () => _openStep(index),
-                                      child: Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          '${index + 1}  ${sideStepNames[index]}',
-                                          maxLines: 1,
-                                          style: const TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w800),
+          if (isImageWorkspace)
+            Positioned(
+              left: 6,
+              top: 112,
+              child: SafeArea(
+                child: SizedBox(
+                  width: sideStepRailWidth,
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 3, vertical: 6),
+                      child: Column(
+                        children: [
+                          ...List.generate(7, (index) {
+                            return Padding(
+                              padding: const EdgeInsets.only(bottom: 3),
+                              child: showSideStepNames
+                                  ? SizedBox(
+                                      width: 114,
+                                      height: 34,
+                                      child: FilledButton(
+                                        style: FilledButton.styleFrom(
+                                          padding: const EdgeInsets.symmetric(
+                                              horizontal: 9),
+                                          backgroundColor: _stepIndex == index
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .primaryContainer
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .surfaceContainerHighest,
+                                          foregroundColor: _stepIndex == index
+                                              ? Theme.of(context)
+                                                  .colorScheme
+                                                  .onPrimaryContainer
+                                              : Theme.of(context)
+                                                  .colorScheme
+                                                  .onSurfaceVariant,
+                                        ),
+                                        onPressed: () => _openStep(index),
+                                        child: Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            '${index + 1}  ${sideStepNames[index]}',
+                                            maxLines: 1,
+                                            style: const TextStyle(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w800),
+                                          ),
                                         ),
                                       ),
+                                    )
+                                  : IconButton.filled(
+                                      constraints:
+                                          const BoxConstraints.tightFor(
+                                              width: 34, height: 32),
+                                      padding: EdgeInsets.zero,
+                                      visualDensity: VisualDensity.compact,
+                                      tooltip:
+                                          '${index + 1} ${sideStepNames[index]}',
+                                      onPressed: () => _openStep(index),
+                                      icon: Text('${index + 1}',
+                                          style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w800)),
                                     ),
-                                  )
-                                : IconButton.filled(
-                                    constraints: const BoxConstraints.tightFor(
-                                        width: 34, height: 32),
-                                    padding: EdgeInsets.zero,
-                                    visualDensity: VisualDensity.compact,
-                                    tooltip:
-                                        '${index + 1} ${sideStepNames[index]}',
-                                    onPressed: () => _openStep(index),
-                                    icon: Text('${index + 1}',
-                                        style: const TextStyle(
+                            );
+                          }),
+                          const Divider(height: 8),
+                          showSideStepNames
+                              ? SizedBox(
+                                  width: 114,
+                                  height: 34,
+                                  child: FilledButton.tonalIcon(
+                                    style: FilledButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 9),
+                                    ),
+                                    onPressed: _scrollToOutput,
+                                    icon: const Icon(
+                                        Icons.vertical_align_bottom,
+                                        size: 16),
+                                    label: const Text('提示詞',
+                                        style: TextStyle(
                                             fontSize: 12,
                                             fontWeight: FontWeight.w800)),
                                   ),
-                          );
-                        }),
-                        const Divider(height: 8),
-                        showSideStepNames
-                            ? SizedBox(
-                                width: 114,
-                                height: 34,
-                                child: FilledButton.tonalIcon(
-                                  style: FilledButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 9),
-                                  ),
+                                )
+                              : IconButton.filled(
+                                  constraints: const BoxConstraints.tightFor(
+                                      width: 34, height: 32),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                  tooltip: '前往中英文提示詞輸出',
                                   onPressed: _scrollToOutput,
                                   icon: const Icon(Icons.vertical_align_bottom,
-                                      size: 16),
-                                  label: const Text('提示詞',
-                                      style: TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w800)),
+                                      size: 17),
                                 ),
-                              )
-                            : IconButton.filled(
-                                constraints: const BoxConstraints.tightFor(
-                                    width: 34, height: 32),
-                                padding: EdgeInsets.zero,
-                                visualDensity: VisualDensity.compact,
-                                tooltip: '前往中英文提示詞輸出',
-                                onPressed: _scrollToOutput,
-                                icon: const Icon(Icons.vertical_align_bottom,
-                                    size: 17),
-                              ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
           Positioned(
             left: 8,
             bottom: 154,
@@ -21283,57 +21419,58 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
             ),
           ),
-          Positioned(
-            left: 6,
-            bottom: 12,
-            child: SafeArea(
-              child: SizedBox(
-                width: 56,
-                child: Card(
-                  margin: EdgeInsets.zero,
-                  child: Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 3, vertical: 7),
-                    child: Column(
-                      children: [
-                        const Text('複製',
-                            style: TextStyle(
-                                fontSize: 10, fontWeight: FontWeight.w700)),
-                        const SizedBox(height: 6),
-                        IconButton.filled(
-                            constraints: const BoxConstraints.tightFor(
-                                width: 44, height: 42),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            iconSize: 16,
-                            tooltip: '複製正向英文標籤',
-                            onPressed: () => _copy(_positiveText, '正向英文標籤',
-                                showFeedback: true),
-                            icon: const Text('正',
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800))),
-                        const SizedBox(height: 6),
-                        IconButton.filled(
-                            constraints: const BoxConstraints.tightFor(
-                                width: 44, height: 42),
-                            padding: EdgeInsets.zero,
-                            visualDensity: VisualDensity.compact,
-                            iconSize: 16,
-                            tooltip: '複製負面英文標籤',
-                            onPressed: () => _copy(_negativeText, '負面英文標籤',
-                                showFeedback: true),
-                            icon: const Text('負',
-                                style: TextStyle(
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w800))),
-                      ],
+          if (isImageWorkspace)
+            Positioned(
+              left: 6,
+              bottom: 12,
+              child: SafeArea(
+                child: SizedBox(
+                  width: 56,
+                  child: Card(
+                    margin: EdgeInsets.zero,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 3, vertical: 7),
+                      child: Column(
+                        children: [
+                          const Text('複製',
+                              style: TextStyle(
+                                  fontSize: 10, fontWeight: FontWeight.w700)),
+                          const SizedBox(height: 6),
+                          IconButton.filled(
+                              constraints: const BoxConstraints.tightFor(
+                                  width: 44, height: 42),
+                              padding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                              iconSize: 16,
+                              tooltip: '複製正向英文標籤',
+                              onPressed: () => _copy(_positiveText, '正向英文標籤',
+                                  showFeedback: true),
+                              icon: const Text('正',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800))),
+                          const SizedBox(height: 6),
+                          IconButton.filled(
+                              constraints: const BoxConstraints.tightFor(
+                                  width: 44, height: 42),
+                              padding: EdgeInsets.zero,
+                              visualDensity: VisualDensity.compact,
+                              iconSize: 16,
+                              tooltip: '複製負面英文標籤',
+                              onPressed: () => _copy(_negativeText, '負面英文標籤',
+                                  showFeedback: true),
+                              icon: const Text('負',
+                                  style: TextStyle(
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w800))),
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
         ],
       ),
     );
