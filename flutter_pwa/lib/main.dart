@@ -3849,6 +3849,9 @@ List<TagItem> _createScopedClothingTags() {
     ['open_shirt', '\u896F\u886B\u657E\u958B', 'open shirt'],
     ['bra_visible', '\u9732\u51FA\u80F8\u7F69', 'bra visible'],
   ]);
+  addMany('top', 'wear', [
+    ['collarbone_peek', '只露出鎖骨（肩膀遮住）', 'collarbone peek'],
+  ]);
   addMany(
       'top',
       'wear',
@@ -3891,6 +3894,8 @@ List<TagItem> _createScopedClothingTags() {
         ],
         ['pussy_outline', '長褲顯出陰部輪廓', 'pussy outline'],
         ['cameltoe', '長褲顯出陰唇輪廓', 'cameltoe'],
+        ['butt_crack', '長褲局部露臀溝', 'butt crack'],
+        ['ass_cutout', '長褲臀部挖空', 'ass cutout'],
       ],
       adult: true);
   addMany(
@@ -3908,6 +3913,8 @@ List<TagItem> _createScopedClothingTags() {
         ],
         ['pussy_outline', '短褲顯出陰部輪廓', 'pussy outline'],
         ['cameltoe', '短褲顯出陰唇輪廓', 'cameltoe'],
+        ['butt_crack', '短褲局部露臀溝', 'butt crack'],
+        ['ass_cutout', '短褲臀部挖空', 'ass cutout'],
       ],
       adult: true);
   addMany('skirt', 'wear', [
@@ -4104,6 +4111,9 @@ List<TagItem> _createScopedClothingTags() {
         ],
         ['pussy_outline', '內褲顯出陰部輪廓', 'pussy outline'],
         ['cameltoe', '內褲顯出陰唇輪廓', 'cameltoe'],
+        ['butt_crack', '內褲局部露臀溝', 'butt crack'],
+        ['backless', '露臀式內褲', 'backless panties'],
+        ['ass_cutout', '內褲臀部挖空', 'ass cutout'],
       ],
       adult: true);
   addMany(
@@ -6023,6 +6033,12 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'head_direction'),
       _tag('pose_head_turn_right', '頭部姿勢', '頭轉向右側', 'head turned right', 4,
           conflictGroup: 'head_direction'),
+      _tag('pose_turning_head', '頭部姿勢', '轉頭', 'turning head', 4,
+          conflictGroup: 'head_direction'),
+      _tag('pose_looking_to_side', '頭部姿勢', '看向側邊', 'looking to the side', 4,
+          conflictGroup: 'head_direction'),
+      _tag('pose_looking_back', '頭部姿勢', '回頭望', 'looking back', 4,
+          conflictGroup: 'head_direction'),
 
       // Dynamic actions and sports poses.
       _tag('action_basketball_shooting', '動作', '投籃', 'shooting basketball', 4),
@@ -6093,6 +6109,30 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'object_interaction_mode'),
       _tag('action_leaning_on_object', '動作', '靠著物件', 'leaning on object', 4,
           conflictGroup: 'object_interaction_mode'),
+      _tag('action_object_beside', '動作', '物件放在身旁', 'object beside person', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_object_on_floor_beside', '動作', '物件放在身旁地面',
+          'object on floor beside person', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_fanning_object', '動作', '用物件扇風', 'fanning object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_waving_object', '動作', '揮動物件', 'waving object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_swinging_object', '動作', '揮舞物件', 'swinging object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_spinning_object', '動作', '旋轉物件', 'spinning object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_tossing_object', '動作', '拋起物件', 'tossing object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_catching_object', '動作', '接住物件', 'catching object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_throwing_object', '動作', '投擲物件', 'throwing object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_shaking_object', '動作', '搖動物件', 'shaking object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_pointing_with_object', '動作', '用物件指向', 'pointing with object',
+          4,
+          conflictGroup: 'object_interaction_mode'),
 
       // Common props and handheld objects.
       _tag('object_basketball', '物件', '籃球', 'basketball', 4),
@@ -6129,6 +6169,9 @@ List<TagItem> _seedTags() => [
       _tag('object_fork', '物件', '叉子', 'fork', 4),
       _tag('object_spoon', '物件', '湯匙', 'spoon', 4),
       _tag('object_chopsticks', '物件', '筷子', 'chopsticks', 4),
+      _tag('object_hand_fan', '物件', '手扇', 'hand fan', 4),
+      _tag('object_folding_fan', '物件', '摺扇', 'folding fan', 4),
+      _tag('object_paper_fan', '物件', '紙扇', 'paper fan', 4),
       _tag('object_microphone', '物件', '麥克風', 'microphone', 4),
       _tag('object_guitar', '物件', '吉他', 'guitar', 4),
       _tag('object_violin', '物件', '小提琴', 'violin', 4),
@@ -9539,6 +9582,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return 'lying on ${object.en}';
         case 'action_leaning_on_object':
           return 'leaning on ${object.en}';
+        case 'action_object_beside':
+          return '${object.en} beside person';
+        case 'action_object_on_floor_beside':
+          return '${object.en} on floor beside person';
+        case 'action_fanning_object':
+          return 'fanning ${object.en}';
+        case 'action_waving_object':
+          return 'waving ${object.en}';
+        case 'action_swinging_object':
+          return 'swinging ${object.en}';
+        case 'action_spinning_object':
+          return 'spinning ${object.en}';
+        case 'action_tossing_object':
+          return 'tossing ${object.en}';
+        case 'action_catching_object':
+          return 'catching ${object.en}';
+        case 'action_throwing_object':
+          return 'throwing ${object.en}';
+        case 'action_shaking_object':
+          return 'shaking ${object.en}';
+        case 'action_pointing_with_object':
+          return 'pointing with ${object.en}';
         default:
           return '${mode.en} ${object.en}';
       }
@@ -9566,6 +9631,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return '躺在${object.zh}上';
         case 'action_leaning_on_object':
           return '靠著${object.zh}';
+        case 'action_object_beside':
+          return '${object.zh}放在身旁';
+        case 'action_object_on_floor_beside':
+          return '${object.zh}放在身旁地面';
+        case 'action_fanning_object':
+          return '用${object.zh}扇風';
+        case 'action_waving_object':
+          return '揮動${object.zh}';
+        case 'action_swinging_object':
+          return '揮舞${object.zh}';
+        case 'action_spinning_object':
+          return '旋轉${object.zh}';
+        case 'action_tossing_object':
+          return '拋起${object.zh}';
+        case 'action_catching_object':
+          return '接住${object.zh}';
+        case 'action_throwing_object':
+          return '投擲${object.zh}';
+        case 'action_shaking_object':
+          return '搖動${object.zh}';
+        case 'action_pointing_with_object':
+          return '用${object.zh}指向';
         default:
           return '${mode.zh}${object.zh}';
       }
@@ -13110,7 +13197,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     String? modeId;
     String remainder = '';
-    if (key.startsWith('holding ') && key.endsWith(' overhead')) {
+    if (key.endsWith(' on floor beside person')) {
+      modeId = 'action_object_on_floor_beside';
+      remainder = key
+          .substring(0, key.length - ' on floor beside person'.length)
+          .trim();
+    } else if (key.endsWith(' beside person')) {
+      modeId = 'action_object_beside';
+      remainder = key.substring(0, key.length - ' beside person'.length).trim();
+    } else if (key.startsWith('holding ') && key.endsWith(' overhead')) {
       modeId = 'action_holding_object_overhead';
       remainder = key
           .substring('holding '.length, key.length - ' overhead'.length)
@@ -13120,6 +13215,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'hugging ': 'action_hugging_object',
         'riding ': 'action_riding_object',
         'holding ': 'action_holding_object',
+        'fanning ': 'action_fanning_object',
+        'waving ': 'action_waving_object',
+        'swinging ': 'action_swinging_object',
+        'spinning ': 'action_spinning_object',
+        'tossing ': 'action_tossing_object',
+        'catching ': 'action_catching_object',
+        'throwing ': 'action_throwing_object',
+        'shaking ': 'action_shaking_object',
+        'pointing with ': 'action_pointing_with_object',
         'carrying ': 'action_carrying_object',
         'sitting on ': 'action_sitting_on_object',
         'lying on ': 'action_lying_on_object',

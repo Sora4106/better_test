@@ -1090,6 +1090,8 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     adult: true,
     rows: const [
       ['骨盆前後推動', 'pelvic thrust'],
+      ['女上位・女性主動上下騎乘', 'girl on top, riding, pelvic thrust'],
+      ['背向女上位・女性主動上下騎乘', 'reverse cowgirl, riding, pelvic thrust'],
       ['腰胯磨蹭中', 'humping'],
       ['男性腰部左右擺動', 'male hips swaying from side to side'],
       ['陰莖反覆抽插', 'penis thrusting in and out'],

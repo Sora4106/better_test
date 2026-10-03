@@ -1,7 +1,14 @@
-const appVersion = '1.1.183';
-const appBuildNumber = 185;
-const appVersionLabel = '1.1.183+185';
+const appVersion = '1.1.184';
+const appBuildNumber = 186;
+const appVersionLabel = '1.1.184+186';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.184',
+    'build': '186',
+    'label': '1.1.184+186',
+    'date': '2026-10-03',
+    'notes': '新增物件放置與手持動態、局部服裝露出、頭部回望與女上位主動騎乘動態'
+  },
   {
     'version': '1.1.183',
     'build': '185',
@@ -31,13 +38,5 @@ const appVersionHistory = <Map<String, String>>[
     'label': '1.1.180+182',
     'date': '2026-10-03',
     'notes': '全系統顏色選項統一依色系與深淺排序，涵蓋服裝雙色、細節色、髮色、眼睛、獸人特徵、翅膀、配件、組合標籤與全域搜尋。'
-  },
-  {
-    'version': '1.1.179',
-    'build': '181',
-    'label': '1.1.179+181',
-    'date': '2026-10-03',
-    'notes':
-        '修正銀白髮等舊版角色特徵重複並遷移舊記憶；整理同中文異英文標籤；補齊官方 medium skirt；新增長方形書包與 5 套華麗人偶風服裝；顏色選項改依色系與深淺排列。'
   },
 ];
