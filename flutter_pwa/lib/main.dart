@@ -479,6 +479,8 @@ class _GeneratedOutputTag {
     this.personClothingExtraValue,
     this.personPoseExtraValue,
     this.sharedPoseExtraValue,
+    this.extraPositiveValue,
+    this.prepromptValue,
     this.clothingBlockKey,
   });
 
@@ -493,6 +495,8 @@ class _GeneratedOutputTag {
   final String? personClothingExtraValue;
   final String? personPoseExtraValue;
   final String? sharedPoseExtraValue;
+  final String? extraPositiveValue;
+  final String? prepromptValue;
 
   /// Identifies the garment block that owns this generated clothing phrase.
   /// This is used only when rendering the English prompt, so its individual
@@ -10707,39 +10711,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }..removeWhere((item) => item.isEmpty);
     if (identityValues.contains(value)) return false;
 
-    // Expressions, moods, and generic face-quality terms are dynamic choices.
-    // They must not be silently re-applied as a character's fixed appearance.
-    const dynamicTerms = <String>{
-      'expression',
-      'smile',
-      'melancholic',
-      'energetic',
-      'disciplined',
-      'lively',
-      'mature',
-      'mysterious',
-      'elegant',
-      'refined facial features',
-      'delicate facial features',
-      'sweet face',
-      'cute',
-      'quiet',
-      'tired',
-      'serious',
-      'calm',
-      'distant',
-      'soft',
-      'playful',
-      'lonely',
-      'confident',
-      'stern',
-      'fierce',
-      'relaxed',
-      'emotionless',
-      'tsundere',
-    };
-    return !dynamicTerms.any((term) =>
-        value == term || value.endsWith(' $term') || value.contains('$term '));
+    // The character name/source is emitted as mandatory identity metadata.
+    // Every other catalogue trait is represented by a normal selectable tag
+    // so the picker state is always the single source of truth for output.
+    return true;
   }
 
   void _setCharacterTraitsEnabled(int index, bool enabled) {
@@ -10854,10 +10829,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return groups;
   }
 
-  Set<String> _personOverrideGroups(int index) => _selectedTagsForPerson(index)
-      .expand((tag) => _traitOverrideGroups(tag.en))
-      .toSet();
-
   Set<String> _removedCharacterTagSet(int index) =>
       _removedCharacterTags.putIfAbsent(index, () => <String>{});
 
@@ -10865,19 +10836,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _removedCharacterTagSet(index).contains(_cleanTag(english).toLowerCase());
 
   List<CatalogTagData> _characterTraitsForSlot(PersonSlot slot, int index) {
-    final character = _characterForNew(slot);
-    if (character == null || !slot.characterTraitsEnabled) {
-      return const <CatalogTagData>[];
-    }
-    final replaced = _personOverrideGroups(index);
-    return character.traits
-        .where((trait) => _isStableCharacterTrait(character, trait))
-        .where((trait) =>
-            _traitOverrideGroups(trait.en).intersection(replaced).isEmpty &&
-            !_characterTraitOptions(trait)
-                .any((option) => _personTagIds(index).contains(option.id)) &&
-            !_isRemovedCharacterTag(index, trait.en))
-        .toList();
+    // Character catalogue traits are synchronized into [_personTagIds] by
+    // [_syncCharacterTraitsForSlot]. Do not also emit an invisible fallback
+    // copy here, otherwise output can contain a trait that is not checked in
+    // the UI (or contain the same English trait twice).
+    return const <CatalogTagData>[];
   }
 
   List<String> _characterTokensForSlot(PersonSlot slot, int index) {
@@ -11057,6 +11020,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         tag.personClothingExtraValue ?? '',
         tag.personPoseExtraValue ?? '',
         tag.sharedPoseExtraValue ?? '',
+        tag.extraPositiveValue ?? '',
+        tag.prepromptValue ?? '',
       ].join('|');
       final key =
           '${tag.personIndex ?? -1}|${tag.characterTag}|$owner|${_cleanTag(tag.en).toLowerCase()}';
@@ -11083,6 +11048,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             previous.personPoseExtraValue ?? tag.personPoseExtraValue,
         sharedPoseExtraValue:
             previous.sharedPoseExtraValue ?? tag.sharedPoseExtraValue,
+        extraPositiveValue:
+            previous.extraPositiveValue ?? tag.extraPositiveValue,
+        prepromptValue: previous.prepromptValue ?? tag.prepromptValue,
         clothingBlockKey: previous.clothingBlockKey ?? tag.clothingBlockKey,
       );
     }
@@ -11114,6 +11082,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (outputTag.combinationId != null && outputTag.personIndex != null) {
         _personCombinationIds[outputTag.personIndex!]
             ?.remove(outputTag.combinationId);
+      } else if (outputTag.extraPositiveValue != null) {
+        final values = _extraTags(_extraPositive.text);
+        final target = _cleanTag(outputTag.extraPositiveValue!).toLowerCase();
+        values.removeWhere(
+          (value) => _cleanTag(value).toLowerCase() == target,
+        );
+        _extraPositive.text = values.join(', ');
+        _collectUnknownExtraPositiveTags();
+      } else if (outputTag.prepromptValue != null) {
+        final values = _extraTags(_preprompt.text);
+        final target = _cleanTag(outputTag.prepromptValue!).toLowerCase();
+        values.removeWhere(
+          (value) => _cleanTag(value).toLowerCase() == target,
+        );
+        _preprompt.text = values.join(', ');
       } else if (outputTag.sharedPoseExtraValue != null) {
         final prompts = _poseExtraPrompts(_sharedPoseExtra.text);
         final target = _cleanTag(outputTag.sharedPoseExtraValue!).toLowerCase();
@@ -17580,15 +17563,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             constraints: BoxConstraints(maxHeight: maxOptionsHeight),
             child: SingleChildScrollView(
               primary: false,
-              child: _uniformButtonGrid(
-                minItemWidth: visible.every(_isColorPickerTag) ? 58 : 205,
-                itemHeight: visible.every(_isColorPickerTag) ? 48 : 54,
-                maxColumns: visible.every(_isColorPickerTag) ? 12 : 4,
-                scaleItemHeight: false,
-                children: visible
-                    .map((tag) => _tagChip(tag, personIndex: personIndex))
-                    .toList(),
-              ),
+              child: _tagPickerOptionLayout(visible, personIndex: personIndex),
             ),
           ),
         if (visible.length > 18) ...[
@@ -19928,6 +19903,308 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  bool _isMandatoryCharacterIdentityOutput(_GeneratedOutputTag output) {
+    final personIndex = output.personIndex;
+    if (personIndex == null ||
+        personIndex < 0 ||
+        personIndex >= _personSlots.length) {
+      return false;
+    }
+    final slot = _personSlots[personIndex];
+    final keys = <String>{};
+    if (slot.mode == '動漫角色') {
+      final character = _characterForNew(slot);
+      if (character == null) return false;
+      keys.addAll([
+        character.animeTag,
+        character.unitTag,
+        character.characterTag,
+      ].map(_englishTagKey).where((key) => key.isNotEmpty));
+    } else {
+      keys.addAll([
+        slot.originalAnimeTag,
+        slot.originalCharacterTag,
+      ].map(_englishTagKey).where((key) => key.isNotEmpty));
+    }
+    return keys.contains(_englishTagKey(output.en));
+  }
+
+  List<_GeneratedOutputTag> _stepOutputTags(int stepIndex) {
+    final result = <_GeneratedOutputTag>[];
+
+    if (stepIndex == 0) {
+      result.addAll(_selectedTags
+          .where((tag) => _isSceneVisualPromptGroup(tag.group))
+          .map((tag) => _GeneratedOutputTag(
+                zh: tag.zh,
+                en: tag.en,
+                tagId: tag.id,
+              )));
+    }
+
+    for (var personIndex = 0;
+        personIndex < _personSlots.length;
+        personIndex++) {
+      final identity =
+          _characterOutputTagsForSlot(_personSlots[personIndex], personIndex);
+      final personal = _personPromptTags(personIndex);
+      switch (stepIndex) {
+        case 1:
+          result.addAll(identity.where(_isMandatoryCharacterIdentityOutput));
+          break;
+        case 2:
+          result.addAll(personal.where((tag) => tag.combinationId != null));
+          break;
+        case 3:
+          result.addAll(identity
+              .where((tag) => !_isMandatoryCharacterIdentityOutput(tag)));
+          result.addAll(personal.where((tag) =>
+              tag.combinationId == null && _isCharacterWeightOutputTag(tag)));
+          break;
+        case 4:
+          result.addAll(personal.where((tag) =>
+              tag.combinationId == null && _isClothingWeightOutputTag(tag)));
+          break;
+        case 5:
+          result.addAll(personal.where((tag) =>
+              tag.combinationId == null &&
+              !_isCharacterWeightOutputTag(tag) &&
+              !_isClothingWeightOutputTag(tag)));
+          break;
+      }
+    }
+
+    if (stepIndex == 5) {
+      result.addAll(_selectedTags
+          .where((tag) => _isSharedActionGroup(tag.group))
+          .map((tag) => _GeneratedOutputTag(
+                zh: tag.zh,
+                en: tag.en,
+                tagId: tag.id,
+              )));
+      result.addAll(_sharedPoseExtraOutputTags());
+    }
+
+    if (stepIndex == 6) {
+      result.addAll(_selectedTags
+          .where((tag) =>
+              !_isSceneVisualPromptGroup(tag.group) &&
+              !_isSharedActionGroup(tag.group))
+          .map((tag) => _GeneratedOutputTag(
+                zh: tag.zh,
+                en: tag.en,
+                tagId: tag.id,
+              )));
+      result.addAll(_extraTags(_extraPositive.text).map(
+        (value) => _GeneratedOutputTag(
+          zh: _positiveChineseTag(value),
+          en: _positiveEnglishTag(value),
+          extraPositiveValue: value,
+        ),
+      ));
+      result.addAll(_extraTags(_preprompt.text).map(
+        (value) => _GeneratedOutputTag(
+          zh: _positiveChineseTag(value),
+          en: value,
+          prepromptValue: value,
+        ),
+      ));
+    }
+
+    return _deduplicateGeneratedOutputTags(result);
+  }
+
+  String _stepPersonOuterBlock(int personIndex, List<String> segments) {
+    final visibleSegments =
+        segments.where((segment) => segment.trim().isNotEmpty).toList();
+    if (visibleSegments.isEmpty) return '';
+    final slot = _personSlots[personIndex];
+    final suffix = slot.promptWeightEnabled
+        ? ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}'
+        : '';
+    return '(${visibleSegments.join('. ')}$suffix).';
+  }
+
+  String _stepEnglishOutput(int stepIndex, List<_GeneratedOutputTag> tags) {
+    final output = <String>[];
+    final trailingPersonTags = <_GeneratedOutputTag>[];
+    if (stepIndex == 1) {
+      output.addAll(_peopleTokensNew().map((value) => '$value.'));
+    }
+
+    for (var personIndex = 0;
+        personIndex < _personSlots.length;
+        personIndex++) {
+      final personal =
+          tags.where((tag) => tag.personIndex == personIndex).toList();
+      if (personal.isEmpty) continue;
+      final blockTags = stepIndex == 5
+          ? personal
+              .where((tag) => !_isFinalPersonOutputTag(personIndex, tag))
+              .toList()
+          : personal;
+      if (stepIndex == 5) {
+        trailingPersonTags.addAll(
+          personal.where((tag) => _isFinalPersonOutputTag(personIndex, tag)),
+        );
+      }
+      if (blockTags.isEmpty) continue;
+      final segments = <String>[];
+      if (stepIndex == 3) {
+        final hair = blockTags
+            .where((tag) => _isHairPromptOutputTag(personIndex, tag))
+            .toList();
+        final features = blockTags
+            .where((tag) => !_isHairPromptOutputTag(personIndex, tag))
+            .toList();
+        segments.add(_promptTagBlock(features));
+        if (hair.isNotEmpty) {
+          final slot = _personSlots[personIndex];
+          segments.add(_promptTagBlock(
+            hair,
+            weight: slot.hairPromptWeightEnabled ? slot.hairPromptWeight : null,
+          ));
+        }
+      } else if (stepIndex == 4) {
+        segments.add(_groupedClothingPromptBlock(blockTags));
+      } else {
+        segments.add(_promptTagBlock(blockTags));
+      }
+      final block = _stepPersonOuterBlock(personIndex, segments);
+      if (block.isNotEmpty) output.add(block);
+    }
+
+    final shared = <_GeneratedOutputTag>[
+      ...trailingPersonTags,
+      ...tags.where((tag) => tag.personIndex == null),
+    ];
+    final seenShared = <String>{};
+    for (final tag in shared) {
+      final value = _moderationSafePromptTag(tag.en);
+      if (value.isNotEmpty && seenShared.add(value.toLowerCase())) {
+        output.add('$value.');
+      }
+    }
+    return output.join(' ');
+  }
+
+  Widget _stepSelectionOutput(int stepIndex) {
+    final tags = _stepOutputTags(stepIndex);
+    final english = _stepEnglishOutput(stepIndex, tags);
+    final tone = _pickerLayerTone(
+      switch (stepIndex) {
+        0 => _indoorSceneGroup,
+        1 => '角色標籤',
+        2 => '組合標籤',
+        3 => '身體特徵',
+        4 => '上衣',
+        5 => '動作',
+        _ => '品質',
+      },
+    );
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: tone.withValues(alpha: .08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tone.withValues(alpha: .55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.fact_check_outlined, size: 18),
+              SizedBox(width: 7),
+              Text('本大項已選中文標籤', style: TextStyle(fontWeight: FontWeight.w800)),
+            ],
+          ),
+          const SizedBox(height: 8),
+          if (stepIndex == 1)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 7),
+              child: Text(
+                '人物數量：${_peopleZhNew()}',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          if (tags.isEmpty)
+            Text(
+              stepIndex == 2 ? '尚無組合額外標籤；套用後的既有標籤會顯示在各自所屬大項。' : '本大項目前沒有已選標籤。',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            )
+          else
+            Wrap(
+              spacing: 6,
+              runSpacing: 5,
+              children: tags.map((tag) {
+                final locked =
+                    stepIndex == 1 && _isMandatoryCharacterIdentityOutput(tag);
+                final personPrefix = tag.personIndex == null
+                    ? ''
+                    : '人物 ${tag.personIndex! + 1} · ';
+                return Tooltip(
+                  message: locked ? '${tag.en}（角色名稱必定保留）' : tag.en,
+                  child: InputChip(
+                    avatar: locked
+                        ? const Icon(Icons.lock_outline, size: 15)
+                        : null,
+                    label: Text('$personPrefix${tag.zh}'),
+                    deleteIcon: const Icon(Icons.close, size: 16),
+                    onDeleted:
+                        locked ? null : () => _removeGeneratedOutputTag(tag),
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: _pickerLayerSurface(tone, selected: false),
+                    side: BorderSide(color: tone.withValues(alpha: .75)),
+                  ),
+                );
+              }).toList(),
+            ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Expanded(
+                child: Text('本大項英文輸出（保留括號位置）',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+              ),
+              IconButton(
+                tooltip: '複製本大項英文',
+                visualDensity: VisualDensity.compact,
+                onPressed: english.isEmpty
+                    ? null
+                    : () => _copy(english, '本大項英文標籤', showFeedback: true),
+                icon: const Icon(Icons.copy_all_outlined, size: 19),
+              ),
+            ],
+          ),
+          Container(
+            width: double.infinity,
+            constraints: const BoxConstraints(minHeight: 54),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: Theme.of(context).colorScheme.surface,
+              borderRadius: BorderRadius.circular(9),
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            child: SelectableText(
+              english.ifEmpty('本大項目前沒有英文輸出。'),
+              style: const TextStyle(fontFamily: 'monospace', fontSize: 12),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _stepCard(
       int index, String title, String summary, IconData icon, Widget child,
       {VoidCallback? onClear}) {
@@ -19940,7 +20217,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (_stepIndex == index) const Divider(height: 1),
         if (_stepIndex == index)
           Padding(
-              padding: const EdgeInsets.fromLTRB(18, 16, 18, 18), child: child),
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                child,
+                const SizedBox(height: 16),
+                const Divider(),
+                const SizedBox(height: 10),
+                _stepSelectionOutput(index),
+              ],
+            ),
+          ),
       ]),
     );
   }
@@ -20067,6 +20355,59 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .toList(),
         );
       },
+    );
+  }
+
+  Widget _denseColorTagGrid(
+    List<TagItem> tags, {
+    int? personIndex,
+  }) {
+    if (tags.isEmpty) return const SizedBox.shrink();
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
+        children: tags
+            .map(
+              (tag) => SizedBox(
+                width: 58,
+                height: 48,
+                child: _tagChip(tag, personIndex: personIndex),
+              ),
+            )
+            .toList(),
+      ),
+    );
+  }
+
+  /// Text labels keep the existing readable equal-width grid. Colour-only
+  /// swatches are split into their own compact flow so a tiny circle never
+  /// consumes a full text-label column or leaves large empty gaps.
+  Widget _tagPickerOptionLayout(
+    List<TagItem> tags, {
+    int? personIndex,
+  }) {
+    final regularTags = tags.where((tag) => !_isColorPickerTag(tag)).toList();
+    final colorTags = tags.where(_isColorPickerTag).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (regularTags.isNotEmpty)
+          _uniformButtonGrid(
+            minItemWidth: 205,
+            itemHeight: 54,
+            maxColumns: 4,
+            scaleItemHeight: false,
+            children: regularTags
+                .map((tag) => _tagChip(tag, personIndex: personIndex))
+                .toList(),
+          ),
+        if (regularTags.isNotEmpty && colorTags.isNotEmpty)
+          const SizedBox(height: 8),
+        if (colorTags.isNotEmpty)
+          _denseColorTagGrid(colorTags, personIndex: personIndex),
+      ],
     );
   }
 
@@ -22020,36 +22361,34 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     required VoidCallback onCopy,
     int maxLines = 4,
   }) {
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
-              IconButton(
-                tooltip: '複製',
-                onPressed: value.isEmpty ? null : onCopy,
-                icon: const Icon(Icons.copy_all_outlined),
-              ),
-            ],
-          ),
-          TextField(
-            controller: TextEditingController(text: value),
-            readOnly: true,
-            maxLines: maxLines,
-            decoration: const InputDecoration(
-              filled: true,
-              border: OutlineInputBorder(),
             ),
+            IconButton(
+              tooltip: '複製',
+              onPressed: value.isEmpty ? null : onCopy,
+              icon: const Icon(Icons.copy_all_outlined),
+            ),
+          ],
+        ),
+        TextField(
+          controller: TextEditingController(text: value),
+          readOnly: true,
+          maxLines: maxLines,
+          decoration: const InputDecoration(
+            filled: true,
+            border: OutlineInputBorder(),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -22057,91 +22396,94 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final generated = _generatedPositiveTags();
     final extra = _extraPositive.text.trim();
     final preprompt = _preprompt.text.trim();
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Expanded(
-                child: Text(
-                  '中文翻譯與記憶欄位',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Expanded(
+              child: Text(
+                '中文翻譯與記憶欄位',
+                style: TextStyle(fontWeight: FontWeight.w700),
               ),
-              IconButton(
-                tooltip: '複製',
-                onPressed: _positiveZh.isEmpty
-                    ? null
-                    : () => _copy(_positiveZh, '中文欄位'),
-                icon: const Icon(Icons.copy_all_outlined),
-              ),
-            ],
-          ),
-          Container(
-            width: double.infinity,
-            constraints: const BoxConstraints(minHeight: 150),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Theme.of(context).inputDecorationTheme.fillColor ??
-                  Theme.of(context).colorScheme.surface,
-              border: Border.all(
-                color: Theme.of(context).colorScheme.outline,
-              ),
-              borderRadius: BorderRadius.circular(12),
             ),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '人物數量：${_peopleZhNew()}',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      fontSize: 12,
-                    ),
+            IconButton(
+              tooltip: '複製',
+              onPressed:
+                  _positiveZh.isEmpty ? null : () => _copy(_positiveZh, '中文欄位'),
+              icon: const Icon(Icons.copy_all_outlined),
+            ),
+          ],
+        ),
+        Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 150),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).inputDecorationTheme.fillColor ??
+                Theme.of(context).colorScheme.surface,
+            border: Border.all(
+              color: Theme.of(context).colorScheme.outline,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '人物數量：${_peopleZhNew()}',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontSize: 12,
                   ),
-                  if (generated.isNotEmpty) ...[
-                    const SizedBox(height: 9),
-                    Wrap(
-                      spacing: 7,
-                      runSpacing: 7,
-                      children: generated.map((tag) {
-                        return Tooltip(
-                          message: tag.en,
-                          child: InputChip(
-                            label: Text(tag.zh),
-                            deleteIcon: const Icon(Icons.close, size: 16),
-                            onDeleted: () => _removeGeneratedOutputTag(tag),
-                            backgroundColor: _buttonSurface,
-                            side: const BorderSide(color: _buttonBorder),
-                            labelStyle: const TextStyle(color: Colors.white),
-                            deleteIconColor: Colors.white,
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ],
-                  if (extra.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      '額外正向敘述：${_extraTags(extra).map(_positiveChineseTag).join('、')}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
-                  if (preprompt.isNotEmpty) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      'Amanatsu 品質前綴：${_extraTags(preprompt).map(_positiveChineseTag).join('、')}',
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                  ],
+                ),
+                if (generated.isNotEmpty) ...[
+                  const SizedBox(height: 9),
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: generated.map((tag) {
+                      final locked = _isMandatoryCharacterIdentityOutput(tag);
+                      return Tooltip(
+                        message: locked ? '${tag.en}（角色名稱必定保留）' : tag.en,
+                        child: InputChip(
+                          avatar: locked
+                              ? const Icon(Icons.lock_outline, size: 15)
+                              : null,
+                          label: Text(tag.zh),
+                          deleteIcon: const Icon(Icons.close, size: 16),
+                          onDeleted: locked
+                              ? null
+                              : () => _removeGeneratedOutputTag(tag),
+                          backgroundColor: _buttonSurface,
+                          side: const BorderSide(color: _buttonBorder),
+                          labelStyle: const TextStyle(color: Colors.white),
+                          deleteIconColor: Colors.white,
+                        ),
+                      );
+                    }).toList(),
+                  ),
                 ],
-              ),
+                if (extra.isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  Text(
+                    '額外正向敘述：${_extraTags(extra).map(_positiveChineseTag).join('、')}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+                if (preprompt.isNotEmpty) ...[
+                  const SizedBox(height: 6),
+                  Text(
+                    'Amanatsu 品質前綴：${_extraTags(preprompt).map(_positiveChineseTag).join('、')}',
+                    style: const TextStyle(fontSize: 12),
+                  ),
+                ],
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -22193,29 +22535,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ],
             ),
             const SizedBox(height: 12),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final narrow = constraints.maxWidth < 690;
-                final english = _outputField(
-                  'English prompt · 可直接貼上',
-                  _positiveText,
-                  onCopy: () =>
-                      _copy(_positiveText, '英文正向標籤', showFeedback: true),
-                  maxLines: 6,
-                );
-                final chinese = _chineseOutputField();
-                return narrow
-                    ? Column(
-                        children: [
-                          english,
-                          const SizedBox(height: 12),
-                          chinese,
-                        ],
-                      )
-                    : Row(
-                        children: [english, const SizedBox(width: 14), chinese],
-                      );
-              },
+            _chineseOutputField(),
+            const SizedBox(height: 12),
+            _outputField(
+              'English prompt · 可直接貼上',
+              _positiveText,
+              onCopy: () => _copy(_positiveText, '英文正向標籤', showFeedback: true),
+              maxLines: 6,
             ),
             const SizedBox(height: 12),
             Container(

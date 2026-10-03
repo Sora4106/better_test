@@ -1,7 +1,15 @@
-const appVersion = '1.1.181';
-const appBuildNumber = 183;
-const appVersionLabel = '1.1.181+183';
+const appVersion = '1.1.182';
+const appBuildNumber = 184;
+const appVersionLabel = '1.1.182+184';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.182',
+    'build': '184',
+    'label': '1.1.182+184',
+    'date': '2026-10-03',
+    'notes':
+        '重整顏色選擇版面：顏色色塊改為獨立密集排列，文字標籤維持原有寬度。; 角色名稱固定保留，其餘角色原始特徵統一同步成可勾選標籤，移除隱藏與重複輸出。; 七個大項新增各自的中文可刪除標籤與含括號英文預覽；綜合輸出改為中文在上、英文在下。'
+  },
   {
     'version': '1.1.181',
     'build': '183',
@@ -31,12 +39,5 @@ const appVersionHistory = <Map<String, String>>[
     'label': '1.1.178+180',
     'date': '2026-10-02',
     'notes': '修正文字放大後標籤網格列高被二次放大的問題；一般標籤列改為54像素緊湊高度，移除大片上下空白並保留兩行文字。'
-  },
-  {
-    'version': '1.1.177',
-    'build': '179',
-    'label': '1.1.177+179',
-    'date': '2026-10-02',
-    'notes': '進一步縮小標籤、分類、影片選項及搜尋結果的上下列間距，左右間距維持原設定。'
   },
 ];
