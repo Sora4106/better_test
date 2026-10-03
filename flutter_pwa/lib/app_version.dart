@@ -1,7 +1,15 @@
-const appVersion = '1.1.180';
-const appBuildNumber = 182;
-const appVersionLabel = '1.1.180+182';
+const appVersion = '1.1.181';
+const appBuildNumber = 183;
+const appVersionLabel = '1.1.181+183';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.181',
+    'build': '183',
+    'label': '1.1.181+183',
+    'date': '2026-10-03',
+    'notes':
+        '重構圖片工作區導覽：7 個大項集中於圖片／影片切換下方並以兩列顯示，頁面只建立目前選中的單一內容區；左側導覽同步切換並對齊內容頂端，新增中段與底部回頂端按鈕。'
+  },
   {
     'version': '1.1.180',
     'build': '182',
@@ -30,12 +38,5 @@ const appVersionHistory = <Map<String, String>>[
     'label': '1.1.177+179',
     'date': '2026-10-02',
     'notes': '進一步縮小標籤、分類、影片選項及搜尋結果的上下列間距，左右間距維持原設定。'
-  },
-  {
-    'version': '1.1.176',
-    'build': '178',
-    'label': '1.1.176+178',
-    'date': '2026-10-02',
-    'notes': '全站文字統一放大為原本1.5倍；標籤網格、影片按鈕與左側步驟列同步自適應高度與寬度，避免文字裁切。'
   },
 ];

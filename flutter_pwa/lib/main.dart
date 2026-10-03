@@ -6498,6 +6498,34 @@ class PromptBuilderApp extends StatefulWidget {
 }
 
 class _PromptBuilderAppState extends State<PromptBuilderApp> {
+  static const _imageStepTitles = <String>[
+    '場景與畫面',
+    '角色資料',
+    '組合標籤',
+    '固定角色外觀',
+    '服裝與穿脫',
+    '姿勢與互動',
+    '品質與負面',
+  ];
+  static const _imageStepShortTitles = <String>[
+    '場景',
+    '角色',
+    '組合',
+    '特徵',
+    '服裝',
+    '姿勢',
+    '品質',
+  ];
+  static const _imageStepIcons = <IconData>[
+    Icons.landscape_outlined,
+    Icons.badge_outlined,
+    Icons.auto_awesome_motion_outlined,
+    Icons.face_retouching_natural,
+    Icons.checkroom_outlined,
+    Icons.accessibility_new,
+    Icons.tune,
+  ];
+
   late final List<TagItem> _builtIns = _seedTags();
   late final List<TagItem> _supplemental = [
     ...supplementalTags,
@@ -9763,7 +9791,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _restore();
         if (!mounted) return;
         setState(() => _isPreparingCatalog = false);
-        unawaited(_scrollToStep(_stepIndex));
       });
     });
   }
@@ -13400,7 +13427,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _preprompt.clear();
       _persist();
     });
-    unawaited(_scrollToStep(0));
+    _scrollToPageTop();
   }
 
   Future<void> _clearStepTags(int index) async {
@@ -19742,6 +19769,34 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  void _scrollToPageTop() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    ++_stepScrollTicket;
+    setState(() => _pageBottomPadding = _basePageBottomPadding);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_pageScrollController.hasClients) return;
+      unawaited(_pageScrollController.animateTo(
+        _pageScrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+      ));
+    });
+  }
+
+  Widget _backToTopButton() {
+    return Align(
+      alignment: Alignment.centerRight,
+      child: FilledButton.tonalIcon(
+        onPressed: _scrollToPageTop,
+        icon: const Icon(Icons.vertical_align_top, size: 18),
+        label: const Text(
+          '回到最上方',
+          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+
   void _scrollToOutput() {
     final ticket = ++_stepScrollTicket;
     setState(() => _pageBottomPadding = _basePageBottomPadding);
@@ -19834,30 +19889,34 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return InkWell(
       onTap: () => _openStep(index),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         child: Row(children: [
-          CircleAvatar(radius: 15, child: Text('${index + 1}')),
-          const SizedBox(width: 12),
+          CircleAvatar(
+            radius: 13,
+            child: Text('${index + 1}', style: const TextStyle(fontSize: 11)),
+          ),
+          const SizedBox(width: 9),
           Icon(icon,
-              size: 20,
+              size: 18,
               color: expanded
                   ? Theme.of(context).colorScheme.primary
                   : Theme.of(context).colorScheme.onSurfaceVariant),
-          const SizedBox(width: 9),
+          const SizedBox(width: 7),
           Expanded(
               child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                 Text(title,
-                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                    style: const TextStyle(
+                        fontSize: 13, fontWeight: FontWeight.w800)),
                 Text(summary,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 10,
                         color: Theme.of(context).colorScheme.onSurfaceVariant))
               ])),
-          Icon(expanded ? Icons.expand_less : Icons.expand_more),
+          Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 18),
           if (onClear != null)
             IconButton(
               tooltip: '清除本大項標籤',
@@ -20588,15 +20647,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted || !_pageScrollController.hasClients) return;
-      if (_workspaceMode == 'image') {
-        unawaited(_scrollToStep(_stepIndex));
-      } else {
-        _pageScrollController.animateTo(
-          _pageScrollController.position.minScrollExtent,
-          duration: const Duration(milliseconds: 240),
-          curve: Curves.easeOutCubic,
-        );
-      }
+      _pageScrollController.animateTo(
+        _pageScrollController.position.minScrollExtent,
+        duration: const Duration(milliseconds: 240),
+        curve: Curves.easeOutCubic,
+      );
     });
   }
 
@@ -20643,6 +20698,81 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _imageStepNavigation() {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 680;
+        final scheme = Theme.of(context).colorScheme;
+        return Card(
+          margin: EdgeInsets.zero,
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: _imageStepTitles.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 4,
+                mainAxisExtent: compact ? 58 : 50,
+                crossAxisSpacing: 6,
+                mainAxisSpacing: 6,
+              ),
+              itemBuilder: (context, index) {
+                final selected = _stepIndex == index;
+                return FilledButton(
+                  style: FilledButton.styleFrom(
+                    elevation: 0,
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compact ? 4 : 9,
+                      vertical: 4,
+                    ),
+                    backgroundColor: selected
+                        ? scheme.primaryContainer
+                        : scheme.surfaceContainerHighest,
+                    foregroundColor: selected
+                        ? scheme.onPrimaryContainer
+                        : scheme.onSurfaceVariant,
+                    side: BorderSide(
+                      color: selected ? scheme.primary : scheme.outlineVariant,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                  ),
+                  onPressed: () => _openStep(index),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (!compact) ...[
+                        Icon(_imageStepIcons[index], size: 16),
+                        const SizedBox(width: 6),
+                      ],
+                      Flexible(
+                        child: Text(
+                          compact
+                              ? _imageStepTitles[index]
+                              : '${index + 1} ${_imageStepTitles[index]}',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: compact ? 10 : 11.5,
+                            height: 1.08,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -21552,8 +21682,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _progressiveBuilder() {
-    return Column(children: [
-      _stepCard(
+    final steps = <Widget Function()>[
+      () => _stepCard(
           0,
           '場景與畫面',
           _selectedTags
@@ -21591,14 +21721,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ],
           ),
           onClear: () => _clearStepTags(0)),
-      _stepCard(
+      () => _stepCard(
           1,
           '角色資料',
           _characterChineseNew().join('、').ifEmpty('每個人物都要設定或選擇不需細節'),
           Icons.badge_outlined,
           _stepCharacters(),
           onClear: () => _clearStepTags(1)),
-      _stepCard(
+      () => _stepCard(
           2,
           '\u7D44\u5408\u6A19\u7C64',
           _combinations.isEmpty
@@ -21607,7 +21737,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Icons.auto_awesome_motion_outlined,
           _stepCombinations(),
           onClear: () => _clearStepTags(2)),
-      _stepCard(
+      () => _stepCard(
           3,
           '固定角色外觀',
           _fixedCharacterFeatureSummaryZh()
@@ -21633,7 +21763,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               instruction:
                   '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸耳、獸尾、獸手、獸足、翅膀與額外特徵。獸化部位及翅膀的顏色都放在各自特徵內，並自動合併成中英文提示詞；全身毛茸茸 furry 與 anthro 必須自行選擇，不會因耳尾自動加入。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
           onClear: () => _clearStepTags(3)),
-      _stepCard(
+      () => _stepCard(
           4,
           '服裝與穿脫狀態',
           _personSelectedIds.values
@@ -21680,7 +21810,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Icons.checkroom_outlined,
           _stepClothing(),
           onClear: () => _clearStepTags(4)),
-      _stepCard(
+      () => _stepCard(
           5,
           '姿勢、互動與成人分類',
           _personSelectedIds.values
@@ -21698,10 +21828,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               instruction:
                   '依序選頭部、上半身、下半身、全身姿勢，再選物件或人物互動；成人性姿勢與道具集中在最後。每位人物會保留自己的動作與互動。'),
           onClear: () => _clearStepTags(5)),
-      _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示', Icons.tune,
-          _stepFinal(),
+      () => _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示',
+          Icons.tune, _stepFinal(),
           onClear: () => _clearStepTags(6)),
-    ]);
+    ];
+    final index = _stepIndex.clamp(0, steps.length - 1).toInt();
+    return steps[index]();
   }
 
   // ignore: unused_element
@@ -22264,15 +22396,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         isImageWorkspace ? (showSideStepNames ? 158.0 : 50.0) : 0.0;
     final contentLeftPadding =
         isImageWorkspace ? max(sideStepRailWidth + 14, 72.0) : 16.0;
-    const sideStepNames = <String>[
-      '場景',
-      '角色',
-      '組合',
-      '特徵',
-      '服裝',
-      '姿勢',
-      '品質',
-    ];
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 22,
@@ -22326,6 +22449,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 constraints: const BoxConstraints(maxWidth: 1120),
                 child: _workspaceModeSelector(),
               ),
+              if (isImageWorkspace) ...[
+                const SizedBox(height: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _imageStepNavigation(),
+                ),
+              ],
               const SizedBox(height: 12),
               if (isImageWorkspace) ...[
                 ConstrainedBox(
@@ -22344,6 +22474,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 ),
                 const SizedBox(height: 6),
                 ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _backToTopButton(),
+                ),
+                const SizedBox(height: 6),
+                ConstrainedBox(
                   key: _outputKey,
                   constraints: const BoxConstraints(maxWidth: 1120),
                   child: _outputPanel(),
@@ -22352,6 +22487,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 1120),
                   child: _memoryPanel(),
+                ),
+                const SizedBox(height: 10),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1120),
+                  child: _backToTopButton(),
                 ),
               ] else
                 ConstrainedBox(
@@ -22404,7 +22544,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                         child: Align(
                                           alignment: Alignment.centerLeft,
                                           child: Text(
-                                            '${index + 1}  ${sideStepNames[index]}',
+                                            '${index + 1}  ${_imageStepShortTitles[index]}',
                                             maxLines: 1,
                                             style: const TextStyle(
                                                 fontSize: 12,
@@ -22420,7 +22560,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                       padding: EdgeInsets.zero,
                                       visualDensity: VisualDensity.compact,
                                       tooltip:
-                                          '${index + 1} ${sideStepNames[index]}',
+                                          '${index + 1} ${_imageStepShortTitles[index]}',
                                       onPressed: () => _openStep(index),
                                       icon: Text('${index + 1}',
                                           style: const TextStyle(
