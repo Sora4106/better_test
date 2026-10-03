@@ -1,7 +1,14 @@
-const appVersion = '1.1.179';
-const appBuildNumber = 181;
-const appVersionLabel = '1.1.179+181';
+const appVersion = '1.1.180';
+const appBuildNumber = 182;
+const appVersionLabel = '1.1.180+182';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.180',
+    'build': '182',
+    'label': '1.1.180+182',
+    'date': '2026-10-03',
+    'notes': '全系統顏色選項統一依色系與深淺排序，涵蓋服裝雙色、細節色、髮色、眼睛、獸人特徵、翅膀、配件、組合標籤與全域搜尋。'
+  },
   {
     'version': '1.1.179',
     'build': '181',
@@ -30,12 +37,5 @@ const appVersionHistory = <Map<String, String>>[
     'label': '1.1.176+178',
     'date': '2026-10-02',
     'notes': '全站文字統一放大為原本1.5倍；標籤網格、影片按鈕與左側步驟列同步自適應高度與寬度，避免文字裁切。'
-  },
-  {
-    'version': '1.1.175',
-    'build': '177',
-    'label': '1.1.175+177',
-    'date': '2026-10-02',
-    'notes': '縮小標籤網格的上下左右間距與按鈕內距；移除標籤上的官方、既有與描述文字前綴，僅保留來源小圖示。'
   },
 ];

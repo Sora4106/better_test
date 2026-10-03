@@ -3814,10 +3814,7 @@ List<TagItem> _createScopedClothingTags() {
       add(slot, 'material', material[0], '${material[1]}\u6750\u8CEA',
           '${material[2]} material $noun');
     }
-    final colorOptions = <List<String>>[
-      ..._clothingColors.map((color) => [color[0], color[1], color[0]]),
-      ..._clothingColorShades,
-    ];
+    final colorOptions = _allClothingColorOptions();
     for (final color in colorOptions) {
       add(slot, 'detail_color', color[0], '${color[1]}\u7D30\u7BC0\u8272',
           '${color[2]} detail color $noun');
@@ -3990,18 +3987,18 @@ List<TagItem> _createScopedClothingTags() {
 
 const _clothingColors = <List<String>>[
   ['black', '\u9ED1\u8272'],
+  ['gray', '\u7070\u8272'],
+  ['silver', '\u9280\u8272'],
   ['white', '\u767D\u8272'],
   ['red', '\u7D05\u8272'],
-  ['blue', '\u85CD\u8272'],
   ['pink', '\u7C89\u7D05\u8272'],
-  ['purple', '\u7D2B\u8272'],
-  ['green', '\u7DA0\u8272'],
-  ['yellow', '\u9EC3\u8272'],
-  ['brown', '\u68D5\u8272'],
-  ['gray', '\u7070\u8272'],
-  ['gold', '\u91D1\u8272'],
-  ['silver', '\u9280\u8272'],
   ['orange', '\u6A59\u8272'],
+  ['brown', '\u68D5\u8272'],
+  ['yellow', '\u9EC3\u8272'],
+  ['gold', '\u91D1\u8272'],
+  ['green', '\u7DA0\u8272'],
+  ['blue', '\u85CD\u8272'],
+  ['purple', '\u7D2B\u8272'],
   ['multicolored', '\u591A\u5F69'],
 ];
 
@@ -4091,7 +4088,7 @@ List<List<String>> _allClothingColorOptions() {
   for (final color in _clothingColorShades) {
     if (seen.add(color[0])) options.add(color);
   }
-  return options;
+  return _sortPromptColorOptions(options);
 }
 
 const _promptColorChinese = <String, String>{
@@ -4303,6 +4300,65 @@ const _promptColorTypeOrder = <String>[
   'multicolored',
 ];
 
+/// Finds the primary colour phrase used to order a colour option.
+///
+/// The earliest phrase wins, so a combined option such as `pink and white`
+/// stays with the pink family. When phrases begin at the same location, the
+/// longest one wins so `light blue` is never reduced to plain `blue`.
+String? _promptColorSortPhraseFromText(String value) {
+  final normalized = value
+      .trim()
+      .toLowerCase()
+      .replaceAll('_', ' ')
+      .replaceAll(RegExp(r'\s+'), ' ');
+  if (normalized.isEmpty) return null;
+
+  String? best;
+  var bestStart = normalized.length + 1;
+  for (final color in _promptColorTypeOrder) {
+    final match = RegExp(
+      r'(^|\s)' + RegExp.escape(color) + r'(?=\s|$)',
+      caseSensitive: false,
+    ).firstMatch(normalized);
+    if (match == null) continue;
+    final start = match.start + (match.group(1)?.length ?? 0);
+    if (start < bestStart ||
+        (start == bestStart && (best == null || color.length > best.length))) {
+      best = color;
+      bestStart = start;
+    }
+  }
+  return best;
+}
+
+int _promptColorSortIndex(String? color) {
+  if (color == null) return _promptColorTypeOrder.length;
+  final index = _promptColorTypeOrder.indexOf(color);
+  return index < 0 ? _promptColorTypeOrder.length : index;
+}
+
+int _comparePromptColorText(String first, String second) {
+  final firstIndex =
+      _promptColorSortIndex(_promptColorSortPhraseFromText(first));
+  final secondIndex =
+      _promptColorSortIndex(_promptColorSortPhraseFromText(second));
+  final colorCompare = firstIndex.compareTo(secondIndex);
+  if (colorCompare != 0) return colorCompare;
+  return first.toLowerCase().compareTo(second.toLowerCase());
+}
+
+List<List<String>> _sortPromptColorOptions(
+  Iterable<List<String>> source,
+) {
+  final options = source.map((option) => List<String>.from(option)).toList();
+  options.sort((first, second) {
+    final firstEnglish = first.length >= 3 ? first[2] : first.first;
+    final secondEnglish = second.length >= 3 ? second[2] : second.first;
+    return _comparePromptColorText(firstEnglish, secondEnglish);
+  });
+  return options;
+}
+
 const _promptColorValues = <String, Color>{
   'black': Color(0xff17171c),
   'white': Color(0xfff5f5f5),
@@ -4398,7 +4454,9 @@ List<TagItem> _clothingColorTags(
   String conflictGroup, {
   bool adult = false,
 }) {
-  return _clothingColors
+  return _sortPromptColorOptions(
+    _clothingColors.map((color) => [color[0], color[1], color[0]]),
+  )
       .map((color) => _tag(
             '${prefix}_${color[0]}',
             group,
@@ -4423,7 +4481,9 @@ List<TagItem> _missingLegacyClothingColorTags() {
     'yellow',
     'multicolored',
   };
-  return _clothingColors
+  return _sortPromptColorOptions(
+    _clothingColors.map((color) => [color[0], color[1], color[0]]),
+  )
       .where((color) => !existingColors.contains(color[0]))
       .map((color) => _tag(
             'clothing_color_${color[0]}',
@@ -4443,7 +4503,9 @@ List<TagItem> _eyeColorTags() {
     'red': 'trait_red_eyes',
     'purple': 'trait_purple_eyes',
   };
-  return _clothingColors
+  return _sortPromptColorOptions(
+    _clothingColors.map((color) => [color[0], color[1], color[0]]),
+  )
       .map((color) => _tag(
             legacyIds[color[0]] ?? 'eye_color_${color[0]}',
             '眼睛',
@@ -4463,7 +4525,7 @@ List<TagItem> _clothingColorShadeTags(
   String conflictGroup, {
   bool adult = false,
 }) {
-  return _clothingColorShades
+  return _sortPromptColorOptions(_clothingColorShades)
       .map((color) => _tag(
             '${prefix}_${color[0]}',
             group,
@@ -4561,7 +4623,7 @@ List<TagItem> _accessoryPositionTags() => _extraFeaturePositionTags()
     .toList();
 
 List<TagItem> _hairColorShadeTags() {
-  return _clothingColorShades
+  return _sortPromptColorOptions(_clothingColorShades)
       .map((color) => _tag(
             'trait_${color[0]}_hair',
             '\u9AEE\u8272',
@@ -6608,6 +6670,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    // Keep every cached colour collection in the same family/depth order.
+    // This also covers callers that read a group directly instead of going
+    // through the normal step picker (for example clothing pair controls,
+    // combination dialogs, animal traits, wings, hair and eye colours).
+    for (final entry in byGroup.entries) {
+      if (entry.value.any(_isColorPickerTag)) {
+        _sortPickerTags(entry.value, entry.key);
+      }
+    }
+
     _allTagsCache = tags;
     _tagByIdCache = byId;
     _tagByEnglishCache = byEnglish;
@@ -8112,7 +8184,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (seen.add(_clothingColorChoiceKey(tag))) choices.add(tag);
       }
     }
-    choices.sort(_compareOutputTags);
+    choices.sort(_compareColorPickerTags);
     return choices;
   }
 
@@ -14743,7 +14815,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final groupOrder =
           _wizardGroupLabel(a.group).compareTo(_wizardGroupLabel(b.group));
       if (groupOrder != 0) return groupOrder;
-      return a.en.compareTo(b.en);
+      if (_isColorPickerTag(a) && _isColorPickerTag(b)) {
+        return _compareColorPickerTags(a, b);
+      }
+      return _compareOutputTags(a, b);
     });
     return options;
   }
@@ -15871,35 +15946,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String? _pickerColorSortPhrase(TagItem tag) {
     if (!_isColorPickerTag(tag)) return null;
-    final normalized = _cleanTag(tag.en)
-        .toLowerCase()
-        .replaceAll('_', ' ')
-        .replaceAll(RegExp(r'\s+'), ' ');
-    if (normalized.isEmpty) return null;
-
-    // Prefer the longest match so `navy blue-black` is not reduced to `navy`
-    // and `light blue` is not reduced to `blue`.
-    String? match;
-    for (final color in _promptColorTypeOrder) {
-      final pattern = RegExp(
-        r'(^|\s)' + RegExp.escape(color) + r'(?=\s|$)',
-        caseSensitive: false,
-      );
-      if (!pattern.hasMatch(normalized)) continue;
-      if (match == null || color.length > match.length) match = color;
-    }
-    return match;
+    return _promptColorSortPhraseFromText(_cleanTag(tag.en));
   }
 
   int _compareColorPickerTags(TagItem a, TagItem b) {
     final aColor = _pickerColorSortPhrase(a);
     final bColor = _pickerColorSortPhrase(b);
-    final aOrder = aColor == null
-        ? _promptColorTypeOrder.length
-        : _promptColorTypeOrder.indexOf(aColor);
-    final bOrder = bColor == null
-        ? _promptColorTypeOrder.length
-        : _promptColorTypeOrder.indexOf(bColor);
+    final aOrder = _promptColorSortIndex(aColor);
+    final bOrder = _promptColorSortIndex(bColor);
     final orderCompare = aOrder.compareTo(bOrder);
     return orderCompare == 0 ? _compareOutputTags(a, b) : orderCompare;
   }
@@ -21340,7 +21394,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (rankCompare != 0) return rankCompare;
       final groupCompare =
           _wizardGroupLabel(a.group).compareTo(_wizardGroupLabel(b.group));
-      return groupCompare == 0 ? _compareOutputTags(a, b) : groupCompare;
+      if (groupCompare != 0) return groupCompare;
+      if (_isColorPickerTag(a) && _isColorPickerTag(b)) {
+        return _compareColorPickerTags(a, b);
+      }
+      return _compareOutputTags(a, b);
     });
     return results;
   }
