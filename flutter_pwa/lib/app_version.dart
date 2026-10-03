@@ -1,7 +1,14 @@
-const appVersion = '1.1.182';
-const appBuildNumber = 184;
-const appVersionLabel = '1.1.182+184';
+const appVersion = '1.1.183';
+const appBuildNumber = 185;
+const appVersionLabel = '1.1.183+185';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.183',
+    'build': '185',
+    'label': '1.1.183+185',
+    'date': '2026-10-03',
+    'notes': '新增各服裝部位的18+穿脫、單側露出與透視可見狀態標籤'
+  },
   {
     'version': '1.1.182',
     'build': '184',
@@ -32,12 +39,5 @@ const appVersionHistory = <Map<String, String>>[
     'date': '2026-10-03',
     'notes':
         '修正銀白髮等舊版角色特徵重複並遷移舊記憶；整理同中文異英文標籤；補齊官方 medium skirt；新增長方形書包與 5 套華麗人偶風服裝；顏色選項改依色系與深淺排列。'
-  },
-  {
-    'version': '1.1.178',
-    'build': '180',
-    'label': '1.1.178+180',
-    'date': '2026-10-02',
-    'notes': '修正文字放大後標籤網格列高被二次放大的問題；一般標籤列改為54像素緊湊高度，移除大片上下空白並保留兩行文字。'
   },
 ];

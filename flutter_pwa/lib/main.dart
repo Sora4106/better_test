@@ -3234,7 +3234,7 @@ String _clothingScopedKindLabel(String kind) =>
       'material': '\u6750\u8CEA',
       'pattern': '圖案',
       'detail_color': '裝飾色',
-      'wear': '\u7A7F\u812B\u72C0\u614B',
+      'wear': '穿脫／暴露狀態',
     }[kind] ??
     kind;
 
@@ -3849,6 +3849,29 @@ List<TagItem> _createScopedClothingTags() {
     ['open_shirt', '\u896F\u886B\u657E\u958B', 'open shirt'],
     ['bra_visible', '\u9732\u51FA\u80F8\u7F69', 'bra visible'],
   ]);
+  addMany(
+      'top',
+      'wear',
+      [
+        ['one_breast_out', '露出單邊乳房', 'one breast out'],
+        ['breasts_out', '雙乳露出', 'breasts out'],
+        ['breast_slip', '乳房從上衣滑出', 'breast slip'],
+        ['nipple_slip', '乳頭從上衣滑出', 'nipple slip'],
+        ['areola_slip', '乳暈從上衣滑出', 'areola slip'],
+        ['see_through', '透視上衣', 'see-through shirt'],
+        [
+          'see_through_nipples',
+          '透視上衣可見乳頭',
+          'nipples visible through see-through shirt'
+        ],
+        [
+          'see_through_breasts',
+          '透視上衣可見乳房',
+          'breasts visible through see-through shirt'
+        ],
+        ['bra_visible_through', '上衣下可見胸罩', 'bra visible through clothes'],
+      ],
+      adult: true);
   addMany('pants', 'wear', [
     ['down', '\u8932\u5B50\u892A\u4E0B', 'pants down'],
     ['around_ankles', '\u8932\u5B50\u5728\u8173\u8E1D', 'pants around ankles'],
@@ -3856,6 +3879,37 @@ List<TagItem> _createScopedClothingTags() {
   addMany('pants', 'wear', [
     ['pants_pull', '\u624B\u62C9\u8932\u5B50', 'pants pull'],
   ]);
+  addMany(
+      'pants',
+      'wear',
+      [
+        ['see_through', '透視長褲', 'see-through pants'],
+        [
+          'see_through_pussy',
+          '透視長褲可見陰部',
+          'pussy visible through see-through pants'
+        ],
+        ['pussy_outline', '長褲顯出陰部輪廓', 'pussy outline'],
+        ['cameltoe', '長褲顯出陰唇輪廓', 'cameltoe'],
+      ],
+      adult: true);
+  addMany(
+      'shorts',
+      'wear',
+      [
+        ['down', '短褲褪下', 'shorts down'],
+        ['around_ankles', '短褲在腳踝', 'shorts around ankles'],
+        ['pull', '手拉短褲', 'shorts pull'],
+        ['see_through', '透視短褲', 'see-through shorts'],
+        [
+          'see_through_pussy',
+          '透視短褲可見陰部',
+          'pussy visible through see-through shorts'
+        ],
+        ['pussy_outline', '短褲顯出陰部輪廓', 'pussy outline'],
+        ['cameltoe', '短褲顯出陰唇輪廓', 'cameltoe'],
+      ],
+      adult: true);
   addMany('skirt', 'wear', [
     ['lifted', '\u88D9\u5B50\u88AB\u63C0\u8D77', 'skirt lifted'],
     [
@@ -3868,6 +3922,18 @@ List<TagItem> _createScopedClothingTags() {
   addMany('skirt', 'wear', [
     ['skirt_pull', '\u624B\u62C9\u88D9\u5B50', 'skirt pull'],
   ]);
+  addMany(
+      'skirt',
+      'wear',
+      [
+        ['see_through', '透視裙子', 'see-through skirt'],
+        [
+          'see_through_pussy',
+          '透視裙子可見陰部',
+          'pussy visible through see-through skirt'
+        ],
+      ],
+      adult: true);
   addMany('onepiece', 'wear', [
     [
       'one_shoulder_removed',
@@ -3876,6 +3942,60 @@ List<TagItem> _createScopedClothingTags() {
     ],
     ['lifted', '\u9023\u8EAB\u88DD\u88AB\u63C0\u8D77', 'dress lifted'],
   ]);
+  addMany(
+      'onepiece',
+      'wear',
+      [
+        ['aside', '連身裙拉到一側', 'dress aside'],
+        ['one_breast_out', '連身裝露出單邊乳房', 'one breast out'],
+        ['breasts_out', '連身裝露出雙乳', 'breasts out'],
+        ['nipple_slip', '乳頭從連身裝滑出', 'nipple slip'],
+        ['see_through', '透視連身裙', 'see-through dress'],
+        [
+          'see_through_nipples',
+          '透視連身裙可見乳頭',
+          'nipples visible through see-through dress'
+        ],
+        [
+          'see_through_pussy',
+          '透視連身裙可見陰部',
+          'pussy visible through see-through dress'
+        ],
+      ],
+      adult: true);
+  addMany(
+      'outerwear',
+      'wear',
+      [
+        ['open', '外套敞開', 'open coat'],
+        ['half_removed', '外套脫一半', 'half-removed coat'],
+        ['see_through', '透視外套', 'see-through coat'],
+        [
+          'see_through_nipples',
+          '透視外套可見乳頭',
+          'nipples visible through see-through coat'
+        ],
+      ],
+      adult: true);
+  addMany(
+      'costume',
+      'wear',
+      [
+        ['open', '特殊服裝敞開', 'open costume'],
+        ['half_removed', '特殊服裝脫一半', 'half-removed costume'],
+        ['see_through', '透視特殊服裝', 'see-through costume'],
+        [
+          'see_through_nipples',
+          '透視特殊服裝可見乳頭',
+          'nipples visible through see-through costume'
+        ],
+        [
+          'see_through_pussy',
+          '透視特殊服裝可見陰部',
+          'pussy visible through see-through costume'
+        ],
+      ],
+      adult: true);
   addMany('underwear', 'wear', [
     ['open', '\u6253\u958B\u5167\u8863', 'open underwear'],
     [
@@ -3891,6 +4011,23 @@ List<TagItem> _createScopedClothingTags() {
     ['down', '\u5167\u8863\u892A\u4E0B', 'underwear down'],
     ['removed', '\u8131\u6389\u5167\u8863', 'underwear removed'],
   ]);
+  addMany(
+      'underwear',
+      'wear',
+      [
+        ['see_through', '透視內衣', 'see-through underwear'],
+        [
+          'see_through_nipples',
+          '透視內衣可見乳頭',
+          'nipples visible through see-through underwear'
+        ],
+        [
+          'see_through_pussy',
+          '透視內衣可見陰部',
+          'pussy visible through see-through underwear'
+        ],
+      ],
+      adult: true);
   addMany(
       'bra',
       'wear',
@@ -3916,6 +4053,22 @@ List<TagItem> _createScopedClothingTags() {
       ],
       adult: true);
   addMany(
+      'bra',
+      'wear',
+      [
+        ['open', '敞開式胸罩', 'open bra'],
+        ['see_through', '透視胸罩', 'see-through bra'],
+        ['cupless', '無罩杯胸罩', 'cupless bra'],
+        ['one_breast_out', '胸罩外露出單邊乳房', 'one breast out'],
+        ['nipple_slip', '乳頭從胸罩滑出', 'nipple slip'],
+        [
+          'see_through_nipples',
+          '透視胸罩可見乳頭',
+          'nipples visible through see-through bra'
+        ],
+      ],
+      adult: true);
+  addMany(
       'panties',
       'wear',
       [
@@ -3936,6 +4089,21 @@ List<TagItem> _createScopedClothingTags() {
           'panties pulled aside'
         ],
         ['removed', '\u8131\u6389\u5167\u8932', 'panties removed'],
+      ],
+      adult: true);
+  addMany(
+      'panties',
+      'wear',
+      [
+        ['see_through', '透視內褲', 'see-through panties'],
+        ['crotchless', '開襠內褲', 'crotchless panties'],
+        [
+          'see_through_pussy',
+          '透視內褲可見陰部',
+          'pussy visible through see-through panties'
+        ],
+        ['pussy_outline', '內褲顯出陰部輪廓', 'pussy outline'],
+        ['cameltoe', '內褲顯出陰唇輪廓', 'cameltoe'],
       ],
       adult: true);
   addMany(
@@ -19647,8 +19815,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     _pickerStage(
                       icon: Icons.dry_cleaning_outlined,
                       tone: const Color(0xfff87171),
-                      title: '4. 各部位穿脫狀態',
-                      description: '依已選服裝顯示各部位專用狀態；上衣、下身、連身裝、內搭、襪子、鞋子與配件可分別設定。',
+                      title: '4. 各部位穿脫／暴露狀態',
+                      description: '依已選服裝顯示各部位專用狀態；18+ 模式另提供單側露出、滑出與透視可見等選項。',
                       child: _stepTagPicker(
                         adaptiveWear,
                         nextLabel: '下一步',
