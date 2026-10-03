@@ -37,6 +37,17 @@ const _physicalTraitColorGroups = <String>{
   _animalFootColorGroup,
   _wingColorGroup,
 };
+const _breastSizeGroup = '胸部・尺寸';
+const _breastShapeGroup = '胸部・形狀／位置';
+const _breastNippleGroup = '胸部・乳頭／乳暈';
+const _breastVisibilityGroup = '胸部・可見／裸露';
+const _breastAdultActionGroup = '性行為・胸部／乳頭';
+const _breastTraitGroups = <String>{
+  _breastSizeGroup,
+  _breastShapeGroup,
+  _breastNippleGroup,
+  _breastVisibilityGroup,
+};
 // Dynamic head details are selected with poses, not with permanent character
 // appearance.  Keep the actual stored tag groups unchanged for compatibility.
 const _staticFaceAppearanceGroup = '固定外觀・臉部結構';
@@ -198,6 +209,114 @@ bool _isSceneVisualPromptGroup(String group) =>
 /// Shared actions describe what multiple characters do together. They are
 /// selected globally and are intentionally rendered after every character's
 /// own pose/action block, without parentheses or a character weight.
+/// The pose catalogue is intentionally shallow: first choose an anatomical or
+/// interaction area, then its focused subgroup. This prevents the former
+/// all-in-one body/animation panel from becoming a wall of buttons.
+const _organizedPosePickerSections = <String, List<String>>{
+  '① 頭部／表情': [
+    '頭部姿勢',
+    '頭部動態・眼睛／視線',
+    '頭部動態・嘴巴／口型',
+    '頭部動態・挑逗',
+    '頭部動態・符號表情',
+    '頭部動態・情緒／其他',
+  ],
+  '② 手部／上半身': [
+    '手臂姿勢',
+    '手部姿勢',
+    '手部・接觸位置',
+    '手指・指向方向',
+    '手指・手勢形狀',
+    '手指・嘴臉互動',
+    '手指・細節動作',
+    '軀幹姿勢',
+    '軀幹・腰臀動態',
+  ],
+  '③ 腰臀／腿腳': [
+    '腿部姿勢',
+    '大腿・膝蓋動態',
+    '小腿・腳踝動態',
+    '腳掌・腳趾動態',
+  ],
+  '④ 基本姿勢': [
+    '站立與蹲姿',
+    '坐姿與跪姿',
+    '躺臥姿勢',
+    '全身姿勢',
+    '姿勢',
+  ],
+  '⑤ 單人・場所姿勢': [
+    '單人・站姿',
+    '單人・靠牆姿勢',
+    '單人・椅子坐姿',
+    '單人・桌邊姿勢',
+    '單人・地板坐姿',
+    '單人・床上坐姿',
+    '單人・仰躺姿勢',
+    '單人・側躺姿勢',
+    '單人・俯臥姿勢',
+    '單人・跪蹲姿勢',
+  ],
+  '⑥ 動態／獸人姿勢': [
+    '男性動作姿勢',
+    '動態姿勢',
+    '動作',
+    '身體動作',
+    '貓系・單人動作',
+    '獸人動作',
+    '角色姿勢',
+  ],
+  '⑦ 物件・道具互動': [
+    '互動・物件動作',
+    '物件・家具／室內',
+    '物件・飲食／餐具',
+    '物件・學習／藝術／音樂',
+    '物件・科技／媒體',
+    '物件・運動／戶外',
+    '物件・工具／科學／遊戲',
+    '物件・武器／奇幻',
+    '物件・交通／旅行',
+    '物件・日常／裝飾',
+  ],
+  '⑧ 人物互動': ['親吻動作', '多人互動', '貓系・人物互動'],
+  '⑨ 成人・性姿勢': [
+    '性姿勢',
+    '性姿勢・一般',
+    '性姿勢・後入',
+    '性姿勢・女上位',
+    '性姿勢・男上位',
+    '性姿勢・多人',
+  ],
+  '⑩ 成人・胸部／性行為': [
+    _breastAdultActionGroup,
+    '性行為',
+    '性行為・足部',
+    '性行為・摩擦',
+    '性行為・手部',
+    '性行為・自慰',
+    '性行為・動態',
+    '性行為・親吻',
+    '性行為・口部',
+    '性行為・插入',
+    '性行為・多人',
+    '性行為・前後',
+    '體液',
+    '公開與窺視',
+  ],
+  '⑪ 成人・束縛／服飾／道具': [
+    '束縛姿勢',
+    'BDSM行為',
+    '情趣內衣',
+    'BDSM服裝',
+    '暴露服裝',
+    '成人道具',
+    '成人道具・插入',
+    '成人道具・振動',
+    'BDSM器具',
+    '情趣用品',
+  ],
+};
+
 bool _isSharedActionGroup(String group) =>
     const {
       '\u89aa\u543b\u52d5\u4f5c',
@@ -6233,6 +6352,79 @@ List<TagItem> _seedTags() => [
       _tag('adult_blindfold', '成人道具', '眼罩（成年角色）', 'blindfold', 5, adult: true),
 
       // Breasts and nudity groups based on the supplied Danbooru references.
+      _tag('body_gigantic_breasts', _breastSizeGroup, '超巨乳', 'gigantic breasts',
+          5,
+          adult: true),
+      _tag('body_asymmetrical_breasts', _breastShapeGroup, '不對稱胸部',
+          'asymmetrical breasts', 5,
+          adult: true),
+      _tag(
+          'body_breasts_apart', _breastShapeGroup, '胸部間距明顯', 'breasts apart', 5,
+          adult: true),
+      _tag('body_floating_breasts', _breastShapeGroup, '浮動胸部',
+          'floating breasts', 5,
+          adult: true),
+      _tag('body_hanging_breasts', _breastShapeGroup, '下垂胸部', 'hanging breasts',
+          5,
+          adult: true),
+      _tag('body_perky_breasts', _breastShapeGroup, '挺立胸部', 'perky breasts', 5,
+          adult: true),
+      _tag('body_sagging_breasts', _breastShapeGroup, '鬆垂胸部', 'sagging breasts',
+          5,
+          adult: true),
+      _tag('body_unaligned_breasts', _breastShapeGroup, '胸部高度不一致',
+          'unaligned breasts', 5,
+          adult: true),
+      _tag('body_veiny_breasts', _breastShapeGroup, '青筋胸部', 'veiny breasts', 5,
+          adult: true),
+      _tag(
+          'body_pointy_breasts', _breastShapeGroup, '尖挺胸部', 'pointy breasts', 5,
+          adult: true),
+      _tag('body_backboob', _breastVisibilityGroup, '背側胸部', 'backboob', 5,
+          adult: true),
+      _tag('body_areolae', _breastNippleGroup, '乳暈可見', 'areolae', 5,
+          adult: true),
+      _tag('body_dark_areolae', _breastNippleGroup, '深色乳暈', 'dark areolae', 5,
+          adult: true),
+      _tag('body_large_areolae', _breastNippleGroup, '大乳暈', 'large areolae', 5,
+          adult: true),
+      _tag('body_light_areolae', _breastNippleGroup, '淺色乳暈', 'light areolae', 5,
+          adult: true),
+      _tag('body_speckled_areolae', _breastNippleGroup, '斑點乳暈',
+          'speckled areolae', 5,
+          adult: true),
+      _tag('body_glands_of_montgomery', _breastNippleGroup, '乳暈腺體',
+          'glands of montgomery', 5,
+          adult: true),
+      _tag('body_dark_nipples', _breastNippleGroup, '深色乳頭', 'dark nipples', 5,
+          adult: true),
+      _tag('body_covered_nipples', _breastNippleGroup, '遮住乳頭',
+          'covered nipples', 5,
+          adult: true),
+      _tag('body_gaping_nipples', _breastNippleGroup, '張開乳頭', 'gaping nipples',
+          5,
+          adult: true),
+      _tag('body_huge_nipples', _breastNippleGroup, '巨大乳頭', 'huge nipples', 5,
+          adult: true),
+      _tag('body_nipple_indents', _breastNippleGroup, '乳頭壓痕', 'nipple indents',
+          5,
+          adult: true),
+      _tag('body_inverted_nipples', _breastNippleGroup, '凹陷乳頭',
+          'inverted nipples', 5,
+          adult: true),
+      _tag('body_long_nipples', _breastNippleGroup, '長乳頭', 'long nipples', 5,
+          adult: true),
+      _tag('body_no_nipples', _breastNippleGroup, '無乳頭', 'no nipples', 5,
+          adult: true),
+      _tag('body_puffy_nipples', _breastNippleGroup, '蓬起乳頭', 'puffy nipples', 5,
+          adult: true),
+      _tag('body_small_nipples', _breastNippleGroup, '小乳頭', 'small nipples', 5,
+          adult: true),
+      _tag('body_colored_nipples', _breastNippleGroup, '彩色乳頭',
+          'colored nipples', 5,
+          adult: true),
+      _tag('body_nipple_hair', _breastNippleGroup, '乳頭毛髮', 'nipple hair', 5,
+          adult: true),
       _tag('body_flat_chest', '胸部', '平胸', 'flat chest', 5),
       _tag('body_small_breasts', '胸部', '小胸', 'small breasts', 5),
       _tag('body_medium_breasts', '胸部', '中等胸部', 'medium breasts', 5),
@@ -7175,6 +7367,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return 18;
     }
     const order = <String, int>{
+      _breastSizeGroup: 19,
+      _breastShapeGroup: 19,
+      _breastNippleGroup: 19,
+      _breastVisibilityGroup: 19,
+      _breastAdultActionGroup: 50,
       // 人物：由頭部、臉部一路排到身體，再進入服裝。
       '角色類型': 8,
       '角色標籤': 9,
@@ -7391,6 +7588,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       tag.group == _animalTraitGroup ||
       tag.group == _wingTypeGroup ||
       _physicalTraitColorGroups.contains(tag.group) ||
+      _breastTraitGroups.contains(tag.group) ||
       const {
         '身體特徵',
         '眼睛',
@@ -9852,6 +10050,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .toList();
 
   static const _characterWeightGroups = <String>{
+    ..._breastTraitGroups,
     '角色類型',
     '角色標籤',
     '自訂角色',
@@ -12114,6 +12313,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (tag.group == '性姿勢') return 'sex_position';
     if (_isScenePickerGroup(tag.group)) return 'scene';
+    if (tag.group == _breastSizeGroup) return 'breast_size';
     if (tag.group == '胸部' &&
         [
           'flat chest',
@@ -16808,6 +17008,77 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return group;
   }
 
+  String? _breastPickerGroupForTag(TagItem tag) {
+    switch (tag.id) {
+      case 'body_flat_chest':
+      case 'body_small_breasts':
+      case 'body_medium_breasts':
+      case 'body_large_breasts':
+      case 'body_huge_breasts':
+        return _breastSizeGroup;
+      case 'body_breasts':
+      case 'body_cleavage':
+      case 'body_underboob':
+        return _breastVisibilityGroup;
+      case 'body_nipples':
+        return _breastNippleGroup;
+      case 'body_breast_press':
+      case 'act_breast_grinding':
+      case 'act_paizuri':
+      case 'act_autopaizuri':
+      case 'act_cooperative_paizuri':
+      case 'act_handsfree_paizuri':
+      case 'act_paizuri_on_lap':
+      case 'act_paizuri_over_clothes':
+      case 'act_paizuri_under_clothes':
+      case 'act_perpendicular_paizuri':
+      case 'act_reverse_paizuri':
+      case 'act_straddling_paizuri':
+      case 'act_naizuri':
+      case 'act_cooperative_naizuri':
+      case 'act_breast_smother':
+      case 'adult_kiss_kissing_breast':
+      case 'hand_sex_grabbing_another_s_breast':
+      case 'hand_sex_guided_breast_grab':
+      case 'hand_sex_nipple_tweak':
+      case 'hand_sex_grabbing_own_breast':
+      case 'oral_sex_breast_sucking':
+      case 'bdsm_action_breast_bondage':
+      case 'bdsm_action_nipple_pull':
+        return _breastAdultActionGroup;
+    }
+    if (const {
+      'breast press',
+      'breast grinding',
+      'paizuri',
+      'autopaizuri',
+      'cooperative paizuri',
+      'handsfree paizuri',
+      'naizuri',
+      'paizuri over clothes',
+      'paizuri on lap',
+      'paizuri under clothes',
+      'pecjob',
+      'perpendicular paizuri',
+      'sideways perpendicular paizuri',
+      'straddling paizuri',
+      'reverse paizuri',
+      'cooperative naizuri',
+      'breast smother',
+      'kissing breast',
+      'grabbing another\'s breast',
+      'guided breast grab',
+      'grabbing own breast',
+      'nipple tweak',
+      'breast sucking',
+      'breast bondage',
+      'nipple pull',
+    }.contains(tag.en)) {
+      return _breastAdultActionGroup;
+    }
+    return null;
+  }
+
   List<TagItem> _stepVisibleTags(List<String> groups,
       {String? queryText,
       String? activeGroup,
@@ -16816,9 +17087,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final query = (queryText ?? _search.text).trim().toLowerCase();
     final pickerGroup = activeGroup ?? groups.first;
     final searchAcrossGroups = searchAllGroups;
-    final pickerTags = searchAcrossGroups
+    final basePickerTags = searchAcrossGroups
         ? _tagsForPickerGroups(groups)
         : _tagsForPickerGroup(pickerGroup);
+    _allTags;
+    final pickerTags = <TagItem>{
+      ...basePickerTags,
+      ..._allTags.where((tag) {
+        final mappedGroup = _breastPickerGroupForTag(tag);
+        return mappedGroup != null &&
+            (searchAcrossGroups
+                ? groups.contains(mappedGroup)
+                : mappedGroup == pickerGroup);
+      }),
+    }.toList();
     final pickerTagIds = searchAcrossGroups
         ? pickerTags.map((tag) => tag.id).toSet()
         : const <String>{};
@@ -16828,7 +17110,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .map(_clothingScopeForBase)
             .whereType<String>()
             .toSet();
-    _allTags;
     final hiddenTaxonomyIds = _hiddenTaxonomyDuplicateIdsCache!;
     final tags = pickerTags.where((tag) {
       final allClothingWear = activeGroup == _allClothingWearGroup &&
@@ -16856,6 +17137,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final objectCategoryMatch = objectPickerGroup == activeGroup;
       final objectInPickerGroups =
           objectPickerGroup != null && groups.contains(objectPickerGroup);
+      final breastPickerGroup = _breastPickerGroupForTag(tag);
+      final breastCategoryMatch = breastPickerGroup == activeGroup;
+      final breastInPickerGroups =
+          breastPickerGroup != null && groups.contains(breastPickerGroup);
+      final hideOutsideBreastCategory = !searchAcrossGroups &&
+          breastPickerGroup != null &&
+          !breastCategoryMatch;
       final usesClothingBaseDisplayGroup = const {
         _clothingGroupTop,
         _clothingGroupPants,
@@ -16885,12 +17173,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ? clothingBaseDisplayMatch
           : tag.group == activeGroup ||
               objectCategoryMatch ||
+              breastCategoryMatch ||
               staticFaceAppearanceMatch ||
               objectInteractionMatch;
       final inGroup = searchAcrossGroups
           ? pickerTagIds.contains(tag.id)
           : (groups.contains(tag.group) ||
                   objectInPickerGroups ||
+                  breastInPickerGroups ||
                   staticFaceInPickerGroups ||
                   objectInteractionInPickerGroups ||
                   clothingBaseDisplayMatch ||
@@ -16904,6 +17194,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   hairColorInHairGroup ||
                   faceExpressionInMergedGroup ||
                   faceExpressionInSubgroup ||
+                  breastCategoryMatch ||
                   staticFaceAppearanceMatch ||
                   objectInteractionMatch);
       final adultMatch = _showAdult || !tag.adult;
@@ -16918,6 +17209,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return inGroup &&
           adultMatch &&
           queryMatch &&
+          !hideOutsideBreastCategory &&
           !hiddenLegacyScopedDesign &&
           !hiddenTaxonomyDuplicate;
     }).toList();
@@ -17584,6 +17876,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             '\u8ACB\u5148\u9078\u64C7\u4E00\u7A2E\u670D\u88DD\u985E\u578B'),
       );
     }
+    groups = groups.where((group) => group != '胸部').toSet().toList();
     // Some pickers expose extra groups only after a prerequisite tag is
     // selected (for example a clothing detail color after choosing a detail).
     // Callers can provide a stable key so that change does not reset the user
@@ -17867,6 +18160,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Widget _stepPersonTagPicker(List<String> groups,
       {required String nextLabel, required String instruction}) {
+    groups = <String>[...groups, ..._breastTraitGroups].toSet().toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -19112,6 +19406,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           !(pickerGroup == '動作' &&
                               _isObjectInteractionTag(tag))) ||
                       _objectPickerGroupForTag(tag) == pickerGroup ||
+                      _breastPickerGroupForTag(tag) == pickerGroup ||
                       (pickerGroup == _staticFaceAppearanceGroup &&
                           _isStaticFaceAppearanceTag(tag)) ||
                       (pickerGroup == _objectInteractionGroup &&
@@ -19148,42 +19443,59 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                     ],
                   ),
-                  _promptPackagePanel(
-                    personIndex: index,
-                    panelId: 'pose',
-                    title: '一般姿勢套裝',
-                    subtitle: '非露骨單人姿勢；每一類提供 10 組可直接套用。',
-                    icon: Icons.accessibility_new,
-                    tone: const Color(0xff38bdf8),
-                    packages: generalPosePackages,
-                  ),
-                  _promptPackagePanel(
-                    personIndex: index,
-                    panelId: 'sexy-pose',
-                    title: '性感姿勢套裝',
-                    subtitle: '非露骨的姿勢、肢體線條與表情搭配；共 100 套，可套用後個別調整。',
-                    icon: Icons.auto_awesome_outlined,
-                    tone: const Color(0xfff472b6),
-                    packages: sexyPosePackages,
-                  ),
-                  _promptPackagePanel(
-                    personIndex: index,
-                    panelId: 'feline-solo-pose',
-                    title: '貓咪單人姿勢套件',
-                    subtitle: '15 組貓系玩耍、休息、撒嬌與警覺姿態；不會自動加入獸耳、獸尾或 furry。',
-                    icon: Icons.pets_outlined,
-                    tone: const Color(0xfffbbf24),
-                    packages: felineSoloPosePackages,
-                  ),
-                  _promptPackagePanel(
-                    personIndex: index,
-                    panelId: 'wolf-girl-pose',
-                    title: '狼耳少女姿勢套件',
-                    subtitle: '文件整理的 7 組休息、撒嬌與森林用個人姿勢；不會自動加入獸化特徵。',
-                    icon: Icons.pets_outlined,
-                    tone: const Color(0xffff9fbb),
-                    packages: lalaWolfGirlPosePackages,
-                    previewAsCards: true,
+                  Card(
+                    margin: const EdgeInsets.only(top: 10),
+                    color: const Color(0xff1d2942),
+                    child: ExpansionTile(
+                      key: PageStorageKey<String>('all-pose-packages-$index'),
+                      leading: const Icon(Icons.auto_awesome_motion_outlined,
+                          color: Color(0xff7dd3fc)),
+                      title: const Text('姿勢套件（常用組合）',
+                          style: TextStyle(fontWeight: FontWeight.w800)),
+                      subtitle: const Text('一般、性感、貓系與狼系套件；需要時再展開',
+                          style: TextStyle(fontSize: 12)),
+                      childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
+                      children: [
+                        _promptPackagePanel(
+                          personIndex: index,
+                          panelId: 'pose',
+                          title: '一般姿勢套裝',
+                          subtitle: '非露骨單人姿勢；每一類提供 10 組可直接套用。',
+                          icon: Icons.accessibility_new,
+                          tone: const Color(0xff38bdf8),
+                          packages: generalPosePackages,
+                        ),
+                        _promptPackagePanel(
+                          personIndex: index,
+                          panelId: 'sexy-pose',
+                          title: '性感姿勢套裝',
+                          subtitle: '非露骨的姿勢、肢體線條與表情搭配；共 100 套，可套用後個別調整。',
+                          icon: Icons.auto_awesome_outlined,
+                          tone: const Color(0xfff472b6),
+                          packages: sexyPosePackages,
+                        ),
+                        _promptPackagePanel(
+                          personIndex: index,
+                          panelId: 'feline-solo-pose',
+                          title: '貓咪單人姿勢套件',
+                          subtitle: '15 組貓系玩耍、休息、撒嬌與警覺姿態；不會自動加入獸耳、獸尾或 furry。',
+                          icon: Icons.pets_outlined,
+                          tone: const Color(0xfffbbf24),
+                          packages: felineSoloPosePackages,
+                        ),
+                        _promptPackagePanel(
+                          personIndex: index,
+                          panelId: 'wolf-girl-pose',
+                          title: '狼耳少女姿勢套件',
+                          subtitle: '文件整理的 7 組休息、撒嬌與森林用個人姿勢；不會自動加入獸化特徵。',
+                          icon: Icons.pets_outlined,
+                          tone: const Color(0xffff9fbb),
+                          packages: lalaWolfGirlPosePackages,
+                          previewAsCards: true,
+                        ),
+                        const SizedBox(height: 4),
+                      ],
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
@@ -22436,7 +22748,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .join('、')
               .ifEmpty('每位人物分別設定'),
           Icons.accessibility_new,
-          _stepCategorizedPersonTagPicker(expandedTagPickerSections,
+          _stepCategorizedPersonTagPicker(_organizedPosePickerSections,
               nextLabel: '下一步：品質與負面',
               instruction:
                   '依序選頭部、上半身、下半身、全身姿勢，再選物件或人物互動；成人性姿勢與道具集中在最後。每位人物會保留自己的動作與互動。'),

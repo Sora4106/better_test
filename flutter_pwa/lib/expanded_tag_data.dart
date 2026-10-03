@@ -35,6 +35,7 @@ const _torsoWaistHipGroup = '軀幹・腰臀動態';
 const _thighKneeGroup = '大腿・膝蓋動態';
 const _lowerLegAnkleGroup = '小腿・腳踝動態';
 const _footToeGroup = '腳掌・腳趾動態';
+const _breastAdultActionGroup = '性行為・胸部／乳頭';
 
 const expandedGeneralPoseGroups = <String>{
   _maleActionPoseGroup,
@@ -73,6 +74,7 @@ const expandedSexualPoseGroups = <String>{
 };
 
 const expandedSexualActGroups = <String>{
+  _breastAdultActionGroup,
   '性行為・足部',
   '性行為・摩擦',
   '性行為・手部',
@@ -214,6 +216,7 @@ const expandedTagPickerSections = <String, List<String>>{
     '體液',
     '公開與窺視',
   ],
+  '⑩ 成人・胸部／乳頭': [_breastAdultActionGroup],
 };
 
 final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
@@ -1081,6 +1084,41 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['乳液', 'lotion'],
       ['乳液瓶', 'lotion bottle'],
       ['潤滑液', 'lube'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'breast_nipple_action',
+    group: _breastAdultActionGroup,
+    order: 7,
+    adult: true,
+    rows: const [
+      ['胸部晃動', 'bouncing breasts'],
+      ['托起胸部', 'breast lift'],
+      ['拉扯胸部', 'breast pull'],
+      ['壓住胸部', 'breast suppress'],
+      ['擠在一起的胸部', 'breasts squeezed together'],
+      ['拍打胸部', 'slapping breasts'],
+      ['用胸部拍打', 'slapping with breasts'],
+      ['胸部枕頭', 'breast pillow'],
+      ['胸部壓在頭上', 'breasts on head'],
+      ['臉貼胸部', 'face to breasts'],
+      ['頭在胸部之間', 'head between breasts'],
+      ['臉在胸部之間', 'face between breasts'],
+      ['咬胸部', 'biting breast'],
+      ['哺乳', 'breastfeeding'],
+      ['吸自己的胸部', 'sucking own breasts'],
+      ['互相吸胸部', 'mutual breast sucking'],
+      ['咬乳頭', 'biting nipple'],
+      ['舔乳頭', 'licking nipple'],
+      ['彈乳頭', 'nipple flick'],
+      ['按壓乳頭', 'nipple press'],
+      ['推乳頭', 'nipple push'],
+      ['揉乳頭', 'nipple rub'],
+      ['戳自己的胸部', 'poking own breast'],
+      ['戳他人胸部', "poking another's breast"],
+      ['泌乳', 'lactation'],
+      ['衣物外泌乳', 'lactation through clothes'],
+      ['容器中的母乳', 'breast milk in container'],
     ],
   ),
   ..._expandedTags(

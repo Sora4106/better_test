@@ -1,7 +1,15 @@
-const appVersion = '1.1.184';
-const appBuildNumber = 186;
-const appVersionLabel = '1.1.184+186';
+const appVersion = '1.1.185';
+const appBuildNumber = 187;
+const appVersionLabel = '1.1.185+187';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.185',
+    'build': '187',
+    'label': '1.1.185+187',
+    'date': '2026-10-03',
+    'notes':
+        '胸部標籤依尺寸、形狀、乳頭與可見狀態重新分類並補齊官方常用詞; 新增成人胸部／乳頭互動分類，整合既有乳交、吸吮與束縛詞; 姿勢套件改為單一收合入口，姿勢導覽拆成基本、場所與動態分類'
+  },
   {
     'version': '1.1.184',
     'build': '186',
@@ -31,12 +39,5 @@ const appVersionHistory = <Map<String, String>>[
     'date': '2026-10-03',
     'notes':
         '重構圖片工作區導覽：7 個大項集中於圖片／影片切換下方並以兩列顯示，頁面只建立目前選中的單一內容區；左側導覽同步切換並對齊內容頂端，新增中段與底部回頂端按鈕。'
-  },
-  {
-    'version': '1.1.180',
-    'build': '182',
-    'label': '1.1.180+182',
-    'date': '2026-10-03',
-    'notes': '全系統顏色選項統一依色系與深淺排序，涵蓋服裝雙色、細節色、髮色、眼睛、獸人特徵、翅膀、配件、組合標籤與全域搜尋。'
   },
 ];
