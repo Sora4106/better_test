@@ -1,7 +1,14 @@
-const appVersion = '1.1.185';
-const appBuildNumber = 187;
-const appVersionLabel = '1.1.185+187';
+const appVersion = '1.1.186';
+const appBuildNumber = 188;
+const appVersionLabel = '1.1.186+188';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.186',
+    'build': '188',
+    'label': '1.1.186+188',
+    'date': '2026-10-03',
+    'notes': '中文翻譯記憶欄位改為依人物特徵、服裝、姿勢、共享互動與場景分段顯示；保持同一欄位與可刪除標籤'
+  },
   {
     'version': '1.1.185',
     'build': '187',
@@ -31,13 +38,5 @@ const appVersionHistory = <Map<String, String>>[
     'date': '2026-10-03',
     'notes':
         '重整顏色選擇版面：顏色色塊改為獨立密集排列，文字標籤維持原有寬度。; 角色名稱固定保留，其餘角色原始特徵統一同步成可勾選標籤，移除隱藏與重複輸出。; 七個大項新增各自的中文可刪除標籤與含括號英文預覽；綜合輸出改為中文在上、英文在下。'
-  },
-  {
-    'version': '1.1.181',
-    'build': '183',
-    'label': '1.1.181+183',
-    'date': '2026-10-03',
-    'notes':
-        '重構圖片工作區導覽：7 個大項集中於圖片／影片切換下方並以兩列顯示，頁面只建立目前選中的單一內容區；左側導覽同步切換並對齊內容頂端，新增中段與底部回頂端按鈕。'
   },
 ];

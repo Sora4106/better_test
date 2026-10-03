@@ -22976,8 +22976,70 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  List<TagItem> _generatedOutputSourceTags(_GeneratedOutputTag output) {
+    final ids = <String>{
+      if (output.tagId != null) output.tagId!,
+      ...output.tagIds,
+    };
+    return ids.map((id) => _tagsById[id]).whereType<TagItem>().toList();
+  }
+
+  String _chineseOutputSection(_GeneratedOutputTag output) {
+    final sourceTags = _generatedOutputSourceTags(output);
+    final personIndex = output.personIndex;
+    if (personIndex != null) {
+      final personLabel = '人物 ${personIndex + 1}';
+      if (output.personClothingExtraValue != null ||
+          sourceTags.any((tag) => _isClothingGroup(tag.group))) {
+        return '$personLabel・服裝';
+      }
+      if (output.personPoseExtraValue != null ||
+          sourceTags.any(_isPoseWorkflowTag)) {
+        return '$personLabel・姿勢／動作';
+      }
+      return '$personLabel・角色與固定外觀';
+    }
+    if (output.sharedPoseExtraValue != null ||
+        sourceTags.any((tag) => _isSharedActionGroup(tag.group))) {
+      return '共享互動／姿勢';
+    }
+    if (output.extraPositiveValue != null) return '額外正向標籤';
+    if (output.prepromptValue != null) return 'Amanatsu 品質前綴';
+    if (sourceTags.any((tag) => _isSceneVisualPromptGroup(tag.group))) {
+      return '場景與畫面';
+    }
+    return '其他標籤';
+  }
+
+  Map<String, List<_GeneratedOutputTag>> _chineseOutputSections(
+      Iterable<_GeneratedOutputTag> tags) {
+    final sections = <String, List<_GeneratedOutputTag>>{};
+    for (final tag in tags) {
+      sections.putIfAbsent(_chineseOutputSection(tag), () => []).add(tag);
+    }
+    return sections;
+  }
+
+  Widget _chineseOutputTagChip(_GeneratedOutputTag tag) {
+    final locked = _isMandatoryCharacterIdentityOutput(tag);
+    return Tooltip(
+      message: locked ? '${tag.en}（角色名稱必定保留）' : tag.en,
+      child: InputChip(
+        avatar: locked ? const Icon(Icons.lock_outline, size: 15) : null,
+        label: Text(tag.zh),
+        deleteIcon: const Icon(Icons.close, size: 16),
+        onDeleted: locked ? null : () => _removeGeneratedOutputTag(tag),
+        backgroundColor: _buttonSurface,
+        side: const BorderSide(color: _buttonBorder),
+        labelStyle: const TextStyle(color: Colors.white),
+        deleteIconColor: Colors.white,
+      ),
+    );
+  }
+
   Widget _chineseOutputField() {
     final generated = _generatedPositiveTags();
+    final groupedGenerated = _chineseOutputSections(generated);
     final extra = _extraPositive.text.trim();
     final preprompt = _preprompt.text.trim();
     return Column(
@@ -23022,32 +23084,30 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     fontSize: 12,
                   ),
                 ),
-                if (generated.isNotEmpty) ...[
+                if (groupedGenerated.isNotEmpty) ...[
                   const SizedBox(height: 9),
-                  Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: generated.map((tag) {
-                      final locked = _isMandatoryCharacterIdentityOutput(tag);
-                      return Tooltip(
-                        message: locked ? '${tag.en}（角色名稱必定保留）' : tag.en,
-                        child: InputChip(
-                          avatar: locked
-                              ? const Icon(Icons.lock_outline, size: 15)
-                              : null,
-                          label: Text(tag.zh),
-                          deleteIcon: const Icon(Icons.close, size: 16),
-                          onDeleted: locked
-                              ? null
-                              : () => _removeGeneratedOutputTag(tag),
-                          backgroundColor: _buttonSurface,
-                          side: const BorderSide(color: _buttonBorder),
-                          labelStyle: const TextStyle(color: Colors.white),
-                          deleteIconColor: Colors.white,
+                  ...groupedGenerated.entries.indexed.expand((entry) {
+                    final index = entry.$1;
+                    final section = entry.$2;
+                    return <Widget>[
+                      if (index > 0) const SizedBox(height: 16),
+                      Text(
+                        section.key,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
                         ),
-                      );
-                    }).toList(),
-                  ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 7,
+                        runSpacing: 7,
+                        children:
+                            section.value.map(_chineseOutputTagChip).toList(),
+                      ),
+                    ];
+                  }),
                 ],
                 if (extra.isNotEmpty) ...[
                   const SizedBox(height: 12),
