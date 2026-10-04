@@ -14,6 +14,7 @@ List<CatalogTagData> _expandedTags({
   required bool adult,
   required List<List<String>> rows,
   String? defaultConflictGroup,
+  String support = 'standard',
 }) =>
     rows
         .map((row) => CatalogTagData(
@@ -26,15 +27,19 @@ List<CatalogTagData> _expandedTags({
               conflictGroup: row.length > 2
                   ? (row[2].isEmpty ? null : row[2])
                   : defaultConflictGroup,
+              support: support,
             ))
         .toList();
 
 const _maleActionPoseGroup = '男性動作姿勢';
 const _handContactGroup = '手部・接觸位置';
 const _torsoWaistHipGroup = '軀幹・腰臀動態';
+const _hipButtDetailGroup = '臀部・髖部細節';
+const _buttPoseLensGroup = '臀部・正背面構圖';
 const _thighKneeGroup = '大腿・膝蓋動態';
 const _lowerLegAnkleGroup = '小腿・腳踝動態';
 const _footToeGroup = '腳掌・腳趾動態';
+const _legTowardCameraGroup = '腿部・朝鏡頭構圖';
 const _breastAdultActionGroup = '性行為・胸部／乳頭';
 
 const expandedGeneralPoseGroups = <String>{
@@ -51,10 +56,13 @@ const expandedGeneralPoseGroups = <String>{
   _handContactGroup,
   ...fingerGestureGroups,
   _torsoWaistHipGroup,
+  _hipButtDetailGroup,
+  _buttPoseLensGroup,
   '腿部姿勢',
   _thighKneeGroup,
   _lowerLegAnkleGroup,
   _footToeGroup,
+  _legTowardCameraGroup,
   '動態姿勢',
   '身體動作',
   '貓系・單人動作',
@@ -138,12 +146,15 @@ const expandedTagPickerSections = <String, List<String>>{
     '手指・細節動作',
     '軀幹姿勢',
     _torsoWaistHipGroup,
+    _hipButtDetailGroup,
+    _buttPoseLensGroup,
   ],
   '③ 下半身・腿腳動態': [
     '腿部姿勢',
     _thighKneeGroup,
     _lowerLegAnkleGroup,
     _footToeGroup,
+    _legTowardCameraGroup,
   ],
   '④ 全身姿勢・移動': [
     '站立與蹲姿',
@@ -484,6 +495,59 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['自我環抱', 'self hug'],
     ],
   ),
+  // Keep lower-torso detail separate from the generic torso picker. These can
+  // be freely layered with standing, sitting, or lying poses.
+  ..._expandedTags(
+    prefix: 'hip_butt_detail',
+    group: _hipButtDetailGroup,
+    order: 4,
+    adult: false,
+    rows: const [
+      ['臀部向後突出', 'butt out'],
+      ['髖部側傾', 'hip tilt'],
+      ['髖部向側推', 'hip pop'],
+      ['臀部向側擺動', 'hips swaying'],
+      ['臀部稍微後移', 'hips back'],
+      ['單手放在自己的臀部', 'hand on own ass'],
+      ['雙手扶住自己的臀部', 'hands on own ass'],
+      ['臀部朝向鏡頭', 'hips toward viewer'],
+    ],
+  ),
+  // These are ready-made camera/pose descriptions. They intentionally keep
+  // the subject, direction and framing together so front/rear hip poses do
+  // not need to be rebuilt from many separate buttons.
+  ..._expandedTags(
+    prefix: 'butt_pose_lens',
+    group: _buttPoseLensGroup,
+    order: 4,
+    adult: false,
+    support: 'description',
+    rows: const [
+      ['正面站姿・髖部朝鏡頭', 'front view, standing, hips angled toward viewer'],
+      [
+        '正面坐姿・屈膝髖部朝鏡頭',
+        'front view, sitting, knees bent, hips angled toward viewer'
+      ],
+      [
+        '正面坐姿・單膝抬起髖部朝鏡頭',
+        'front view, sitting, one knee raised, hips angled toward viewer'
+      ],
+      ['背面站姿・回頭看鏡頭', 'rear view, standing, looking back over shoulder'],
+      ['背面站姿・單側髖部突出', 'rear view, standing, one hip cocked'],
+      ['背面坐姿・髖部朝鏡頭', 'rear view, sitting, hips toward viewer'],
+      ['背面跪姿・回頭看鏡頭', 'rear view, kneeling, looking back over shoulder'],
+      ['側後三分之四・髖部突出', 'three-quarter rear view, hip cocked'],
+      ['側面姿勢・髖部轉向鏡頭', 'side view, hips angled toward viewer'],
+      [
+        '趴躺・臀部朝鏡頭背面構圖',
+        'lying on stomach, hips angled toward viewer, rear view'
+      ],
+      ['側躺・臀部朝鏡頭', 'lying on side, hips angled toward viewer'],
+      ['臀髖背面特寫', 'close-up of hips and ass, rear view'],
+      ['臀髖正面三分之四特寫', 'close-up of hips and ass, front three-quarter view'],
+      ['低角度臀腿特寫', 'low-angle close-up of hips and thighs'],
+    ],
+  ),
   ..._expandedTags(
     prefix: 'head_pose',
     group: '頭部姿勢',
@@ -635,6 +699,62 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['腳趾張開', 'spread toes'],
       ['用腳趾抓取', 'toe grab'],
       ['踮腳', 'tiptoes'],
+    ],
+  ),
+  // Perspective-focused leg poses. The short entries can be combined with a
+  // base pose, while the ready-made entries preserve the intended sitting or
+  // lying relationship and the near-to-camera perspective.
+  ..._expandedTags(
+    prefix: 'leg_toward_camera',
+    group: _legTowardCameraGroup,
+    order: 4,
+    adult: false,
+    support: 'description',
+    rows: const [
+      ['單腿伸向鏡頭', 'leg toward viewer'],
+      ['雙腿伸向鏡頭', 'legs toward viewer'],
+      ['抬起單腿朝鏡頭', 'raised leg toward viewer'],
+      ['抬起雙腿朝鏡頭', 'raised legs toward viewer'],
+      ['單膝朝鏡頭', 'knee toward viewer'],
+      ['雙膝朝鏡頭', 'knees toward viewer'],
+      ['單腳朝鏡頭', 'foot toward viewer'],
+      ['雙腳朝鏡頭', 'feet toward viewer'],
+      ['腳掌朝鏡頭', 'sole toward viewer'],
+      ['雙腳掌朝鏡頭', 'soles toward viewer'],
+      ['腳趾朝鏡頭', 'toes toward viewer'],
+      ['單腿透視縮短', 'foreshortened leg'],
+      ['雙腿透視縮短', 'foreshortened legs'],
+      ['腳部更靠近鏡頭', 'feet closer to camera'],
+      [
+        '坐姿・單側大腿伸向鏡頭',
+        'sitting, one thigh extended toward viewer, foreshortening'
+      ],
+      [
+        '坐姿・雙腿伸向鏡頭',
+        'sitting, both legs extended toward viewer, foreshortening'
+      ],
+      [
+        '坐姿・屈膝腳部靠近鏡頭',
+        'sitting, bent knees toward viewer, feet close to camera'
+      ],
+      ['椅上坐姿・單腿伸向鏡頭', 'sitting on chair, one leg extended toward viewer'],
+      ['床上坐姿・雙腿朝鏡頭伸直', 'sitting on bed, legs stretched toward viewer'],
+      [
+        '仰躺・抬起單腿朝鏡頭',
+        'lying on back, one leg raised toward viewer, foreshortening'
+      ],
+      [
+        '仰躺・抬起雙腿朝鏡頭',
+        'lying on back, both legs raised toward viewer, foreshortening'
+      ],
+      ['側躺・上方腿朝鏡頭伸展', 'lying on side, top leg extended toward viewer'],
+      ['趴躺・小腿向上彎向鏡頭', 'lying on stomach, lower legs bent upward toward viewer'],
+      ['斜倚・單膝抬起朝鏡頭', 'reclining, one knee raised toward viewer'],
+      ['腳部在前・低角度透視', 'feet first, low-angle view, foreshortening'],
+      ['腳掌朝鏡頭特寫', 'sole close-up, foot toward viewer, foreshortening'],
+      ['腳趾朝鏡頭特寫', 'toe close-up, foot toward viewer, foreshortening'],
+      ['大腿朝鏡頭特寫', 'thigh close-up, leg toward viewer, foreshortening'],
+      ['小腿朝鏡頭特寫', 'calf close-up, leg extended toward viewer, foreshortening'],
     ],
   ),
   ..._expandedTags(

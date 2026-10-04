@@ -1,7 +1,14 @@
-const appVersion = '1.1.186';
-const appBuildNumber = 188;
-const appVersionLabel = '1.1.186+188';
+const appVersion = '1.1.187';
+const appBuildNumber = 189;
+const appVersionLabel = '1.1.187+189';
 const appVersionHistory = <Map<String, String>>[
+  {
+    'version': '1.1.187',
+    'build': '189',
+    'label': '1.1.187+189',
+    'date': '2026-10-04',
+    'notes': '新增臀部／髖部固定外觀、動態細節與正背面特寫構圖；新增腿部朝鏡頭、坐躺伸展、腳掌與腳趾特寫組合'
+  },
   {
     'version': '1.1.186',
     'build': '188',
@@ -30,13 +37,5 @@ const appVersionHistory = <Map<String, String>>[
     'label': '1.1.183+185',
     'date': '2026-10-03',
     'notes': '新增各服裝部位的18+穿脫、單側露出與透視可見狀態標籤'
-  },
-  {
-    'version': '1.1.182',
-    'build': '184',
-    'label': '1.1.182+184',
-    'date': '2026-10-03',
-    'notes':
-        '重整顏色選擇版面：顏色色塊改為獨立密集排列，文字標籤維持原有寬度。; 角色名稱固定保留，其餘角色原始特徵統一同步成可勾選標籤，移除隱藏與重複輸出。; 七個大項新增各自的中文可刪除標籤與含括號英文預覽；綜合輸出改為中文在上、英文在下。'
   },
 ];

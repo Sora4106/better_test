@@ -5253,6 +5253,16 @@ List<TagItem> _seedTags() => [
       _tag('trait_curvy', '身體特徵', '曲線身材', 'curvy', 1),
       _tag('trait_slim', '身體特徵', '纖細體態', 'slender build', 1),
       _tag('trait_mature', '身體特徵', '成熟外貌（成年）', 'mature female', 1),
+      _tag('trait_ass', '身體特徵', '臀部輪廓', 'ass', 1),
+      _tag('trait_hips', '身體特徵', '髖部', 'hips', 1),
+      _tag('trait_wide_hips', '身體特徵', '寬髖', 'wide hips', 1),
+      _tag('trait_hip_dips', '身體特徵', '髖凹', 'hip dips', 1),
+      _tag('trait_long_legs', '身體特徵', '長腿', 'long legs', 1),
+      _tag('trait_slim_legs', '身體特徵', '纖細雙腿', 'slim legs', 1),
+      _tag('trait_thighs', '身體特徵', '大腿', 'thighs', 1),
+      _tag('trait_thick_thighs', '身體特徵', '豐滿大腿', 'thick thighs', 1),
+      _tag('trait_knees', '身體特徵', '膝蓋', 'knees', 1),
+      _tag('trait_kneepits', '身體特徵', '膝窩', 'kneepits', 1),
       _tag('trait_makeup', '額外特徵', '化妝', 'makeup', 1),
       _tag('trait_earrings', '額外特徵', '耳環', 'earrings', 1),
       _tag('trait_necklace', '額外特徵', '項鍊', 'necklace', 1),
@@ -7453,8 +7463,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '手指・嘴臉互動' ||
         '手指・細節動作' =>
           45,
-        '軀幹姿勢' || '軀幹・腰臀動態' => 46,
-        '腿部姿勢' || '大腿・膝蓋動態' || '小腿・腳踝動態' || '腳掌・腳趾動態' => 47,
+        '軀幹姿勢' || '軀幹・腰臀動態' || '臀部・髖部細節' || '臀部・正背面構圖' => 46,
+        '腿部姿勢' || '大腿・膝蓋動態' || '小腿・腳踝動態' || '腳掌・腳趾動態' || '腿部・朝鏡頭構圖' => 47,
         '單人・站姿' ||
         '單人・靠牆姿勢' ||
         '站立與蹲姿' ||
@@ -16529,6 +16539,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '小腿・腳踝動態': Color(0xff22c55e),
       '腳掌・腳趾動態': Color(0xff14b8a6),
       '軀幹・腰臀動態': Color(0xff0d9488),
+      '臀部・髖部細節': Color(0xff0f766e),
+      '臀部・正背面構圖': Color(0xff0369a1),
+      '腿部・朝鏡頭構圖': Color(0xff0891b2),
       '動態姿勢': Color(0xffff8a4c),
       '動作': Color(0xfffb923c),
       '身體動作': Color(0xfff97316),
