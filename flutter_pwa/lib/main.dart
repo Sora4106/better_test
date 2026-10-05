@@ -7350,6 +7350,31 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _uniquePickerTags(unique.values);
   }
 
+  /// Normalises alternate romanisations created by remote lookup / old saved
+  /// data.  Keep this separate from prompt rendering: it is only used to make
+  /// the character picker show one entry for one actual character.
+  String _canonicalCharacterTagKey(String value) {
+    final key = _englishTagKey(value);
+    const aliases = <String, String>{
+      'konjiki no yami': 'golden darkness',
+      'yami': 'golden darkness',
+      'momo velia deviluke': 'momo belia deviluke',
+      'mikan yuuki': 'yuuki mikan',
+      'haruna sairenji': 'sairenji haruna',
+      'yui kotegawa': 'kotegawa yui',
+      'risa momioka': 'momioka risa',
+      'ryouko mikado': 'mikado ryouko',
+    };
+    return aliases[key] ?? key;
+  }
+
+  String _catalogCharacterIdentityKey(CatalogCharacter character) =>
+      '${_englishTagKey(character.animeTag)}|'
+      '${_canonicalCharacterTagKey(character.characterTag)}';
+
+  /// The static catalogue deliberately comes first.  A remote/custom record
+  /// with the same canonical identity is only a historical lookup alias and
+  /// must not be presented as a second character choice.
   List<CatalogCharacter> get _allCharacters =>
       [...catalogCharacters, ..._customCharacters];
 
@@ -10841,7 +10866,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   CatalogCharacter? _characterForNew(PersonSlot slot) {
     if (slot.characterId.isEmpty) return null;
     for (final character in _allCharacters) {
-      if (character.id == slot.characterId) return character;
+      if (character.id != slot.characterId) continue;
+      final identity = _catalogCharacterIdentityKey(character);
+      for (final catalogCharacter in catalogCharacters) {
+        if (_catalogCharacterIdentityKey(catalogCharacter) == identity) {
+          // Upgrade an old remote alias (for example `mikan_yuuki`) to the
+          // canonical built-in entry without invalidating the saved slot ID.
+          return catalogCharacter;
+        }
+      }
+      return character;
     }
     return null;
   }
@@ -11209,6 +11243,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final character = _characterForNew(slot);
     if (character == null) return;
     final ids = _personTagIds(index);
+    // Kanade's catalogue definition is `very long hair`.  Some older saved
+    // sessions still carry the previous generic `long hair` auto-selection;
+    // remove it before conflict detection so the correct length can be
+    // restored instead of leaving both hair lengths checked.
+    if (character.id == 'project_sekai_yoisaki_kanade') {
+      final legacyLongHair = _tagByEnglish('long hair');
+      if (legacyLongHair != null) ids.remove(legacyLongHair.id);
+    }
     // Remove old auto-applied source / expression entries from saved sessions.
     // A manual expression can still be picked normally after this migration.
     for (final trait in character.traits
@@ -14516,15 +14558,31 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return '${item.animeZh} ${item.animeEn} ${item.characterZh} ${item.characterEn} ${item.animeTag} ${item.characterTag} ${item.unitZh} ${item.unitEn} ${item.unitTag}'
           .toLowerCase()
           .contains(lower);
-    }).toList();
+    });
+    final unique = <String, CatalogCharacter>{};
+    for (final character in source) {
+      // Catalogue entries are evaluated before user-imported entries, so the
+      // canonical spelling wins while remote aliases remain available to old
+      // saved selections through [_characterForNew].
+      unique.putIfAbsent(
+          _catalogCharacterIdentityKey(character), () => character);
+    }
+    final matches = unique.values.toList();
     if (lower.isEmpty && _recentCharacterIds.isNotEmpty) {
-      source.sort((a, b) {
+      matches.sort((a, b) {
         final aIndex = _recentCharacterIds.indexOf(a.id);
         final bIndex = _recentCharacterIds.indexOf(b.id);
         return (aIndex < 0 ? 999 : aIndex).compareTo(bIndex < 0 ? 999 : bIndex);
       });
     }
-    return source;
+    return matches;
+  }
+
+  bool _isSelectedCharacter(PersonSlot slot, CatalogCharacter candidate) {
+    final selected = _characterForNew(slot);
+    return selected != null &&
+        _catalogCharacterIdentityKey(selected) ==
+            _catalogCharacterIdentityKey(candidate);
   }
 
   Future<Map<String, dynamic>> _remoteJson(String url) async {
@@ -14719,9 +14777,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // selectors even after the lookup panel is closed.
       for (final remote in characters) {
         final discovered = _remoteCatalogCharacter(anime, remote);
-        final existingIndex =
-            _customCharacters.indexWhere((item) => item.id == discovered.id);
-        if (existingIndex < 0) {
+        final alreadyKnown =
+            _allCharacters.any((item) => item.id == discovered.id);
+        if (!alreadyKnown) {
           _customCharacters.add(discovered);
         }
       }
@@ -14868,18 +14926,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _RemoteAnime anime, _RemoteCharacter remote) {
     final animeTag = _resolvedAnimeTag(anime);
     CatalogCharacter? local;
+    final remoteTag = _slug(remote.name);
+    final remoteIdentity = _canonicalCharacterTagKey(remoteTag);
     final normalized =
         remote.name.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
-    for (final item in _allCharacters) {
+    for (final item in catalogCharacters) {
       if (item.animeTag != animeTag) continue;
       final itemName =
           item.characterEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
       if (itemName == normalized ||
-          item.characterTag.toLowerCase() == _slug(remote.name)) {
+          item.characterTag.toLowerCase() == remoteTag ||
+          _canonicalCharacterTagKey(item.characterTag) == remoteIdentity) {
         local = item;
         break;
       }
     }
+    if (local != null) return local;
     return CatalogCharacter(
       id: 'jikan_character_${remote.id}',
       animeZh: anime.titleJapanese.isEmpty ? anime.title : anime.titleJapanese,
@@ -14887,8 +14949,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       animeTag: animeTag,
       characterZh: remote.nameKanji.isEmpty ? remote.name : remote.nameKanji,
       characterEn: remote.name,
-      characterTag: _slug(remote.name),
-      traits: local?.traits ?? _remoteTraits(remote),
+      characterTag: remoteTag,
+      traits: _remoteTraits(remote),
     );
   }
 
@@ -14951,7 +15013,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final character = _remoteCatalogCharacter(anime, remote);
       final existingIndex =
           _customCharacters.indexWhere((item) => item.id == character.id);
-      if (existingIndex < 0) {
+      final builtIn = catalogCharacters.any((item) => item.id == character.id);
+      if (builtIn) {
+        // The built-in record already has the canonical model name and
+        // translated traits; importing it must not create a duplicate.
+      } else if (existingIndex < 0) {
         _customCharacters.add(character);
       } else {
         // A previous lookup may have saved the name without the optional
@@ -22055,8 +22121,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                                 ? '${character.characterZh} · ${_catalogCharacterPromptLabel(character)}'
                                                 : '${character.characterZh} · ${_catalogCharacterPromptLabel(character)}\n${character.unitZh}',
                                             textAlign: TextAlign.center),
-                                        selected:
-                                            slot.characterId == character.id,
+                                        selected: _isSelectedCharacter(
+                                            slot, character),
                                         onSelected: (_) =>
                                             _selectCharacter(index, character)))
                                     .toList())

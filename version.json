@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.188",
-    "build":  190,
-    "label":  "1.1.188+190",
+    "version":  "1.1.189",
+    "build":  191,
+    "label":  "1.1.189+191",
     "history":  [
+                    {
+                        "version":  "1.1.189",
+                        "build":  191,
+                        "label":  "1.1.189+191",
+                        "date":  "2026-10-05",
+                        "notes":  "修正世界計畫初音未來使用 hatsune_miku_(project_sekai)，各團體持續以正式團體標籤區分; 修正遠端查詢造成的姓名倒置重複角色，美柑等別名自動回用固定角色資料; 修正宵崎奏舊資料殘留 long hair，固定特徵只保留 very long hair"
+                    },
                     {
                         "version":  "1.1.188",
                         "build":  190,

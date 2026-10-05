@@ -4241,7 +4241,9 @@ final catalogCharacters = <CatalogCharacter>[
     id: 'project_sekai_hatsune_miku',
     characterZh: '初音未來',
     characterEn: 'Hatsune Miku',
-    characterTag: 'hatsune_miku',
+    // Project Sekai has its own qualified character tag.  Plain
+    // `hatsune_miku` is reserved for the generic VOCALOID entry.
+    characterTag: 'hatsune_miku_(project_sekai)',
     unitZh: 'VIRTUAL SINGER',
     unitEn: 'VIRTUAL SINGER',
     unitTag: 'virtual_singer',
