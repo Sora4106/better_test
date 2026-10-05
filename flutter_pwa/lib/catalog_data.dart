@@ -2982,6 +2982,13 @@ const supplementalTags = <CatalogTagData>[
       zh: '精緻動漫美學',
       en: 'refined anime aesthetic',
       order: 11),
+  CatalogTagData(
+      id: 'quality_hyperrealistic',
+      group: '品質',
+      zh: '超寫實',
+      en: 'hyperrealistic',
+      order: 11,
+      support: 'description'),
 ];
 
 CatalogTagData _trait(String id, String zh, String en, {bool adult = false}) =>

@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.193';
-const appBuildNumber = 195;
-const appVersionLabel = '1.1.193+195';
+﻿const appVersion = '1.1.194';
+const appBuildNumber = 196;
+const appVersionLabel = '1.1.194+196';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.194', 'build': '196', 'label': '1.1.194+196', 'date': '2026-10-06', 'notes': '品質分類新增超寫實標籤，輸出為 hyperrealistic; 超寫實可與原有動漫、3D、光影與品質標籤自由搭配'},
   {'version': '1.1.193', 'build': '195', 'label': '1.1.193+195', 'date': '2026-10-05', 'notes': '新增臉部／嘴巴動態的微吐舌標籤 :p，適合閉嘴時僅露出舌尖; 保留原有 tongue out 作為完整吐舌，避免與微吐舌混淆'},
   {'version': '1.1.192', 'build': '194', 'label': '1.1.192+194', 'date': '2026-10-05', 'notes': '動漫角色改為預設只保留角色名稱與出處，固定外觀特徵改為手動選用; 選擇或更換角色時不再自動勾選髮色、髮型、身材等角色預設特徵; 保留角色特徵按鈕可隨時恢復該角色的固定外觀標籤'},
   {'version': '1.1.191', 'build': '193', 'label': '1.1.191+193', 'date': '2026-10-05', 'notes': '依 Character Select SAA 的 waiIllustriousSDXL 角色清單新增 12 個作品與 70 名角色; 新增原神、崩壞：星穹鐵道、明日方舟、蔚藍檔案、碧藍航線與 Fate 等角色分類; 參考清單角色以模型辨識名稱為主，預設不強加未驗證外觀特徵'},
   {'version': '1.1.190', 'build': '192', 'label': '1.1.190+192', 'date': '2026-10-05', 'notes': '人物卡片的需要細節改為按鈕，已選角色與保留角色特徵控制移至同一列; 已選角色改為可辨識的角色按鈕，特徵控制可直接切換保留角色特徵或只保留角色名稱; 移除細節編輯區下方重複的角色與特徵摘要顯示'},
-  {'version': '1.1.189', 'build': '191', 'label': '1.1.189+191', 'date': '2026-10-05', 'notes': '修正世界計畫初音未來使用 hatsune_miku_(project_sekai)，各團體持續以正式團體標籤區分; 修正遠端查詢造成的姓名倒置重複角色，美柑等別名自動回用固定角色資料; 修正宵崎奏舊資料殘留 long hair，固定特徵只保留 very long hair'},
 ];
