@@ -86,6 +86,11 @@ final List<CatalogTagData> expressionCatalogTags = <CatalogTagData>[
       ('緊張微笑', 'nervous smile'),
       ('悲傷微笑', 'sad smile'),
       ('假笑', 'false smile'),
+      // `:p` is the Danbooru / Illustrious mouth expression for a tongue
+      // peeking out from an otherwise closed mouth.  It is deliberately kept
+      // separate from `tongue out`, which commonly renders a much longer,
+      // fully extended tongue.
+      ('微吐舌（閉嘴／舌尖微露）', ':p'),
       ('咬緊牙齒', 'gritted teeth'),
       ('上排牙齒可見', 'upper teeth'),
       ('下排牙齒可見', 'lower teeth'),

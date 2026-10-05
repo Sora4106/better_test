@@ -2985,9 +2985,10 @@ class PersonSlot {
   String featureExtraPositive = '';
   String clothingExtraPositive = '';
   String poseExtraPositive = '';
-  // Anime character names are always kept.  This flag only controls the
-  // character's automatically-applied, stable appearance traits.
-  bool characterTraitsEnabled = true;
+  // Anime character names are always kept.  Appearance traits deliberately
+  // start disabled, so choosing a character never silently adds a preset look.
+  // Users can opt in from the character header when they want those traits.
+  bool characterTraitsEnabled = false;
   // Each person's identity, fixed traits, outfit, and individual actions use
   // one shared outer emphasis block. Turning this off only omits the explicit
   // `:1.05`-style suffix.
@@ -3067,7 +3068,9 @@ class PersonSlot {
         ..featureExtraPositive = '${json['featureExtraPositive'] ?? ''}'
         ..clothingExtraPositive = '${json['clothingExtraPositive'] ?? ''}'
         ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}'
-        ..characterTraitsEnabled = json['characterTraitsEnabled'] != false
+        // Old saved sessions that explicitly enabled traits keep that choice;
+        // absent values and all new characters start name/source only.
+        ..characterTraitsEnabled = json['characterTraitsEnabled'] == true
         ..promptWeightEnabled = json['promptWeightEnabled'] != false
         ..personPromptWeight = (double.tryParse(
                     '${json['personPromptWeight'] ?? json['characterPromptWeight'] ?? json['clothingPromptWeight'] ?? 1.05}') ??
@@ -11193,7 +11196,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _personSlots[index].hairGradientStyle = _defaultHairGradientStyle;
     _personSlots[index].physicalTraitGradientColorIds =
         <String, List<String>>{};
-    _personSlots[index].characterTraitsEnabled = true;
+    // A replacement character begins from its model-recognized name/source.
+    // Fixed visual traits are opt-in and can be restored from the header.
+    _personSlots[index].characterTraitsEnabled = false;
     _removedCharacterTags.remove(index);
   }
 
