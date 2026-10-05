@@ -10220,7 +10220,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (ungrouped.isNotEmpty) ungrouped.join(', '),
     ];
     if (sections.isEmpty) return '';
-    return sections.join('. ');
+    return sections.join(', ');
   }
 
   int get _personSelectedCount =>
@@ -11312,20 +11312,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (slot.mode == '動漫角色') {
       final character = _characterForNew(slot);
       if (character == null) return [];
-      // A catalog character tag already carries its source identity (for
-      // example `leaf_(pokemon)`). Emitting the franchise tag again adds
-      // noise without making the character more specific. Unit tags remain:
-      // they distinguish variants such as Nightcord at 25:00 Miku.
+      // BetterWaifu / Danbooru character triggers are most reliable when the
+      // character tag is immediately followed by its series tag. Keep an
+      // optional unit tag after the series to distinguish variants such as
+      // Project Sekai's different Miku designs.
       final emitCharacterTag = character.characterTag.trim().isNotEmpty &&
           !_isRemovedCharacterTag(index, character.characterTag);
       return [
-        if (!emitCharacterTag &&
-            !_isRemovedCharacterTag(index, character.animeTag))
+        if (emitCharacterTag) character.characterTag,
+        if (!_isRemovedCharacterTag(index, character.animeTag))
           character.animeTag,
         if (character.unitTag.trim().isNotEmpty &&
             !_isRemovedCharacterTag(index, character.unitTag))
           character.unitTag,
-        if (emitCharacterTag) character.characterTag,
         ..._characterTraitsForSlot(slot, index).map((item) => item.en),
       ];
     }
@@ -11333,13 +11332,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final originalCharacterTag = _cleanTag(slot.originalCharacterTag);
     final emitOriginalCharacter = originalCharacterTag.isNotEmpty &&
         !_isRemovedCharacterTag(index, originalCharacterTag);
-    if (!emitOriginalCharacter &&
-        _cleanTag(slot.originalAnimeTag).isNotEmpty &&
-        !_isRemovedCharacterTag(index, slot.originalAnimeTag)) {
-      own.add(_cleanTag(slot.originalAnimeTag));
-    }
     if (emitOriginalCharacter) {
       own.add(originalCharacterTag);
+    }
+    if (_cleanTag(slot.originalAnimeTag).isNotEmpty &&
+        !_isRemovedCharacterTag(index, slot.originalAnimeTag)) {
+      own.add(_cleanTag(slot.originalAnimeTag));
     }
     own.addAll(_extraTags(slot.originalTraits)
         .where((tag) => !_isRemovedCharacterTag(index, tag)));
@@ -11355,8 +11353,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final result = <_GeneratedOutputTag>[];
       final emitCharacterTag = character.characterTag.trim().isNotEmpty &&
           !_isRemovedCharacterTag(index, character.characterTag);
-      if (!emitCharacterTag &&
-          !_isRemovedCharacterTag(index, character.animeTag)) {
+      if (emitCharacterTag) {
+        result.add(_GeneratedOutputTag(
+          zh: character.characterZh,
+          en: character.characterTag,
+          personIndex: index,
+          characterTag: true,
+        ));
+      }
+      if (!_isRemovedCharacterTag(index, character.animeTag)) {
         result.add(_GeneratedOutputTag(
           zh: character.animeZh,
           en: character.animeTag,
@@ -11371,14 +11376,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ? character.unitEn
               : character.unitZh,
           en: character.unitTag,
-          personIndex: index,
-          characterTag: true,
-        ));
-      }
-      if (emitCharacterTag) {
-        result.add(_GeneratedOutputTag(
-          zh: character.characterZh,
-          en: character.characterTag,
           personIndex: index,
           characterTag: true,
         ));
@@ -11398,24 +11395,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final characterTag = _cleanTag(slot.originalCharacterTag);
     final emitOriginalCharacter =
         characterTag.isNotEmpty && !_isRemovedCharacterTag(index, characterTag);
-    if (!emitOriginalCharacter &&
-        animeTag.isNotEmpty &&
-        !_isRemovedCharacterTag(index, animeTag)) {
-      result.add(_GeneratedOutputTag(
-        zh: slot.originalAnimeZh.trim().isEmpty
-            ? animeTag
-            : slot.originalAnimeZh.trim(),
-        en: animeTag,
-        personIndex: index,
-        characterTag: true,
-      ));
-    }
     if (emitOriginalCharacter) {
       result.add(_GeneratedOutputTag(
         zh: slot.originalCharacterZh.trim().isEmpty
             ? characterTag
             : slot.originalCharacterZh.trim(),
         en: characterTag,
+        personIndex: index,
+        characterTag: true,
+      ));
+    }
+    if (animeTag.isNotEmpty && !_isRemovedCharacterTag(index, animeTag)) {
+      result.add(_GeneratedOutputTag(
+        zh: slot.originalAnimeZh.trim().isEmpty
+            ? animeTag
+            : slot.originalAnimeZh.trim(),
+        en: animeTag,
         personIndex: index,
         characterTag: true,
       ));
@@ -11638,6 +11633,38 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       .trim()
       .replaceAll(RegExp(r'^[,，。.;\s]+|[,，。.;\s]+$'), '')
       .replaceAll(RegExp(r'\s+'), ' ');
+
+  /// Canonical tag spellings used by the target Danbooru-style model.
+  ///
+  /// The catalogue stores stable database-style IDs (underscores and unescaped
+  /// parentheses) so selections, reverse import, and old saved data stay
+  /// compatible. Prompt output, however, follows BetterWaifu's recommended
+  /// human-readable form: spaces instead of underscores and escaped
+  /// parentheses. A handful of Project Sekai entries used old convenience
+  /// labels; map them to their actual character / unit trigger tags here.
+  String _canonicalModelTag(String value, {bool escapeParentheses = true}) {
+    var normalized =
+        _cleanTag(value).replaceAll(r'\(', '(').replaceAll(r'\)', ')');
+    const aliases = <String, String>{
+      'leo/need_miku': 'hatsune_miku_(project_sekai)',
+      'more_more_jump!_miku': 'hatsune_miku_(project_sekai)',
+      'vivid_bad_squad_miku': 'hatsune_miku_(project_sekai)',
+      'wonderlands_x_showtime_miku': 'hatsune_miku_(project_sekai)',
+      'leo_need': 'leo/need_(project_sekai)',
+      'more_more_jump': 'more_more_jump!_(project_sekai)',
+      'vivid_bad_squad': 'vivid_bad_squad_(project_sekai)',
+      'wonderlands_x_showtime': 'wonderlands_x_showtime_(project_sekai)',
+      '25-ji_nightcord_de': '25-ji_nightcord_de._(project_sekai)',
+      'virtual_singer': 'virtual_singer_(project_sekai)',
+    };
+    normalized = aliases[normalized.toLowerCase()] ?? normalized;
+    normalized = normalized.replaceAll('_', ' ');
+    if (!escapeParentheses) return normalized;
+    return normalized.replaceAll('(', r'\(').replaceAll(')', r'\)');
+  }
+
+  String _catalogCharacterPromptLabel(CatalogCharacter character) =>
+      _canonicalModelTag(character.characterTag, escapeParentheses: false);
 
   /// The unregistered-tag inbox is hidden in compact mobile layouts.
   bool get _isCompactMobileViewport => (html.window.innerWidth ?? 999) < 600;
@@ -11975,7 +12002,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ).hasMatch(result)) {
       return '';
     }
-    return _cleanTag(result);
+    return _canonicalModelTag(result);
   }
 
   List<String> get _negativeTokens {
@@ -12032,7 +12059,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     void addSharedTokens(Iterable<String> values) {
       for (final value in values.map(_moderationSafePromptTag)) {
         if (value.isNotEmpty && usedShared.add(value.toLowerCase())) {
-          output.add('$value.');
+          output.add(value);
         }
       }
     }
@@ -12074,7 +12101,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         final suffix = slot.promptWeightEnabled
             ? ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}'
             : '';
-        output.add('(${segments.join('. ')}$suffix).');
+        output.add('(${segments.join(', ')}$suffix)');
       }
       usedShared.addAll(
         personal
@@ -12087,14 +12114,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     addSharedTokens(_sharedActionTokens);
     addSharedTokens(_sharedPositiveTokens);
-    return output.join(' ');
+    return output.join(', ');
   }
 
   String get _positiveText {
     final hasDetailedPerson = _personSlots.any((slot) => slot.detailed);
     return hasDetailedPerson
         ? _groupedPositiveText()
-        : _positiveTokens.map((tag) => '$tag.').join(' ');
+        : _positiveTokens.join(', ');
   }
 
   String get _positiveZh {
@@ -12155,7 +12182,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return tokens.join('。 ');
   }
 
-  String get _negativeText => _negativeTokens.map((tag) => '$tag.').join(' ');
+  String get _negativeText => _negativeTokens.join(', ');
 
   void _toggleNegativeTag(String english, String chinese) {
     final tags = _extraTags(_negative.text);
@@ -15567,7 +15594,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 const Text('英文組合預覽',
                     style: TextStyle(fontWeight: FontWeight.w700)),
                 const SizedBox(height: 6),
-                SelectableText(preview.map((tag) => '${tag.en}.').join(' ')),
+                SelectableText(preview.map((tag) => tag.en).join(', ')),
                 if (resolution.missing.isNotEmpty) ...[
                   const SizedBox(height: 14),
                   Text(
@@ -20619,14 +20646,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final suffix = slot.promptWeightEnabled
         ? ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}'
         : '';
-    return '(${visibleSegments.join('. ')}$suffix).';
+    return '(${visibleSegments.join(', ')}$suffix)';
   }
 
   String _stepEnglishOutput(int stepIndex, List<_GeneratedOutputTag> tags) {
     final output = <String>[];
     final trailingPersonTags = <_GeneratedOutputTag>[];
     if (stepIndex == 1) {
-      output.addAll(_peopleTokensNew().map((value) => '$value.'));
+      output.addAll(_peopleTokensNew());
     }
 
     for (var personIndex = 0;
@@ -20679,10 +20706,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     for (final tag in shared) {
       final value = _moderationSafePromptTag(tag.en);
       if (value.isNotEmpty && seenShared.add(value.toLowerCase())) {
-        output.add('$value.');
+        output.add(value);
       }
     }
-    return output.join(' ');
+    return output.join(', ');
   }
 
   Widget _stepSelectionOutput(int stepIndex) {
@@ -20748,7 +20775,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ? ''
                     : '人物 ${tag.personIndex! + 1} · ';
                 return Tooltip(
-                  message: locked ? '${tag.en}（角色名稱必定保留）' : tag.en,
+                  message: locked
+                      ? '${_moderationSafePromptTag(tag.en)}（角色名稱必定保留）'
+                      : _moderationSafePromptTag(tag.en),
                   child: InputChip(
                     avatar: locked
                         ? const Icon(Icons.lock_outline, size: 15)
@@ -22023,8 +22052,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                     .map((character) => ChoiceChip(
                                         label: Text(
                                             character.unitZh.isEmpty
-                                                ? '${character.characterZh} · ${character.characterEn}'
-                                                : '${character.characterZh} · ${character.characterEn}\n${character.unitZh}',
+                                                ? '${character.characterZh} · ${_catalogCharacterPromptLabel(character)}'
+                                                : '${character.characterZh} · ${_catalogCharacterPromptLabel(character)}\n${character.unitZh}',
                                             textAlign: TextAlign.center),
                                         selected:
                                             slot.characterId == character.id,
@@ -23036,7 +23065,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _chineseOutputTagChip(_GeneratedOutputTag tag) {
     final locked = _isMandatoryCharacterIdentityOutput(tag);
     return Tooltip(
-      message: locked ? '${tag.en}（角色名稱必定保留）' : tag.en,
+      message: locked
+          ? '${_moderationSafePromptTag(tag.en)}（角色名稱必定保留）'
+          : _moderationSafePromptTag(tag.en),
       child: InputChip(
         avatar: locked ? const Icon(Icons.lock_outline, size: 15) : null,
         label: Text(tag.zh),

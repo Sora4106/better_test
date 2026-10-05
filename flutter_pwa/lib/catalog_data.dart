@@ -3963,8 +3963,6 @@ final catalogCharacters = <CatalogCharacter>[
     unitEn: 'Nightcord at 25:00',
     unitTag: '25-ji_nightcord_de',
     traits: [
-      _trait('nightcord_miku_unit', '25時，在 Nightcord。初音未來',
-          'nightcord at 25:00 miku'),
       _trait(
           'nightcord_miku_nightcord', '25時，在 Nightcord。', '25-ji nightcord de'),
       _trait('nightcord_miku_pale_skin', '蒼白肌膚', 'pale skin'),
@@ -3994,8 +3992,6 @@ final catalogCharacters = <CatalogCharacter>[
     unitTag: 'leo_need',
     unitPrompt: 'leo/need (project sekai)',
     traits: [
-      _trait('leo_need_miku_identity', 'Leo/need 初音未來', 'leo/need miku'),
-      _trait('leo_need_miku_source', 'Leo/need', 'leo/need (project sekai)'),
       _trait('leo_need_miku_green_hair', '綠髮', 'green hair'),
       _trait('leo_need_miku_pink_hair', '粉紅髮', 'pink hair'),
       _trait('leo_need_miku_long_hair', '長髮', 'long hair'),
@@ -4014,10 +4010,6 @@ final catalogCharacters = <CatalogCharacter>[
     unitTag: 'more_more_jump',
     unitPrompt: 'more more jump! (project sekai)',
     traits: [
-      _trait('more_more_jump_miku_identity', 'MORE MORE JUMP！初音未來',
-          'more more jump! miku'),
-      _trait('more_more_jump_miku_source', 'MORE MORE JUMP！',
-          'more more jump! (project sekai)'),
       _trait('more_more_jump_miku_aqua_hair', '水藍髮', 'aqua hair'),
       _trait('more_more_jump_miku_very_long_hair', '極長髮', 'very long hair'),
       _trait('more_more_jump_miku_twintails', '雙馬尾', 'twintails'),
@@ -4035,10 +4027,6 @@ final catalogCharacters = <CatalogCharacter>[
     unitTag: 'vivid_bad_squad',
     unitPrompt: 'vivid bad squad (project sekai)',
     traits: [
-      _trait('vivid_bad_squad_miku_identity', 'Vivid BAD SQUAD 初音未來',
-          'vivid bad squad miku'),
-      _trait('vivid_bad_squad_miku_source', 'Vivid BAD SQUAD',
-          'vivid bad squad (project sekai)'),
       _trait('vivid_bad_squad_miku_aqua_hair', '水藍髮', 'aqua hair'),
       _trait('vivid_bad_squad_miku_long_hair', '長髮', 'long hair'),
       _trait('vivid_bad_squad_miku_high_twintails', '高雙馬尾', 'high twintails'),
@@ -4056,10 +4044,6 @@ final catalogCharacters = <CatalogCharacter>[
     unitTag: 'wonderlands_x_showtime',
     unitPrompt: 'wonderlands x showtime (project sekai)',
     traits: [
-      _trait('wonderlands_x_showtime_miku_identity',
-          'Wonderlands×Showtime 初音未來', 'wonderlands x showtime miku'),
-      _trait('wonderlands_x_showtime_miku_source', 'Wonderlands×Showtime',
-          'wonderlands x showtime (project sekai)'),
       _trait('wonderlands_x_showtime_miku_blonde_hair', '金髮', 'blonde hair'),
       _trait('wonderlands_x_showtime_miku_blue_hair', '藍髮', 'blue hair'),
       _trait('wonderlands_x_showtime_miku_very_long_hair', '極長髮',
