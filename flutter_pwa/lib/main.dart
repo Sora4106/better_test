@@ -14553,6 +14553,149 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return matches;
   }
 
+  // Keep the picker compact and Chinese-first. The English work name remains
+  // searchable and is still used for the prompt data, but it no longer makes
+  // the visible selection chips uneven or hard to scan.
+  static const Map<String, String> _animeShortZhByTag = <String, String>{
+    'to_love-ru': '出包',
+    'project_sekai': '世界計畫',
+    'pokemon': '寶可夢',
+    'sword_art_online': '刀劍',
+    're:zero_kara_hajimeru_isekai_seikatsu': '從零開始',
+    'darling_in_the_franxx': '國家隊',
+    'sono_bisque_doll_wa_koi_wo_suru': '更衣人偶',
+    'spy_x_family': '間諜家家酒',
+    'chainsaw_man': '鏈鋸',
+    'kimetsu_no_yaiba': '鬼滅',
+    'bishoujo_senshi_sailor_moon': '美少女戰士',
+    'neon_genesis_evangelion': '福音戰士',
+    'one_piece': '航海王',
+    'fairy_tail': '妖精尾巴',
+    'highschool_dxd': '惡魔高校',
+    'kaguya-sama_wa_kokurasetai': '輝夜',
+    'oshi_no_ko': '我推的孩子',
+    'sousou_no_frieren': '芙莉蓮',
+    'kono_subarashii_sekai_ni_shukufuku_wo!': '美好世界',
+    'fate/stay_night': '命運之夜',
+    'fate_extra': '命運外傳',
+    'naruto': '火影',
+    'bleach': '死神',
+    'dragon_ball': '七龍珠',
+    'black_lagoon': '企業傭兵',
+    'cowboy_bebop': '星際牛仔',
+    'ghost_in_the_shell': '攻殼機動隊',
+    'lupin_iii': '魯邦三世',
+    'jujutsu_kaisen': '咒術',
+    'boku_no_hero_academia': '我的英雄',
+    'fullmetal_alchemist': '鋼之鍊金術師',
+    'nier:automata': '尼爾：自動人形',
+    'genshin_impact': '原神',
+    'honkai_star_rail': '星穹鐵道',
+    'arknights': '明日方舟',
+    'blue_archive': '蔚藍檔案',
+    'azur_lane': '碧藍航線',
+    'fate': '命運系列',
+    'bocchi_the_rock!': '孤獨搖滾',
+    'mahou_shoujo_madoka_magica': '魔法少女小圓',
+    'k-on!': '輕音部',
+    'cyberpunk_edgerunners': '邊緣行者',
+    'vocaloid': '初音家族',
+  };
+
+  String _compactAnimeChoiceLabel(CatalogCharacter anime) {
+    final preset = _animeShortZhByTag[anime.animeTag];
+    if (preset != null) return preset;
+    final chineseOnly = anime.animeZh
+        .replaceAll(RegExp(r'\s*feat\..*$', caseSensitive: false), '')
+        .trim();
+    if (chineseOnly.length <= 10) return chineseOnly;
+    return '${chineseOnly.substring(0, 9)}…';
+  }
+
+  Widget _pickerChoiceGrid({
+    required int itemCount,
+    required Widget Function(int index) itemBuilder,
+    double tileHeight = 64,
+  }) =>
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final columns =
+              max(2, ((constraints.maxWidth + 16) / 210).floor()).toInt();
+          return GridView.builder(
+            shrinkWrap: true,
+            primary: false,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: itemCount,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              mainAxisExtent: tileHeight,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 12,
+            ),
+            itemBuilder: (_, index) => itemBuilder(index),
+          );
+        },
+      );
+
+  Widget _animeChoiceChip(
+      PersonSlot slot, int slotIndex, CatalogCharacter anime) {
+    final shortName = _compactAnimeChoiceLabel(anime);
+    return Tooltip(
+      message: '${anime.animeZh}\n簡稱：$shortName',
+      child: SizedBox.expand(
+        child: ChoiceChip(
+          labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+          label: Text(
+            shortName,
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          selected: slot.animeTag == anime.animeTag,
+          onSelected: (_) => _selectAnime(slotIndex, anime),
+        ),
+      ),
+    );
+  }
+
+  Widget _characterChoiceChip(
+      PersonSlot slot, int slotIndex, CatalogCharacter character) {
+    final hasUnit = character.unitZh.trim().isNotEmpty;
+    return Tooltip(
+      message: [
+        character.characterZh,
+        if (hasUnit) character.unitZh,
+        _catalogCharacterPromptLabel(character),
+      ].join('\n'),
+      child: SizedBox.expand(
+        child: ChoiceChip(
+          labelPadding: const EdgeInsets.symmetric(horizontal: 5),
+          label: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                character.characterZh,
+                textAlign: TextAlign.center,
+                maxLines: hasUnit ? 1 : 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+              if (hasUnit)
+                Text(
+                  character.unitZh,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(fontSize: 10, height: 1.1),
+                ),
+            ],
+          ),
+          selected: _isSelectedCharacter(slot, character),
+          onSelected: (_) => _selectCharacter(slotIndex, character),
+        ),
+      ),
+    );
+  }
+
   List<CatalogCharacter> _matchingCharacters(PersonSlot slot) {
     final lower = slot.query.trim().toLowerCase();
     final source = _allCharacters.where((item) {
@@ -21971,7 +22114,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ),
         const SizedBox(height: 4),
         const Text(
-            '人物數量會依下方角色資料卡自動計算。每個人物都要選擇「動漫角色」、「原創角色」，或明確選擇「不需細節」。動漫角色會自動帶入動漫英文 tag、角色英文 tag 與角色特徵。'),
+            '人物數量會依下方角色資料卡自動計算。每個人物都要選擇「動漫角色」、「原創角色」，或明確選擇「不需細節」。動漫角色預設只帶入作品與角色名稱；需要時再按「保留角色特徵」。'),
         const SizedBox(height: 12),
         ..._personSlots.asMap().entries.map((entry) {
           final index = entry.key;
@@ -22119,17 +22262,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         _remoteCharacterPanel(index),
                         const SizedBox(height: 9),
                         if (animeMatches.isNotEmpty)
-                          Wrap(
-                              spacing: 7,
-                              runSpacing: 7,
-                              children: animeMatches
-                                  .map((anime) => ChoiceChip(
-                                      label: Text(
-                                          '${anime.animeZh} · ${anime.animeEn}'),
-                                      selected: slot.animeTag == anime.animeTag,
-                                      onSelected: (_) =>
-                                          _selectAnime(index, anime)))
-                                  .toList())
+                          _pickerChoiceGrid(
+                            itemCount: animeMatches.length,
+                            tileHeight: 60,
+                            itemBuilder: (animeIndex) => _animeChoiceChip(
+                                slot, index, animeMatches[animeIndex]),
+                          )
                         else
                           const Text('查無動漫資料，可新增自己的動漫與角色。'),
                         if (slot.animeTag.isNotEmpty) ...[
@@ -22144,21 +22282,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                   setState(() => slot.query = value)),
                           const SizedBox(height: 9),
                           if (matches.isNotEmpty)
-                            Wrap(
-                                spacing: 7,
-                                runSpacing: 7,
-                                children: matches
-                                    .map((character) => ChoiceChip(
-                                        label: Text(
-                                            character.unitZh.isEmpty
-                                                ? '${character.characterZh} · ${_catalogCharacterPromptLabel(character)}'
-                                                : '${character.characterZh} · ${_catalogCharacterPromptLabel(character)}\n${character.unitZh}',
-                                            textAlign: TextAlign.center),
-                                        selected: _isSelectedCharacter(
-                                            slot, character),
-                                        onSelected: (_) =>
-                                            _selectCharacter(index, character)))
-                                    .toList())
+                            _pickerChoiceGrid(
+                              itemCount: matches.length,
+                              tileHeight: 68,
+                              itemBuilder: (characterIndex) =>
+                                  _characterChoiceChip(
+                                slot,
+                                index,
+                                matches[characterIndex],
+                              ),
+                            )
                           else
                             const Text('查無此動漫角色，可自行新增角色資料。'),
                         ],
