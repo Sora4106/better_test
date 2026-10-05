@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.190",
-    "build":  192,
-    "label":  "1.1.190+192",
+    "version":  "1.1.191",
+    "build":  193,
+    "label":  "1.1.191+193",
     "history":  [
+                    {
+                        "version":  "1.1.191",
+                        "build":  193,
+                        "label":  "1.1.191+193",
+                        "date":  "2026-10-05",
+                        "notes":  "依 Character Select SAA 的 waiIllustriousSDXL 角色清單新增 12 個作品與 70 名角色; 新增原神、崩壞：星穹鐵道、明日方舟、蔚藍檔案、碧藍航線與 Fate 等角色分類; 參考清單角色以模型辨識名稱為主，預設不強加未驗證外觀特徵"
+                    },
                     {
                         "version":  "1.1.190",
                         "build":  192,
