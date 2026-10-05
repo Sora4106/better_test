@@ -6451,6 +6451,7 @@ List<TagItem> _seedTags() => [
       _tag('nudity_nude', '裸露', '裸體', 'nude', 6, adult: true),
       _tag('nudity_nude_female', '裸露', '裸體女性', 'nude female', 6, adult: true),
       _tag('nudity_vagina', '裸露', '陰部（成年角色）', 'vagina', 6, adult: true),
+      _tag('nudity_penis', '裸露', '陰莖（成年角色）', 'penis', 6, adult: true),
       _tag('nudity_topless', '裸露', '上空', 'topless', 6, adult: true),
       _tag('nudity_bottomless', '裸露', '下空', 'bottomless', 6, adult: true),
       _tag('nudity_bare_shoulders', '裸露', '裸肩', 'bare shoulders', 6),
