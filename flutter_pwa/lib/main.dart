@@ -22024,21 +22024,49 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                       slot.gender = value ?? slot.gender;
                                       _persist();
                                     }))),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Switch(
-                                value: slot.detailed,
-                                onChanged: (value) => setState(() {
-                                      slot.detailed = value;
-                                      if (value) {
-                                        _syncCharacterTraitsForSlot(index);
-                                      }
-                                      _persist();
-                                    })),
-                            const Text('需要細節'),
-                          ],
+                        FilterChip(
+                          avatar: const Icon(Icons.tune_outlined, size: 17),
+                          label: const Text('需要細節'),
+                          selected: slot.detailed,
+                          onSelected: (value) => setState(() {
+                            slot.detailed = value;
+                            if (value) {
+                              _syncCharacterTraitsForSlot(index);
+                            }
+                            _persist();
+                          }),
                         ),
+                        if (slot.detailed && selectedCharacter != null)
+                          ActionChip(
+                            avatar: const Icon(Icons.person_outline, size: 17),
+                            label: Text(
+                              '角色：${selectedCharacter.characterZh}',
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            tooltip: '${selectedCharacter.characterZh} · '
+                                '${_catalogCharacterPromptLabel(selectedCharacter)}',
+                            onPressed: () => setState(() {
+                              // This compact identity button keeps the
+                              // selected character visible beside the detail
+                              // control without changing the choice.
+                              slot.detailed = true;
+                              _persist();
+                            }),
+                          ),
+                        if (slot.detailed && selectedCharacter != null)
+                          FilterChip(
+                            avatar: Icon(
+                                slot.characterTraitsEnabled
+                                    ? Icons.visibility_outlined
+                                    : Icons.visibility_off_outlined,
+                                size: 17),
+                            label: Text(slot.characterTraitsEnabled
+                                ? '保留角色特徵'
+                                : '只保留角色名稱'),
+                            selected: slot.characterTraitsEnabled,
+                            onSelected: (_) => _setCharacterTraitsEnabled(
+                                index, !slot.characterTraitsEnabled),
+                          ),
                       ],
                     ),
                     if (!slot.detailed)
@@ -22134,7 +22162,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             onPressed: _addCustomCharacter,
                             icon: const Icon(Icons.person_add_alt_1),
                             label: const Text('新增自訂動漫與角色')),
-                        if (selectedCharacter != null)
+                        // The selected-character and trait controls now live
+                        // beside the detail button above, so this former
+                        // inline summary is not shown during detail editing.
+                        if (selectedCharacter != null && !slot.detailed)
                           Padding(
                               padding: const EdgeInsets.only(top: 8),
                               child: Column(
