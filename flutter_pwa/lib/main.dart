@@ -3212,6 +3212,7 @@ const _clothingGroupNeckAccessory = '配件・頸肩';
 const _clothingGroupHandAccessory = '配件・手臂';
 const _clothingGroupWaistAccessory = '配件・腰部';
 const _clothingGroupLegAccessory = '配件・腿部';
+const _clothingGroupFootAccessory = '配件・腳踝足部';
 const _clothingGroupOtherAccessory = '配件・其他';
 const _clothingAccessoryPickerGroups = <String>{
   _clothingGroupHat,
@@ -3224,6 +3225,7 @@ const _clothingAccessoryPickerGroups = <String>{
   _clothingGroupHandAccessory,
   _clothingGroupWaistAccessory,
   _clothingGroupLegAccessory,
+  _clothingGroupFootAccessory,
   _clothingGroupOtherAccessory,
 };
 const _cosplayGroup = '角色扮演';
@@ -3259,6 +3261,7 @@ const _clothingGarmentPickerGroups = <String>[
   _clothingGroupHandAccessory,
   _clothingGroupWaistAccessory,
   _clothingGroupLegAccessory,
+  _clothingGroupFootAccessory,
   _clothingGroupSocks,
   _clothingGroupShoes,
   _clothingGroupOtherAccessory,
@@ -3407,21 +3410,29 @@ String _clothingAccessoryPickerGroup(TagItem tag) {
       .hasMatch(english)) {
     return _clothingGroupEyewear;
   }
-  if (RegExp(r'\b(mask|earring|ear cuff)\b').hasMatch(english)) {
+  if (RegExp(
+    r'\b(mask|earring|ear cuff|ear piercing|nose ring|septum ring|lip ring|bindi|forehead jewel|maang tikka|face chain)\b',
+  ).hasMatch(english)) {
     return _clothingGroupFaceAccessory;
   }
-  if (RegExp(r'\b(choker|necklace|necktie|neck ribbon|scarf|shawl|collar)\b')
-      .hasMatch(english)) {
+  if (RegExp(
+    r'\b(choker|necklace|pendant|brooch|necktie|neck ribbon|scarf|shawl|collar|shoulder jewelry|body chain|chest chain|chest harness)\b',
+  ).hasMatch(english)) {
     return _clothingGroupNeckAccessory;
   }
-  if (RegExp(r'\b(glove|arm guard|bracelet|wrist|sleeve)\b')
-      .hasMatch(english)) {
+  if (RegExp(r'\b(anklet|ankle|toe ring|foot chain)\b').hasMatch(english)) {
+    return _clothingGroupFootAccessory;
+  }
+  if (RegExp(
+    r'\b(glove|arm guard|bracelet|wrist|sleeve|armlet|upper arm band|ring|hand chain|hand jewelry)\b',
+  ).hasMatch(english)) {
     return _clothingGroupHandAccessory;
   }
-  if (RegExp(r'\b(thigh|leg garter)\b').hasMatch(english)) {
+  if (RegExp(r'\b(thigh|leg garter|leg chain|knee|calf)\b').hasMatch(english)) {
     return _clothingGroupLegAccessory;
   }
-  if (RegExp(r'\b(belt|sash|waist|garter)\b').hasMatch(english)) {
+  if (RegExp(r'\b(belt|sash|waist|garter|navel|belly|hip)\b')
+      .hasMatch(english)) {
     return _clothingGroupWaistAccessory;
   }
   return _clothingGroupOtherAccessory;
@@ -8125,8 +8136,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _clothingGroupHandAccessory => 7,
         _clothingGroupWaistAccessory => 8,
         _clothingGroupLegAccessory => 9,
-        _clothingGroupOtherAccessory => 10,
-        _ => 10,
+        _clothingGroupFootAccessory => 10,
+        _clothingGroupOtherAccessory => 11,
+        _ => 11,
       };
     }
     return switch (scope) {
@@ -14194,6 +14206,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupHandAccessory ||
       _clothingGroupWaistAccessory ||
       _clothingGroupLegAccessory ||
+      _clothingGroupFootAccessory ||
       _clothingGroupOtherAccessory ||
       '配件' ||
       '配件顏色' ||
@@ -16955,6 +16968,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupHandAccessory: Color(0xff38bdf8),
       _clothingGroupWaistAccessory: Color(0xfffacc15),
       _clothingGroupLegAccessory: Color(0xff2dd4bf),
+      _clothingGroupFootAccessory: Color(0xff4ade80),
       _clothingGroupOtherAccessory: Color(0xff94a3b8),
     };
     final accessoryTone = accessoryTones[group];
@@ -17388,6 +17402,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _clothingGroupHeadAccessory) return '其他頭部配件';
     if (group == _clothingGroupAnimalAccessory) return '獸耳／尾飾／翅飾';
     if (group == _clothingGroupLegAccessory) return '腿部飾品';
+    if (group == _clothingGroupFootAccessory) return '腳踝／足部飾品';
     if (group == '褲子') return '下身／褲子';
     if (group == '短褲') return '下身／短褲';
     if (group == '服裝') return '連身裙／洋裝';
@@ -20120,6 +20135,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupHandAccessory ||
       _clothingGroupWaistAccessory ||
       _clothingGroupLegAccessory ||
+      _clothingGroupFootAccessory ||
       _clothingGroupOtherAccessory =>
         'accessory',
       _ => null,
