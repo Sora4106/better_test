@@ -2990,9 +2990,9 @@ class PersonSlot {
   // Users can opt in from the character header when they want those traits.
   bool characterTraitsEnabled = false;
   // Each person's identity, fixed traits, outfit, and individual actions use
-  // one shared outer emphasis block. Turning this off only omits the explicit
-  // `:1.05`-style suffix.
-  bool promptWeightEnabled = true;
+  // one shared outer block. Weighting is opt-in: the parentheses remain even
+  // when this is off, while the explicit `:1.05` suffix is omitted.
+  bool promptWeightEnabled = false;
   double personPromptWeight = 1.05;
   // Legacy saved values are retained solely so older local saves can be read.
   // New prompt output and controls use [personPromptWeight].
@@ -3071,7 +3071,7 @@ class PersonSlot {
         // Old saved sessions that explicitly enabled traits keep that choice;
         // absent values and all new characters start name/source only.
         ..characterTraitsEnabled = json['characterTraitsEnabled'] == true
-        ..promptWeightEnabled = json['promptWeightEnabled'] != false
+        ..promptWeightEnabled = json['promptWeightEnabled'] == true
         ..personPromptWeight = (double.tryParse(
                     '${json['personPromptWeight'] ?? json['characterPromptWeight'] ?? json['clothingPromptWeight'] ?? 1.05}') ??
                 1.05)
