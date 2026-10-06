@@ -20647,7 +20647,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       showNext: false,
                       showGroupClear: true,
                       autoCollapseGroups: _autoCollapseClothingBaseGroups,
-                      verticalGroups: true,
                     ),
                   ),
                   if (adaptiveDetails.isNotEmpty)
