@@ -14848,12 +14848,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
-  void _downloadBackup() {
+  void _downloadBackup(
+      {String fileName = 'betterwaifu-full-state-backup.json'}) {
     final blob =
         html.Blob([jsonEncode(_fullStateBackup())], 'application/json');
     final url = html.Url.createObjectUrlFromBlob(blob);
     html.AnchorElement(href: url)
-      ..setAttribute('download', 'betterwaifu-full-state-backup.json')
+      ..setAttribute('download', fileName)
       ..click();
     html.Url.revokeObjectUrl(url);
   }
@@ -24368,6 +24369,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 ),
               ],
             ),
+            const SizedBox(height: 6),
+            Text(
+              '目前選擇 JSON 會保存各人物的已勾選標籤、服裝／姿勢欄位、權重與額外正向詞；匯入後會依原本欄位完整回填。',
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
             const SizedBox(height: 12),
             _chineseOutputField(),
             const SizedBox(height: 12),
@@ -24378,13 +24387,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               maxLines: 6,
             ),
             const SizedBox(height: 12),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: OutlinedButton.icon(
-                onPressed: _downloadCurrentTags,
-                icon: const Icon(Icons.download_outlined),
-                label: const Text('匯出標籤 TXT'),
-              ),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                OutlinedButton.icon(
+                  onPressed: _downloadCurrentTags,
+                  icon: const Icon(Icons.description_outlined),
+                  label: const Text('匯出標籤 TXT'),
+                ),
+                FilledButton.icon(
+                  onPressed: () => _downloadBackup(
+                    fileName: 'betterwaifu-current-selection.json',
+                  ),
+                  icon: const Icon(Icons.save_alt_outlined),
+                  label: const Text('匯出目前選擇 JSON'),
+                ),
+                OutlinedButton.icon(
+                  onPressed: _importBackup,
+                  icon: const Icon(Icons.file_open_outlined),
+                  label: const Text('匯入目前選擇 JSON'),
+                ),
+              ],
             ),
             const SizedBox(height: 12),
             Container(
