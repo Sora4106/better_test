@@ -3263,6 +3263,25 @@ const _clothingGarmentPickerGroups = <String>[
   _clothingGroupOtherAccessory,
 ];
 
+// Garment bases are mutually replacing choices, so selecting one can return
+// the user to the compact head-to-foot overview. Accessory groups and all
+// design details stay open because those categories intentionally allow more
+// than one selection.
+const _autoCollapseClothingBaseGroups = <String>{
+  _clothingGroupOuterwear,
+  _clothingGroupTop,
+  _clothingGroupOnePiece,
+  _clothingGroupCostume,
+  _clothingGroupPants,
+  _clothingGroupShorts,
+  _clothingGroupSkirt,
+  _clothingGroupUnderwear,
+  _clothingGroupBra,
+  _clothingGroupPanties,
+  _clothingGroupSocks,
+  _clothingGroupShoes,
+};
+
 String _scopedClothingGroup(String slot, String kind) =>
     '$_scopedClothingPrefix${slot}_$kind';
 
@@ -6966,6 +6985,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Map<int, Set<String>> _removedCharacterTags = <int, Set<String>>{};
   final Map<int, String> _personTagQueries = <int, String>{};
   final Map<String, String> _personActiveGroups = <String, String>{};
+  // Picker panels begin collapsed. The active group remembers the last
+  // category used, while this map only tracks which panel is visible now.
+  final Map<String, String> _openPickerGroups = <String, String>{};
+  final Map<int, String> _openCharacterPickers = <int, String>{};
   final Map<String, String> _pickerTagQueries = <String, String>{};
   final Map<String, TextEditingController> _pickerSearchControllers =
       <String, TextEditingController>{};
@@ -14487,6 +14510,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       shiftMap(_personCombinationIds);
       shiftMap(_removedCharacterTags);
       shiftMap(_personTagQueries);
+      shiftMap(_openCharacterPickers);
       shiftMap(_remoteAnimeResults);
       shiftMap(_remoteAnimeSelection);
       shiftMap(_remoteCharacters);
@@ -14520,6 +14544,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _personActiveGroups
         ..clear()
         ..addAll(shiftedActiveGroups);
+
+      // Picker expansion is presentation-only. Reset it after indices move so
+      // a panel belonging to a removed person cannot reopen for the next one.
+      _openPickerGroups.clear();
 
       for (final controller in _personSearchControllers.values) {
         controller.dispose();
@@ -14613,6 +14641,50 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return '${chineseOnly.substring(0, 9)}…';
   }
 
+  CatalogCharacter? _animeForSlot(PersonSlot slot) {
+    if (slot.animeTag.trim().isEmpty) return null;
+    for (final item in _allCharacters) {
+      if (item.animeTag == slot.animeTag) return item;
+    }
+    return null;
+  }
+
+  String _animeSelectionLabel(PersonSlot slot) {
+    final anime = _animeForSlot(slot);
+    if (anime != null) return _compactAnimeChoiceLabel(anime);
+    return slot.animeTag.trim().isEmpty ? '尚未選擇' : slot.animeTag;
+  }
+
+  Widget _characterPickerButton({
+    required IconData icon,
+    required String title,
+    required String selection,
+    required bool expanded,
+    required VoidCallback onPressed,
+    bool enabled = true,
+  }) {
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: enabled ? onPressed : null,
+        icon: Icon(icon, size: 19),
+        label: Row(
+          children: [
+            Expanded(
+              child: Text(
+                '$title：$selection',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.left,
+              ),
+            ),
+            Icon(expanded ? Icons.expand_less : Icons.expand_more, size: 19),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _pickerChoiceGrid({
     required int itemCount,
     required Widget Function(int index) itemBuilder,
@@ -14639,7 +14711,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       );
 
   Widget _animeChoiceChip(
-      PersonSlot slot, int slotIndex, CatalogCharacter anime) {
+    PersonSlot slot,
+    int slotIndex,
+    CatalogCharacter anime, {
+    VoidCallback? afterSelected,
+  }) {
     final shortName = _compactAnimeChoiceLabel(anime);
     return Tooltip(
       message: '${anime.animeZh}\n簡稱：$shortName',
@@ -14653,14 +14729,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             overflow: TextOverflow.ellipsis,
           ),
           selected: slot.animeTag == anime.animeTag,
-          onSelected: (_) => _selectAnime(slotIndex, anime),
+          onSelected: (_) {
+            _selectAnime(slotIndex, anime);
+            afterSelected?.call();
+          },
         ),
       ),
     );
   }
 
   Widget _characterChoiceChip(
-      PersonSlot slot, int slotIndex, CatalogCharacter character) {
+    PersonSlot slot,
+    int slotIndex,
+    CatalogCharacter character, {
+    VoidCallback? afterSelected,
+  }) {
     final hasUnit = character.unitZh.trim().isNotEmpty;
     return Tooltip(
       message: [
@@ -14691,7 +14774,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ],
           ),
           selected: _isSelectedCharacter(slot, character),
-          onSelected: (_) => _selectCharacter(slotIndex, character),
+          onSelected: (_) {
+            _selectCharacter(slotIndex, character);
+            afterSelected?.call();
+          },
         ),
       ),
     );
@@ -15313,6 +15399,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       slot.animeQuery = '';
       slot.query = '';
       slot.characterId = '';
+      _openCharacterPickers.remove(slotIndex);
       _removedCharacterTags.remove(slotIndex);
       _clearPersonSearchController(slotIndex, 'anime');
       _clearPersonSearchController(slotIndex, 'character');
@@ -15330,6 +15417,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       slot.animeTag = character.animeTag;
       slot.animeQuery = '';
       slot.query = '';
+      _openCharacterPickers.remove(slotIndex);
       _removedCharacterTags.remove(slotIndex);
       _clearPersonSearchController(slotIndex, 'anime');
       _clearPersonSearchController(slotIndex, 'character');
@@ -16908,7 +16996,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         : Colors.white;
   }
 
-  Widget _tagChip(TagItem tag, {int? personIndex}) {
+  Widget _tagChip(
+    TagItem tag, {
+    int? personIndex,
+    VoidCallback? afterToggle,
+  }) {
     final selected = personIndex == null
         ? _selectedIds.contains(tag.id)
         : _personTagIds(personIndex).contains(tag.id);
@@ -16980,7 +17072,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           side: BorderSide(
             color: selected ? tone : tone.withValues(alpha: .7),
           ),
-          onSelected: (_) => _toggle(tag, personIndex: personIndex),
+          onSelected: (_) async {
+            await _toggle(tag, personIndex: personIndex);
+            afterToggle?.call();
+          },
         ),
       ),
     );
@@ -16993,6 +17088,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     int colorOrder = 0,
     String? colorOrderLabel,
     VoidCallback? onTap,
+    VoidCallback? afterToggle,
   }) {
     final colorWord = _clothingColorWord(tag);
     final tone = _pickerLayerTone(tag.group);
@@ -17073,11 +17169,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           side: BorderSide(
             color: selected ? Colors.white : tone.withValues(alpha: .72),
           ),
-          onSelected: (_) {
+          onSelected: (_) async {
             if (onTap != null) {
               onTap();
             } else {
-              _toggle(tag, personIndex: personIndex);
+              await _toggle(tag, personIndex: personIndex);
+              afterToggle?.call();
             }
           },
         ),
@@ -17103,6 +17200,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final choices = _clothingColorChoices(mainGroup, secondaryGroup);
     if (choices.isEmpty) return const SizedBox.shrink();
     const tone = Color(0xff818cf8);
+    final expansionKey =
+        'clothing-color:$personIndex:${_clothingScopeForBase(base) ?? base.id}';
+    final isExpanded = _openPickerGroups[expansionKey] == 'open';
+    final colorSummary = [
+      if (main != null) '色 1：${_clothingColorChinesePrefix(main)}',
+      if (secondary != null) '色 2：${_clothingColorChinesePrefix(secondary)}',
+    ].join('／');
 
     Widget slotChip(int order, TagItem? color, String group, String role) {
       final label = color == null
@@ -17135,56 +17239,81 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
-            children: [
-              Icon(Icons.palette_outlined, color: tone, size: 20),
-              SizedBox(width: 8),
-              Text('配色：色 1／色 2', style: TextStyle(fontWeight: FontWeight.w800)),
-            ],
-          ),
-          const SizedBox(height: 7),
-          Wrap(
-            spacing: 7,
-            runSpacing: 7,
-            children: [
-              slotChip(1, main, mainGroup, '主色'),
-              slotChip(2, secondary, secondaryGroup, '次色／邊線色'),
-            ],
-          ),
-          const SizedBox(height: 7),
-          const Text(
-            '依序點選顏色：第一色為主色、第二色為次色。兩色都選好後，再點新色只替換色 2；可用上方 X 分別清除。輸出敘述維持主色與邊線／細節色的原本規則。',
-            style: TextStyle(fontSize: 11),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: choices.map((choice) {
-              final isMain =
-                  main != null && _isSameClothingColorChoice(main, choice);
-              final isSecondary = secondary != null &&
-                  _isSameClothingColorChoice(secondary, choice);
-              final order = isSecondary ? 2 : (isMain ? 1 : 0);
-              return _colorTagChip(
-                choice,
-                personIndex: personIndex,
-                selected: order > 0,
-                colorOrder: order,
-                colorOrderLabel: order == 1
-                    ? '色 1（主色）'
-                    : order == 2
-                        ? '色 2（次色）'
-                        : null,
-                onTap: () => _toggleClothingColorPair(
-                  personIndex,
-                  mainGroup,
-                  secondaryGroup,
-                  choice,
+          InkWell(
+            borderRadius: BorderRadius.circular(8),
+            onTap: () => setState(() {
+              if (isExpanded) {
+                _openPickerGroups.remove(expansionKey);
+              } else {
+                _openPickerGroups[expansionKey] = 'open';
+              }
+            }),
+            child: Row(
+              children: [
+                const Icon(Icons.palette_outlined, color: tone, size: 20),
+                const SizedBox(width: 8),
+                const Expanded(
+                  child: Text('配色：色 1／色 2',
+                      style: TextStyle(fontWeight: FontWeight.w800)),
                 ),
-              );
-            }).toList(),
+                Flexible(
+                  child: Text(
+                    colorSummary.ifEmpty('尚未選擇'),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: const TextStyle(fontSize: 11),
+                  ),
+                ),
+                Icon(isExpanded ? Icons.expand_less : Icons.expand_more),
+              ],
+            ),
           ),
+          if (isExpanded) ...[
+            const SizedBox(height: 7),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: [
+                slotChip(1, main, mainGroup, '主色'),
+                slotChip(2, secondary, secondaryGroup, '次色／邊線色'),
+              ],
+            ),
+            const SizedBox(height: 7),
+            const Text(
+              '依序點選顏色：第一色為主色、第二色為次色。兩色都選好後，再點新色只替換色 2；可用上方 X 分別清除。輸出敘述維持主色與邊線／細節色的原本規則。',
+              style: TextStyle(fontSize: 11),
+            ),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: choices.map((choice) {
+                final isMain =
+                    main != null && _isSameClothingColorChoice(main, choice);
+                final isSecondary = secondary != null &&
+                    _isSameClothingColorChoice(secondary, choice);
+                final order = isSecondary ? 2 : (isMain ? 1 : 0);
+                return _colorTagChip(
+                  choice,
+                  personIndex: personIndex,
+                  selected: order > 0,
+                  colorOrder: order,
+                  colorOrderLabel: order == 1
+                      ? '色 1（主色）'
+                      : order == 2
+                          ? '色 2（次色）'
+                          : null,
+                  onTap: () => _toggleClothingColorPair(
+                    personIndex,
+                    mainGroup,
+                    secondaryGroup,
+                    choice,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
         ],
       ),
     );
@@ -18123,7 +18252,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       bool showNext = true,
       bool showGroupClear = false,
       List<String>? searchGroups,
-      String? pickerStateKey}) {
+      String? pickerStateKey,
+      bool autoCollapseOnSelect = false,
+      Set<String>? autoCollapseGroups,
+      bool verticalGroups = false}) {
     if (groups.isEmpty) {
       return const Padding(
         padding: EdgeInsets.symmetric(vertical: 8),
@@ -18139,11 +18271,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final groupKey = personIndex == null
         ? null
         : '$personIndex:${pickerStateKey ?? groups.join('|')}';
+    final expansionKey =
+        '${personIndex == null ? 'shared' : 'person:$personIndex'}:${pickerStateKey ?? groups.join('|')}';
     final storedGroup = personIndex == null
         ? _activeGroup
         : (_personActiveGroups[groupKey!] ?? groups.first);
-    final currentGroup =
-        groups.contains(storedGroup) ? storedGroup : groups.first;
+    final openGroup = _openPickerGroups[expansionKey];
+    final isExpanded = openGroup != null && groups.contains(openGroup);
+    final currentGroup = isExpanded
+        ? openGroup
+        : (groups.contains(storedGroup) ? storedGroup : groups.first);
     final searchScopeGroups = searchGroups ?? groups;
     final pickerQueryKey = _pickerQueryKey(searchScopeGroups, personIndex);
     final tagQuery = _pickerTagQueries[pickerQueryKey] ?? '';
@@ -18169,19 +18306,45 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         personIndex == null ? _selectedIds : _personTagIds(personIndex);
     final selectedInCurrentGroup =
         allInCurrentGroup.where((tag) => selectedIds.contains(tag.id)).toList();
-    int selectedCountForGroup(String group) => _stepVisibleTags(
-          groups,
-          queryText: '',
-          activeGroup: group,
-          personIndex: personIndex,
-        ).where((tag) => selectedIds.contains(tag.id)).length;
+    List<TagItem> selectedSummaryTagsForGroup(String group) {
+      final direct = _stepVisibleTags(
+        groups,
+        queryText: '',
+        activeGroup: group,
+        personIndex: personIndex,
+      ).where((tag) => selectedIds.contains(tag.id)).toList();
+      final clothingScope =
+          personIndex == null ? null : _clothingScopeForPickerGroup(group);
+      if (clothingScope == null ||
+          _clothingAccessoryPickerGroups.contains(group) ||
+          !_clothingGarmentPickerGroups.contains(group)) {
+        return direct;
+      }
+      // A clothing scope only exists for a per-person picker. Keep the
+      // nullable UI argument out of the data lookup so analysis can also
+      // guarantee this branch is person-scoped.
+      final scopedPersonIndex = personIndex!;
+      return _selectedTagsForPerson(scopedPersonIndex)
+          .where((tag) => _clothingScopeForTag(tag) == clothingScope)
+          .toList();
+    }
+
+    int selectedCountForGroup(String group) =>
+        selectedSummaryTagsForGroup(group).length;
+    String selectedSummaryForGroup(String group) {
+      final selected = selectedSummaryTagsForGroup(group);
+      if (selected.isEmpty) return '尚未選擇';
+      final names = selected.take(2).map((tag) => tag.zh).join('、');
+      return selected.length > 2 ? '$names 等 ${selected.length} 項' : names;
+    }
+
     final maxOptionsHeight =
         MediaQuery.sizeOf(context).height < 720 ? 360.0 : 520.0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          groups.length == 1 ? '標籤分類' : '先選擇細分類',
+          groups.length == 1 ? '點選展開選項' : '點選要設定的細分類',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
@@ -18190,28 +18353,44 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ),
         const SizedBox(height: 5),
         _uniformButtonGrid(
-          minItemWidth: 132,
-          itemHeight: 44,
-          maxColumns: 6,
+          minItemWidth: verticalGroups ? 220 : 132,
+          itemHeight: verticalGroups ? 58 : 52,
+          maxColumns: verticalGroups ? 1 : 6,
           children: groups.map((group) {
             final selectedCount = selectedCountForGroup(group);
             final tone = _pickerLayerTone(group);
-            final isActive = group == currentGroup;
+            final isActive = isExpanded && group == currentGroup;
             return ChoiceChip(
-              label: Center(
-                child: Text(
-                  selectedCount == 0
-                      ? _wizardGroupLabel(group)
-                      : '${_wizardGroupLabel(group)}  $selectedCount',
-                  softWrap: true,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: _pickerLayerText(tone, selected: isActive),
-                    fontWeight: FontWeight.w700,
+              label: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _wizardGroupLabel(group),
+                    softWrap: true,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _pickerLayerText(tone, selected: isActive),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 2),
+                  Text(
+                    selectedCount == 0
+                        ? '尚未選擇'
+                        : selectedSummaryForGroup(group),
+                    softWrap: false,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: _pickerLayerText(tone, selected: isActive)
+                          .withValues(alpha: .82),
+                      fontSize: 10,
+                    ),
+                  ),
+                ],
               ),
               selected: isActive,
               backgroundColor: _pickerLayerSurface(tone, selected: false),
@@ -18222,6 +18401,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
               onSelected: (_) => setState(() {
                 _clearPickerQuery(searchScopeGroups, personIndex);
+                if (isActive) {
+                  _openPickerGroups.remove(expansionKey);
+                  return;
+                }
+                _openPickerGroups[expansionKey] = group;
                 if (personIndex == null) {
                   _activeGroup = group;
                 } else {
@@ -18232,174 +18416,189 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(12, 10, 10, 12),
-          decoration: BoxDecoration(
-            color: _pickerLayerSurface(_pickerLayerTone(currentGroup),
-                selected: false),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: _pickerLayerTone(currentGroup).withValues(alpha: .7),
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.folder_open_outlined, size: 19),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      _wizardGroupLabel(currentGroup),
-                      style: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                  Text(
-                    '已選 ${selectedInCurrentGroup.length}／${allInCurrentGroup.length}',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                  if (showGroupClear && personIndex != null)
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      tooltip: '只清除此細分類',
-                      onPressed: selectedInCurrentGroup.isEmpty
-                          ? null
-                          : () => _clearPersonPickerGroup(
-                              personIndex, currentGroup),
-                      icon: const Icon(Icons.delete_sweep_outlined, size: 19),
-                    ),
-                ],
-              ),
-              if (selectedInCurrentGroup.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 2,
-                  children: selectedInCurrentGroup
-                      .map(
-                        (tag) => Tooltip(
-                          message: tag.en,
-                          child: InputChip(
-                            label: Text(tag.zh),
-                            visualDensity: VisualDensity.compact,
-                            backgroundColor: _pickerLayerSurface(
-                              _pickerLayerTone(currentGroup),
-                              selected: false,
-                            ),
-                            side: BorderSide(
-                              color: _pickerLayerTone(currentGroup)
-                                  .withValues(alpha: .75),
-                            ),
-                            onDeleted: () =>
-                                _toggle(tag, personIndex: personIndex),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-            ],
-          ),
-        ),
-        if (currentGroup == '髮型') ...[
-          const SizedBox(height: 10),
+        if (isExpanded) ...[
+          const SizedBox(height: 8),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.fromLTRB(12, 10, 10, 12),
             decoration: BoxDecoration(
-              color: const Color(0xff1f3b34),
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: const Color(0xff4ade80)),
+              color: _pickerLayerSurface(_pickerLayerTone(currentGroup),
+                  selected: false),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: _pickerLayerTone(currentGroup).withValues(alpha: .7),
+              ),
             ),
-            child: const Row(
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.verified_outlined,
-                    size: 19, color: Color(0xff4ade80)),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '「官方」是 Danbooru Hair Styles 群組中的精確標籤，通常較容易被 Amanatsu 辨識；「描述」是髮廊名稱或自然語句，效果依模型而異，建議再搭配官方髮型、髮長與髮色。',
-                    style: TextStyle(fontSize: 12),
-                  ),
+                Row(
+                  children: [
+                    const Icon(Icons.folder_open_outlined, size: 19),
+                    const SizedBox(width: 7),
+                    Expanded(
+                      child: Text(
+                        _wizardGroupLabel(currentGroup),
+                        style: const TextStyle(fontWeight: FontWeight.w800),
+                      ),
+                    ),
+                    Text(
+                      '已選 ${selectedInCurrentGroup.length}／${allInCurrentGroup.length}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    if (showGroupClear && personIndex != null)
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        tooltip: '只清除此細分類',
+                        onPressed: selectedInCurrentGroup.isEmpty
+                            ? null
+                            : () => _clearPersonPickerGroup(
+                                personIndex, currentGroup),
+                        icon: const Icon(Icons.delete_sweep_outlined, size: 19),
+                      ),
+                  ],
                 ),
+                if (selectedInCurrentGroup.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 2,
+                    children: selectedInCurrentGroup
+                        .map(
+                          (tag) => Tooltip(
+                            message: tag.en,
+                            child: InputChip(
+                              label: Text(tag.zh),
+                              visualDensity: VisualDensity.compact,
+                              backgroundColor: _pickerLayerSurface(
+                                _pickerLayerTone(currentGroup),
+                                selected: false,
+                              ),
+                              side: BorderSide(
+                                color: _pickerLayerTone(currentGroup)
+                                    .withValues(alpha: .75),
+                              ),
+                              onDeleted: () =>
+                                  _toggle(tag, personIndex: personIndex),
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  ),
+                ],
               ],
             ),
           ),
-        ],
-        if (currentGroup == '髮型' && personIndex != null) ...[
-          const SizedBox(height: 10),
-          _hairGradientControl(personIndex),
-          const SizedBox(height: 10),
-          _hairPromptWeightControl(personIndex),
-        ],
-        const SizedBox(height: 7),
-        TextField(
-          controller: _pickerSearchController(searchScopeGroups, personIndex),
-          decoration: InputDecoration(
-              labelText: '搜尋此區所有標籤',
-              prefixIcon: const Icon(Icons.search),
-              hintText: '搜尋此區所有中英文標籤…',
-              filled: true,
-              suffixIcon: tagQuery.isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: '清除搜尋文字',
-                      onPressed: () {
-                        _pickerSearchDebounce?.cancel();
-                        setState(() =>
-                            _clearPickerQuery(searchScopeGroups, personIndex));
-                      },
-                      icon: const Icon(Icons.clear))),
-          onChanged: (value) => _schedulePickerSearch(pickerQueryKey, value),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            const Icon(Icons.sell_outlined, size: 17),
-            const SizedBox(width: 6),
-            Text(
-              tagQuery.trim().isEmpty
-                  ? '此區可加入 ${allInPickerGroups.length} 個標籤'
-                  : '搜尋結果 ${visible.length}／${allInPickerGroups.length} 個',
-              style: const TextStyle(fontWeight: FontWeight.w700),
+          if (currentGroup == '髮型') ...[
+            const SizedBox(height: 10),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xff1f3b34),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xff4ade80)),
+              ),
+              child: const Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.verified_outlined,
+                      size: 19, color: Color(0xff4ade80)),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '「官方」是 Danbooru Hair Styles 群組中的精確標籤，通常較容易被 Amanatsu 辨識；「描述」是髮廊名稱或自然語句，效果依模型而異，建議再搭配官方髮型、髮長與髮色。',
+                      style: TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
-        ),
-        const SizedBox(height: 8),
-        if (visible.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Text('此分類沒有符合的標籤，可以切換細分類、清除搜尋或新增自訂標籤。'),
-          )
-        else
-          ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: maxOptionsHeight),
-            child: SingleChildScrollView(
-              primary: false,
-              child: _tagPickerOptionLayout(visible, personIndex: personIndex),
-            ),
+          if (currentGroup == '髮型' && personIndex != null) ...[
+            const SizedBox(height: 10),
+            _hairGradientControl(personIndex),
+            const SizedBox(height: 10),
+            _hairPromptWeightControl(personIndex),
+          ],
+          const SizedBox(height: 7),
+          TextField(
+            controller: _pickerSearchController(searchScopeGroups, personIndex),
+            decoration: InputDecoration(
+                labelText: '搜尋此區所有標籤',
+                prefixIcon: const Icon(Icons.search),
+                hintText: '搜尋此區所有中英文標籤…',
+                filled: true,
+                suffixIcon: tagQuery.isEmpty
+                    ? null
+                    : IconButton(
+                        tooltip: '清除搜尋文字',
+                        onPressed: () {
+                          _pickerSearchDebounce?.cancel();
+                          setState(() => _clearPickerQuery(
+                              searchScopeGroups, personIndex));
+                        },
+                        icon: const Icon(Icons.clear))),
+            onChanged: (value) => _schedulePickerSearch(pickerQueryKey, value),
           ),
-        if (visible.length > 18) ...[
-          const SizedBox(height: 6),
-          Text(
-            '此區可上下滑動，建議使用搜尋快速縮小範圍。',
-            style: TextStyle(
-              fontSize: 11,
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              const Icon(Icons.sell_outlined, size: 17),
+              const SizedBox(width: 6),
+              Text(
+                tagQuery.trim().isEmpty
+                    ? '此區可加入 ${allInPickerGroups.length} 個標籤'
+                    : '搜尋結果 ${visible.length}／${allInPickerGroups.length} 個',
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ],
           ),
+          const SizedBox(height: 8),
+          if (visible.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: Text('此分類沒有符合的標籤，可以切換細分類、清除搜尋或新增自訂標籤。'),
+            )
+          else
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxOptionsHeight),
+              child: SingleChildScrollView(
+                primary: false,
+                child: _tagPickerOptionLayout(
+                  visible,
+                  personIndex: personIndex,
+                  afterToggle: (autoCollapseOnSelect ||
+                          (autoCollapseGroups?.contains(currentGroup) ?? false))
+                      ? () {
+                          if (!mounted) return;
+                          setState(() {
+                            _openPickerGroups.remove(expansionKey);
+                            _clearPickerQuery(searchScopeGroups, personIndex);
+                          });
+                        }
+                      : null,
+                ),
+              ),
+            ),
+          if (visible.length > 18) ...[
+            const SizedBox(height: 6),
+            Text(
+              '此區可上下滑動，建議使用搜尋快速縮小範圍。',
+              style: TextStyle(
+                fontSize: 11,
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+          if (personIndex != null &&
+              (currentGroup == _animalTraitGroup ||
+                  currentGroup == _wingTypeGroup))
+            _integratedPhysicalTraitColors(personIndex, currentGroup),
         ],
-        if (personIndex != null &&
-            (currentGroup == _animalTraitGroup ||
-                currentGroup == _wingTypeGroup))
-          _integratedPhysicalTraitColors(personIndex, currentGroup),
         if (showNext) ...[
           const SizedBox(height: 14),
           Align(
@@ -20438,6 +20637,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       personIndex: index,
                       showNext: false,
                       showGroupClear: true,
+                      autoCollapseGroups: _autoCollapseClothingBaseGroups,
+                      verticalGroups: true,
                     ),
                   ),
                   if (adaptiveDetails.isNotEmpty)
@@ -20692,9 +20893,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _pageBottomPadding = _basePageBottomPadding;
       _persist();
     });
-    // Expansion is committed first; _scrollToStep waits for that frame before
-    // positioning the card title at the top of the viewport.
-    unawaited(_scrollToStep(index));
+    // The left rail must first switch/expand the requested card, then measure
+    // its final layout. Scheduling the scroll after that frame prevents a
+    // previous (very tall) card from pulling the viewport back down.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || _stepIndex != index) return;
+      unawaited(_scrollToStep(index));
+    });
   }
 
   Widget _stepHeader(int index, String title, String summary, IconData icon,
@@ -21202,6 +21407,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _denseColorTagGrid(
     List<TagItem> tags, {
     int? personIndex,
+    VoidCallback? afterToggle,
   }) {
     if (tags.isEmpty) return const SizedBox.shrink();
     return Align(
@@ -21214,7 +21420,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               (tag) => SizedBox(
                 width: 58,
                 height: 48,
-                child: _tagChip(tag, personIndex: personIndex),
+                child: _tagChip(
+                  tag,
+                  personIndex: personIndex,
+                  afterToggle: afterToggle,
+                ),
               ),
             )
             .toList(),
@@ -21228,6 +21438,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _tagPickerOptionLayout(
     List<TagItem> tags, {
     int? personIndex,
+    VoidCallback? afterToggle,
   }) {
     final regularTags = tags.where((tag) => !_isColorPickerTag(tag)).toList();
     final colorTags = tags.where(_isColorPickerTag).toList();
@@ -21241,13 +21452,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             maxColumns: 4,
             scaleItemHeight: false,
             children: regularTags
-                .map((tag) => _tagChip(tag, personIndex: personIndex))
+                .map((tag) => _tagChip(
+                      tag,
+                      personIndex: personIndex,
+                      afterToggle: afterToggle,
+                    ))
                 .toList(),
           ),
         if (regularTags.isNotEmpty && colorTags.isNotEmpty)
           const SizedBox(height: 8),
         if (colorTags.isNotEmpty)
-          _denseColorTagGrid(colorTags, personIndex: personIndex),
+          _denseColorTagGrid(
+            colorTags,
+            personIndex: personIndex,
+            afterToggle: afterToggle,
+          ),
       ],
     );
   }
@@ -22239,62 +22458,102 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               .toList()),
                       if (slot.mode == '動漫角色') ...[
                         const SizedBox(height: 10),
-                        Row(children: [
-                          Expanded(
-                            child: TextField(
-                                controller: _personSearchController(
-                                    index, 'anime', slot.animeQuery),
-                                decoration: const InputDecoration(
-                                    labelText: '第一步：查詢動漫名稱',
-                                    prefixIcon: Icon(Icons.search)),
-                                onChanged: (value) =>
-                                    setState(() => slot.animeQuery = value)),
-                          ),
-                          const SizedBox(width: 8),
-                          FilledButton.icon(
-                            onPressed: _remoteLookupLoading.contains(index)
-                                ? null
-                                : () => _searchRemoteAnime(index),
-                            icon: const Icon(Icons.public, size: 18),
-                            label: const Text('自動查詢'),
-                          ),
-                        ]),
-                        _remoteAnimePanel(index),
-                        _remoteCharacterPanel(index),
-                        const SizedBox(height: 9),
-                        if (animeMatches.isNotEmpty)
-                          _pickerChoiceGrid(
-                            itemCount: animeMatches.length,
-                            tileHeight: 60,
-                            itemBuilder: (animeIndex) => _animeChoiceChip(
-                                slot, index, animeMatches[animeIndex]),
-                          )
-                        else
-                          const Text('查無動漫資料，可新增自己的動漫與角色。'),
-                        if (slot.animeTag.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          TextField(
-                              controller: _personSearchController(
-                                  index, 'character', slot.query),
-                              decoration: const InputDecoration(
-                                  labelText: '第二步：查詢角色名稱',
-                                  prefixIcon: Icon(Icons.person_search)),
-                              onChanged: (value) =>
-                                  setState(() => slot.query = value)),
+                        _characterPickerButton(
+                          icon: Icons.movie_filter_outlined,
+                          title: '選擇動漫',
+                          selection: _animeSelectionLabel(slot),
+                          expanded: _openCharacterPickers[index] == 'anime',
+                          onPressed: () => setState(() {
+                            if (_openCharacterPickers[index] == 'anime') {
+                              _openCharacterPickers.remove(index);
+                            } else {
+                              _openCharacterPickers[index] = 'anime';
+                            }
+                          }),
+                        ),
+                        if (_openCharacterPickers[index] == 'anime') ...[
+                          const SizedBox(height: 8),
+                          Row(children: [
+                            Expanded(
+                              child: TextField(
+                                  controller: _personSearchController(
+                                      index, 'anime', slot.animeQuery),
+                                  decoration: const InputDecoration(
+                                      labelText: '查詢動漫名稱',
+                                      prefixIcon: Icon(Icons.search)),
+                                  onChanged: (value) =>
+                                      setState(() => slot.animeQuery = value)),
+                            ),
+                            const SizedBox(width: 8),
+                            FilledButton.icon(
+                              onPressed: _remoteLookupLoading.contains(index)
+                                  ? null
+                                  : () => _searchRemoteAnime(index),
+                              icon: const Icon(Icons.public, size: 18),
+                              label: const Text('自動查詢'),
+                            ),
+                          ]),
+                          _remoteAnimePanel(index),
                           const SizedBox(height: 9),
-                          if (matches.isNotEmpty)
+                          if (animeMatches.isNotEmpty)
                             _pickerChoiceGrid(
-                              itemCount: matches.length,
-                              tileHeight: 68,
-                              itemBuilder: (characterIndex) =>
-                                  _characterChoiceChip(
+                              itemCount: animeMatches.length,
+                              tileHeight: 60,
+                              itemBuilder: (animeIndex) => _animeChoiceChip(
                                 slot,
                                 index,
-                                matches[characterIndex],
+                                animeMatches[animeIndex],
+                                afterSelected: () => setState(
+                                    () => _openCharacterPickers.remove(index)),
                               ),
                             )
                           else
-                            const Text('查無此動漫角色，可自行新增角色資料。'),
+                            const Text('查無動漫資料，可新增自己的動漫與角色。'),
+                        ],
+                        if (slot.animeTag.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          _characterPickerButton(
+                            icon: Icons.person_search_outlined,
+                            title: '選擇角色',
+                            selection: selectedCharacter?.characterZh ?? '尚未選擇',
+                            expanded:
+                                _openCharacterPickers[index] == 'character',
+                            onPressed: () => setState(() {
+                              if (_openCharacterPickers[index] == 'character') {
+                                _openCharacterPickers.remove(index);
+                              } else {
+                                _openCharacterPickers[index] = 'character';
+                              }
+                            }),
+                          ),
+                          if (_openCharacterPickers[index] == 'character') ...[
+                            const SizedBox(height: 8),
+                            TextField(
+                                controller: _personSearchController(
+                                    index, 'character', slot.query),
+                                decoration: const InputDecoration(
+                                    labelText: '查詢角色名稱',
+                                    prefixIcon: Icon(Icons.person_search)),
+                                onChanged: (value) =>
+                                    setState(() => slot.query = value)),
+                            _remoteCharacterPanel(index),
+                            const SizedBox(height: 9),
+                            if (matches.isNotEmpty)
+                              _pickerChoiceGrid(
+                                itemCount: matches.length,
+                                tileHeight: 68,
+                                itemBuilder: (characterIndex) =>
+                                    _characterChoiceChip(
+                                  slot,
+                                  index,
+                                  matches[characterIndex],
+                                  afterSelected: () => setState(() =>
+                                      _openCharacterPickers.remove(index)),
+                                ),
+                              )
+                            else
+                              const Text('查無此動漫角色，可自行新增角色資料。'),
+                          ],
                         ],
                         const SizedBox(height: 9),
                         OutlinedButton.icon(
