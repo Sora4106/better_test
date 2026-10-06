@@ -12107,14 +12107,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> get _positiveTokens {
-    final tokens = <String>[..._peopleTokensNew()];
+    final tokens = <String>[
+      ..._selectedTags
+          .where((tag) => _isSceneVisualPromptGroup(tag.group))
+          .map((tag) => tag.en),
+      ..._peopleTokensNew(),
+    ];
     for (var index = 0; index < _personSlots.length; index++) {
       tokens.addAll(_characterTokensForSlot(_personSlots[index], index));
       tokens.addAll(_personPromptTags(index).map((tag) => tag.en));
     }
     tokens.addAll(
       _selectedTags
-          .where((tag) => !_isSharedActionGroup(tag.group))
+          .where((tag) =>
+              !_isSceneVisualPromptGroup(tag.group) &&
+              !_isSharedActionGroup(tag.group))
           .map((tag) => tag.en),
     );
     tokens.addAll(_extraTags(_extraPositive.text).map(_positiveEnglishTag));
@@ -12124,6 +12131,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .where((tag) => _isSharedActionGroup(tag.group))
           .map((tag) => tag.en),
     );
+    tokens.addAll(_sharedPoseExtraOutputTags().map((tag) => tag.en));
     final seen = <String>{};
     return tokens
         .map(_moderationSafePromptTag)
@@ -12157,6 +12165,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    // Shared scene/camera terms deliberately lead the prompt. The following
+    // person blocks retain their own internal feature → clothing → action
+    // order so multi-person details do not get reassigned by the model.
+    addSharedTokens(_selectedTags
+        .where((tag) => _isSceneVisualPromptGroup(tag.group))
+        .map((tag) => tag.en));
     addSharedTokens(_peopleTokensNew());
     for (var index = 0; index < _personSlots.length; index++) {
       final slot = _personSlots[index];
@@ -12202,11 +12216,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .where((value) => value.isNotEmpty),
       );
     }
+    addSharedTokens(_sharedPositiveTokens);
+    // Interaction / shared-pose tags must come after every person's own
+    // identity, clothing, and pose block.
     for (var index = 0; index < _personSlots.length; index++) {
       addSharedTokens(_personFinalPromptTags(index).map((tag) => tag.en));
     }
     addSharedTokens(_sharedActionTokens);
-    addSharedTokens(_sharedPositiveTokens);
+    addSharedTokens(_sharedPoseExtraOutputTags().map((tag) => tag.en));
     return output.join(', ');
   }
 
@@ -12273,6 +12290,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       );
     }
     return tokens.join('。 ');
+  }
+
+  String get _orderedPositiveZhForCopy {
+    final ordered = _orderedOutputTagsForSummary(_generatedPositiveTags());
+    final values = <String>[
+      ...ordered
+          .where((tag) => _summaryOutputOrder(tag) == 0)
+          .map((tag) => tag.zh),
+      _peopleZhNew(),
+      ...ordered
+          .where((tag) => _summaryOutputOrder(tag) != 0)
+          .map((tag) => tag.zh),
+    ].where((value) => value.trim().isNotEmpty).toList();
+    return values.isEmpty ? _positiveZh : values.join('、');
   }
 
   String get _negativeText => _negativeTokens.join(', ');
@@ -23568,6 +23599,51 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return ids.map((id) => _tagsById[id]).whereType<TagItem>().toList();
   }
 
+  bool _isSummaryClothingOutputTag(_GeneratedOutputTag output) {
+    if (output.personIndex == null) return false;
+    return output.personClothingExtraValue != null ||
+        _generatedOutputSourceTags(output)
+            .any((tag) => _isClothingGroup(tag.group));
+  }
+
+  bool _isSummaryIndividualPoseOutputTag(_GeneratedOutputTag output) {
+    if (output.personIndex == null) return false;
+    return output.personPoseExtraValue != null ||
+        _generatedOutputSourceTags(output).any(_isPoseWorkflowTag);
+  }
+
+  bool _isSummarySharedPoseOutputTag(_GeneratedOutputTag output) =>
+      output.sharedPoseExtraValue != null ||
+      _generatedOutputSourceTags(output)
+          .any((tag) => _isSharedActionGroup(tag.group));
+
+  /// Final prompt and Chinese-memory ordering:
+  /// scene/camera → identity → clothing → individual pose → shared pose.
+  int _summaryOutputOrder(_GeneratedOutputTag output) {
+    if (_generatedOutputSourceTags(output)
+        .any((tag) => _isSceneVisualPromptGroup(tag.group))) {
+      return 0;
+    }
+    if (output.personIndex != null) {
+      if (_isSummaryClothingOutputTag(output)) return 2;
+      if (_isSummaryIndividualPoseOutputTag(output)) return 3;
+      return 1;
+    }
+    if (_isSummarySharedPoseOutputTag(output)) return 4;
+    return 5;
+  }
+
+  List<_GeneratedOutputTag> _orderedOutputTagsForSummary(
+      Iterable<_GeneratedOutputTag> tags) {
+    final indexed = tags.toList().indexed.toList()
+      ..sort((left, right) {
+        final bySection = _summaryOutputOrder(left.$2)
+            .compareTo(_summaryOutputOrder(right.$2));
+        return bySection != 0 ? bySection : left.$1.compareTo(right.$1);
+      });
+    return indexed.map((entry) => entry.$2).toList(growable: false);
+  }
+
   String _chineseOutputSection(_GeneratedOutputTag output) {
     final sourceTags = _generatedOutputSourceTags(output);
     final personIndex = output.personIndex;
@@ -23598,7 +23674,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Map<String, List<_GeneratedOutputTag>> _chineseOutputSections(
       Iterable<_GeneratedOutputTag> tags) {
     final sections = <String, List<_GeneratedOutputTag>>{};
-    for (final tag in tags) {
+    for (final tag in _orderedOutputTagsForSummary(tags)) {
       sections.putIfAbsent(_chineseOutputSection(tag), () => []).add(tag);
     }
     return sections;
@@ -23641,8 +23717,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
             IconButton(
               tooltip: '複製',
-              onPressed:
-                  _positiveZh.isEmpty ? null : () => _copy(_positiveZh, '中文欄位'),
+              onPressed: _orderedPositiveZhForCopy.isEmpty
+                  ? null
+                  : () => _copy(_orderedPositiveZhForCopy, '中文欄位'),
               icon: const Icon(Icons.copy_all_outlined),
             ),
           ],
