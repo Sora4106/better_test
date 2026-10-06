@@ -4030,7 +4030,6 @@ List<TagItem> _createScopedClothingTags() {
     ['unzipped', '拉鍊拉開', 'unzipped'],
     ['open_shirt', '\u896F\u886B\u657E\u958B', 'open shirt'],
     ['bra_visible', '\u9732\u51FA\u80F8\u7F69', 'bra visible'],
-    ['bra_peek', '\u80F8\u7F69\u5FAE\u9732', 'bra peek'],
     ['bikini_under_clothes', '衣物下穿著比基尼', 'bikini under clothes'],
   ]);
   addMany('top', 'wear', [
@@ -4258,6 +4257,7 @@ List<TagItem> _createScopedClothingTags() {
       'wear',
       [
         ['lift', '\u63C0\u8D77\u80F8\u7F69', 'bra lift'],
+        ['bra_peek', '\u80F8\u7F69\u5FAE\u9732', 'bra peek'],
         ['half_removed', '\u80F8\u7F69\u812B\u4E00\u534A', 'half-removed bra'],
         [
           'one_strap_removed',
