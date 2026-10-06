@@ -41,6 +41,7 @@ const _lowerLegAnkleGroup = '小腿・腳踝動態';
 const _footToeGroup = '腳掌・腳趾動態';
 const _legTowardCameraGroup = '腿部・朝鏡頭構圖';
 const _breastAdultActionGroup = '性行為・胸部／乳頭';
+const _clothedIntimateHandGroup = '性行為・衣物內手部互動';
 
 const expandedGeneralPoseGroups = <String>{
   _maleActionPoseGroup,
@@ -83,6 +84,7 @@ const expandedSexualPoseGroups = <String>{
 
 const expandedSexualActGroups = <String>{
   _breastAdultActionGroup,
+  _clothedIntimateHandGroup,
   '性行為・足部',
   '性行為・摩擦',
   '性行為・手部',
@@ -227,7 +229,8 @@ const expandedTagPickerSections = <String, List<String>>{
     '體液',
     '公開與窺視',
   ],
-  '⑩ 成人・胸部／乳頭': [_breastAdultActionGroup],
+  '⑩ 成人・衣物內互動': [_clothedIntimateHandGroup],
+  '⑪ 成人・胸部／乳頭': [_breastAdultActionGroup],
 };
 
 final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
@@ -1378,6 +1381,31 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['反向哺乳式手交', 'reverse nursing handjob'],
       ['從背後手交', 'reach-around'],
       ['雙手手交', 'two-handed handjob'],
+    ],
+  ),
+  // These keep the currently selected outfit in the prompt. The first part
+  // uses established under-clothes phrasing; the second part makes the intended
+  // self-contact unambiguous without adding any undressing or removal tags.
+  ..._expandedTags(
+    prefix: 'clothed_intimate_hand',
+    group: _clothedIntimateHandGroup,
+    order: 7,
+    adult: true,
+    rows: const [
+      ['單手伸進衣物內', 'hand under clothes'],
+      ['雙手伸進衣物內', 'hands under clothes'],
+      ['手伸進上衣內', 'hand under shirt'],
+      ['手伸進胸罩內', 'hand in bra'],
+      ['手伸進裙子內', 'hand under skirt'],
+      ['手伸進內褲內', 'hand in panties'],
+      ['衣物內單手摸胸', 'hand under clothes, grabbing own breast'],
+      ['上衣內摸胸', 'hand under shirt, grabbing own breast'],
+      ['胸罩內托胸', 'hand in bra, grabbing own breast'],
+      ['衣物內觸碰乳頭', 'hand under clothes, nipple tweak'],
+      ['衣物內摸臀部', 'hand under clothes, hand on own ass'],
+      ['裙子內摸臀部', 'hand under skirt, hand on own ass'],
+      ['內褲內觸碰胯部', 'hand in panties, crotch grab'],
+      ['內褲內手指刺激', 'hand in panties, fingering'],
     ],
   ),
   ..._expandedTags(

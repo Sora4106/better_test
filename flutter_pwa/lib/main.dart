@@ -289,6 +289,7 @@ const _organizedPosePickerSections = <String, List<String>>{
   ],
   '⑩ 成人・胸部／性行為': [
     _breastAdultActionGroup,
+    '性行為・衣物內手部互動',
     '性行為',
     '性行為・足部',
     '性行為・摩擦',
@@ -3987,8 +3988,14 @@ List<TagItem> _createScopedClothingTags() {
     ['clothes_pull', '\u624B\u62C9\u8863\u670D', 'clothes pull'],
     ['shirt_pull', '\u624B\u62C9\u896F\u886B', 'shirt pull'],
     ['collar_pull', '\u624B\u62C9\u9818\u53E3', 'collar pull'],
+    ['clothes_lift', '掀起衣物', 'clothes lift'],
+    ['shirt_lift', '掀起上衣', 'shirt lift'],
+    ['open_clothes', '衣物敞開', 'open clothes'],
+    ['unbuttoned', '鈕扣解開', 'unbuttoned'],
+    ['unzipped', '拉鍊拉開', 'unzipped'],
     ['open_shirt', '\u896F\u886B\u657E\u958B', 'open shirt'],
     ['bra_visible', '\u9732\u51FA\u80F8\u7F69', 'bra visible'],
+    ['bikini_under_clothes', '衣物下穿著比基尼', 'bikini under clothes'],
   ]);
   addMany('top', 'wear', [
     ['collarbone_peek', '只露出鎖骨（肩膀遮住）', 'collarbone peek'],
@@ -4013,6 +4020,7 @@ List<TagItem> _createScopedClothingTags() {
           '透視上衣可見乳房',
           'breasts visible through see-through shirt'
         ],
+        ['sideboob', '側乳', 'sideboob'],
         ['bra_visible_through', '上衣下可見胸罩', 'bra visible through clothes'],
       ],
       adult: true);
@@ -4060,6 +4068,7 @@ List<TagItem> _createScopedClothingTags() {
       adult: true);
   addMany('skirt', 'wear', [
     ['lifted', '\u88D9\u5B50\u88AB\u63C0\u8D77', 'skirt lifted'],
+    ['skirt_lift', '手掀裙子', 'skirt lift'],
     [
       'around_one_leg',
       '\u88D9\u5B50\u7E8F\u5728\u55AE\u8173',
