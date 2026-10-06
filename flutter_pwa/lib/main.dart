@@ -13517,6 +13517,36 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     html.Url.revokeObjectUrl(url);
   }
 
+  /// Downloads the prompt itself rather than the editable JSON backup. This
+  /// keeps a portable record of the currently selected Chinese and English
+  /// tags, ready to paste into BetterWaifu or share for later tag additions.
+  void _downloadCurrentTags() {
+    final timestamp = DateTime.now()
+        .toIso8601String()
+        .replaceAll(RegExp(r'[:.]'), '-')
+        .replaceAll('T', '_')
+        .split('+')
+        .first;
+    final lines = <String>[
+      'BetterWaifu Prompt Builder · $appVersionLabel',
+      '',
+      '【中文標籤】',
+      _orderedPositiveZhForCopy,
+      '',
+      '【英文正向標籤】',
+      _positiveText,
+      '',
+      '【英文負向標籤】',
+      _negativeText,
+    ];
+    final blob = html.Blob([lines.join('\r\n')], 'text/plain;charset=utf-8');
+    final url = html.Url.createObjectUrlFromBlob(blob);
+    html.AnchorElement(href: url)
+      ..setAttribute('download', 'betterwaifu-tags-$timestamp.txt')
+      ..click();
+    html.Url.revokeObjectUrl(url);
+  }
+
   String _compactReverseKey(String value) =>
       _englishTagKey(value).replaceAll(' ', '');
 
@@ -23966,6 +23996,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               _positiveText,
               onCopy: () => _copy(_positiveText, '英文正向標籤', showFeedback: true),
               maxLines: 6,
+            ),
+            const SizedBox(height: 12),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: OutlinedButton.icon(
+                onPressed: _downloadCurrentTags,
+                icon: const Icon(Icons.download_outlined),
+                label: const Text('匯出標籤 TXT'),
+              ),
             ),
             const SizedBox(height: 12),
             Container(
