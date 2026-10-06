@@ -20755,8 +20755,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   GlobalKey _stepKey(int index) =>
       _stepKeys.putIfAbsent(index, () => GlobalKey(debugLabel: 'step-$index'));
 
-  Future<void> _scrollToStep(int index) async {
-    final ticket = ++_stepScrollTicket;
+  Future<void> _scrollToStep(int index, {int? requestedTicket}) async {
+    // Navigation triggered from the left rail reserves its ticket before the
+    // layout change. That stops an older, in-flight animation from taking the
+    // page back to the previous step after the new card has expanded.
+    final ticket = requestedTicket ?? ++_stepScrollTicket;
+    if (ticket != _stepScrollTicket) return;
     // Wait for the selected card to expand and for an unfocused text field to
     // finish changing the mobile viewport height before measuring its header.
     await WidgetsBinding.instance.endOfFrame;
@@ -20871,11 +20875,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .toDouble();
     }
 
-    await _pageScrollController.animateTo(
-      destination(),
-      duration: duration,
-      curve: Curves.easeOutCubic,
-    );
+    final targetContext = targetKey.currentContext;
+    if (targetContext != null) {
+      // RenderViewport's reveal calculation remains reliable when the current
+      // offset is already at the bottom of a long page. The former manual
+      // animateTo-only path could retain that bottom offset after a card swap.
+      await Scrollable.ensureVisible(
+        targetContext,
+        alignment: 0,
+        duration: duration,
+        curve: Curves.easeOutCubic,
+      );
+    } else {
+      await _pageScrollController.animateTo(
+        destination(),
+        duration: duration,
+        curve: Curves.easeOutCubic,
+      );
+    }
     if (!mounted || !_pageScrollController.hasClients) return;
 
     // A large card can change the page extent while another card collapses.
@@ -20888,6 +20905,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   void _openStep(int index) {
     FocusManager.instance.primaryFocus?.unfocus();
+    // Claim the navigation slot immediately, before rebuilding the selected
+    // card. This makes left-side navigation deterministic even at page bottom.
+    final ticket = ++_stepScrollTicket;
     setState(() {
       _stepIndex = index;
       _pageBottomPadding = _basePageBottomPadding;
@@ -20897,8 +20917,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     // its final layout. Scheduling the scroll after that frame prevents a
     // previous (very tall) card from pulling the viewport back down.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _stepIndex != index) return;
-      unawaited(_scrollToStep(index));
+      if (!mounted || _stepIndex != index || ticket != _stepScrollTicket) {
+        return;
+      }
+      unawaited(_scrollToStep(index, requestedTicket: ticket));
     });
   }
 
