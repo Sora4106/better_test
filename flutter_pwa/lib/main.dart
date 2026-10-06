@@ -3650,6 +3650,10 @@ List<TagItem> _createScopedClothingTags() {
       'collar_pull',
       'pants_pull',
       'skirt_pull',
+      'dress_pull',
+      'dress_strap_pull',
+      'pantyhose_pull',
+      'pulling_off_legwear',
       'adjusting_clothes',
     };
     final visibilityIds = {
@@ -3659,6 +3663,9 @@ List<TagItem> _createScopedClothingTags() {
       'panties_visible',
       'waistband',
     };
+    final isDamageWearState = RegExp(
+      r'^(?:torn|ripped|tattered|frayed|holes|laddered|scuffed|damaged)',
+    ).hasMatch(id);
     final defaultConflict = kind == 'style'
         ? '${slot}_style'
         : kind == 'detail_color'
@@ -3668,7 +3675,9 @@ List<TagItem> _createScopedClothingTags() {
                     ? '${slot}_visibility'
                     : interactionIds.contains(id)
                         ? '${slot}_interaction'
-                        : '${slot}_wear'
+                        : isDamageWearState
+                            ? '${slot}_damage'
+                            : '${slot}_wear'
                 : conflictGroup;
     tags.add(_tag(
       '${_scopedClothingPrefix}${slot}_${kind}_$id',
@@ -3978,6 +3987,21 @@ List<TagItem> _createScopedClothingTags() {
     }
   }
 
+  // Damage is separate from worn/removed states: a torn garment can still be
+  // lifted, pulled aside, or partly removed. These stay available for every
+  // wearable clothing slot and are intentionally not treated as a style.
+  for (final slot in slots.where((slot) => slot != 'accessory')) {
+    final label = _clothingScopeLabel(slot);
+    final noun = slot == 'onepiece' ? 'dress' : _clothingScopeNoun(slot);
+    addMany(slot, 'wear', [
+      ['torn', '${label}\u7834\u640D', 'torn $noun'],
+      ['ripped', '${label}\u6495\u88C2', 'ripped $noun'],
+      ['tattered', '${label}\u7834\u723B', 'tattered $noun'],
+      ['holes', '${label}\u591A\u8655\u7834\u6D1E', '$noun with holes'],
+      ['frayed', '${label}\u78E8\u640D\u908A\u7DE3', 'frayed $noun'],
+    ]);
+  }
+
   addMany('top', 'wear', [
     [
       'one_sleeve_removed',
@@ -4110,11 +4134,43 @@ List<TagItem> _createScopedClothingTags() {
       'one shoulder removed'
     ],
     ['lifted', '\u9023\u8EAB\u88DD\u88AB\u63C0\u8D77', 'dress lifted'],
+    ['dress_pull', '\u624B\u62C9\u9023\u8EAB\u88DD', 'dress pull'],
+    [
+      'dress_strap_pull',
+      '\u624B\u62C9\u6D0B\u88DD\u80A9\u5E36',
+      'dress strap pull'
+    ],
+    ['open_dress', '\u9023\u8EAB\u88DD\u657E\u958B', 'open dress'],
+    [
+      'half_removed_dress',
+      '\u9023\u8EAB\u88DD\u812B\u4E00\u534A',
+      'half-removed dress'
+    ],
+    [
+      'unzipped_dress',
+      '\u9023\u8EAB\u88DD\u62C9\u934A\u6253\u958B',
+      'unzipped dress'
+    ],
+    [
+      'dress_strap_slip',
+      '\u6D0B\u88DD\u80A9\u5E36\u6ED1\u843D',
+      'dress strap slip'
+    ],
   ]);
   addMany(
       'onepiece',
       'wear',
       [
+        [
+          'dress_pulled_aside',
+          '\u9023\u8EAB\u88DD\u88AB\u62C9\u5230\u65C1\u908A',
+          'dress pulled aside'
+        ],
+        [
+          'dress_around_one_leg',
+          '\u9023\u8EAB\u88DD\u7E8F\u5728\u55AE\u8173',
+          'dress around one leg'
+        ],
         ['aside', '連身裙拉到一側', 'dress aside'],
         ['one_breast_out', '連身裝露出單邊乳房', 'one breast out'],
         ['breasts_out', '連身裝露出雙乳', 'breasts out'],
@@ -4287,6 +4343,28 @@ List<TagItem> _createScopedClothingTags() {
       ],
       adult: true);
   addMany('socks', 'wear', [
+    ['pantyhose_pull', '\u624B\u62C9\u9023\u8932\u896A', 'pantyhose pull'],
+    [
+      'pantyhose_around_one_leg',
+      '\u9023\u8932\u896A\u7E8F\u5728\u55AE\u8173',
+      'pantyhose around one leg'
+    ],
+    [
+      'pulling_off_legwear',
+      '\u6B63\u5728\u812B\u4E0B\u817F\u90E8\u8863\u7269',
+      'pulling off legwear'
+    ],
+    [
+      'removing_pantyhose',
+      '\u6B63\u5728\u812B\u9023\u8932\u896A',
+      'removing pantyhose'
+    ],
+    ['removing_sock', '\u6B63\u5728\u812B\u896A\u5B50', 'removing sock'],
+    [
+      'removing_thighhigh',
+      '\u6B63\u5728\u812B\u5927\u817F\u9AD8\u7B52\u896A',
+      'removing thighhigh'
+    ],
     ['down', '\u896A\u5B50\u892A\u4E0B', 'socks down'],
     ['one_removed', '\u55AE\u96BB\u896A\u5B50\u812B\u843D', 'one sock removed'],
     ['thighhighs_down', '\u9577\u7B52\u896A\u892A\u4E0B', 'thighhighs down'],
@@ -4294,6 +4372,45 @@ List<TagItem> _createScopedClothingTags() {
     ['around_ankles', '\u896A\u5B50\u5728\u8173\u8E1D', 'socks around ankles'],
     ['removed', '\u8131\u6389\u896A\u5B50', 'socks removed'],
   ]);
+  addMany('socks', 'wear', [
+    ['torn_pantyhose', '\u7834\u6D1E\u9023\u8932\u896A', 'torn pantyhose'],
+    [
+      'laddered_pantyhose',
+      '\u9023\u8932\u896A\u62BD\u7D72\u7834\u640D',
+      'laddered pantyhose'
+    ],
+    [
+      'torn_thighhighs',
+      '\u7834\u6D1E\u5927\u817F\u9AD8\u7B52\u896A',
+      'torn thighhighs'
+    ],
+  ]);
+  addMany(
+      'socks',
+      'wear',
+      [
+        [
+          'see_through_pantyhose',
+          '\u900F\u8996\u9023\u8932\u896A',
+          'see-through pantyhose'
+        ],
+        [
+          'crotchless_pantyhose',
+          '\u958B\u8960\u9023\u8932\u896A',
+          'crotchless pantyhose'
+        ],
+        [
+          'panties_over_pantyhose',
+          '\u9023\u8932\u896A\u5916\u7A7F\u5167\u8932',
+          'panties over pantyhose'
+        ],
+        [
+          'panties_under_pantyhose',
+          '\u9023\u8932\u896A\u5167\u7A7F\u5167\u8932',
+          'panties under pantyhose'
+        ],
+      ],
+      adult: true);
   addMany('shoes', 'wear', [
     ['one_removed', '\u55AE\u96BB\u978B\u812B\u843D', 'one shoe removed'],
     ['removed', '\u978B\u5B50\u812B\u843D', 'shoes removed'],
