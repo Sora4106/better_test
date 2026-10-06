@@ -430,6 +430,46 @@ class TagItem {
       );
 }
 
+/// A non-destructive analysis of text pasted into the reverse-prompt field.
+/// Keeping this separate from applying the selection lets the user inspect the
+/// bilingual matches and decide what to do with words the catalog does not yet
+/// contain.
+class _ReversePromptAnalysis {
+  const _ReversePromptAnalysis({
+    required this.tokens,
+    required this.matchedTags,
+    required this.unmatchedTokens,
+    this.peopleCount,
+    this.gender,
+    this.detectedCharacter,
+    this.detectedAnimeTag,
+  });
+
+  const _ReversePromptAnalysis.empty()
+      : tokens = const <String>[],
+        matchedTags = const <TagItem>[],
+        unmatchedTokens = const <String>[],
+        peopleCount = null,
+        gender = null,
+        detectedCharacter = null,
+        detectedAnimeTag = null;
+
+  final List<String> tokens;
+  final List<TagItem> matchedTags;
+  final List<String> unmatchedTokens;
+  final int? peopleCount;
+  final String? gender;
+  final CatalogCharacter? detectedCharacter;
+  final String? detectedAnimeTag;
+
+  bool get hasInput => tokens.isNotEmpty;
+  bool get hasMatches =>
+      matchedTags.isNotEmpty ||
+      peopleCount != null ||
+      detectedCharacter != null ||
+      detectedAnimeTag != null;
+}
+
 class _HairGradientStyle {
   const _HairGradientStyle({
     required this.id,
@@ -7170,6 +7210,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final TextEditingController _extraPositive = TextEditingController();
   final TextEditingController _sharedPoseExtra = TextEditingController();
   final TextEditingController _reversePrompt = TextEditingController();
+  _ReversePromptAnalysis _reversePromptAnalysis =
+      const _ReversePromptAnalysis.empty();
   final TextEditingController _negative = TextEditingController(
     text: _defaultNegativeText,
   );
@@ -7181,6 +7223,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Timer? _poseExtraDebounce;
   Timer? _pickerSearchDebounce;
   Timer? _globalSearchDebounce;
+  Timer? _reversePromptDebounce;
   Timer? _persistDebounce;
   StreamSubscription<html.Event>? _beforeUnloadSubscription;
 
@@ -10611,6 +10654,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _poseExtraDebounce?.cancel();
     _pickerSearchDebounce?.cancel();
     _globalSearchDebounce?.cancel();
+    _reversePromptDebounce?.cancel();
     _persistDebounce?.cancel();
     _collectUnknownExtraPositiveTags();
     _persistNow();
@@ -10911,6 +10955,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _collectUnknownExtraPositiveTags();
       _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
+      _reversePromptAnalysis = _analyzeReversePrompt(_reversePrompt.text);
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
         ..clear()
@@ -10970,6 +11015,63 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'customNegativeTranslations': _customNegativeTranslations,
         'preprompt': _preprompt.text,
       };
+
+  /// A portable snapshot intentionally stores selected tag IDs and scoped
+  /// manual text separately.  This preserves the exact picker state without
+  /// needing to re-parse the generated English prompt during import.
+  Map<String, dynamic> _fullStateBackup() => {
+        'backupFormat': 'betterwaifu-full-state',
+        'schemaVersion': 2,
+        'createdAt': DateTime.now().toIso8601String(),
+        'state': _snapshot(),
+      };
+
+  Map<String, dynamic>? _stateFromBackup(dynamic decoded) {
+    if (decoded is! Map) return null;
+    final root = Map<String, dynamic>.from(decoded);
+    final wrappedState = root['state'];
+    if (root['backupFormat'] == 'betterwaifu-full-state' &&
+        wrappedState is Map) {
+      return Map<String, dynamic>.from(wrappedState);
+    }
+    // Read backups exported by versions before the full-state wrapper.
+    if (root.containsKey('selectedIds') || root.containsKey('personSlots')) {
+      return root;
+    }
+    return null;
+  }
+
+  void _clearInMemoryStateForFullRestore() {
+    _selectedIds.clear();
+    _personSelectedIds.clear();
+    _personCombinationIds.clear();
+    _removedCharacterTags.clear();
+    _autoFurryIdentityForPerson.clear();
+    _customTags.clear();
+    _customCharacters.clear();
+    _personSlots.clear();
+    _recentCharacterIds.clear();
+    _presets.clear();
+    _combinations.clear();
+    _animationBeats.clear();
+    _remoteAnimeResults.clear();
+    _remoteAnimeSelection.clear();
+    _remoteCharacters.clear();
+    _remoteLookupLoading.clear();
+    _remoteLookupErrors.clear();
+    _personTagQueries.clear();
+    _personActiveGroups.clear();
+    _outfitReferenceCache.clear();
+    _unregisteredPositiveTags.clear();
+    _customNegativeTranslations.clear();
+    _extraPositive.clear();
+    _sharedPoseExtra.clear();
+    _reversePrompt.clear();
+    _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
+    _negative.text = _defaultNegativeText;
+    _preprompt.clear();
+    _invalidateTagCaches();
+  }
 
   void _persist() {
     // localStorage and JSON encoding are synchronous in the browser. Most UI
@@ -13971,6 +14073,109 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  _ReversePromptAnalysis _analyzeReversePrompt(String value) {
+    // `:3` is a supported symbolic mouth expression. Shield it before
+    // stripping optional prompt-weight suffixes such as `tag:1.15`.
+    const colonThreeMarker = '__bw_symbol_colon_three__';
+    final normalized = value
+        .replaceAll(':3', colonThreeMarker)
+        .replaceAllMapped(RegExp(r':\s*-?(?:\d+(?:\.\d+)?|\.\d+)'), (_) => '')
+        .replaceAll(RegExp(r'[()\[\]{}]'), '');
+    final tokens = _reversePromptTokens(normalized)
+        .map((token) => token == colonThreeMarker ? ':3' : token)
+        .toList();
+    if (tokens.isEmpty) return const _ReversePromptAnalysis.empty();
+
+    final recognized = <TagItem>[];
+    final unknown = <String>[];
+    int? importedPeopleCount;
+    String? importedGender;
+    CatalogCharacter? detectedCharacter;
+    String? detectedAnimeTag;
+    for (final token in tokens) {
+      final peopleMatch = RegExp(
+        r'^(\d+)\s*(girls?|boys?|people?|persons?)$',
+        caseSensitive: false,
+      ).firstMatch(_englishTagKey(token));
+      if (peopleMatch != null) {
+        importedPeopleCount =
+            (int.tryParse(peopleMatch.group(1)!) ?? 1).clamp(1, 10).toInt();
+        final kind = peopleMatch.group(2)!.toLowerCase();
+        importedGender = kind.startsWith('girl')
+            ? '女性'
+            : kind.startsWith('boy')
+                ? '男性'
+                : '其他／混合';
+        continue;
+      }
+      final tokenKey = _englishTagKey(token);
+      CatalogCharacter? tokenCharacter;
+      String? tokenAnimeTag;
+      for (final character in _allCharacters) {
+        if (_englishTagKey(character.characterTag) == tokenKey) {
+          tokenCharacter = character;
+          break;
+        }
+        if (_englishTagKey(character.animeTag) == tokenKey) {
+          tokenAnimeTag = character.animeTag;
+          break;
+        }
+      }
+      tokenCharacter ??= _reverseCharacterMatch(token);
+      tokenAnimeTag ??= _reverseAnimeMatch(token);
+      if (tokenCharacter != null) {
+        detectedCharacter = tokenCharacter;
+        continue;
+      }
+      if (tokenAnimeTag != null) {
+        detectedAnimeTag = tokenAnimeTag;
+        continue;
+      }
+      final tags = _reverseTagCandidates(token);
+      if (tags.isEmpty) {
+        unknown.add(token);
+      } else {
+        recognized.addAll(tags);
+      }
+    }
+
+    final uniqueTags = <String, TagItem>{
+      for (final tag in recognized) tag.id: tag,
+    };
+    final uniqueUnknown = <String, String>{};
+    for (final token in unknown) {
+      final key = _reverseExtraKey(token);
+      if (key.isNotEmpty) uniqueUnknown.putIfAbsent(key, () => token);
+    }
+    return _ReversePromptAnalysis(
+      tokens: tokens,
+      matchedTags: uniqueTags.values.toList(),
+      unmatchedTokens: uniqueUnknown.values.toList(),
+      peopleCount: importedPeopleCount,
+      gender: importedGender,
+      detectedCharacter: detectedCharacter,
+      detectedAnimeTag: detectedAnimeTag,
+    );
+  }
+
+  void _scheduleReversePromptAnalysis() {
+    _reversePromptDebounce?.cancel();
+    final raw = _reversePrompt.text;
+    if (raw.trim().isEmpty) {
+      if (_reversePromptAnalysis.hasInput) {
+        setState(() =>
+            _reversePromptAnalysis = const _ReversePromptAnalysis.empty());
+      }
+      _persist();
+      return;
+    }
+    _reversePromptDebounce = Timer(const Duration(milliseconds: 220), () {
+      if (!mounted) return;
+      setState(() => _reversePromptAnalysis = _analyzeReversePrompt(raw));
+      _persist();
+    });
+  }
+
   void _reversePromptTags() {
     // `:3` is a supported symbolic mouth expression. Shield it before
     // stripping optional prompt-weight suffixes such as `tag:1.15`.
@@ -14128,16 +14333,162 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _syncPhysicalTraitGradientColorIds(0, _personTagIds(0));
       _syncAutoFurryIdentity(0, _personTagIds(0));
+      _persist();
+    });
+  }
 
-      final existingExtra = _extraTags(_extraPositive.text);
-      final existingKeys = existingExtra.map(_reverseExtraKey).toSet();
-      for (final token in unknown) {
-        if (existingKeys.add(_reverseExtraKey(token))) existingExtra.add(token);
-      }
+  void _addReversePromptUnmatchedToExtraPositive() {
+    final analysis = _analyzeReversePrompt(_reversePrompt.text);
+    if (analysis.unmatchedTokens.isEmpty) return;
+    final existingExtra = _extraTags(_extraPositive.text);
+    final existingKeys = existingExtra.map(_reverseExtraKey).toSet();
+    for (final token in analysis.unmatchedTokens) {
+      if (existingKeys.add(_reverseExtraKey(token))) existingExtra.add(token);
+    }
+    setState(() {
       _extraPositive.text = existingExtra.join(', ');
+      _reversePromptAnalysis = analysis;
       _collectUnknownExtraPositiveTags();
       _persist();
     });
+  }
+
+  Widget _reversePromptPreviewPanel() {
+    final analysis = _reversePromptAnalysis;
+    if (!analysis.hasInput) return const SizedBox.shrink();
+    final character = analysis.detectedCharacter;
+    final tone = Theme.of(context).colorScheme;
+    final recognizedChips = <Widget>[
+      if (analysis.peopleCount != null)
+        Chip(
+          avatar: const Icon(Icons.groups_outlined, size: 16),
+          label: Text(
+            '人物數量：${analysis.peopleCount}${analysis.gender == null ? '' : '（${analysis.gender}）'}',
+          ),
+          visualDensity: VisualDensity.compact,
+        ),
+      if (character != null)
+        Chip(
+          avatar: const Icon(Icons.person_outline, size: 16),
+          label: Text('角色：${character.characterZh} · ${character.characterEn}'),
+          visualDensity: VisualDensity.compact,
+        )
+      else if (analysis.detectedAnimeTag != null)
+        Chip(
+          avatar: const Icon(Icons.movie_outlined, size: 16),
+          label: Text('作品：${analysis.detectedAnimeTag}'),
+          visualDensity: VisualDensity.compact,
+        ),
+      ...analysis.matchedTags.map(
+        (tag) => Tooltip(
+          message: tag.en,
+          child: Chip(
+            label: Text('${tag.zh.isEmpty ? tag.en : tag.zh} · ${tag.en}'),
+            visualDensity: VisualDensity.compact,
+          ),
+        ),
+      ),
+    ];
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: tone.secondaryContainer.withValues(alpha: .35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: tone.secondary.withValues(alpha: .45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.manage_search_outlined,
+                  size: 18, color: tone.secondary),
+              const SizedBox(width: 7),
+              const Expanded(
+                child: Text(
+                  '反推預覽（尚未套用）',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Text('${analysis.tokens.length} 詞',
+                  style: TextStyle(color: tone.onSurfaceVariant, fontSize: 12)),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Text(
+            recognizedChips.isEmpty
+                ? '目前沒有可對應的系統標籤。'
+                : '可對應的中文標籤 ${recognizedChips.length} 個',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          if (recognizedChips.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 180),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: recognizedChips,
+                ),
+              ),
+            ),
+          ],
+          if (analysis.unmatchedTokens.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              '尚未對應 ${analysis.unmatchedTokens.length} 詞（不會自動加入）',
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: tone.error,
+              ),
+            ),
+            const SizedBox(height: 6),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 130),
+              child: SingleChildScrollView(
+                child: Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: analysis.unmatchedTokens
+                      .map(
+                        (token) => Chip(
+                          label: Text(token),
+                          visualDensity: VisualDensity.compact,
+                          side: BorderSide(
+                              color: tone.error.withValues(alpha: .65)),
+                          backgroundColor:
+                              tone.errorContainer.withValues(alpha: .36),
+                        ),
+                      )
+                      .toList(),
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: analysis.hasMatches ? _reversePromptTags : null,
+                icon: const Icon(Icons.playlist_add_check_outlined),
+                label: const Text('套用已對應標籤'),
+              ),
+              if (analysis.unmatchedTokens.isNotEmpty)
+                OutlinedButton.icon(
+                  onPressed: _addReversePromptUnmatchedToExtraPositive,
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('未對應詞加入額外正向標籤'),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _clearAllTags() async {
@@ -14186,6 +14537,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..clear()
         ..add(_AnimationBeat());
       _reversePrompt.clear();
+      _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
       _negative.text = _defaultNegativeText;
       _preprompt.clear();
       _persist();
@@ -14346,6 +14698,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         case 6:
           _extraPositive.clear();
           _reversePrompt.clear();
+          _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
           _negative.text = _defaultNegativeText;
           _preprompt.clear();
           break;
@@ -14496,10 +14849,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _downloadBackup() {
-    final blob = html.Blob([jsonEncode(_snapshot())], 'application/json');
+    final blob =
+        html.Blob([jsonEncode(_fullStateBackup())], 'application/json');
     final url = html.Url.createObjectUrlFromBlob(blob);
     html.AnchorElement(href: url)
-      ..setAttribute('download', 'betterwaifu-prompt-backup.json')
+      ..setAttribute('download', 'betterwaifu-full-state-backup.json')
       ..click();
     html.Url.revokeObjectUrl(url);
   }
@@ -14513,18 +14867,33 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (file == null) return;
       final reader = html.FileReader();
       reader.readAsText(file);
-      reader.onLoad.listen((_) {
+      reader.onLoad.listen((_) async {
         try {
-          html.window.localStorage[_storageKey] = '${reader.result}';
+          final state = _stateFromBackup(jsonDecode('${reader.result}'));
+          if (state == null || !mounted) return;
+          final confirmed = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              title: const Text('匯入完整狀態備份'),
+              content: const Text(
+                '匯入會覆蓋目前所有已勾選標籤、人物設定、各區額外正向詞、套裝與負面標籤。',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: const Text('取消'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  child: const Text('覆蓋並匯入'),
+                ),
+              ],
+            ),
+          );
+          if (confirmed != true || !mounted) return;
+          html.window.localStorage[_storageKey] = jsonEncode(state);
           setState(() {
-            _selectedIds.clear();
-            _personSelectedIds.clear();
-            _personCombinationIds.clear();
-            _removedCharacterTags.clear();
-            _customTags.clear();
-            _invalidateTagCaches();
-            _presets.clear();
-            _combinations.clear();
+            _clearInMemoryStateForFullRestore();
             _restore();
           });
         } catch (_) {}
@@ -14612,6 +14981,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _collectUnknownExtraPositiveTags();
       _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
+      _reversePromptAnalysis = _analyzeReversePrompt(_reversePrompt.text);
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
         ..clear()
@@ -23136,6 +23506,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       TextField(
           controller: _reversePrompt,
           maxLines: 4,
+          onChanged: (_) => _scheduleReversePromptAnalysis(),
           decoration: const InputDecoration(
               labelText: '標籤反推（貼上既有提示詞）',
               hintText:
@@ -23144,13 +23515,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       Align(
         alignment: Alignment.centerLeft,
         child: FilledButton.icon(
-          onPressed: _reversePromptTags,
-          icon: const Icon(Icons.auto_fix_high),
-          label: const Text('反推並勾選標籤'),
+          onPressed: () {
+            _reversePromptDebounce?.cancel();
+            setState(() {
+              _reversePromptAnalysis =
+                  _analyzeReversePrompt(_reversePrompt.text);
+            });
+            _persist();
+          },
+          icon: const Icon(Icons.manage_search_outlined),
+          label: const Text('重新分析'),
         ),
       ),
       const SizedBox(height: 4),
-      Text('已收錄的英文或中文標籤會自動勾選；查不到的內容會追加到額外正向標籤。括號權重與英文句點會自動整理。',
+      _reversePromptPreviewPanel(),
+      const SizedBox(height: 8),
+      Text('輸入後會先顯示可對應與未對應詞；確認後才套用，未對應詞可選擇是否加入額外正向標籤。括號權重與英文句點會自動整理。',
           style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant)),
@@ -24057,12 +24437,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                 ),
                 IconButton(
-                  tooltip: '匯出 JSON',
+                  tooltip: '匯出完整狀態 JSON',
                   onPressed: _downloadBackup,
                   icon: const Icon(Icons.download_outlined),
                 ),
                 IconButton(
-                  tooltip: '匯入 JSON',
+                  tooltip: '匯入完整狀態 JSON',
                   onPressed: _importBackup,
                   icon: const Icon(Icons.upload_outlined),
                 ),
@@ -24073,6 +24453,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               '目前資料只存在這個瀏覽器的 localStorage；清除網站資料會移除記憶。',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '完整狀態 JSON 會分區保存已勾選標籤與各人物／服裝／姿勢的額外正向詞；匯入時會覆蓋並回填到原欄位。',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontSize: 12,
               ),
             ),
             const SizedBox(height: 12),
@@ -24207,12 +24595,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             icon: const Icon(Icons.new_releases_outlined),
           ),
           IconButton(
-            tooltip: '匯出備份',
+            tooltip: '匯出完整狀態',
             onPressed: _downloadBackup,
             icon: const Icon(Icons.save_alt),
           ),
           IconButton(
-            tooltip: '匯入備份',
+            tooltip: '匯入完整狀態',
             onPressed: _importBackup,
             icon: const Icon(Icons.file_open_outlined),
           ),
