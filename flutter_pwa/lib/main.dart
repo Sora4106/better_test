@@ -4006,6 +4006,7 @@ List<TagItem> _createScopedClothingTags() {
     ['unzipped', '拉鍊拉開', 'unzipped'],
     ['open_shirt', '\u896F\u886B\u657E\u958B', 'open shirt'],
     ['bra_visible', '\u9732\u51FA\u80F8\u7F69', 'bra visible'],
+    ['bra_peek', '\u80F8\u7F69\u5FAE\u9732', 'bra peek'],
     ['bikini_under_clothes', '衣物下穿著比基尼', 'bikini under clothes'],
   ]);
   addMany('top', 'wear', [
