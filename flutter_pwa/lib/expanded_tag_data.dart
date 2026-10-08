@@ -1621,6 +1621,9 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['物體上精液', 'cum on object'],
       ['食物上精液', 'cum on food'],
       ['精液水窪', 'cum pool'],
+      ['尿液', 'pee'],
+      ['排尿', 'peeing'],
+      ['尿濕自己', 'peeing self'],
     ],
   ),
   ..._expandedTags(

@@ -4054,6 +4054,7 @@ List<TagItem> _createScopedClothingTags() {
   }
 
   addMany('top', 'wear', [
+    ['wet_shirt', '濕上衣', 'wet shirt'],
     [
       'one_sleeve_removed',
       '\u55AE\u624B\u812B\u4E0A\u8863',
@@ -4111,6 +4112,7 @@ List<TagItem> _createScopedClothingTags() {
       ],
       adult: true);
   addMany('pants', 'wear', [
+    ['wet_pants', '濕褲子', 'wet pants'],
     ['down', '\u8932\u5B50\u892A\u4E0B', 'pants down'],
     ['around_ankles', '\u8932\u5B50\u5728\u8173\u8E1D', 'pants around ankles'],
   ]);
@@ -4133,6 +4135,9 @@ List<TagItem> _createScopedClothingTags() {
         ['ass_cutout', '長褲臀部挖空', 'ass cutout'],
       ],
       adult: true);
+  addMany('shorts', 'wear', [
+    ['wet_shorts', '濕短褲', 'wet shorts'],
+  ]);
   addMany(
       'shorts',
       'wear',
@@ -4153,6 +4158,7 @@ List<TagItem> _createScopedClothingTags() {
       ],
       adult: true);
   addMany('skirt', 'wear', [
+    ['wet_skirt', '濕裙子', 'wet skirt'],
     ['lifted', '\u88D9\u5B50\u88AB\u63C0\u8D77', 'skirt lifted'],
     ['skirt_lift', '手掀裙子', 'skirt lift'],
     [
@@ -4178,6 +4184,7 @@ List<TagItem> _createScopedClothingTags() {
       ],
       adult: true);
   addMany('onepiece', 'wear', [
+    ['wet_dress', '濕洋裝', 'wet dress'],
     [
       'one_shoulder_removed',
       '\u55AE\u80A9\u812B\u843D',
@@ -4307,6 +4314,7 @@ List<TagItem> _createScopedClothingTags() {
       'bra',
       'wear',
       [
+        ['wet_bra', '濕胸罩', 'wet bra'],
         ['lift', '\u63C0\u8D77\u80F8\u7F69', 'bra lift'],
         ['bra_peek', '\u80F8\u7F69\u5FAE\u9732', 'bra peek'],
         ['half_removed', '\u80F8\u7F69\u812B\u4E00\u534A', 'half-removed bra'],
@@ -4348,6 +4356,7 @@ List<TagItem> _createScopedClothingTags() {
       'panties',
       'wear',
       [
+        ['wet_panties', '濕內褲', 'wet panties'],
         ['down', '\u5167\u8932\u892A\u4E0B', 'panties down'],
         [
           'half_removed',
@@ -4394,6 +4403,8 @@ List<TagItem> _createScopedClothingTags() {
       ],
       adult: true);
   addMany('socks', 'wear', [
+    ['wet_socks', '濕襪子', 'wet socks'],
+    ['wet_pantyhose', '濕連褲襪', 'wet pantyhose'],
     ['pantyhose_pull', '\u624B\u62C9\u9023\u8932\u896A', 'pantyhose pull'],
     [
       'pantyhose_around_one_leg',
@@ -8871,8 +8882,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   TagItem? _matchingClothingColorKeyForGroup(String? group, String colorKey) {
     if (group == null || colorKey.isEmpty) return null;
     for (final tag in _tagsByGroup[group] ?? const <TagItem>[]) {
-      if (_isColorPickerTag(tag) &&
-          _clothingColorChoiceKey(tag) == colorKey) {
+      if (_isColorPickerTag(tag) && _clothingColorChoiceKey(tag) == colorKey) {
         return tag;
       }
     }
@@ -18134,8 +18144,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             spacing: 8,
             runSpacing: 8,
             children: choices.map((choice) {
-              final isMain = main != null &&
-                  _isSameClothingColorChoice(main, choice);
+              final isMain =
+                  main != null && _isSameClothingColorChoice(main, choice);
               final isSecondary = secondary != null &&
                   _isSameClothingColorChoice(secondary, choice);
               final order = isSecondary ? 2 : (isMain ? 1 : 0);
@@ -18144,8 +18154,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 personIndex: personIndex,
                 selected: order > 0,
                 colorOrder: order,
-                colorOrderLabel:
-                    order == 1 ? '色 1（整套主色）' : '色 2（整套次色）',
+                colorOrderLabel: order == 1 ? '色 1（整套主色）' : '色 2（整套次色）',
                 onTap: () => _toggleOutfitPaletteColor(personIndex, choice),
               );
             }).toList(),
