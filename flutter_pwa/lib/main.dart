@@ -3026,6 +3026,11 @@ class PersonSlot {
   String featureExtraPositive = '';
   String clothingExtraPositive = '';
   String poseExtraPositive = '';
+  // Stores a reusable outfit-wide colour pair as semantic colour keys rather
+  // than slot-specific tag IDs. The same pair can then be mapped to every
+  // currently selected garment/accessory colour group.
+  String outfitPaletteMainColorKey = '';
+  String outfitPaletteSecondaryColorKey = '';
   // Anime character names are always kept.  Appearance traits deliberately
   // start disabled, so choosing a character never silently adds a preset look.
   // Users can opt in from the character header when they want those traits.
@@ -3072,6 +3077,8 @@ class PersonSlot {
         'featureExtraPositive': featureExtraPositive,
         'clothingExtraPositive': clothingExtraPositive,
         'poseExtraPositive': poseExtraPositive,
+        'outfitPaletteMainColorKey': outfitPaletteMainColorKey,
+        'outfitPaletteSecondaryColorKey': outfitPaletteSecondaryColorKey,
         'characterTraitsEnabled': characterTraitsEnabled,
         'promptWeightEnabled': promptWeightEnabled,
         'personPromptWeight': personPromptWeight,
@@ -3109,6 +3116,10 @@ class PersonSlot {
         ..featureExtraPositive = '${json['featureExtraPositive'] ?? ''}'
         ..clothingExtraPositive = '${json['clothingExtraPositive'] ?? ''}'
         ..poseExtraPositive = '${json['poseExtraPositive'] ?? ''}'
+        ..outfitPaletteMainColorKey =
+            '${json['outfitPaletteMainColorKey'] ?? ''}'
+        ..outfitPaletteSecondaryColorKey =
+            '${json['outfitPaletteSecondaryColorKey'] ?? ''}'
         // Old saved sessions that explicitly enabled traits keep that choice;
         // absent values and all new characters start name/source only.
         ..characterTraitsEnabled = json['characterTraitsEnabled'] == true
@@ -8855,6 +8866,142 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
     return null;
+  }
+
+  TagItem? _matchingClothingColorKeyForGroup(String? group, String colorKey) {
+    if (group == null || colorKey.isEmpty) return null;
+    for (final tag in _tagsByGroup[group] ?? const <TagItem>[]) {
+      if (_isColorPickerTag(tag) &&
+          _clothingColorChoiceKey(tag) == colorKey) {
+        return tag;
+      }
+    }
+    return null;
+  }
+
+  List<TagItem> _outfitPaletteBasesForPerson(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const <TagItem>[];
+    }
+    final seen = <String>{};
+    final bases = <TagItem>[];
+    for (final tag in _selectedTagsForPerson(personIndex)) {
+      if (!_isClothingBaseTag(tag)) continue;
+      final mainGroup = _clothingColorGroupForBase(tag);
+      final secondaryGroup = _clothingTrimColorGroupForBase(tag);
+      if (mainGroup == null || secondaryGroup == null) continue;
+      if (seen.add(tag.id)) bases.add(tag);
+    }
+    return bases;
+  }
+
+  List<TagItem> _outfitPaletteColorChoices(int personIndex) {
+    final choices = <TagItem>[];
+    final seen = <String>{};
+    final bases = _outfitPaletteBasesForPerson(personIndex);
+    for (final base in bases) {
+      for (final group in [
+        _clothingColorGroupForBase(base),
+        _clothingTrimColorGroupForBase(base),
+      ].whereType<String>()) {
+        for (final tag in _tagsByGroup[group] ?? const <TagItem>[]) {
+          if (!_isColorPickerTag(tag)) continue;
+          if (seen.add(_clothingColorChoiceKey(tag))) choices.add(tag);
+        }
+      }
+    }
+    // A palette must be applicable to every currently selected item.  Showing
+    // only the common colour choices prevents a partial outfit recolour where
+    // a colour exists for a top but not, for example, the selected shoes.
+    choices.removeWhere((choice) {
+      final key = _clothingColorChoiceKey(choice);
+      return bases.any((base) =>
+          _matchingClothingColorKeyForGroup(
+                _clothingColorGroupForBase(base),
+                key,
+              ) ==
+              null ||
+          _matchingClothingColorKeyForGroup(
+                _clothingTrimColorGroupForBase(base),
+                key,
+              ) ==
+              null);
+    });
+    choices.sort(_compareColorPickerTags);
+    return choices;
+  }
+
+  TagItem? _outfitPaletteChoiceForKey(int personIndex, String colorKey) {
+    if (colorKey.isEmpty) return null;
+    for (final choice in _outfitPaletteColorChoices(personIndex)) {
+      if (_clothingColorChoiceKey(choice) == colorKey) return choice;
+    }
+    return null;
+  }
+
+  void _toggleOutfitPaletteColor(int personIndex, TagItem choice) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final colorKey = _clothingColorChoiceKey(choice);
+    if (colorKey.isEmpty) return;
+    setState(() {
+      final slot = _personSlots[personIndex];
+      if (slot.outfitPaletteMainColorKey == colorKey) {
+        // Keep the interaction intuitive: when colour 1 is removed while a
+        // second colour exists, colour 2 becomes the new main colour.
+        slot.outfitPaletteMainColorKey = slot.outfitPaletteSecondaryColorKey;
+        slot.outfitPaletteSecondaryColorKey = '';
+      } else if (slot.outfitPaletteSecondaryColorKey == colorKey) {
+        slot.outfitPaletteSecondaryColorKey = '';
+      } else if (slot.outfitPaletteMainColorKey.isEmpty) {
+        slot.outfitPaletteMainColorKey = colorKey;
+      } else {
+        slot.outfitPaletteSecondaryColorKey = colorKey;
+      }
+      _persist();
+    });
+  }
+
+  void _clearOutfitPaletteColor(int personIndex, {required bool main}) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    setState(() {
+      final slot = _personSlots[personIndex];
+      if (main) {
+        slot.outfitPaletteMainColorKey = slot.outfitPaletteSecondaryColorKey;
+        slot.outfitPaletteSecondaryColorKey = '';
+      } else {
+        slot.outfitPaletteSecondaryColorKey = '';
+      }
+      _persist();
+    });
+  }
+
+  void _applyOutfitPalette(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final slot = _personSlots[personIndex];
+    final mainKey = slot.outfitPaletteMainColorKey;
+    if (mainKey.isEmpty) return;
+    final secondaryKey = slot.outfitPaletteSecondaryColorKey;
+    final bases = _outfitPaletteBasesForPerson(personIndex);
+    if (bases.isEmpty) return;
+    setState(() {
+      final target = _personTagIds(personIndex);
+      final handledGroups = <String>{};
+      for (final base in bases) {
+        final mainGroup = _clothingColorGroupForBase(base);
+        final secondaryGroup = _clothingTrimColorGroupForBase(base);
+        for (final group in [mainGroup, secondaryGroup].whereType<String>()) {
+          if (!handledGroups.add(group)) continue;
+          target.removeWhere((id) => _tagsById[id]?.group == group);
+        }
+        final main = _matchingClothingColorKeyForGroup(mainGroup, mainKey);
+        if (main != null) target.add(main.id);
+        final secondary =
+            _matchingClothingColorKeyForGroup(secondaryGroup, secondaryKey);
+        if (secondary != null) target.add(secondary.id);
+      }
+      _markClothingTemplateCustomized(personIndex);
+      _persist();
+    });
   }
 
   List<TagItem> _clothingColorChoices(
@@ -17892,6 +18039,152 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _outfitPaletteTable(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const SizedBox.shrink();
+    }
+    final bases = _outfitPaletteBasesForPerson(personIndex);
+    const tone = Color(0xff14b8a6);
+    if (bases.isEmpty) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xff173a3b),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: tone.withValues(alpha: .7)),
+        ),
+        child: const Text('請先選擇至少一件服裝或配件，再使用整套配色表。'),
+      );
+    }
+    final choices = _outfitPaletteColorChoices(personIndex);
+    final slot = _personSlots[personIndex];
+    final main =
+        _outfitPaletteChoiceForKey(personIndex, slot.outfitPaletteMainColorKey);
+    final secondary = _outfitPaletteChoiceForKey(
+      personIndex,
+      slot.outfitPaletteSecondaryColorKey,
+    );
+    final baseLabels = bases.map((base) => base.zh).toSet().toList();
+
+    Widget paletteSlot({
+      required int order,
+      required TagItem? color,
+      required bool mainSlot,
+    }) {
+      final label = color == null
+          ? '色 $order：未選'
+          : '色 $order：${_clothingColorChinesePrefix(color)}';
+      return InputChip(
+        avatar: CircleAvatar(
+          radius: 10,
+          backgroundColor: tone,
+          child: Text('$order', style: const TextStyle(fontSize: 11)),
+        ),
+        label: Text(label),
+        tooltip: mainSlot ? '整套主色' : '整套次色／邊線色',
+        backgroundColor: _pickerLayerSurface(tone, selected: color != null),
+        side: BorderSide(color: tone.withValues(alpha: .75)),
+        onDeleted: color == null
+            ? null
+            : () => _clearOutfitPaletteColor(personIndex, main: mainSlot),
+      );
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xff173a3b),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: tone.withValues(alpha: .8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.palette_outlined, color: tone, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text('整套配色表',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '先設定色 1 主色與可選的色 2 次色，再套用到目前已選的服裝與配件。純色只選色 1 即可。',
+            style: TextStyle(fontSize: 12),
+          ),
+          const SizedBox(height: 8),
+          Text('本次會套用：${baseLabels.join('、')}',
+              style: const TextStyle(fontWeight: FontWeight.w700)),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 7,
+            runSpacing: 7,
+            children: [
+              paletteSlot(order: 1, color: main, mainSlot: true),
+              paletteSlot(order: 2, color: secondary, mainSlot: false),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: choices.map((choice) {
+              final isMain = main != null &&
+                  _isSameClothingColorChoice(main, choice);
+              final isSecondary = secondary != null &&
+                  _isSameClothingColorChoice(secondary, choice);
+              final order = isSecondary ? 2 : (isMain ? 1 : 0);
+              return _colorTagChip(
+                choice,
+                personIndex: personIndex,
+                selected: order > 0,
+                colorOrder: order,
+                colorOrderLabel:
+                    order == 1 ? '色 1（整套主色）' : '色 2（整套次色）',
+                onTap: () => _toggleOutfitPaletteColor(personIndex, choice),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              FilledButton.icon(
+                onPressed: main == null
+                    ? null
+                    : () => _applyOutfitPalette(personIndex),
+                icon: const Icon(Icons.format_paint_outlined, size: 18),
+                label: const Text('套用至目前服裝'),
+              ),
+              OutlinedButton.icon(
+                onPressed: main == null && secondary == null
+                    ? null
+                    : () => setState(() {
+                          slot.outfitPaletteMainColorKey = '';
+                          slot.outfitPaletteSecondaryColorKey = '';
+                          _persist();
+                        }),
+                icon: const Icon(Icons.restart_alt, size: 18),
+                label: const Text('清空配色表'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            '套用後，各部位原有顏色會被這組配色取代；仍可在下方各部位的色 1／色 2 使用 X 取消或另選顏色。',
+            style: TextStyle(fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _wizardGroupLabel(String group) {
     const clothingColorLabels = <String, String>{
       '上衣袖子顏色': '袖子色彩 1',
@@ -21215,11 +21508,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       autoCollapseGroups: _autoCollapseClothingBaseGroups,
                     ),
                   ),
+                  _pickerStage(
+                    icon: Icons.palette_outlined,
+                    tone: const Color(0xff14b8a6),
+                    title: '2. 整套配色表',
+                    description: '只套用到目前已選的服裝與配件；可選純色或主色＋次色，之後仍能逐項修改。',
+                    child: _outfitPaletteTable(index),
+                  ),
                   if (adaptiveDetails.isNotEmpty)
                     _pickerStage(
                       icon: Icons.palette_outlined,
                       tone: const Color(0xff60a5fa),
-                      title: '2. $activeClothingLabel：多維度設計',
+                      title: '3. $activeClothingLabel：多維度設計',
                       description:
                           '色 1／色 2 直接依序選取，分別輸出主色與次色；所有色調均可直接選，不再依既選色系隱藏。風格、剪裁、版型、長度、材質、細節與圖案可多選。',
                       child: Column(
@@ -21247,7 +21547,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   _pickerStage(
                     icon: Icons.auto_awesome_outlined,
                     tone: const Color(0xffa78bfa),
-                    title: '3. 整體風格、氣質與場合',
+                    title: '4. 整體風格、氣質與場合',
                     description: '這些描述作用於整套穿搭，不會取代上方已選的服裝種類與細節。',
                     child: _stepTagPicker(
                       overallGroups,
@@ -21261,7 +21561,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     _pickerStage(
                       icon: Icons.dry_cleaning_outlined,
                       tone: const Color(0xfff87171),
-                      title: '4. 各部位穿脫／暴露狀態',
+                      title: '5. 各部位穿脫／暴露狀態',
                       description: '依已選服裝顯示各部位專用狀態；18+ 模式另提供單側露出、滑出與透視可見等選項。',
                       child: _stepTagPicker(
                         adaptiveWear,
