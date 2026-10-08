@@ -231,9 +231,14 @@ const _organizedPosePickerSections = <String, List<String>>{
     '手指・細節動作',
     '軀幹姿勢',
     '軀幹・腰臀動態',
+    '軀幹・角度控制',
+    '臀部・髖部細節',
+    '臀部・角度控制',
+    '臀部・正背面構圖',
   ],
   '③ 腰臀／腿腳': [
     '腿部姿勢',
+    '腿部・角度控制',
     '大腿・膝蓋動態',
     '小腿・腳踝動態',
     '腳掌・腳趾動態',
@@ -3608,7 +3613,9 @@ void _migrateClothingTaxonomyTagIds(Set<String> ids) {
     'catalog_taxonomy_outerwear_fit_slim_fit':
         'catalog_taxonomy_outerwear_fit_tailored_fit',
     'catalog_taxonomy_top_cut_above_elbow_sleeves':
-        'catalog_taxonomy_sleeves_above_elbow_sleeves',
+        'catalog_taxonomy_top_cut_short_sleeves',
+    'catalog_taxonomy_sleeves_above_elbow_sleeves':
+        'catalog_taxonomy_top_cut_short_sleeves',
     'catalog_taxonomy_shorts_length_short_length':
         'catalog_taxonomy_shorts_length_upper_thigh_length',
     'catalog_taxonomy_costume_maid_outfit': 'catalog_taxonomy_costume_maid',
@@ -6286,7 +6293,7 @@ List<TagItem> _seedTags() => [
       _tag('pose_arms_up', '手臂姿勢', '雙手舉起', 'arms up', 4),
       _tag('pose_hand_on_hip', '軀幹・腰臀動態', '手放在自己的髖部', 'hand on own hip', 4),
       _tag('pose_leaning', '軀幹姿勢', '倚靠', 'leaning', 4),
-      _tag('pose_bent_over', '軀幹姿勢', '彎腰', 'bent over', 4, adult: true),
+      _tag('pose_bent_over', '軀幹姿勢', '彎腰', 'bent over', 4),
       _tag('pose_presenting', '全身姿勢', '展示姿勢（成年角色）', 'presenting', 4,
           adult: true),
       _tag('pose_ass_up', '全身姿勢', '臀部抬起（成年角色）', 'ass up', 4, adult: true),
@@ -7718,8 +7725,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '手指・嘴臉互動' ||
         '手指・細節動作' =>
           45,
-        '軀幹姿勢' || '軀幹・腰臀動態' || '臀部・髖部細節' || '臀部・正背面構圖' => 46,
-        '腿部姿勢' || '大腿・膝蓋動態' || '小腿・腳踝動態' || '腳掌・腳趾動態' || '腿部・朝鏡頭構圖' => 47,
+        '軀幹姿勢' ||
+        '軀幹・腰臀動態' ||
+        '軀幹・角度控制' ||
+        '臀部・髖部細節' ||
+        '臀部・角度控制' ||
+        '臀部・正背面構圖' =>
+          46,
+        '腿部姿勢' ||
+        '腿部・角度控制' ||
+        '大腿・膝蓋動態' ||
+        '小腿・腳踝動態' ||
+        '腳掌・腳趾動態' ||
+        '腿部・朝鏡頭構圖' =>
+          47,
         '單人・站姿' ||
         '單人・靠牆姿勢' ||
         '站立與蹲姿' ||
@@ -9235,7 +9254,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'slim pants': 'narrow-leg pants',
       'short shorts': 'hot pants',
       'slim fit': 'tailored fit',
-      'short sleeves': 'above-elbow sleeves',
       'short length': 'upper-thigh length',
       'cute': 'charming',
       'sweet cute style': 'sweet feminine style',
@@ -12443,7 +12461,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'serafuku': 'sailor-style outfit',
       'school shoes': 'loafers',
       'school outfit': 'daytime formal outfit',
-      'short sleeves': 'above-elbow sleeves',
       'short shorts': 'hot pants',
       'short skirt': 'above-knee skirt',
       'short dress': 'above-knee dress',
@@ -17579,6 +17596,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '單人・跪蹲姿勢': Color(0xffa78bfa),
       '全身姿勢': Color(0xffe879f9),
       '軀幹姿勢': Color(0xff2dd4bf),
+      '軀幹・角度控制': Color(0xff14b8a6),
       '頭部姿勢': Color(0xfff472b6),
       _expressionEyesGroup: Color(0xfff472b6),
       _expressionMouthGroup: Color(0xfffb7185),
@@ -17594,11 +17612,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '手指・嘴臉互動': Color(0xfff472b6),
       '手指・細節動作': Color(0xff2dd4bf),
       '腿部姿勢': Color(0xff34d399),
+      '腿部・角度控制': Color(0xff22c55e),
       '大腿・膝蓋動態': Color(0xff10b981),
       '小腿・腳踝動態': Color(0xff22c55e),
       '腳掌・腳趾動態': Color(0xff14b8a6),
       '軀幹・腰臀動態': Color(0xff0d9488),
       '臀部・髖部細節': Color(0xff0f766e),
+      '臀部・角度控制': Color(0xff0d9488),
       '臀部・正背面構圖': Color(0xff0369a1),
       '腿部・朝鏡頭構圖': Color(0xff0891b2),
       '動態姿勢': Color(0xffff8a4c),

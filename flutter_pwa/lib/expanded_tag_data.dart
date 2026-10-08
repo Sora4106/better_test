@@ -34,8 +34,11 @@ List<CatalogTagData> _expandedTags({
 const _maleActionPoseGroup = '男性動作姿勢';
 const _handContactGroup = '手部・接觸位置';
 const _torsoWaistHipGroup = '軀幹・腰臀動態';
+const _torsoAngleGroup = '軀幹・角度控制';
 const _hipButtDetailGroup = '臀部・髖部細節';
+const _hipAngleGroup = '臀部・角度控制';
 const _buttPoseLensGroup = '臀部・正背面構圖';
+const _legAngleGroup = '腿部・角度控制';
 const _thighKneeGroup = '大腿・膝蓋動態';
 const _lowerLegAnkleGroup = '小腿・腳踝動態';
 const _footToeGroup = '腳掌・腳趾動態';
@@ -57,9 +60,12 @@ const expandedGeneralPoseGroups = <String>{
   _handContactGroup,
   ...fingerGestureGroups,
   _torsoWaistHipGroup,
+  _torsoAngleGroup,
   _hipButtDetailGroup,
+  _hipAngleGroup,
   _buttPoseLensGroup,
   '腿部姿勢',
+  _legAngleGroup,
   _thighKneeGroup,
   _lowerLegAnkleGroup,
   _footToeGroup,
@@ -148,11 +154,14 @@ const expandedTagPickerSections = <String, List<String>>{
     '手指・細節動作',
     '軀幹姿勢',
     _torsoWaistHipGroup,
+    _torsoAngleGroup,
     _hipButtDetailGroup,
+    _hipAngleGroup,
     _buttPoseLensGroup,
   ],
   '③ 下半身・腿腳動態': [
     '腿部姿勢',
+    _legAngleGroup,
     _thighKneeGroup,
     _lowerLegAnkleGroup,
     _footToeGroup,
@@ -462,13 +471,37 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['背部後彎', 'bent back'],
       ['向後倚靠', 'leaning back'],
       ['向前傾', 'leaning forward'],
-      [
-        '腰部約45度前彎',
-        'slightly bent forward at the waist, upper body tilted forward about 45 degrees'
-      ],
       ['駝背', 'slouching'],
       ['腰部後擺', 'sway back'],
       ['扭轉軀幹', 'twisted torso'],
+    ],
+  ),
+  // Danbooru has no canonical numeric-angle tags. Keep these as explicit
+  // natural-language helpers rather than presenting them as official tags.
+  ..._expandedTags(
+    prefix: 'torso_angle',
+    group: _torsoAngleGroup,
+    order: 4,
+    adult: false,
+    support: 'description',
+    rows: const [
+      [
+        '腰部微前傾（約30度）',
+        'slight forward lean at the waist, upper body tilted forward about 30 degrees'
+      ],
+      [
+        '腰部約45度前彎',
+        'slight forward bend at the waist, upper body tilted forward about 45 degrees'
+      ],
+      [
+        '腰部大幅前傾（約60度）',
+        'deep forward lean at the waist, upper body tilted forward about 60 degrees'
+      ],
+      [
+        '腰部微後傾（約15度）',
+        'slight backward lean at the waist, upper body tilted backward about 15 degrees'
+      ],
+      ['腰部約30度後傾', 'upper body tilted backward about 30 degrees'],
     ],
   ),
   // Keep torso, waist, hip and butt placement separate from facial/hand
@@ -514,6 +547,30 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['單手放在自己的臀部', 'hand on own ass'],
       ['雙手扶住自己的臀部', 'hands on own ass'],
       ['臀部朝向鏡頭', 'hips toward viewer'],
+    ],
+  ),
+  CatalogTagData(
+    id: 'character_pose_raised_hips',
+    group: _hipButtDetailGroup,
+    zh: '抬起髖部',
+    en: 'raised hips',
+    order: 4,
+    support: 'official',
+  ),
+  ..._expandedTags(
+    prefix: 'hip_angle',
+    group: _hipAngleGroup,
+    order: 4,
+    adult: false,
+    support: 'description',
+    rows: const [
+      ['骨盆微向前傾', 'slight anterior pelvic tilt, hips tilted forward'],
+      ['骨盆微向後傾', 'slight posterior pelvic tilt, hips tilted backward'],
+      ['臀部側轉約45度', 'hips turned about 45 degrees to the side'],
+      ['臀部向鏡頭斜轉', 'hips angled toward viewer'],
+      ['臀部背離鏡頭斜轉', 'hips angled away from viewer'],
+      ['臀部向後推', 'hips pushed back'],
+      ['臀部向前推', 'hips pushed forward'],
     ],
   ),
   // These are ready-made camera/pose descriptions. They intentionally keep
@@ -665,6 +722,21 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['膝蓋併攏腳分開', 'knees together feet apart'],
       ['抬起單膝', 'knee up'],
       ['抬起雙膝', 'knees up'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'leg_angle',
+    group: _legAngleGroup,
+    order: 4,
+    adult: false,
+    support: 'description',
+    rows: const [
+      ['單腿向前約45度伸出', 'one leg extended forward about 45 degrees'],
+      ['單腿向側約45度伸出', 'one leg extended to the side about 45 degrees'],
+      ['單腿向後約45度抬起', 'one leg lifted backward about 45 degrees'],
+      ['大腿向上約45度', 'thigh raised about 45 degrees'],
+      ['小腿向前約45度', 'lower leg extended forward about 45 degrees'],
+      ['雙腿向前約45度伸出', 'both legs extended forward about 45 degrees'],
     ],
   ),
   ..._expandedTags(

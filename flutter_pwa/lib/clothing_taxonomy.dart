@@ -206,6 +206,22 @@ const _patterns = <(String, String)>[
   ('圖像印花', 'graphic print'),
 ];
 
+/// Exact, selectable sleeve-length / sleeve-shape tags. These stay attached
+/// to a chosen top or one-piece; short sleeves never imply detached sleeves.
+const _sleeveCuts = <(String, String)>[
+  ('無袖', 'sleeveless'),
+  ('短袖', 'short sleeves'),
+  ('七分袖', 'three-quarter sleeves'),
+  ('長袖', 'long sleeves'),
+  ('袖長過手腕', 'sleeves past wrists'),
+  ('袖長過手指', 'sleeves past fingers'),
+  ('單袖', 'single sleeve'),
+  ('不對稱袖', 'asymmetrical sleeves'),
+  ('寬袖', 'wide sleeves'),
+  ('泡泡袖', 'puffy sleeves'),
+  ('喇叭袖', 'bell sleeves'),
+];
+
 const _officialClothingDimensionEnglish = <String>{
   'denim',
   'leather',
@@ -230,7 +246,14 @@ const _officialClothingDimensionEnglish = <String>{
   'one-shoulder',
   'halter neck',
   'sleeveless',
+  'short sleeves',
+  'three-quarter sleeves',
   'long sleeves',
+  'sleeves past wrists',
+  'sleeves past fingers',
+  'single sleeve',
+  'asymmetrical sleeves',
+  'wide sleeves',
   'puffy sleeves',
   'bell sleeves',
   'strapless',
@@ -742,11 +765,6 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('長版束腰上衣', 'tunic'),
     ('罩袍式上衣', 'tabard'),
     ('下胸式上衣', 'underbust'),
-  ]),
-  // Sleeves remain in the top category, but are their own wearable part so
-  // they can use an independent colour instead of inheriting the shirt colour.
-  ..._garments('上衣', 'sleeves', const [
-    ('肘上袖', 'above-elbow sleeves'),
   ]),
   ..._garments('褲子', 'pants', const [
     ('直筒褲', 'straight-leg pants'),
@@ -1285,11 +1303,7 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
     ('露側乳', 'sideboob'),
     ('單肩', 'one-shoulder'),
     ('繞頸', 'halter neck'),
-    ('無袖', 'sleeveless'),
-    ('短袖', 'short sleeves'),
-    ('長袖', 'long sleeves'),
-    ('泡泡袖', 'puffy sleeves'),
-    ('喇叭袖', 'bell sleeves'),
+    ..._sleeveCuts,
     ('削肩', 'racerback'),
   ]),
   for (final scope in const ['pants', 'shorts', 'skirt', 'onepiece'])
@@ -1307,6 +1321,7 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
     ('繞頸', 'halter neck'),
     ('露背', 'backless'),
     ('深V領', 'plunging neckline'),
+    ..._sleeveCuts,
   ]),
   ..._dimensions('bra', 'cut', const [
     ('有鋼圈', 'underwire'),

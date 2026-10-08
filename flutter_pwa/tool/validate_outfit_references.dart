@@ -96,8 +96,8 @@ void main() {
   );
   void validatePromptTerm(String context, String? value) {
     const moderationSafeCompounds = {
-      // The renderer converts this UI-facing garment term to the moderation-
-      // safe prompt phrase `above-elbow sleeves` before output.
+      // This is an exact Danbooru clothing tag, safe despite containing
+      // the word "short".
       'short sleeves',
     };
     if (value != null &&
