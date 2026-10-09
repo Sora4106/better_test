@@ -3921,6 +3921,8 @@ String? _scopedClothingSlot(String group) {
   final value = group.substring(_scopedClothingPrefix.length);
   for (final kind in const [
     'detail_color',
+    'upper_cut',
+    'lower_cut',
     'material',
     'pattern',
     'length',
@@ -3943,6 +3945,8 @@ String? _scopedClothingKind(String group) {
   final value = group.substring(_scopedClothingPrefix.length);
   for (final kind in const [
     'detail_color',
+    'upper_cut',
+    'lower_cut',
     'material',
     'pattern',
     'length',
@@ -3997,6 +4001,8 @@ String _clothingScopedKindLabel(String kind) =>
     const {
       'style': '\u98A8\u683C',
       'cut': '剪裁',
+      'upper_cut': '上身剪裁',
+      'lower_cut': '下身剪裁',
       'fit': '版型',
       'length': '長度',
       'detail': '裝飾／細節',
@@ -4155,6 +4161,24 @@ void _migrateConsolidatedWearTagIds(Set<String> ids) {
 }
 
 void _migrateClothingTaxonomyTagIds(Set<String> ids) {
+  const onePieceLowerCutSuffixes = <String>{
+    'natural_waist',
+    'high_waisted',
+    'low_waisted',
+    'empire_waist',
+    'drop_waist',
+  };
+  for (final oldId in ids
+      .where((id) => id.startsWith('catalog_taxonomy_onepiece_cut_'))
+      .toList()) {
+    final suffix = oldId.substring('catalog_taxonomy_onepiece_cut_'.length);
+    final cutKind =
+        onePieceLowerCutSuffixes.contains(suffix) ? 'lower_cut' : 'upper_cut';
+    ids
+      ..remove(oldId)
+      ..add('catalog_taxonomy_onepiece_${cutKind}_$suffix');
+  }
+
   const replacements = <String, String>{
     'catalog_taxonomy_onepiece_one_piece_dress':
         'catalog_taxonomy_onepiece_dress',
@@ -9007,6 +9031,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (scope == null) return const <String>[];
     final groups = <String>[
       _scopedClothingGroup(scope, 'cut'),
+      _scopedClothingGroup(scope, 'upper_cut'),
+      _scopedClothingGroup(scope, 'lower_cut'),
       _scopedClothingGroup(scope, 'fit'),
       _scopedClothingGroup(scope, 'length'),
       _scopedClothingGroup(scope, 'material'),
@@ -10017,7 +10043,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return ('$zh$nounZh', english);
     }
 
-    if (kind == 'cut') {
+    if (kind == 'cut' || kind == 'upper_cut' || kind == 'lower_cut') {
       final english = switch (raw.toLowerCase()) {
         'off-shoulder' => 'off-shoulder $noun',
         'one-shoulder' => 'one-shoulder $noun',
@@ -10092,7 +10118,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .where((tag) => tag.group == _scopedClothingGroup(scope, kind))
           .toList();
 
-      final cuts = dimension('cut');
+      final cuts = <TagItem>[
+        ...dimension('cut'),
+        ...dimension('upper_cut'),
+        ...dimension('lower_cut'),
+      ];
       final fits = dimension('fit');
       final lengths = dimension('length');
       final materials = <TagItem>[
@@ -14779,8 +14809,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _legacyClothingMaterialGroup,
       ..._clothingDetailGroupsForBase(base).where((group) {
         final kind = _scopedClothingKind(group);
-        return const {'cut', 'fit', 'length', 'material', 'detail', 'pattern'}
-            .contains(kind);
+        return const {
+          'cut',
+          'upper_cut',
+          'lower_cut',
+          'fit',
+          'length',
+          'material',
+          'detail',
+          'pattern'
+        }.contains(kind);
       }),
     };
     for (final tag
@@ -17044,11 +17082,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       addTag(base, '${piece.garment}（服裝主體）');
       if (base == null) continue;
 
-      TagItem? dimension(String kind, String value) => _outfitReferenceExactTag(
-            _tagsByGroup[_scopedClothingGroup(piece.scope, kind)] ??
+      TagItem? dimension(String kind, String value) {
+        final kinds = kind == 'cut'
+            ? const ['cut', 'upper_cut', 'lower_cut']
+            : <String>[kind];
+        return _outfitReferenceExactTag(
+          kinds.expand(
+            (candidateKind) =>
+                _tagsByGroup[
+                    _scopedClothingGroup(piece.scope, candidateKind)] ??
                 const <TagItem>[],
-            value,
-          );
+          ),
+          value,
+        );
+      }
 
       TagItem? colorForGroup(String? group, String color) {
         if (group == null) return null;
@@ -18284,7 +18331,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         group == _cosplayGroup) {
       return const Color(0xffffb454);
     }
-    if (kind == 'cut') return const Color(0xff60a5fa);
+    if (kind == 'cut' || kind == 'upper_cut' || kind == 'lower_cut') {
+      return const Color(0xff60a5fa);
+    }
     if (kind == 'fit') return const Color(0xff2dd4bf);
     if (kind == 'length') return const Color(0xff38bdf8);
     if (kind == 'material' || group == _legacyClothingMaterialGroup) {
@@ -21789,10 +21838,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final unusual = count('fit') > 1 ||
         count('length') > 1 ||
         count('cut') > 2 ||
+        count('upper_cut') > 4 ||
+        count('lower_cut') > 3 ||
         count('material') > 2 ||
         count('pattern') > 2;
     final configured = const [
       'cut',
+      'upper_cut',
+      'lower_cut',
       'fit',
       'length',
       'material',

@@ -115,9 +115,15 @@ void main() {
     problems.add('Preset IDs are not unique.');
   }
 
-  bool hasDimension(String scope, String kind, String value) =>
-      clothingDimensionTags.any((tag) =>
-          tag.group == 'clothing_scope_${scope}_$kind' && tag.en == value);
+  bool hasDimension(String scope, String kind, String value) {
+    final kinds = kind == 'cut'
+        ? const {'cut', 'upper_cut', 'lower_cut'}
+        : <String>{kind};
+    return clothingDimensionTags.any((tag) =>
+        kinds.any(
+            (candidate) => tag.group == 'clothing_scope_${scope}_$candidate') &&
+        tag.en == value);
+  }
 
   for (final preset in outfitReferencePresets) {
     if (preset.pieces.isEmpty) {

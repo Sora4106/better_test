@@ -129,13 +129,36 @@ void main() {
     throw StateError('Cashmere leaked into an incompatible clothing slot.');
   }
 
-  const requiredEnglish = {'sideboob', 'thigh strap', 'thigh chain', 'no bra'};
+  const requiredEnglish = {
+    'sideboob',
+    'thigh strap',
+    'thigh chain',
+    'no bra',
+    'halter dress',
+    'fantasy adventurer outfit',
+    'square neckline',
+    'asymmetrical hemline',
+  };
   final missingEnglish = requiredEnglish.difference(
     tags.map((tag) => tag.en.toLowerCase()).toSet(),
   );
   if (missingEnglish.isNotEmpty) {
     throw StateError(
       'Missing requested clothing tags: ${missingEnglish.join(', ')}',
+    );
+  }
+
+  const requiredScopedCutGroups = {
+    'clothing_scope_onepiece_upper_cut',
+    'clothing_scope_onepiece_lower_cut',
+    'clothing_scope_costume_upper_cut',
+    'clothing_scope_costume_lower_cut',
+  };
+  final missingScopedCutGroups =
+      requiredScopedCutGroups.difference(groups.keys.toSet());
+  if (missingScopedCutGroups.isNotEmpty) {
+    throw StateError(
+      'Missing one-piece/costume cut groups: ${missingScopedCutGroups.join(', ')}',
     );
   }
 
