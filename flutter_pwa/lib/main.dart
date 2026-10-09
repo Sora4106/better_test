@@ -2015,6 +2015,51 @@ final _soloFemaleAdultPosePackages = <_AdultPosePackage>[
     ['front view', 'full body'],
     maleCount: 0,
   ),
+  _adultPosePack(
+    'solo_smelling_held_object_fingering_side',
+    '聞手持物件・手指自慰側面',
+    '一手將選定物件靠近鼻前聞嗅，另一手進行自慰，以側面全身呈現。',
+    '單女・感官／物件互動',
+    [
+      'female masturbation',
+      'vaginal fingering',
+      'holding an object near nose',
+      'smelling held object',
+      'sitting on chair',
+    ],
+    ['side view', 'full body'],
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'solo_smelling_held_object_clitoris_front',
+    '聞手持物件・陰蒂刺激正面',
+    '一手拿著並聞嗅選定物件，另一手進行陰蒂刺激，以正面膝上構圖呈現。',
+    '單女・感官／物件互動',
+    [
+      'female masturbation',
+      'clitoris stimulation',
+      'holding an object near nose',
+      'smelling held object',
+      'sitting on bed',
+    ],
+    ['front view', 'cowboy shot'],
+    maleCount: 0,
+  ),
+  _adultPosePack(
+    'solo_smelling_held_object_clothed_rub_above',
+    '聞手持物件・隔衣摩擦俯視',
+    '一手拿著選定物件靠近鼻前聞嗅，同時隔著衣物摩擦，由上方呈現。',
+    '單女・感官／物件互動',
+    [
+      'female masturbation',
+      'masturbation through clothes',
+      'holding an object near nose',
+      'smelling held object',
+      'sitting on floor',
+    ],
+    ['from above', 'full body'],
+    maleCount: 0,
+  ),
 ];
 
 /// Adult female/female presets shown only when the current cast is exactly two

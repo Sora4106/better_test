@@ -46,6 +46,8 @@ const _legTowardCameraGroup = '腿部・朝鏡頭構圖';
 const _breastAdultActionGroup = '性行為・胸部／乳頭';
 const _clothedIntimateHandGroup = '性行為・衣物內手部互動';
 
+const _sensoryObjectAdultGroup = '性行為・感官／物件互動';
+
 const expandedGeneralPoseGroups = <String>{
   _maleActionPoseGroup,
   ...singlePersonPoseGroups,
@@ -91,6 +93,7 @@ const expandedSexualPoseGroups = <String>{
 const expandedSexualActGroups = <String>{
   _breastAdultActionGroup,
   _clothedIntimateHandGroup,
+  _sensoryObjectAdultGroup,
   '性行為・足部',
   '性行為・摩擦',
   '性行為・手部',
@@ -240,6 +243,7 @@ const expandedTagPickerSections = <String, List<String>>{
   ],
   '⑩ 成人・衣物內互動': [_clothedIntimateHandGroup],
   '⑪ 成人・胸部／乳頭': [_breastAdultActionGroup],
+  '成人・感官／物件互動': [_sensoryObjectAdultGroup],
 };
 
 final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
@@ -1501,6 +1505,32 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['相互自慰', 'mutual masturbation'],
       ['尾巴自慰', 'tail masturbation'],
       ['尾巴摩擦', 'tailjob'],
+    ],
+  ),
+  // These are descriptive combinations rather than a claim that every phrase
+  // is a single official tag. The selected object remains editable through
+  // the object picker instead of being hard-coded into the action.
+  ..._expandedTags(
+    prefix: 'adult_sensory_object',
+    group: _sensoryObjectAdultGroup,
+    order: 7,
+    adult: true,
+    support: 'description',
+    rows: const [
+      ['一手拿物件靠近鼻前', 'holding an object near nose'],
+      ['聞著手持物件', 'smelling held object'],
+      [
+        '聞著手持物件自慰',
+        'female masturbation, holding an object near nose, smelling held object'
+      ],
+      [
+        '聞著手持物件手指自慰',
+        'female masturbation, vaginal fingering, holding an object near nose, smelling held object'
+      ],
+      [
+        '聞著手持物件陰蒂刺激',
+        'female masturbation, clitoris stimulation, holding an object near nose, smelling held object'
+      ],
     ],
   ),
   ..._expandedTags(
