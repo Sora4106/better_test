@@ -10626,6 +10626,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       tag.group == _animalTraitGroup &&
       RegExp(r'\bears?\b', caseSensitive: false).hasMatch(tag.en);
 
+  bool _isAnimalIdentityTag(TagItem tag) =>
+      tag.group == _animalTraitGroup &&
+      const {'anthro', 'furry'}.contains(_englishTagKey(tag.en));
+
   bool _isAnimalTailTypeTag(TagItem tag) =>
       tag.group == _animalTraitGroup &&
       RegExp(r'\btails?\b', caseSensitive: false).hasMatch(tag.en);
@@ -18175,6 +18179,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
 
       int rank(TagItem tag) {
+        if (activeGroup == _animalTraitGroup) {
+          return _isAnimalIdentityTag(tag) ? 0 : 1;
+        }
         if (activeGroup == '髮型') {
           if (tag.group == '髮色') return 2;
           if (tag.group == '髮型') {
@@ -20091,20 +20098,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               constraints: BoxConstraints(maxHeight: maxOptionsHeight),
               child: SingleChildScrollView(
                 primary: false,
-                child: _tagPickerOptionLayout(
-                  visible,
-                  personIndex: personIndex,
-                  afterToggle: (autoCollapseOnSelect ||
-                          (autoCollapseGroups?.contains(currentGroup) ?? false))
-                      ? () {
-                          if (!mounted) return;
-                          setState(() {
-                            _openPickerGroups.remove(expansionKey);
-                            _clearPickerQuery(searchScopeGroups, personIndex);
-                          });
-                        }
-                      : null,
-                ),
+                child: currentGroup == _animalTraitGroup
+                    ? _animalTraitPickerOptionLayout(
+                        visible,
+                        personIndex: personIndex,
+                      )
+                    : _tagPickerOptionLayout(
+                        visible,
+                        personIndex: personIndex,
+                        afterToggle: (autoCollapseOnSelect ||
+                                (autoCollapseGroups?.contains(currentGroup) ??
+                                    false))
+                            ? () {
+                                if (!mounted) return;
+                                setState(() {
+                                  _openPickerGroups.remove(expansionKey);
+                                  _clearPickerQuery(
+                                      searchScopeGroups, personIndex);
+                                });
+                              }
+                            : null,
+                      ),
               ),
             ),
           if (visible.length > 18) ...[
@@ -20147,7 +20161,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             groups.contains(_animalTraitGroup)) ...[
           const SizedBox(height: 6),
           Text(
-            '獸耳、獸尾、獸手與獸足在此代表角色本身的生理特徵，不會自動加入 furry。只選部位時會偏人形；需要全身毛茸茸獸人時，請在此分類另外勾選「全身毛茸茸獸人（furry）」。擬人獸可自行勾選 anthro。選好類型後，顏色會直接顯示在該特徵下方並合併輸出；服裝造型用的耳飾、尾飾與翅飾請在服裝的「獸耳／尾飾／翅飾」設定。',
+            '獸耳、獸尾、獸手與獸足是角色生理特徵，不會自動加入身分類。獸人角色可勾選 anthro；若要全身毛茸茸，可同時加上 furry。選好部位後，顏色會顯示在該特徵下方並合併輸出；服裝造型用的耳飾、尾飾與翅飾請到服裝分類設定。',
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -23027,6 +23041,49 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _animalTraitPickerOptionLayout(
+    List<TagItem> tags, {
+    int? personIndex,
+  }) {
+    final identityTags = tags.where(_isAnimalIdentityTag).toList();
+    final physicalTags =
+        tags.where((tag) => !_isAnimalIdentityTag(tag)).toList();
+    if (identityTags.isEmpty) {
+      return _tagPickerOptionLayout(tags, personIndex: personIndex);
+    }
+    const tone = Color(0xffa78bfa);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '獸人類型與毛皮範圍',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          '獸人角色可選 anthro；需要全身毛茸茸時可再加 furry，兩者可同時使用。',
+          style: TextStyle(
+            fontSize: 12,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: 8),
+        _tagPickerOptionLayout(identityTags, personIndex: personIndex),
+        if (physicalTags.isNotEmpty) ...[
+          const SizedBox(height: 10),
+          Divider(color: tone.withValues(alpha: .5), height: 1),
+          const SizedBox(height: 9),
+          const Text(
+            '獸耳、獸尾、獸手與獸足',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 7),
+          _tagPickerOptionLayout(physicalTags, personIndex: personIndex),
+        ],
+      ],
+    );
+  }
+
   Widget _animationCameraPresetPicker(_AnimationBeat beat) {
     bool matches(_AnimationCameraPreset preset) =>
         beat.cameraFraming == preset.framing &&
@@ -24789,7 +24846,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ],
               nextLabel: '下一步：服裝',
               instruction:
-                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸耳、獸尾、獸手、獸足、翅膀與額外特徵。獸化部位及翅膀的顏色都放在各自特徵內，並自動合併成中英文提示詞；全身毛茸茸 furry 與 anthro 必須自行選擇，不會因耳尾自動加入。表情、視線、嘴型、頭頸動作已移至下一個「姿勢」大項；髮色會在髮型分類中置於下方。'),
+                  '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸化部位、翅膀與額外特徵。獸人角色可自行加入 anthro；需要全身毛茸茸時可再加 furry，兩者不會因耳尾而自動加入。表情、視線、嘴型與頭頸動作放在下一個「姿勢」大項。'),
           onClear: () => _clearStepTags(3)),
       () => _stepCard(
           4,

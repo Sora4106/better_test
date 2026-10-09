@@ -140,14 +140,14 @@ const supplementalTags = <CatalogTagData>[
   CatalogTagData(
       id: 'trait_furry',
       group: '獸化特徵',
-      zh: '全身毛茸茸獸人（furry）',
+      zh: '獸人毛皮・全身毛茸茸（furry）',
       en: 'furry',
       order: 1,
-      conflictGroup: 'animal_identity'),
+      conflictGroup: 'animal_fur_coverage'),
   CatalogTagData(
       id: 'trait_anthro',
       group: '獸化特徵',
-      zh: '擬人獸角色（anthro）',
+      zh: '獸人類型・擬人獸角色（anthro）',
       en: 'anthro',
       order: 1,
       conflictGroup: 'animal_identity'),
