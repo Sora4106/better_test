@@ -25672,7 +25672,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final sideStepRailWidth =
         isImageWorkspace ? (showSideStepNames ? 158.0 : 50.0) : 0.0;
     final contentLeftPadding = isImageWorkspace
-        ? (_sideNavigationOnRight ? 72.0 : max(sideStepRailWidth + 14, 72.0))
+        ? (_sideNavigationOnRight ? 16.0 : max(sideStepRailWidth + 14, 72.0))
         : 16.0;
     final contentRightPadding = isImageWorkspace && _sideNavigationOnRight
         ? max(sideStepRailWidth + 14, 72.0)
@@ -25930,7 +25930,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ),
             ),
           Positioned(
-            left: 8,
+            left: _sideNavigationOnRight ? null : 8,
+            right: _sideNavigationOnRight ? 8 : null,
             bottom: 154,
             child: SafeArea(
               child: IconButton.filledTonal(
@@ -25944,7 +25945,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ),
           if (isImageWorkspace)
             Positioned(
-              left: 6,
+              left: _sideNavigationOnRight ? null : 6,
+              right: _sideNavigationOnRight ? 6 : null,
               bottom: 12,
               child: SafeArea(
                 child: SizedBox(
