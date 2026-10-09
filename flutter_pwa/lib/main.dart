@@ -7858,6 +7858,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   int _peopleCount = 1;
   int _stepIndex = 0;
   String _workspaceMode = 'image';
+  bool _sideNavigationOnRight = false;
   int _globalSearchPersonIndex = 0;
   int _stepScrollTicket = 0;
   static const double _basePageBottomPadding = 24;
@@ -11722,6 +11723,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _stepIndex = savedStep.clamp(0, 6).toInt();
       _workspaceMode = data['workspaceMode'] == 'video' ? 'video' : 'image';
+      _sideNavigationOnRight = data['sideNavigationOnRight'] == true;
       _gender = '${data['gender'] ?? '女性'}';
       _model = '${data['model'] ?? 'Amanatsu 1.1'}';
       _sampler = '${data['sampler'] ?? 'Euler a'}';
@@ -11783,6 +11785,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'stepIndex': _stepIndex,
         'stepLayoutVersion': _stepLayoutVersion,
         'workspaceMode': _workspaceMode,
+        'sideNavigationOnRight': _sideNavigationOnRight,
         'gender': _gender,
         'model': _model,
         'sampler': _sampler,
@@ -22315,6 +22318,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     await Future<void>.delayed(Duration.zero);
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted || ticket != _stepScrollTicket) return;
+    await _mountScrollTarget(
+      _stepKey(index),
+      searchFromEnd: false,
+      ticket: ticket,
+    );
+    if (!mounted || ticket != _stepScrollTicket) return;
     await _ensureScrollRoomForTop(_stepKey(index));
     if (!mounted || ticket != _stepScrollTicket) return;
     await _scrollKeyToTop(
@@ -22350,6 +22359,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  void _toggleSideNavigationSide() {
+    setState(() {
+      _sideNavigationOnRight = !_sideNavigationOnRight;
+      _persist();
+    });
+  }
+
   Widget _backToTopButton() {
     return Align(
       alignment: Alignment.centerRight,
@@ -22375,12 +22391,55 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Future<void> _scrollToOutputAfterLayout(int ticket) async {
     await WidgetsBinding.instance.endOfFrame;
     if (!mounted || ticket != _stepScrollTicket) return;
+    await _mountScrollTarget(
+      _outputKey,
+      searchFromEnd: true,
+      ticket: ticket,
+    );
+    if (!mounted || ticket != _stepScrollTicket) return;
     await _ensureScrollRoomForTop(_outputKey);
     if (!mounted || ticket != _stepScrollTicket) return;
     await _scrollKeyToTop(
       _outputKey,
       duration: const Duration(milliseconds: 280),
     );
+  }
+
+  /// A lazily built [ListView] does not keep distant sections mounted. When a
+  /// side-rail button is pressed from the opposite end of the page, its target
+  /// key can therefore have no context yet. Sweep in from the nearest edge to
+  /// mount the target before asking Flutter for its exact reveal position.
+  Future<void> _mountScrollTarget(
+    GlobalKey targetKey, {
+    required bool searchFromEnd,
+    required int ticket,
+  }) async {
+    if (!_pageScrollController.hasClients || targetKey.currentContext != null) {
+      return;
+    }
+
+    final position = _pageScrollController.position;
+    _pageScrollController.jumpTo(
+      searchFromEnd ? position.maxScrollExtent : position.minScrollExtent,
+    );
+    await WidgetsBinding.instance.endOfFrame;
+    if (!mounted || ticket != _stepScrollTicket) return;
+
+    // Moving by less than one viewport keeps a small overlap, so even a short
+    // target between two very tall sections cannot be skipped.
+    for (var attempt = 0;
+        attempt < 80 && targetKey.currentContext == null;
+        attempt++) {
+      final current = _pageScrollController.position;
+      final delta = max(current.viewportDimension * .72, 240.0);
+      final next = (current.pixels + (searchFromEnd ? -delta : delta))
+          .clamp(current.minScrollExtent, current.maxScrollExtent)
+          .toDouble();
+      if ((next - current.pixels).abs() < 1) break;
+      _pageScrollController.jumpTo(next);
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted || ticket != _stepScrollTicket) return;
+    }
   }
 
   double? _unclampedScrollDestination(GlobalKey targetKey) {
@@ -25612,8 +25671,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         isImageWorkspace && MediaQuery.sizeOf(context).width >= 900;
     final sideStepRailWidth =
         isImageWorkspace ? (showSideStepNames ? 158.0 : 50.0) : 0.0;
-    final contentLeftPadding =
-        isImageWorkspace ? max(sideStepRailWidth + 14, 72.0) : 16.0;
+    final contentLeftPadding = isImageWorkspace
+        ? (_sideNavigationOnRight ? 72.0 : max(sideStepRailWidth + 14, 72.0))
+        : 16.0;
+    final contentRightPadding = isImageWorkspace && _sideNavigationOnRight
+        ? max(sideStepRailWidth + 14, 72.0)
+        : 16.0;
     return Scaffold(
       appBar: AppBar(
         titleSpacing: 22,
@@ -25659,7 +25722,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             padding: EdgeInsets.fromLTRB(
               contentLeftPadding,
               16,
-              16,
+              contentRightPadding,
               _pageBottomPadding,
             ),
             children: [
@@ -25720,7 +25783,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ),
           if (isImageWorkspace)
             Positioned(
-              left: 6,
+              left: _sideNavigationOnRight ? null : 6,
+              right: _sideNavigationOnRight ? 6 : null,
               top: 112,
               child: SafeArea(
                 child: SizedBox(
@@ -25732,6 +25796,47 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           horizontal: 3, vertical: 6),
                       child: Column(
                         children: [
+                          showSideStepNames
+                              ? SizedBox(
+                                  width: 146,
+                                  height: 38,
+                                  child: FilledButton.tonalIcon(
+                                    style: FilledButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 9),
+                                    ),
+                                    onPressed: _toggleSideNavigationSide,
+                                    icon: Icon(
+                                      _sideNavigationOnRight
+                                          ? Icons.keyboard_double_arrow_left
+                                          : Icons.keyboard_double_arrow_right,
+                                      size: 16,
+                                    ),
+                                    label: Text(
+                                      _sideNavigationOnRight ? '移到左側' : '移到右側',
+                                      style: const TextStyle(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800),
+                                    ),
+                                  ),
+                                )
+                              : IconButton.filledTonal(
+                                  constraints: const BoxConstraints.tightFor(
+                                      width: 38, height: 34),
+                                  padding: EdgeInsets.zero,
+                                  visualDensity: VisualDensity.compact,
+                                  tooltip: _sideNavigationOnRight
+                                      ? '將導覽按鈕移到左側'
+                                      : '將導覽按鈕移到右側',
+                                  onPressed: _toggleSideNavigationSide,
+                                  icon: Icon(
+                                    _sideNavigationOnRight
+                                        ? Icons.keyboard_double_arrow_left
+                                        : Icons.keyboard_double_arrow_right,
+                                    size: 17,
+                                  ),
+                                ),
+                          const Divider(height: 9),
                           ...List.generate(7, (index) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 3),
