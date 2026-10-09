@@ -75,7 +75,10 @@ const _objectToolGroup = '物件・工具／科學／遊戲';
 const _objectFantasyGroup = '物件・武器／奇幻';
 const _objectTravelGroup = '物件・交通／旅行';
 const _objectDailyGroup = '物件・日常／裝飾';
+const _objectClothingGroup = '物件・衣物／貼身衣物';
+
 const _objectPickerGroups = <String>{
+  _objectClothingGroup,
   _objectFurnitureGroup,
   _objectDiningGroup,
   _objectStudyGroup,
@@ -281,6 +284,7 @@ const _organizedPosePickerSections = <String, List<String>>{
     '物件・工具／科學／遊戲',
     '物件・武器／奇幻',
     '物件・交通／旅行',
+    _objectClothingGroup,
     '物件・日常／裝飾',
   ],
   '⑧ 人物互動': ['親吻動作', '多人互動', '貓系・人物互動'],
@@ -8557,6 +8561,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }.contains(id)) {
       return _objectTravelGroup;
     }
+    if (id.startsWith('obj_clothing_')) return _objectClothingGroup;
     return _objectDailyGroup;
   }
 
@@ -18202,6 +18207,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _objectToolGroup: Color(0xfffbbf24),
       _objectFantasyGroup: Color(0xffc084fc),
       _objectTravelGroup: Color(0xff38bdf8),
+      _objectClothingGroup: Color(0xfff472b6),
       _objectDailyGroup: Color(0xfff9a8d4),
       '性姿勢': Color(0xfffb7185),
       '性姿勢・一般': Color(0xfffb7185),
