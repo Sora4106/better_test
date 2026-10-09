@@ -8180,8 +8180,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   /// The static catalogue deliberately comes first.  A remote/custom record
   /// with the same canonical identity is only a historical lookup alias and
   /// must not be presented as a second character choice.
-  List<CatalogCharacter> get _allCharacters =>
-      [...catalogCharacters, ..._customCharacters];
+  List<CatalogCharacter> get _allCharacters {
+    final uniqueCharacters = <CatalogCharacter>[];
+    final seenIdentities = <String>{};
+    for (final character in [...catalogCharacters, ..._customCharacters]) {
+      if (seenIdentities.add(_catalogCharacterIdentityKey(character))) {
+        uniqueCharacters.add(character);
+      }
+    }
+    return uniqueCharacters;
+  }
 
   List<TagItem> get _selectedTags {
     final tags =
