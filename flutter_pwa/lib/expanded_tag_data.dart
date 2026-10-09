@@ -1517,19 +1517,32 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     adult: true,
     support: 'description',
     rows: const [
-      ['一手拿物件靠近鼻前', 'holding an object near nose'],
-      ['聞著手持物件', 'smelling held object'],
+      ['一手拿物件靠近鼻前', 'object held in hand near nose'],
+      ['聞著手持物件', 'smelling object held in hand'],
+      ['聞著手持胸罩', 'bra in hand, holding bra near nose, smelling bra'],
+      [
+        '聞著手持內褲',
+        'panties in hand, holding panties near nose, smelling panties'
+      ],
+      [
+        '聞著手持蕾絲內褲',
+        'lace panties in hand, holding lace panties near nose, smelling lace panties'
+      ],
+      [
+        '聞著手持情趣內衣',
+        'lingerie in hand, holding lingerie near nose, smelling lingerie'
+      ],
       [
         '聞著手持物件自慰',
-        'female masturbation, holding an object near nose, smelling held object'
+        'female masturbation, object held in hand near nose, smelling object held in hand'
       ],
       [
         '聞著手持物件手指自慰',
-        'female masturbation, vaginal fingering, holding an object near nose, smelling held object'
+        'female masturbation, vaginal fingering, object held in hand near nose, smelling object held in hand'
       ],
       [
         '聞著手持物件陰蒂刺激',
-        'female masturbation, clitoris stimulation, holding an object near nose, smelling held object'
+        'female masturbation, clitoris stimulation, object held in hand near nose, smelling object held in hand'
       ],
     ],
   ),

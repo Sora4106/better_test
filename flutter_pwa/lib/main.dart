@@ -2027,8 +2027,8 @@ final _soloFemaleAdultPosePackages = <_AdultPosePackage>[
     [
       'female masturbation',
       'vaginal fingering',
-      'holding an object near nose',
-      'smelling held object',
+      'object held in hand near nose',
+      'smelling object held in hand',
       'sitting on chair',
     ],
     ['side view', 'full body'],
@@ -2042,8 +2042,8 @@ final _soloFemaleAdultPosePackages = <_AdultPosePackage>[
     [
       'female masturbation',
       'clitoris stimulation',
-      'holding an object near nose',
-      'smelling held object',
+      'object held in hand near nose',
+      'smelling object held in hand',
       'sitting on bed',
     ],
     ['front view', 'cowboy shot'],
@@ -2057,8 +2057,8 @@ final _soloFemaleAdultPosePackages = <_AdultPosePackage>[
     [
       'female masturbation',
       'masturbation through clothes',
-      'holding an object near nose',
-      'smelling held object',
+      'object held in hand near nose',
+      'smelling object held in hand',
       'sitting on floor',
     ],
     ['from above', 'full body'],
