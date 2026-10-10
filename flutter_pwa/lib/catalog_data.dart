@@ -2586,6 +2586,14 @@ const supplementalTags = <CatalogTagData>[
       adult: true,
       conflictGroup: 'sex_position'),
   CatalogTagData(
+      id: 'pose_pressed_against_glass_wall',
+      group: '性姿勢・後入',
+      zh: '貼透明玻璃牆（成年角色）',
+      en: 'pressed against glass wall',
+      order: 8,
+      adult: true,
+      conflictGroup: 'sex_position'),
+  CatalogTagData(
       id: 'pose_shower_sex',
       group: '性姿勢',
       zh: '淋浴間性交（成年角色）',

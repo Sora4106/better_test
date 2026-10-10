@@ -76,9 +76,11 @@ const _objectFantasyGroup = '物件・武器／奇幻';
 const _objectTravelGroup = '物件・交通／旅行';
 const _objectDailyGroup = '物件・日常／裝飾';
 const _objectClothingGroup = '物件・衣物／貼身衣物';
+const _objectGlassGroup = '物件・透明／玻璃建材';
 
 const _objectPickerGroups = <String>{
   _objectClothingGroup,
+  _objectGlassGroup,
   _objectFurnitureGroup,
   _objectDiningGroup,
   _objectStudyGroup,
@@ -276,6 +278,7 @@ const _organizedPosePickerSections = <String, List<String>>{
   ],
   '⑦ 物件・道具互動': [
     '互動・物件動作',
+    _objectGlassGroup,
     '物件・家具／室內',
     '物件・飲食／餐具',
     '物件・學習／藝術／音樂',
@@ -1471,6 +1474,41 @@ final _adultPosePackages = <_AdultPosePackage>[
     maleCount: 1,
     personTags: ['sex', 'vaginal', 'standing sex', 'standing'],
     frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_glass_wall_rear',
+    name: '透明玻璃牆貼牆後入・側面',
+    description: '女性雙掌貼透明玻璃牆，男性站在後方；側面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'standing sex',
+      'sex from behind',
+      'wall sex',
+      'both palms against wall',
+      'pressed against glass wall',
+    ],
+    frameTags: ['glass wall', 'side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_glass_table_rear',
+    name: '透明玻璃桌俯身後入・側面',
+    description: '女性俯身倚在透明玻璃桌，男性站在後方；側面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: ['sex', 'vaginal', 'sex from behind', 'bent over', 'standing'],
+    frameTags: ['glass table', 'side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_glass_railing_rear',
+    name: '透明玻璃欄杆俯身後入・側面',
+    description: '女性俯身扶著透明玻璃欄杆，男性站在後方；側面全身構圖',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: ['sex', 'vaginal', 'sex from behind', 'bent over', 'standing'],
+    frameTags: ['glass railing', 'side view', 'full body'],
   ),
   _AdultPosePackage(
     id: 'couple_upright_straddle_front',
@@ -8503,6 +8541,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String? _objectPickerGroupForTag(TagItem tag) {
     if (!_isObjectTag(tag)) return null;
     final id = tag.id;
+    if (id.startsWith('obj_glass_')) return _objectGlassGroup;
     if (id.startsWith('obj_furniture_') ||
         const {
           'object_pillow',
@@ -18264,6 +18303,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '角色姿勢': Color(0xffc084fc),
       '物件': Color(0xff94a3b8),
       _objectInteractionGroup: Color(0xff14b8a6),
+      _objectGlassGroup: Color(0xff38bdf8),
       _objectFurnitureGroup: Color(0xffa8a29e),
       _objectDiningGroup: Color(0xfffb923c),
       _objectStudyGroup: Color(0xff60a5fa),

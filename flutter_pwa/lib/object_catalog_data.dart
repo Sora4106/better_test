@@ -74,6 +74,44 @@ const objectCatalogTags = <CatalogTagData>[
   CatalogTagData(
       id: 'obj_furniture_rug', group: '物件', zh: '地毯', en: 'rug', order: 4),
 
+  // 透明／玻璃建材（6）
+  CatalogTagData(
+      id: 'obj_glass_table',
+      group: '物件',
+      zh: '透明玻璃桌',
+      en: 'glass table',
+      order: 4),
+  CatalogTagData(
+      id: 'obj_glass_wall',
+      group: '物件',
+      zh: '透明玻璃牆',
+      en: 'glass wall',
+      order: 4),
+  CatalogTagData(
+      id: 'obj_glass_railing',
+      group: '物件',
+      zh: '透明玻璃欄杆',
+      en: 'glass railing',
+      order: 4),
+  CatalogTagData(
+      id: 'obj_glass_floor',
+      group: '物件',
+      zh: '透明玻璃地板',
+      en: 'glass floor',
+      order: 4),
+  CatalogTagData(
+      id: 'obj_glass_door',
+      group: '物件',
+      zh: '透明玻璃門',
+      en: 'glass door',
+      order: 4),
+  CatalogTagData(
+      id: 'obj_glass_partition',
+      group: '物件',
+      zh: '透明玻璃隔間',
+      en: 'glass partition',
+      order: 4),
+
   // 飲食／餐具（12）
   CatalogTagData(
       id: 'obj_food_bento', group: '物件', zh: '便當盒', en: 'bento', order: 4),
