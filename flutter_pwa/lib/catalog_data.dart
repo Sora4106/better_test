@@ -151,6 +151,17 @@ const supplementalTags = <CatalogTagData>[
       en: 'anthro',
       order: 1,
       conflictGroup: 'animal_identity'),
+  // Kept in the same person-scoped feature picker as anthro/furry so it is
+  // applied to one selected character, rather than accidentally becoming a
+  // shared prompt for every person in a multi-character image.
+  CatalogTagData(
+      id: 'trait_futanari',
+      group: '獸化特徵',
+      zh: '扶他特徵（futanari）',
+      en: 'futanari',
+      order: 1,
+      adult: true,
+      conflictGroup: 'sexual_character_trait'),
   CatalogTagData(
       id: 'trait_dog_ears',
       group: '獸化特徵',

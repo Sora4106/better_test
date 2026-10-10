@@ -10730,7 +10730,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isAnimalIdentityTag(TagItem tag) =>
       tag.group == _animalTraitGroup &&
-      const {'anthro', 'furry'}.contains(_englishTagKey(tag.en));
+      const {'anthro', 'furry', 'futanari'}.contains(_englishTagKey(tag.en));
 
   bool _isAnimalTailTypeTag(TagItem tag) =>
       tag.group == _animalTraitGroup &&
@@ -19005,7 +19005,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _cameraFocusGroup) return '鏡頭・身體聚焦（頭到腳）';
     if (group == _cameraCropGroup) return '鏡頭・裁切構圖';
     if (group == _cameraBedViewGroup) return '鏡頭・床位視角';
-    if (group == _animalTraitGroup) return '獸人特徵（含顏色）';
+    if (group == _animalTraitGroup) return '獸人／特殊角色特徵（含顏色）';
     if (group == _wingTypeGroup) return '翅膀（含顏色）';
     if (group == _clothingGroupHat) return '帽子／頭戴';
     if (group == _clothingGroupHairAccessory) return '髮飾';
@@ -23217,12 +23217,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          '獸人類型與毛皮範圍',
+          '獸人與特殊角色特徵',
           style: TextStyle(fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 3),
         Text(
-          '獸人角色可選 anthro；需要全身毛茸茸時可再加 furry，兩者可同時使用。',
+          '獸人角色可選 anthro；需要全身毛茸茸時可再加 furry。扶他會只套用到目前人物，兩者都可同時使用。',
           style: TextStyle(
             fontSize: 12,
             color: Theme.of(context).colorScheme.onSurfaceVariant,
