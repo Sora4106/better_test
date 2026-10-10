@@ -1615,6 +1615,7 @@ final _adultPosePackages = <_AdultPosePackage>[
     maleCount: 2,
   ),
   ..._soloMaleAdultPosePackages,
+  ..._mixedPairMutualMasturbationPackages,
   ..._soloFemaleAdultPosePackages,
   ..._femaleFemaleAdultPosePackages,
   ..._additionalAdultPosePackages,
@@ -1715,6 +1716,76 @@ final _soloMaleAdultPosePackages = <_AdultPosePackage>[
     ['side view', 'full body'],
     femaleCount: 0,
     maleCount: 1,
+  ),
+];
+
+/// Mutual-touch adult pose kits for one woman and one man.  These are shared
+/// interaction presets, so both partners' actions stay bundled together while
+/// the individual tags remain editable after applying the kit.
+final _mixedPairMutualMasturbationPackages = <_AdultPosePackage>[
+  _adultPosePack(
+    'fm_mutual_touch_seated_front',
+    '男女互摸自慰・面對面坐姿',
+    '一位成年女性與一位成年男性面對面坐姿互相以手部刺激；正面半身取景。',
+    '男女・互摸自慰',
+    [
+      'mutual masturbation',
+      'female masturbation',
+      'male masturbation',
+      'handjob',
+      'vaginal fingering',
+      'sitting',
+      'face-to-face',
+    ],
+    ['front view', 'cowboy shot'],
+  ),
+  _adultPosePack(
+    'fm_mutual_touch_side_lying',
+    '男女互摸自慰・側躺相對',
+    '一位成年女性與一位成年男性側躺相對互相以手部刺激；側面全身取景。',
+    '男女・互摸自慰',
+    [
+      'mutual masturbation',
+      'female masturbation',
+      'male masturbation',
+      'handjob',
+      'vaginal fingering',
+      'lying on side',
+      'face-to-face',
+    ],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'fm_mutual_touch_lap_side',
+    '男女互摸自慰・膝上側面',
+    '一位成年女性坐在成年男性膝上，面對面互相以手部刺激；側面全身取景。',
+    '男女・互摸自慰',
+    [
+      'mutual masturbation',
+      'female masturbation',
+      'male masturbation',
+      'handjob',
+      'vaginal fingering',
+      'sitting on lap',
+      'face-to-face',
+    ],
+    ['side view', 'full body'],
+  ),
+  _adultPosePack(
+    'fm_mutual_touch_bed_above',
+    '男女互摸自慰・床上俯視',
+    '一位成年女性與一位成年男性在床上互相以手部刺激；由上方呈現全身。',
+    '男女・互摸自慰',
+    [
+      'mutual masturbation',
+      'female masturbation',
+      'male masturbation',
+      'handjob',
+      'vaginal fingering',
+      'lying on back',
+      'legs apart',
+    ],
+    ['from above', 'full body'],
   ),
 ];
 
