@@ -984,6 +984,41 @@ class _AnimationCameraPreset {
   final String movement;
 }
 
+/// Reusable video direction which fills the individual storyboard controls.
+/// Keeping these values separate means a preset can still be adjusted after it
+/// has been applied.
+class _AnimationAdultPreset {
+  const _AnimationAdultPreset({
+    required this.zh,
+    required this.description,
+    required this.scene,
+    required this.cameraFraming,
+    required this.cameraAngle,
+    required this.cameraMovement,
+    required this.pose,
+    required this.torsoAction,
+    required this.legAction,
+    required this.motion,
+    required this.adultMotion,
+    required this.adultSound,
+    required this.extraDirection,
+  });
+
+  final String zh;
+  final String description;
+  final String scene;
+  final String cameraFraming;
+  final String cameraAngle;
+  final String cameraMovement;
+  final String pose;
+  final String torsoAction;
+  final String legAction;
+  final String motion;
+  final String adultMotion;
+  final String adultSound;
+  final String extraDirection;
+}
+
 const _animationSceneOptions = <_AnimationOption>[
   _AnimationOption('沿用來源圖片場景', 'same location as the source image'),
   _AnimationOption('室內房間', 'indoor room'),
@@ -993,6 +1028,7 @@ const _animationSceneOptions = <_AnimationOption>[
   _AnimationOption('森林', 'forest'),
   _AnimationOption('海邊', 'beach'),
   _AnimationOption('屋頂', 'rooftop'),
+  _AnimationOption('擁擠地鐵車廂', 'crowded subway train car'),
 ];
 
 // Framing and viewpoint use Danbooru-style tags understood by Illustrious
@@ -1045,6 +1081,7 @@ const _animationCameraFocusOptions = <_AnimationOption>[
 
 const _animationCameraMovementOptions = <_AnimationOption>[
   _AnimationOption('固定鏡頭', 'static camera'),
+  _AnimationOption('大致固定鏡頭', 'mostly locked camera'),
   _AnimationOption('緩慢推近', 'slow push-in'),
   _AnimationOption('緩慢拉遠', 'slow pull-back'),
   _AnimationOption('向左平移', 'slow pan left'),
@@ -1231,6 +1268,10 @@ const _animationAdultMotionOptions = <_AnimationOption>[
   _AnimationOption('成人親密互動', 'adult intimate interaction'),
   _AnimationOption('成人單人親密動作', 'adult solo intimate motion'),
   _AnimationOption('緩慢律動', 'slow rhythmic body motion'),
+  _AnimationOption(
+    '後入快速律動（成人）',
+    'sex from behind, rapid passionate hip thrusting, penis moving in and out of vagina',
+  ),
 ];
 
 const _animationAdultSoundOptions = <_AnimationOption>[
@@ -1241,6 +1282,27 @@ const _animationAdultSoundOptions = <_AnimationOption>[
   _AnimationOption('節奏性呼吸', 'rhythmic breathing'),
   _AnimationOption('床墊細微聲響', 'soft bed creaking'),
   _AnimationOption('衣料摩擦聲', 'gentle fabric rustling'),
+  _AnimationOption('隨律動同步的輕聲呻吟', 'soft moans synchronized with each thrust'),
+];
+
+const _animationAdultPresets = <_AnimationAdultPreset>[
+  _AnimationAdultPreset(
+    zh: '擁擠車廂・站立後入動態',
+    description: '成人角色在擁擠車廂站立後入；鏡頭大致固定，快速律動與聲音同步。',
+    scene: 'crowded subway train car',
+    cameraFraming: 'full body',
+    cameraAngle: 'three-quarter view',
+    cameraMovement: 'mostly locked camera',
+    pose: 'standing',
+    torsoAction: 'gently sways hips',
+    legAction: 'feet planted',
+    motion: 'makes a small natural movement',
+    adultMotion:
+        'sex from behind, rapid passionate hip thrusting, penis moving in and out of vagina',
+    adultSound: 'soft moans synchronized with each thrust',
+    extraDirection:
+        'realistic anatomy, normal anatomy, smooth motion, consistent character model',
+  ),
 ];
 
 final _adultPosePackages = <_AdultPosePackage>[
@@ -23259,6 +23321,99 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _animationAdultPresetPicker(_AnimationBeat beat) {
+    bool matches(_AnimationAdultPreset preset) =>
+        beat.scene == preset.scene &&
+        beat.cameraFraming == preset.cameraFraming &&
+        beat.cameraAngle == preset.cameraAngle &&
+        beat.cameraMovement == preset.cameraMovement &&
+        beat.pose == preset.pose &&
+        beat.torsoAction == preset.torsoAction &&
+        beat.legAction == preset.legAction &&
+        beat.motion == preset.motion &&
+        beat.adultMotion == preset.adultMotion &&
+        beat.adultSound == preset.adultSound &&
+        beat.extraDirection == preset.extraDirection;
+
+    const accent = Color(0xfffb923c);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(8, 7, 8, 8),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: .10),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: accent.withValues(alpha: .72)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.auto_awesome_motion_outlined, size: 19, color: accent),
+              SizedBox(width: 7),
+              Expanded(
+                child: Text(
+                  '成人影片自然敘述套件',
+                  style: TextStyle(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            '套用後會填入場景、鏡頭、動態、成人音訊與補充敘述；下方每一項都仍可修改。',
+            style: TextStyle(
+              fontSize: 11,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 6),
+          _uniformButtonGrid(
+            minItemWidth: 230,
+            itemHeight: 50,
+            maxColumns: 3,
+            children: _animationAdultPresets.map((preset) {
+              final selected = matches(preset);
+              return Tooltip(
+                message: preset.description,
+                child: ChoiceChip(
+                  selected: selected,
+                  showCheckmark: true,
+                  label: Center(
+                    child: Text(
+                      preset.zh,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  onSelected: (_) => _updateAnimationBeat(beat, () {
+                    beat.scene = preset.scene;
+                    beat.cameraFraming = preset.cameraFraming;
+                    beat.cameraAngle = preset.cameraAngle;
+                    beat.cameraPerspective = '';
+                    beat.cameraFocus = '';
+                    beat.cameraMovement = preset.cameraMovement;
+                    beat.pose = preset.pose;
+                    beat.armAction = 'arms at sides';
+                    beat.torsoAction = preset.torsoAction;
+                    beat.legAction = preset.legAction;
+                    beat.motion = preset.motion;
+                    beat.endPose = 'holds the pose';
+                    beat.sound = 'soft ambient sound';
+                    beat.adultMotion = preset.adultMotion;
+                    beat.adultSound = preset.adultSound;
+                    beat.extraDirection = preset.extraDirection;
+                  }),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _animationOptionPicker({
     required String label,
     required String value,
@@ -23503,6 +23658,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                   const SizedBox(height: 8),
                   _animationPersonPicker(beat: beat, people: people),
+                  if (_showAdult) ...[
+                    const SizedBox(height: 8),
+                    _animationAdultPresetPicker(beat),
+                  ],
                   const SizedBox(height: 6),
                   _animationOptionPicker(
                     label: '場景／地點',
