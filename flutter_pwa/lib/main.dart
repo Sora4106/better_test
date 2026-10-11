@@ -11466,6 +11466,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (_isAnimalTraitOutputTag(output) || _isWingOutputTag(output)) {
       return true;
     }
+    if (_isHairOrHeadAccessoryOutputTag(output)) return true;
     return output.tagIds.any((id) {
       final tag = _tagsById[id];
       return tag != null &&
@@ -11535,8 +11536,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return _isHairPromptEnglish(output.en);
   }
 
+  /// Hair ornaments and head ornaments are still selected from the accessory
+  /// picker, but their generated prompt phrases belong to the character's
+  /// fixed appearance.  Keeping their colour/composed wording beside the hair
+  /// reduces cross-character accessory swaps in multi-person prompts.
+  bool _isHairOrHeadAccessoryOutputTag(_GeneratedOutputTag output) {
+    const featureAccessoryGroups = {
+      _clothingGroupHairAccessory,
+      _clothingGroupHeadAccessory,
+    };
+    return output.tagIds.any((id) {
+      final tag = _tagsById[id];
+      if (tag == null) return false;
+      return featureAccessoryGroups.contains(tag.group) ||
+          featureAccessoryGroups.contains(_clothingAccessoryPickerGroup(tag));
+    });
+  }
+
   bool _isClothingWeightOutputTag(_GeneratedOutputTag output) {
     if (output.personClothingExtraValue != null) return true;
+    if (_isHairOrHeadAccessoryOutputTag(output)) return false;
     return output.tagIds.any((id) {
       final tag = _tagsById[id];
       return tag != null && _isClothingGroup(tag.group);
