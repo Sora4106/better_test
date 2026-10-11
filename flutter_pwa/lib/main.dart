@@ -8477,9 +8477,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _canonicalCharacterTagKey(String value) {
     final key = _englishTagKey(value);
     const aliases = <String, String>{
-      'konjiki no yami': 'golden darkness',
-      'yami': 'golden darkness',
-      'momo velia deviluke': 'momo belia deviluke',
+      'golden darkness': 'konjiki no yami',
+      'yami': 'konjiki no yami',
+      'momo belia deviluke': 'momo velia deviluke',
       'mikan yuuki': 'yuuki mikan',
       'haruna sairenji': 'sairenji haruna',
       'yui kotegawa': 'kotegawa yui',
@@ -13039,10 +13039,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     var normalized =
         _cleanTag(value).replaceAll(r'\(', '(').replaceAll(r'\)', ')');
     const aliases = <String, String>{
-      'leo/need_miku': 'hatsune_miku_(project_sekai)',
-      'more_more_jump!_miku': 'hatsune_miku_(project_sekai)',
-      'vivid_bad_squad_miku': 'hatsune_miku_(project_sekai)',
-      'wonderlands_x_showtime_miku': 'hatsune_miku_(project_sekai)',
+      // Character Select SAA only provides the shared model trigger for these
+      // four Project Sekai Miku variants. Keep their distinct catalogue IDs,
+      // but emit the verified name rather than an unsupported convenience tag.
+      'hatsune_miku_(project_sekai)': 'hatsune miku',
+      'leo/need_miku': 'hatsune miku',
+      'more_more_jump!_miku': 'hatsune miku',
+      'vivid_bad_squad_miku': 'hatsune miku',
+      'wonderlands_x_showtime_miku': 'hatsune miku',
       'leo_need': 'leo/need_(project_sekai)',
       'more_more_jump': 'more_more_jump!_(project_sekai)',
       'vivid_bad_squad': 'vivid_bad_squad_(project_sekai)',
@@ -14797,11 +14801,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   CatalogCharacter? _reverseCharacterMatch(String token) {
     const characterTagAliases = <String, String>{
-      'konjiki no yami': 'golden_darkness',
-      'yami': 'golden_darkness',
+      'golden darkness': 'konjiki no yami',
+      'konjiki no yami': 'konjiki no yami',
+      'yami': 'konjiki no yami',
       'lala satalin deviluke': 'lala_satalin_deviluke',
-      'momo velia deviluke': 'momo_belia_deviluke',
-      'momo belia deviluke': 'momo_belia_deviluke',
+      'momo velia deviluke': 'momo velia deviluke',
+      'momo belia deviluke': 'momo velia deviluke',
+      'hitori gotou': 'gotoh hitori',
+      'sakura kyouko': 'sakura kyoko',
+      'sanji': 'sanji (one piece)',
+      'zero two': 'zero two (darling in the franxx)',
+      'makima': 'makima (chainsaw man)',
+      'kocho shinobu': 'kochou shinobu',
+      'nami': 'nami (one piece)',
+      'hoshino ai': 'hoshino ai (oshi no ko)',
+      'hoshino ichika': 'hoshino ichika (project sekai)',
+      'ieiri shouko': 'ieiri shoko',
+      'mirko (boku no hero academia)': 'mirko',
+      'riza hawkeye': 'riza hawkeye (fullmetal alchemist)',
+      'olivier mira armstrong': 'olivier mira armstrong (fullmetal alchemist)',
+      '2b (nier:automata)': '2b (nier automata)',
+      'a2 (nier:automata)': 'a2 (nier automata)',
       'nana asta deviluke': 'nana_asta_deviluke',
       'yuuki mikan': 'yuuki_mikan',
       'mikan yuuki': 'yuuki_mikan',

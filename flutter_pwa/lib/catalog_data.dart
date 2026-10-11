@@ -3253,7 +3253,7 @@ final saaReferenceCharacters = <CatalogCharacter>[
 
   // 孤獨搖滾！ / Bocchi the Rock!
   _saaReferenceCharacter('saa_bocchi_hitori', '孤獨搖滾！', 'Bocchi the Rock!',
-      'bocchi_the_rock!', '後藤一里', 'Hitori Gotou', 'hitori_gotou'),
+      'bocchi_the_rock!', '後藤一里', 'Hitori Gotou', 'gotoh hitori'),
   _saaReferenceCharacter('saa_bocchi_nijika', '孤獨搖滾！', 'Bocchi the Rock!',
       'bocchi_the_rock!', '伊地知虹夏', 'Nijika Ijichi', 'ijichi_nijika'),
   _saaReferenceCharacter('saa_bocchi_ryo', '孤獨搖滾！', 'Bocchi the Rock!',
@@ -3293,7 +3293,7 @@ final saaReferenceCharacters = <CatalogCharacter>[
       'mahou_shoujo_madoka_magica',
       '佐倉杏子',
       'Kyouko Sakura',
-      'sakura_kyouko'),
+      'sakura kyoko'),
 
   // K-ON! 輕音部
   _saaReferenceCharacter('saa_kon_yui', 'K-ON! 輕音部', 'K-ON!', 'k-on!', '平澤唯',
@@ -3350,7 +3350,7 @@ final saaReferenceCharacters = <CatalogCharacter>[
   _saaReferenceCharacter('saa_one_piece_law', '航海王', 'One Piece', 'one_piece',
       '托拉法爾加・羅', 'Trafalgar Law', 'trafalgar_law'),
   _saaReferenceCharacter('saa_one_piece_sanji', '航海王', 'One Piece', 'one_piece',
-      '香吉士', 'Sanji', 'sanji'),
+      '香吉士', 'Sanji', 'sanji (one piece)'),
   _saaReferenceCharacter('saa_one_piece_uta', '航海王', 'One Piece', 'one_piece',
       '烏塔', 'Uta', 'uta_(one_piece)'),
   _saaReferenceCharacter('saa_one_piece_yamato', '航海王', 'One Piece',
@@ -3863,7 +3863,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 'to_love-ru',
       characterZh: '夢夢・貝莉雅・戴比路克',
       characterEn: 'Momo Belia Deviluke',
-      characterTag: 'momo_belia_deviluke',
+      characterTag: 'momo velia deviluke',
       traits: [
         CatalogTagData(
             id: 'momo_pink_hair',
@@ -3992,7 +3992,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 're:zero_kara_hajimeru_isekai_seikatsu',
       characterZh: '雷姆',
       characterEn: 'Rem',
-      characterTag: 'rem_(re:zero)',
+      characterTag: 'rem (re zero)',
       traits: [
         CatalogTagData(
             id: 'rem_blue_hair',
@@ -4020,7 +4020,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 're:zero_kara_hajimeru_isekai_seikatsu',
       characterZh: '拉姆',
       characterEn: 'Ram',
-      characterTag: 'ram_(re:zero)',
+      characterTag: 'ram (re zero)',
       traits: [
         CatalogTagData(
             id: 'ram_pink_hair',
@@ -4048,7 +4048,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 're:zero_kara_hajimeru_isekai_seikatsu',
       characterZh: '艾蜜莉亞',
       characterEn: 'Emilia',
-      characterTag: 'emilia_(re:zero)',
+      characterTag: 'emilia (re zero)',
       traits: [
         CatalogTagData(
             id: 'emilia_silver_hair',
@@ -4076,7 +4076,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 'darling_in_the_franxx',
       characterZh: '02',
       characterEn: 'Zero Two',
-      characterTag: 'zero_two',
+      characterTag: 'zero two (darling in the franxx)',
       traits: [
         CatalogTagData(
             id: '02_pink_hair',
@@ -4186,7 +4186,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 'chainsaw_man',
       characterZh: '真紀真',
       characterEn: 'Makima',
-      characterTag: 'makima',
+      characterTag: 'makima (chainsaw man)',
       traits: [
         CatalogTagData(
             id: 'makima_red_hair',
@@ -4248,7 +4248,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 'kimetsu_no_yaiba',
       characterZh: '胡蝶忍',
       characterEn: 'Shinobu Kocho',
-      characterTag: 'kocho_shinobu',
+      characterTag: 'kochou shinobu',
       traits: [
         CatalogTagData(
             id: 'shinobu_purple_hair',
@@ -4360,7 +4360,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 'one_piece',
       characterZh: '娜美',
       characterEn: 'Nami',
-      characterTag: 'nami',
+      characterTag: 'nami (one piece)',
       traits: [
         CatalogTagData(
             id: 'nami_orange_hair',
@@ -4521,7 +4521,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 'oshi_no_ko',
       characterZh: '星野愛',
       characterEn: 'Ai Hoshino',
-      characterTag: 'hoshino_ai',
+      characterTag: 'hoshino ai (oshi no ko)',
       traits: [
         CatalogTagData(
             id: 'ai_purple_hair',
@@ -4849,7 +4849,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeTag: 'to_love-ru',
     characterZh: '金色闇',
     characterEn: 'Golden Darkness',
-    characterTag: 'golden_darkness',
+    characterTag: 'konjiki no yami',
     traits: [
       _trait('golden_darkness_yami', '闇', 'yami'),
       _trait('golden_darkness_blonde_hair', '金髮', 'blonde hair'),
@@ -5089,7 +5089,7 @@ final catalogCharacters = <CatalogCharacter>[
     id: 'project_sekai_hoshino_ichika',
     characterZh: '星乃一歌',
     characterEn: 'Ichika Hoshino',
-    characterTag: 'hoshino_ichika',
+    characterTag: 'hoshino ichika (project sekai)',
     unitZh: 'Leo/need',
     unitEn: 'Leo/need',
     unitTag: 'leo_need',
@@ -5586,7 +5586,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeTag: 'jujutsu_kaisen',
     characterZh: '家入硝子',
     characterEn: 'Shoko Ieiri',
-    characterTag: 'ieiri_shouko',
+    characterTag: 'ieiri shoko',
     traits: [
       _trait('shoko_brown_hair', '棕色頭髮', 'brown hair'),
       _trait('shoko_long_hair', '長髮', 'long hair'),
@@ -5602,7 +5602,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeTag: 'boku_no_hero_academia',
     characterZh: '米爾科',
     characterEn: 'Mirko',
-    characterTag: 'mirko_(boku_no_hero_academia)',
+    characterTag: 'mirko',
     traits: [
       _trait('mirko_dark_skin', '深色肌膚', 'dark skin'),
       _trait('mirko_white_hair', '白色頭髮', 'white hair'),
@@ -5636,7 +5636,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeTag: 'fullmetal_alchemist',
     characterZh: '莉莎・霍克愛',
     characterEn: 'Riza Hawkeye',
-    characterTag: 'riza_hawkeye',
+    characterTag: 'riza hawkeye (fullmetal alchemist)',
     traits: [
       _trait('riza_blonde_hair', '金髮', 'blonde hair'),
       _trait('riza_long_hair', '長髮', 'long hair'),
@@ -5652,7 +5652,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeTag: 'fullmetal_alchemist',
     characterZh: '奧莉薇・米拉・阿姆斯壯',
     characterEn: 'Olivier Mira Armstrong',
-    characterTag: 'olivier_mira_armstrong',
+    characterTag: 'olivier mira armstrong (fullmetal alchemist)',
     traits: [
       _trait('olivier_blonde_hair', '金髮', 'blonde hair'),
       _trait('olivier_long_hair', '長髮', 'long hair'),
@@ -5667,7 +5667,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeTag: 'nier:automata',
     characterZh: '2B',
     characterEn: '2B',
-    characterTag: '2b_(nier:automata)',
+    characterTag: '2b (nier automata)',
     traits: [
       _trait('nier_2b_white_hair', '白色頭髮', 'white hair'),
       _trait('nier_2b_bob_cut', '鮑伯短髮', 'bob cut'),
@@ -5683,7 +5683,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeTag: 'nier:automata',
     characterZh: 'A2',
     characterEn: 'A2',
-    characterTag: 'a2_(nier:automata)',
+    characterTag: 'a2 (nier automata)',
     traits: [
       _trait('nier_a2_white_hair', '白色頭髮', 'white hair'),
       _trait('nier_a2_very_long_hair', '極長髮', 'very long hair'),

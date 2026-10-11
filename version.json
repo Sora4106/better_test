@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.232",
-    "build":  234,
-    "label":  "1.1.232+234",
+    "version":  "1.1.233",
+    "build":  235,
+    "label":  "1.1.233+235",
     "history":  [
+                    {
+                        "version":  "1.1.233",
+                        "build":  235,
+                        "label":  "1.1.233+235",
+                        "date":  "2026-10-11",
+                        "notes":  "依 Character Select SAA v1.60 名單校正既有角色的模型觸發名稱，並補強舊名稱反推對照。"
+                    },
                     {
                         "version":  "1.1.232",
                         "build":  234,
