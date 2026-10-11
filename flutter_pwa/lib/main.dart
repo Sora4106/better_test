@@ -17180,6 +17180,53 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  /// Character modes are mutually exclusive.  A switch deliberately clears
+  /// the previous identity and its fixed-feature selections so an anime choice
+  /// can never leak into an original character (or the other way around).
+  void _setCharacterMode(int index, String mode) {
+    if (index < 0 || index >= _personSlots.length) return;
+    setState(() {
+      final slot = _personSlots[index];
+      if (mode == slot.mode && (mode != '不需細節' || !slot.detailed)) {
+        _persist();
+        return;
+      }
+      if (mode == '不需細節') {
+        slot
+          ..mode = mode
+          ..detailed = false;
+        _persist();
+        return;
+      }
+
+      _resetCharacterFeatureSelections(index, _characterForNew(slot));
+      _clearOriginalCharacterFeatureSelections(index);
+      _removedCharacterTags.remove(index);
+      _openCharacterPickers.remove(index);
+      _clearPersonSearchController(index, 'anime');
+      _clearPersonSearchController(index, 'character');
+
+      slot
+        ..mode = mode
+        ..detailed = true
+        ..characterId = ''
+        ..animeQuery = ''
+        ..animeTag = ''
+        ..remoteAnimeZh = ''
+        ..remoteAnimeEn = ''
+        ..query = ''
+        ..originalAnimeZh = ''
+        ..originalAnimeEn = ''
+        ..originalAnimeTag = ''
+        ..originalCharacterZh = ''
+        ..originalCharacterEn = ''
+        ..originalCharacterTag = ''
+        ..originalCharacterPresetId = '';
+      _clearPersonSearchController(index, 'original-preset-name');
+      _persist();
+    });
+  }
+
   bool _charactersComplete() {
     for (final slot in _personSlots) {
       if (!slot.detailed) continue;
@@ -17232,10 +17279,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       int index, OriginalCharacterPreset preset) {
     if (index < 0 || index >= _personSlots.length) return;
     setState(() {
+      final previousCharacter = _characterForNew(_personSlots[index]);
+      _resetCharacterFeatureSelections(index, previousCharacter);
       _clearOriginalCharacterFeatureSelections(index);
+      _removedCharacterTags.remove(index);
+      _openCharacterPickers.remove(index);
+      _clearPersonSearchController(index, 'anime');
+      _clearPersonSearchController(index, 'character');
       final slot = _personSlots[index];
       slot
         ..mode = '原創'
+        ..detailed = true
+        ..characterId = ''
+        ..animeQuery = ''
+        ..animeTag = ''
+        ..remoteAnimeZh = ''
+        ..remoteAnimeEn = ''
+        ..query = ''
         ..originalCharacterPresetId = preset.id
         ..originalCharacterZh = preset.name
         ..originalCharacterEn = ''
@@ -17440,7 +17500,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 Text(
                   canSave
                       ? '將目前 $featureCount 個既有特徵與手動補充保存到「${_cleanTag(slot.originalCharacterZh)}」。'
-                      : '先回到角色項目填寫名稱，並至少選擇一個第 4 項特徵或手動補充。',
+                      : '填寫角色名稱，並至少選擇一個角色特徵或手動補充後即可儲存。',
                   style: const TextStyle(fontSize: 12),
                 ),
               ],
@@ -24872,12 +24932,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               .map((mode) => ChoiceChip(
                                   label: Text(mode),
                                   selected: slot.mode == mode,
-                                  onSelected: (_) => setState(() {
-                                        slot.mode = mode;
-                                        if (mode == '不需細節')
-                                          slot.detailed = false;
-                                        _persist();
-                                      })))
+                                  onSelected: (selected) {
+                                    if (selected) {
+                                      _setCharacterMode(index, mode);
+                                    }
+                                  }))
                               .toList()),
                       if (slot.mode == '動漫角色') ...[
                         const SizedBox(height: 10),
@@ -25135,6 +25194,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                               slot.originalTraits = value;
                               _persist();
                             }),
+                        const SizedBox(height: 10),
+                        _originalCharacterFeatureSavePanel(index),
                       ],
                     ],
                   ]),
