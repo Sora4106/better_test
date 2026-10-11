@@ -721,6 +721,68 @@ class PromptCombination {
       );
 }
 
+/// A locally stored original-character profile.  Its [name] is deliberately
+/// interface-only: applying a profile restores fixed appearance choices, but
+/// never emits the profile name as a model prompt tag.
+class OriginalCharacterPreset {
+  OriginalCharacterPreset({
+    required this.id,
+    required this.name,
+    required this.featureTagIds,
+    required this.originalTraits,
+    required this.featureExtraPositive,
+    required this.hairGradientColorIds,
+    required this.hairGradientStyle,
+    required this.physicalTraitGradientColorIds,
+  });
+
+  final String id;
+  final String name;
+  final List<String> featureTagIds;
+  final String originalTraits;
+  final String featureExtraPositive;
+  final List<String> hairGradientColorIds;
+  final String hairGradientStyle;
+  final Map<String, List<String>> physicalTraitGradientColorIds;
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name,
+        'featureTagIds': featureTagIds,
+        'originalTraits': originalTraits,
+        'featureExtraPositive': featureExtraPositive,
+        'hairGradientColorIds': hairGradientColorIds,
+        'hairGradientStyle': hairGradientStyle,
+        'physicalTraitGradientColorIds': {
+          for (final entry in physicalTraitGradientColorIds.entries)
+            entry.key: entry.value,
+        },
+      };
+
+  factory OriginalCharacterPreset.fromJson(Map<String, dynamic> json) {
+    final rawGradients = json['physicalTraitGradientColorIds'] as Map? ?? {};
+    return OriginalCharacterPreset(
+      id: '${json['id'] ?? ''}',
+      name: '${json['name'] ?? '未命名原創角色'}',
+      featureTagIds:
+          (json['featureTagIds'] as List? ?? []).map((id) => '$id').toList(),
+      originalTraits: '${json['originalTraits'] ?? ''}',
+      featureExtraPositive: '${json['featureExtraPositive'] ?? ''}',
+      hairGradientColorIds: (json['hairGradientColorIds'] as List? ?? [])
+          .map((id) => '$id')
+          .toList(),
+      hairGradientStyle:
+          '${json['hairGradientStyle'] ?? _defaultHairGradientStyle}',
+      physicalTraitGradientColorIds: rawGradients.map<String, List<String>>(
+        (key, value) => MapEntry(
+          '$key',
+          (value as List? ?? []).map((id) => '$id').toList(),
+        ),
+      ),
+    );
+  }
+}
+
 class _OutfitReferenceResolution {
   const _OutfitReferenceResolution({
     required this.tags,
@@ -3883,6 +3945,9 @@ class PersonSlot {
   String originalCharacterZh = '';
   String originalCharacterEn = '';
   String originalCharacterTag = '';
+  // UI-only identity for an original-character profile.  Unlike a catalogue
+  // character tag, this must never be rendered into the final prompt.
+  String originalCharacterPresetId = '';
   String originalTraits = '';
   String featureExtraPositive = '';
   String clothingExtraPositive = '';
@@ -3934,6 +3999,7 @@ class PersonSlot {
         'originalCharacterZh': originalCharacterZh,
         'originalCharacterEn': originalCharacterEn,
         'originalCharacterTag': originalCharacterTag,
+        'originalCharacterPresetId': originalCharacterPresetId,
         'originalTraits': originalTraits,
         'featureExtraPositive': featureExtraPositive,
         'clothingExtraPositive': clothingExtraPositive,
@@ -3973,6 +4039,8 @@ class PersonSlot {
         ..originalCharacterZh = '${json['originalCharacterZh'] ?? ''}'
         ..originalCharacterEn = '${json['originalCharacterEn'] ?? ''}'
         ..originalCharacterTag = '${json['originalCharacterTag'] ?? ''}'
+        ..originalCharacterPresetId =
+            '${json['originalCharacterPresetId'] ?? ''}'
         ..originalTraits = '${json['originalTraits'] ?? ''}'
         ..featureExtraPositive = '${json['featureExtraPositive'] ?? ''}'
         ..clothingExtraPositive = '${json['clothingExtraPositive'] ?? ''}'
@@ -8094,6 +8162,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   // state field only to clear records created by older app versions safely.
   final Set<String> _unregisteredPositiveTags = <String>{};
   final List<CatalogCharacter> _customCharacters = <CatalogCharacter>[];
+  final List<OriginalCharacterPreset> _originalCharacterPresets =
+      <OriginalCharacterPreset>[];
   final Map<int, List<_RemoteAnime>> _remoteAnimeResults =
       <int, List<_RemoteAnime>>{};
   final Map<int, _RemoteAnime> _remoteAnimeSelection = <int, _RemoteAnime>{};
@@ -11852,6 +11922,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             )
             .map(_normalizeImportedAnime),
       );
+      _originalCharacterPresets.addAll(
+        (data['originalCharacterPresets'] as List? ?? []).map(
+          (item) => OriginalCharacterPreset.fromJson(
+            Map<String, dynamic>.from(item as Map),
+          ),
+        ),
+      );
       final restoredCustomTagCount = _customTags.length;
       final restoredTagRedirects = _consolidateRestoredCustomTagDuplicates();
       final restoredCustomDuplicatesRemoved =
@@ -11951,6 +12028,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
         for (final preset in _presets) {
           _migrateRestoredPresetTagIds(preset, restoredTagRedirects);
+        }
+        for (final preset in _originalCharacterPresets) {
+          final migrated = preset.featureTagIds.toSet();
+          if (_migrateRestoredTagIds(migrated, restoredTagRedirects)) {
+            preset.featureTagIds
+              ..clear()
+              ..addAll(migrated);
+            restoredDuplicatesMigrated = true;
+          }
         }
         for (final combination in _combinations) {
           final migrated = combination.tagIds.toSet();
@@ -12064,6 +12150,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'customTags': _customTags.map((tag) => tag.toJson()).toList(),
         'customCharacters':
             _customCharacters.map((item) => item.toJson()).toList(),
+        'originalCharacterPresets':
+            _originalCharacterPresets.map((item) => item.toJson()).toList(),
         'personSlots': _personSlots.map((item) => item.toJson()).toList(),
         'recentCharacterIds': _recentCharacterIds,
         'presets': _presets.map((preset) => preset.toJson()).toList(),
@@ -12130,6 +12218,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _autoFurryIdentityForPerson.clear();
     _customTags.clear();
     _customCharacters.clear();
+    _originalCharacterPresets.clear();
     _personSlots.clear();
     _recentCharacterIds.clear();
     _presets.clear();
@@ -12722,19 +12811,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ];
     }
     final own = <String>[];
-    final originalCharacterTag = _cleanTag(slot.originalCharacterTag);
-    final emitOriginalCharacter = originalCharacterTag.isNotEmpty &&
-        !_isRemovedCharacterTag(index, originalCharacterTag);
-    if (emitOriginalCharacter) {
-      own.add(originalCharacterTag);
-    }
     if (_cleanTag(slot.originalAnimeTag).isNotEmpty &&
         !_isRemovedCharacterTag(index, slot.originalAnimeTag)) {
       own.add(_cleanTag(slot.originalAnimeTag));
     }
     own.addAll(_extraTags(slot.originalTraits)
         .where((tag) => !_isRemovedCharacterTag(index, tag)));
-    return own.isEmpty ? ['original'] : own;
+    return own;
   }
 
   List<_GeneratedOutputTag> _characterOutputTagsForSlot(
@@ -12785,19 +12868,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     final result = <_GeneratedOutputTag>[];
     final animeTag = _cleanTag(slot.originalAnimeTag);
-    final characterTag = _cleanTag(slot.originalCharacterTag);
-    final emitOriginalCharacter =
-        characterTag.isNotEmpty && !_isRemovedCharacterTag(index, characterTag);
-    if (emitOriginalCharacter) {
-      result.add(_GeneratedOutputTag(
-        zh: slot.originalCharacterZh.trim().isEmpty
-            ? characterTag
-            : slot.originalCharacterZh.trim(),
-        en: characterTag,
-        personIndex: index,
-        characterTag: true,
-      ));
-    }
     if (animeTag.isNotEmpty && !_isRemovedCharacterTag(index, animeTag)) {
       result.add(_GeneratedOutputTag(
         zh: slot.originalAnimeZh.trim().isEmpty
@@ -15732,6 +15802,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ..originalCharacterZh = ''
               ..originalCharacterEn = ''
               ..originalCharacterTag = ''
+              ..originalCharacterPresetId = ''
               ..originalTraits = '';
           }
           _removedCharacterTags.clear();
@@ -17113,11 +17184,278 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     for (final slot in _personSlots) {
       if (!slot.detailed) continue;
       if (slot.mode == '動漫角色' && _characterForNew(slot) == null) return false;
-      if (slot.mode == '原創' &&
-          (slot.originalCharacterEn.trim().isEmpty ||
-              slot.originalCharacterTag.trim().isEmpty)) return false;
     }
     return true;
+  }
+
+  Set<String> _originalCharacterFeatureTagIds(int index) {
+    return _personTagIds(index).where((id) {
+      final tag = _tagsById[id];
+      return tag != null && _isFixedCharacterFeatureTag(tag);
+    }).toSet();
+  }
+
+  bool _hasOriginalCharacterFeatureData(int index) {
+    if (_originalCharacterFeatureTagIds(index).isNotEmpty) return true;
+    final slot = _personSlots[index];
+    return _extraTags(slot.originalTraits).isNotEmpty ||
+        _extraTags(slot.featureExtraPositive).isNotEmpty;
+  }
+
+  Map<String, List<String>> _copyPhysicalTraitGradients(
+      Map<String, List<String>> source) {
+    return {
+      for (final entry in source.entries)
+        entry.key: List<String>.from(entry.value),
+    };
+  }
+
+  void _clearOriginalCharacterFeatureSelections(int index) {
+    if (index < 0 || index >= _personSlots.length) return;
+    final ids = _personTagIds(index);
+    ids.removeWhere((id) {
+      final tag = _tagsById[id];
+      return tag != null && _isFixedCharacterFeatureTag(tag);
+    });
+    final slot = _personSlots[index];
+    slot
+      ..hairGradientColorIds = <String>[]
+      ..hairGradientStyle = _defaultHairGradientStyle
+      ..physicalTraitGradientColorIds = <String, List<String>>{}
+      ..originalTraits = ''
+      ..featureExtraPositive = '';
+    _clearPersonSearchController(index, 'original-traits');
+    _clearPersonSearchController(index, 'feature-extra-positive');
+  }
+
+  void _applyOriginalCharacterPreset(
+      int index, OriginalCharacterPreset preset) {
+    if (index < 0 || index >= _personSlots.length) return;
+    setState(() {
+      _clearOriginalCharacterFeatureSelections(index);
+      final slot = _personSlots[index];
+      slot
+        ..mode = '原創'
+        ..originalCharacterPresetId = preset.id
+        ..originalCharacterZh = preset.name
+        ..originalCharacterEn = ''
+        ..originalCharacterTag = ''
+        ..originalTraits = preset.originalTraits
+        ..featureExtraPositive = preset.featureExtraPositive
+        ..hairGradientColorIds = List<String>.from(preset.hairGradientColorIds)
+        ..hairGradientStyle = preset.hairGradientStyle
+        ..physicalTraitGradientColorIds =
+            _copyPhysicalTraitGradients(preset.physicalTraitGradientColorIds);
+      _personTagIds(index).addAll(
+        preset.featureTagIds.where((id) => _tagsById.containsKey(id)),
+      );
+      _syncHairGradientColorIds(index, _personTagIds(index));
+      _syncPhysicalTraitGradientColorIds(index, _personTagIds(index));
+      _syncAutoFurryIdentity(index, _personTagIds(index));
+      _personSearchController(index, 'original-traits', slot.originalTraits);
+      _personSearchController(
+          index, 'original-preset-name', slot.originalCharacterZh);
+      _personSearchController(
+          index, 'feature-extra-positive', slot.featureExtraPositive);
+      _persist();
+    });
+  }
+
+  void _saveOriginalCharacterPreset(int index) {
+    if (index < 0 || index >= _personSlots.length) return;
+    final slot = _personSlots[index];
+    final name = _cleanTag(slot.originalCharacterZh);
+    if (name.isEmpty || !_hasOriginalCharacterFeatureData(index)) return;
+    setState(() {
+      final existingIndex = _originalCharacterPresets.indexWhere(
+        (preset) =>
+            preset.id == slot.originalCharacterPresetId || preset.name == name,
+      );
+      final id = existingIndex >= 0
+          ? _originalCharacterPresets[existingIndex].id
+          : 'original_${DateTime.now().microsecondsSinceEpoch}';
+      final preset = OriginalCharacterPreset(
+        id: id,
+        name: name,
+        featureTagIds: _originalCharacterFeatureTagIds(index).toList(),
+        originalTraits: slot.originalTraits,
+        featureExtraPositive: slot.featureExtraPositive,
+        hairGradientColorIds: List<String>.from(slot.hairGradientColorIds),
+        hairGradientStyle: slot.hairGradientStyle,
+        physicalTraitGradientColorIds:
+            _copyPhysicalTraitGradients(slot.physicalTraitGradientColorIds),
+      );
+      if (existingIndex >= 0) {
+        _originalCharacterPresets[existingIndex] = preset;
+      } else {
+        _originalCharacterPresets.add(preset);
+      }
+      slot
+        ..originalCharacterPresetId = id
+        ..originalCharacterZh = name
+        ..originalCharacterEn = ''
+        ..originalCharacterTag = '';
+      _persist();
+    });
+  }
+
+  Future<void> _deleteOriginalCharacterPreset(
+      int index, OriginalCharacterPreset preset) async {
+    final approved = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('刪除原創角色預設？'),
+            content: Text('「${preset.name}」只會從本機的原創角色清單移除。'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('取消'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('刪除'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    if (!approved || !mounted) return;
+    setState(() {
+      _originalCharacterPresets.removeWhere((item) => item.id == preset.id);
+      if (index >= 0 &&
+          index < _personSlots.length &&
+          _personSlots[index].originalCharacterPresetId == preset.id) {
+        _personSlots[index].originalCharacterPresetId = '';
+      }
+      _persist();
+    });
+  }
+
+  Widget _originalCharacterPresetPicker(int index) {
+    final slot = _personSlots[index];
+    OriginalCharacterPreset? selectedPreset;
+    for (final preset in _originalCharacterPresets) {
+      if (preset.id == slot.originalCharacterPresetId) {
+        selectedPreset = preset;
+        break;
+      }
+    }
+    final presets = List<OriginalCharacterPreset>.from(
+      _originalCharacterPresets,
+    )..sort((a, b) => a.name.compareTo(b.name));
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.primaryContainer.withValues(
+              alpha: .34,
+            ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: .45),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.bookmarks_outlined, size: 19),
+              const SizedBox(width: 7),
+              const Expanded(
+                child: Text(
+                  '已儲存的原創角色',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+              if (selectedPreset != null)
+                IconButton(
+                  tooltip: '刪除目前原創角色預設',
+                  onPressed: () =>
+                      _deleteOriginalCharacterPreset(index, selectedPreset!),
+                  icon: const Icon(Icons.delete_outline, size: 19),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            '選取後會恢復第 4 項的角色原有特徵；名稱只供清單辨識，不會輸出為提示詞。',
+            style: TextStyle(fontSize: 12),
+          ),
+          if (presets.isEmpty) ...[
+            const SizedBox(height: 7),
+            const Text('尚未儲存原創角色。先在第 4 項挑選特徵並儲存即可。'),
+          ] else ...[
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 7,
+              runSpacing: 6,
+              children: [
+                for (final preset in presets)
+                  ChoiceChip(
+                    label: Text(preset.name),
+                    selected: preset.id == slot.originalCharacterPresetId,
+                    onSelected: (selected) {
+                      if (selected)
+                        _applyOriginalCharacterPreset(index, preset);
+                    },
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _originalCharacterFeatureSavePanel(int index) {
+    final slot = _personSlots[index];
+    final featureCount = _originalCharacterFeatureTagIds(index).length;
+    final canSave = _cleanTag(slot.originalCharacterZh).isNotEmpty &&
+        _hasOriginalCharacterFeatureData(index);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(11),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.secondaryContainer.withValues(
+              alpha: .30,
+            ),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.secondary.withValues(alpha: .5),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.bookmark_add_outlined),
+          const SizedBox(width: 9),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  '儲存為原創角色特徵組合',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  canSave
+                      ? '將目前 $featureCount 個既有特徵與手動補充保存到「${_cleanTag(slot.originalCharacterZh)}」。'
+                      : '先回到角色項目填寫名稱，並至少選擇一個第 4 項特徵或手動補充。',
+                  style: const TextStyle(fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          FilledButton.icon(
+            onPressed:
+                canSave ? () => _saveOriginalCharacterPreset(index) : null,
+            icon: const Icon(Icons.save_outlined, size: 18),
+            label: const Text('儲存'),
+          ),
+        ],
+      ),
+    );
   }
 
   String _slug(String value) => value
@@ -20530,6 +20868,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                   const SizedBox(height: 8),
                   _personPromptWeightControls(index),
+                  if (slot.mode == '原創') ...[
+                    const SizedBox(height: 8),
+                    _originalCharacterFeatureSavePanel(index),
+                  ],
                   if (groups.contains('髮型')) ...[
                     _hairStylePackagePanel(index),
                     const SizedBox(height: 8),
@@ -22909,7 +23251,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     } else {
       keys.addAll([
         slot.originalAnimeTag,
-        slot.originalCharacterTag,
       ].map(_englishTagKey).where((key) => key.isNotEmpty));
     }
     return keys.contains(_englishTagKey(output.en));
@@ -24745,6 +25086,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ],
                       if (slot.mode == '原創') ...[
                         const SizedBox(height: 10),
+                        _originalCharacterPresetPicker(index),
+                        const SizedBox(height: 10),
                         TextFormField(
                             initialValue: slot.originalAnimeZh,
                             decoration: const InputDecoration(
@@ -24764,41 +25107,30 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             }),
                         const SizedBox(height: 8),
                         TextFormField(
-                            initialValue: slot.originalCharacterZh,
-                            decoration:
-                                const InputDecoration(labelText: '原創角色中文名稱'),
+                            controller: _personSearchController(
+                              index,
+                              'original-preset-name',
+                              slot.originalCharacterZh,
+                            ),
+                            decoration: const InputDecoration(
+                              labelText: '原創角色名稱（僅供清單辨識）',
+                              helperText: '此名稱不會加入英文或中文提示詞；第 4 項可將特徵儲存為此角色。',
+                            ),
                             onChanged: (value) {
                               slot.originalCharacterZh = value;
+                              slot.originalCharacterPresetId = '';
                               _persist();
                             }),
                         const SizedBox(height: 8),
                         TextFormField(
-                            initialValue: slot.originalCharacterEn,
+                            controller: _personSearchController(
+                              index,
+                              'original-traits',
+                              slot.originalTraits,
+                            ),
                             decoration: const InputDecoration(
-                                labelText:
-                                    'Original character English name（必填）'),
-                            onChanged: (value) {
-                              slot.originalCharacterEn = value;
-                              slot.originalCharacterTag =
-                                  slot.originalCharacterTag.isEmpty
-                                      ? _slug(value)
-                                      : slot.originalCharacterTag;
-                              _persist();
-                            }),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                            initialValue: slot.originalCharacterTag,
-                            decoration: const InputDecoration(
-                                labelText: 'Character tag（必填）'),
-                            onChanged: (value) {
-                              slot.originalCharacterTag = value;
-                              _persist();
-                            }),
-                        const SizedBox(height: 8),
-                        TextFormField(
-                            initialValue: slot.originalTraits,
-                            decoration: const InputDecoration(
-                                labelText: '原創角色特徵（中英文皆可，逗號分隔）'),
+                                labelText: '原創角色固定特徵補充（中英文皆可）',
+                                helperText: '逗號分隔；會與第 4 項既有特徵一起保存及輸出。'),
                             onChanged: (value) {
                               slot.originalTraits = value;
                               _persist();
