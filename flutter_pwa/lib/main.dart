@@ -21,6 +21,8 @@ import 'prompt_package_data.dart';
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
+const _characterNameListUrl =
+    'https://huggingface.co/spaces/flagrantia/character_select_saa';
 const _unregisteredPositiveTagInboxEnabled = false;
 const _showPersonFeatureGuidance = false;
 const _stepLayoutVersion = 5;
@@ -24517,6 +24519,67 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                       })))
                               .toList()),
                       if (slot.mode == '動漫角色') ...[
+                        const SizedBox(height: 10),
+                        Semantics(
+                          link: true,
+                          label: '開啟角色名稱清單 Character Select SAA',
+                          child: InkWell(
+                            onTap: () => html.window.open(
+                              _characterNameListUrl,
+                              '_blank',
+                            ),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .secondaryContainer
+                                    .withValues(alpha: .62),
+                                border: Border.all(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .secondary
+                                      .withValues(alpha: .65),
+                                ),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(Icons.travel_explore_outlined),
+                                  const SizedBox(width: 9),
+                                  const Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '角色名稱清單（Character Select SAA）',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w800,
+                                          ),
+                                        ),
+                                        SizedBox(height: 2),
+                                        Text(
+                                          'huggingface.co/spaces/flagrantia/character_select_saa',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(fontSize: 11),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  const Icon(Icons.open_in_new, size: 18),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                         const SizedBox(height: 10),
                         _characterPickerButton(
                           icon: Icons.movie_filter_outlined,
