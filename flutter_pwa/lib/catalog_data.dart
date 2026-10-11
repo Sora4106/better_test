@@ -3723,6 +3723,73 @@ final saaAnimeExpansionCharacters = <CatalogCharacter>[
       'takamachi_nanoha'),
 ];
 
+/// Character names copied verbatim from the public Character Select SAA
+/// waiIllustriousSDXL v1.60 list.  These records intentionally only provide
+/// the model-facing name and source, allowing the model to supply its learned
+/// design without imposing a guessed appearance profile.
+final saaModelNameVerifiedCharacters = <CatalogCharacter>[
+  // Elsword — every female-character entry available in the SAA list.
+  _saaReferenceCharacter('saa_elsword_aisha', '艾爾之光', 'Elsword', 'elsword',
+      '愛莎・蘭德爾', 'Aisha Landar', 'aisha landar'),
+  _saaReferenceCharacter('saa_elsword_ara', '艾爾之光', 'Elsword', 'elsword', '韓艾拉',
+      'Ara Haan', 'ara haan'),
+  _saaReferenceCharacter('saa_elsword_elesis', '艾爾之光', 'Elsword', 'elsword',
+      '艾麗希斯', 'Elesis', 'elesis (elsword)'),
+  _saaReferenceCharacter('saa_elsword_eve', '艾爾之光', 'Elsword', 'elsword', '伊芙',
+      'Eve', 'eve (elsword)'),
+  _saaReferenceCharacter('saa_elsword_luciela', '艾爾之光', 'Elsword', 'elsword',
+      '露・希爾', 'Luciela R. Sourcream', 'luciela r. sourcream'),
+  _saaReferenceCharacter('saa_elsword_rena', '艾爾之光', 'Elsword', 'elsword',
+      '蕾娜・艾琳黛爾', 'Rena Erindel', 'rena erindel'),
+
+  // Sword Art Online — every entry from the SAA list not already represented
+  // by the existing Asuna preset.
+  _saaReferenceCharacter('saa_sao_asuna_alo', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '亞絲娜（ALO）', 'Asuna (ALO)', 'asuna (sao-alo)'),
+  _saaReferenceCharacter('saa_sao_kirito', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '桐人', 'Kirito', 'kirito'),
+  _saaReferenceCharacter('saa_sao_kirito_alo', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '桐人（ALO）', 'Kirito (ALO)', 'kirito (sao-alo)'),
+  _saaReferenceCharacter('saa_sao_lisbeth', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '莉茲貝特', 'Lisbeth', 'lisbeth (sao)'),
+  _saaReferenceCharacter('saa_sao_llenn', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '蓮', 'Llenn', 'llenn (sao)'),
+  _saaReferenceCharacter('saa_sao_pina', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '畢娜', 'Pina', 'pina (sao)'),
+  _saaReferenceCharacter('saa_sao_silica_alo', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '西莉卡（ALO）', 'Silica (ALO)', 'silica (sao-alo)'),
+  _saaReferenceCharacter('saa_sao_sinon_alo', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '詩乃（ALO）', 'Sinon (ALO)', 'sinon (sao-alo)'),
+  _saaReferenceCharacter('saa_sao_titania', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '提塔妮婭', 'Titania', 'titania (sao)'),
+  _saaReferenceCharacter('saa_sao_yui', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '結衣', 'Yui', 'yui (sao)'),
+  _saaReferenceCharacter('saa_sao_yuuki', '刀劍神域', 'Sword Art Online',
+      'sword_art_online', '優紀', 'Yuuki', 'yuuki (sao)'),
+
+  // Kingdom Hearts — every character entry in the SAA list.
+  _saaReferenceCharacter('saa_kh_aqua', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '阿庫婭', 'Aqua', 'aqua (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_axel', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '亞克賽爾', 'Axel', 'axel (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_kairi', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '凱莉', 'Kairi', 'kairi (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_namine', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '娜米妮', 'Namine', 'namine (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_riku', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '里克', 'Riku', 'riku (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_roxas', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '洛克薩斯', 'Roxas', 'roxas (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_sora', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '索拉', 'Sora', 'sora (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_ventus', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '維恩圖斯', 'Ventus', 'ventus (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_xemnas', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '賽恩斯', 'Xemnas', 'xemnas (kingdom hearts)'),
+  _saaReferenceCharacter('saa_kh_xion', '王國之心', 'Kingdom Hearts',
+      'kingdom_hearts', '西恩', 'Xion', 'xion (kingdom hearts)'),
+];
+
 final catalogCharacters = <CatalogCharacter>[
   CatalogCharacter(
     id: 'to_love_ru_lala',
@@ -3776,6 +3843,18 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('lala_cheerful', '開朗表情', 'cheerful expression'),
       _trait('lala_energetic', '活力感', 'energetic'),
     ],
+  ),
+  CatalogCharacter(
+    // Not present in the SAA v1.60 list; retain the canonical Danbooru name
+    // so the series' male lead remains selectable without claiming SAA support.
+    id: 'to_love_ru_yuuki_rito',
+    animeZh: '出包王女',
+    animeEn: 'To LOVE-Ru',
+    animeTag: 'to_love-ru',
+    characterZh: '結城梨斗',
+    characterEn: 'Rito Yuuki',
+    characterTag: 'yuuki_rito',
+    traits: const [],
   ),
   CatalogCharacter(
       id: 'to_love_ru_momo',
@@ -3885,7 +3964,7 @@ final catalogCharacters = <CatalogCharacter>[
       animeTag: 'sword_art_online',
       characterZh: '結城明日奈',
       characterEn: 'Asuna Yuuki',
-      characterTag: 'asuna_(sword_art_online)',
+      characterTag: 'asuna (sao)',
       traits: [
         CatalogTagData(
             id: 'asuna_brown_hair',
@@ -4622,7 +4701,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeTag: 'project_sekai',
     characterZh: '25時，在 Nightcord。初音未來',
     characterEn: 'Nightcord at 25:00 Miku',
-    characterTag: 'hatsune_miku_(project_sekai)',
+    characterTag: '25-ji miku',
     unitZh: '25時，在 Nightcord。',
     unitEn: 'Nightcord at 25:00',
     unitTag: '25-ji_nightcord_de',
@@ -5760,4 +5839,5 @@ final catalogCharacters = <CatalogCharacter>[
   ),
   ...saaReferenceCharacters,
   ...saaAnimeExpansionCharacters,
+  ...saaModelNameVerifiedCharacters,
 ];
