@@ -444,6 +444,51 @@ class TagItem {
       );
 }
 
+/// A bracket-delimited person block found in a pasted prompt.  The raw bounds
+/// are retained so nested person blocks can be removed from the shared text
+/// without destroying the text that appears outside them.
+class _ReverseBracketGroup {
+  _ReverseBracketGroup({
+    required this.start,
+    required this.depth,
+  });
+
+  final int start;
+  final int depth;
+  int? end;
+  final List<_ReverseBracketGroup> children = <_ReverseBracketGroup>[];
+
+  String contentOf(String value) {
+    final close = end;
+    if (close == null || close <= start) return '';
+    return value.substring(start + 1, close);
+  }
+}
+
+/// Reverse-matched data that belongs to one parenthesised person block.
+/// Keeping these results isolated is what allows a multi-character prompt to
+/// restore clothes, traits and individual actions to their original person.
+class _ReversePersonAnalysis {
+  const _ReversePersonAnalysis({
+    required this.tokens,
+    required this.matchedTags,
+    required this.unmatchedTokens,
+    this.detectedCharacter,
+    this.detectedAnimeTag,
+  });
+
+  final List<String> tokens;
+  final List<TagItem> matchedTags;
+  final List<String> unmatchedTokens;
+  final CatalogCharacter? detectedCharacter;
+  final String? detectedAnimeTag;
+
+  bool get hasMatches =>
+      matchedTags.isNotEmpty ||
+      detectedCharacter != null ||
+      detectedAnimeTag != null;
+}
+
 /// A non-destructive analysis of text pasted into the reverse-prompt field.
 /// Keeping this separate from applying the selection lets the user inspect the
 /// bilingual matches and decide what to do with words the catalog does not yet
@@ -453,35 +498,40 @@ class _ReversePromptAnalysis {
     required this.tokens,
     required this.matchedTags,
     required this.unmatchedTokens,
+    required this.people,
     this.peopleCount,
     this.gender,
-    this.detectedCharacter,
-    this.detectedAnimeTag,
   });
 
   const _ReversePromptAnalysis.empty()
       : tokens = const <String>[],
         matchedTags = const <TagItem>[],
         unmatchedTokens = const <String>[],
+        people = const <_ReversePersonAnalysis>[],
         peopleCount = null,
-        gender = null,
-        detectedCharacter = null,
-        detectedAnimeTag = null;
+        gender = null;
 
   final List<String> tokens;
+
+  /// Shared scene, camera, quality and common-action matches.
   final List<TagItem> matchedTags;
+
+  /// Unknown text outside a person block.
   final List<String> unmatchedTokens;
+  final List<_ReversePersonAnalysis> people;
   final int? peopleCount;
   final String? gender;
-  final CatalogCharacter? detectedCharacter;
-  final String? detectedAnimeTag;
 
   bool get hasInput => tokens.isNotEmpty;
   bool get hasMatches =>
       matchedTags.isNotEmpty ||
       peopleCount != null ||
-      detectedCharacter != null ||
-      detectedAnimeTag != null;
+      people.any((person) => person.hasMatches);
+
+  List<String> get allUnmatchedTokens => [
+        ...unmatchedTokens,
+        ...people.expand((person) => person.unmatchedTokens),
+      ];
 }
 
 class _HairGradientStyle {
@@ -14974,20 +15024,38 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return bestScore >= .78 ? bestTag : null;
   }
 
-  TagItem? _tagByReverseLabel(String value) {
+  /// Returns exact system labels in a deterministic longest-first order.
+  /// Colour-only labels are intentionally left to their clothing/feature
+  /// phrase parser: `white` alone does not tell us whether it is hair, a shoe
+  /// or a dress, whereas `white dress with blue trim` does.
+  List<TagItem> _reverseExactTagCandidates(String value) {
     final exactKey = _reverseExactKey(value);
     final englishKey = _englishTagKey(value);
     final chineseKey = _cleanTag(value);
-    for (final tag in _allTags) {
-      if (exactKey.isNotEmpty && _reverseExactKey(tag.en) == exactKey) {
-        return tag;
+    final matches = _allTags.where((tag) {
+      if (_isClothingColorGroup(tag.group) || _isClothingGroup(tag.group)) {
+        return false;
       }
-      if (englishKey.isNotEmpty && _englishTagKey(tag.en) == englishKey) {
-        return tag;
-      }
-      if (chineseKey.isNotEmpty && _cleanTag(tag.zh) == chineseKey) return tag;
+      return (exactKey.isNotEmpty && _reverseExactKey(tag.en) == exactKey) ||
+          (englishKey.isNotEmpty && _englishTagKey(tag.en) == englishKey) ||
+          (chineseKey.isNotEmpty && _cleanTag(tag.zh) == chineseKey);
+    }).toList()
+      ..sort((left, right) {
+        final length = _englishTagKey(right.en)
+            .length
+            .compareTo(_englishTagKey(left.en).length);
+        return length == 0 ? left.order.compareTo(right.order) : length;
+      });
+    final unique = <String, TagItem>{};
+    for (final tag in matches) {
+      unique.putIfAbsent(_englishTagKey(tag.en), () => tag);
     }
-    return null;
+    return unique.values.toList();
+  }
+
+  TagItem? _tagByReverseLabel(String value) {
+    final candidates = _reverseExactTagCandidates(value);
+    return candidates.isEmpty ? null : candidates.first;
   }
 
   List<TagItem> _reverseObjectInteractionCandidates(String value) {
@@ -15115,6 +15183,55 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return [type, ...colors.take(2)];
   }
 
+  List<String> _reverseOrderedColorWords(String key) {
+    final matches = <_ColorMatch>[];
+    for (final color in _clothingColorNames) {
+      final expression = RegExp(
+        r'(^|\s)' + RegExp.escape(color) + r'(?=\s|$)',
+      );
+      for (final match in expression.allMatches(key)) {
+        matches.add(_ColorMatch(
+          color,
+          match.start + (match.group(1)?.length ?? 0),
+        ));
+      }
+    }
+    matches.sort((left, right) {
+      final position = left.start.compareTo(right.start);
+      return position == 0
+          ? right.word.length.compareTo(left.word.length)
+          : position;
+    });
+    final colors = <String>[];
+    for (final match in matches) {
+      final isCovered = matches.any((other) =>
+          other.word.length > match.word.length &&
+          other.start <= match.start &&
+          other.start + other.word.length >= match.start + match.word.length);
+      if (!isCovered && !colors.contains(match.word)) {
+        colors.add(match.word);
+      }
+    }
+    return colors;
+  }
+
+  TagItem? _reverseColorTagForGroup(String? group, String color) {
+    if (group == null) return null;
+    final candidates = _allTags
+        .where((tag) => tag.group == group)
+        .where((tag) => _clothingColorWords(tag).contains(color))
+        .toList()
+      ..sort((left, right) {
+        final leftWords = _clothingColorWords(left);
+        final rightWords = _clothingColorWords(right);
+        final leftExact = leftWords.length == 1 && leftWords.first == color;
+        final rightExact = rightWords.length == 1 && rightWords.first == color;
+        if (leftExact != rightExact) return leftExact ? -1 : 1;
+        return leftWords.length.compareTo(rightWords.length);
+      });
+    return candidates.isEmpty ? null : candidates.first;
+  }
+
   List<TagItem> _reverseTagCandidates(String value) {
     final physicalTrait = _reversePhysicalTraitCandidates(value);
     if (physicalTrait.isNotEmpty) return physicalTrait;
@@ -15181,36 +15298,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     final base = bases.first;
     final result = <TagItem>[base];
-    final colorGroup = _clothingColorGroupForBase(base);
-    if (colorGroup != null) {
-      final colors =
-          _allTags.where((tag) => tag.group == colorGroup).where((tag) {
-        final words = _clothingColorWords(tag);
-        return words.isNotEmpty && words.every(key.contains);
-      }).toList()
-            ..sort((a, b) {
-              final wordCount = _clothingColorWords(b)
-                  .length
-                  .compareTo(_clothingColorWords(a).length);
-              return wordCount == 0
-                  ? _englishTagKey(b.en)
-                      .length
-                      .compareTo(_englishTagKey(a.en).length)
-                  : wordCount;
-            });
-      if (colors.isNotEmpty) result.add(colors.first);
+    // The first colour belonging to this garment is its main colour.  Only a
+    // second distinct colour becomes the trim/secondary colour; a plain
+    // `white dress` must never also select `white trim`.
+    final orderedColors = _reverseOrderedColorWords(key);
+    if (orderedColors.isNotEmpty) {
+      final main = _reverseColorTagForGroup(
+        _clothingColorGroupForBase(base),
+        orderedColors.first,
+      );
+      if (main != null) result.add(main);
+      if (orderedColors.length > 1) {
+        final trim = _reverseColorTagForGroup(
+          _clothingTrimColorGroupForBase(base),
+          orderedColors[1],
+        );
+        if (trim != null) result.add(trim);
+      }
     }
-    final trimColorGroup = _clothingTrimColorGroupForBase(base);
-    final trimColors = trimColorGroup == null
-        ? const <TagItem>[]
-        : _allTags.where((tag) => tag.group == trimColorGroup).where((tag) {
-            final words = _clothingColorWords(tag);
-            return words.isNotEmpty && words.every(key.contains);
-          }).toList()
-      ..sort((a, b) => _clothingColorWords(b)
-          .length
-          .compareTo(_clothingColorWords(a).length));
-    if (trimColors.isNotEmpty) result.add(trimColors.first);
 
     final detailGroups = <String>{
       _legacyClothingDetailGroup,
@@ -15256,7 +15361,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         result.add(tag);
       }
     }
-    return result.length == 1 ? const <TagItem>[] : result.toSet().toList();
+    // A plain garment noun (for example `dress`) is still a valid complete
+    // selection.  It simply has no colour/detail configuration to restore.
+    return result.toSet().toList();
   }
 
   String _reverseExtraKey(String value) {
@@ -15270,62 +15377,192 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
-  _ReversePromptAnalysis _analyzeReversePrompt(String value) {
-    // `:3` is a supported symbolic mouth expression. Shield it before
-    // stripping optional prompt-weight suffixes such as `tag:1.15`.
+  /// Removes explicit weights while deliberately retaining the parenthesis
+  /// hierarchy.  `:3` must be shielded because it is a valid mouth symbol,
+  /// not a prompt weight.
+  String _reversePromptSource(String value) {
     const colonThreeMarker = '__bw_symbol_colon_three__';
-    final normalized = value
+    return value
         .replaceAll(':3', colonThreeMarker)
         .replaceAllMapped(RegExp(r':\s*-?(?:\d+(?:\.\d+)?|\.\d+)'), (_) => '')
-        .replaceAll(RegExp(r'[()\[\]{}]'), '');
-    final tokens = _reversePromptTokens(normalized)
+        .replaceAll(RegExp(r'[\[\]{}]'), ' ');
+  }
+
+  List<String> _reverseTokensFromSource(String value) {
+    const colonThreeMarker = '__bw_symbol_colon_three__';
+    return _reversePromptTokens(value.replaceAll(RegExp(r'[()]'), ' '))
         .map((token) => token == colonThreeMarker ? ':3' : token)
         .toList();
-    if (tokens.isEmpty) return const _ReversePromptAnalysis.empty();
+  }
 
+  List<_ReverseBracketGroup> _reverseBracketGroups(String value) {
+    final roots = <_ReverseBracketGroup>[];
+    final stack = <_ReverseBracketGroup>[];
+    for (var index = 0; index < value.length; index++) {
+      final character = value[index];
+      // Prompt labels can legitimately contain escaped parentheses, such as
+      // `25-ji nightcord de \(project sekai\)`.  They are tag text, not a
+      // structural group.
+      if (character == r'\') {
+        index++;
+        continue;
+      }
+      if (character == '(') {
+        final group = _ReverseBracketGroup(
+          start: index,
+          depth: stack.length,
+        );
+        if (stack.isEmpty) {
+          roots.add(group);
+        } else {
+          stack.last.children.add(group);
+        }
+        stack.add(group);
+      } else if (character == ')' && stack.isNotEmpty) {
+        stack.removeLast().end = index;
+      }
+    }
+    return roots;
+  }
+
+  CatalogCharacter? _reverseCharacterForToken(String token) {
+    final tokenKey = _englishTagKey(token);
+    for (final character in _allCharacters) {
+      if (_englishTagKey(character.characterTag) == tokenKey) return character;
+    }
+    return _reverseCharacterMatch(token);
+  }
+
+  String? _reverseAnimeForToken(String token) {
+    final tokenKey = _englishTagKey(token);
+    for (final character in _allCharacters) {
+      if (_englishTagKey(character.animeTag) == tokenKey) {
+        return character.animeTag;
+      }
+    }
+    return _reverseAnimeMatch(token);
+  }
+
+  Set<String> _reverseCharacterIdsInTokens(Iterable<String> tokens) {
+    return {
+      for (final token in tokens)
+        if (_reverseCharacterForToken(token) case final character?)
+          character.id,
+    };
+  }
+
+  List<_ReverseBracketGroup> _reversePersonGroups(
+    String source, {
+    required int? expectedPeopleCount,
+  }) {
+    final roots = _reverseBracketGroups(source);
+    final selected = <_ReverseBracketGroup>[];
+
+    void visit(_ReverseBracketGroup group) {
+      final characters = _reverseCharacterIdsInTokens(
+        _reverseTokensFromSource(group.contentOf(source)),
+      );
+      // A group that contains exactly one known character is the widest safe
+      // boundary for that person.  Do not descend into its clothing/action
+      // children, otherwise one person would be split into several slots.
+      if (characters.length == 1) {
+        selected.add(group);
+        return;
+      }
+      for (final child in group.children) {
+        visit(child);
+      }
+    }
+
+    for (final root in roots) {
+      visit(root);
+    }
+    if (selected.isNotEmpty) {
+      selected.sort((a, b) => a.start.compareTo(b.start));
+      return selected;
+    }
+
+    // Original characters may not have a catalogue name yet.  When a prompt
+    // explicitly declares the person count, its outermost blocks are still the
+    // least surprising place to restore per-person traits and clothing.
+    final expected = expectedPeopleCount ?? 0;
+    if (expected <= 0 || roots.isEmpty) return const <_ReverseBracketGroup>[];
+    var candidates = roots;
+    if (roots.length == 1 && expected > 1 && roots.first.children.isNotEmpty) {
+      candidates = roots.first.children;
+    }
+    return candidates.take(expected).toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+  }
+
+  String _reverseSourceOutsideGroups(
+    String source,
+    Iterable<_ReverseBracketGroup> groups,
+  ) {
+    final ranges = groups.where((group) => group.end != null).toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+    if (ranges.isEmpty) return source;
+    final output = StringBuffer();
+    var cursor = 0;
+    for (final group in ranges) {
+      final end = group.end!;
+      if (group.start < cursor) continue;
+      output.write(source.substring(cursor, group.start));
+      output.write(' ');
+      cursor = end + 1;
+    }
+    output.write(source.substring(cursor));
+    return output.toString();
+  }
+
+  _ReversePersonAnalysis _analyzeReverseTokens(List<String> tokens) {
     final recognized = <TagItem>[];
     final unknown = <String>[];
-    int? importedPeopleCount;
-    String? importedGender;
     CatalogCharacter? detectedCharacter;
     String? detectedAnimeTag;
-    for (final token in tokens) {
-      final peopleMatch = RegExp(
-        r'^(\d+)\s*(girls?|boys?|people?|persons?)$',
-        caseSensitive: false,
-      ).firstMatch(_englishTagKey(token));
-      if (peopleMatch != null) {
-        importedPeopleCount =
-            (int.tryParse(peopleMatch.group(1)!) ?? 1).clamp(1, 10).toInt();
-        final kind = peopleMatch.group(2)!.toLowerCase();
-        importedGender = kind.startsWith('girl')
-            ? '女性'
-            : kind.startsWith('boy')
-                ? '男性'
-                : '其他／混合';
+    final resolved = <int>{};
+
+    // Identity is checked before regular tags so model-specific character and
+    // source names can never be swallowed by a similarly named generic tag.
+    for (var index = 0; index < tokens.length; index++) {
+      final token = tokens[index];
+      final character = _reverseCharacterForToken(token);
+      final animeTag = _reverseAnimeForToken(token);
+      if (character != null) {
+        detectedCharacter = character;
+        resolved.add(index);
         continue;
       }
-      final tokenKey = _englishTagKey(token);
-      CatalogCharacter? tokenCharacter;
-      String? tokenAnimeTag;
-      for (final character in _allCharacters) {
-        if (_englishTagKey(character.characterTag) == tokenKey) {
-          tokenCharacter = character;
-          break;
-        }
-        if (_englishTagKey(character.animeTag) == tokenKey) {
-          tokenAnimeTag = character.animeTag;
-          break;
-        }
+      if (animeTag != null) {
+        detectedAnimeTag = animeTag;
+        resolved.add(index);
       }
-      tokenCharacter ??= _reverseCharacterMatch(token);
-      tokenAnimeTag ??= _reverseAnimeMatch(token);
-      if (tokenCharacter != null) {
-        detectedCharacter = tokenCharacter;
-        continue;
-      }
-      if (tokenAnimeTag != null) {
-        detectedAnimeTag = tokenAnimeTag;
+    }
+
+    // Resolve every complete catalogue label before attempting compositional
+    // parsing.  Long labels win so `sitting on chair` is not reduced to a
+    // shorter action when both happen to exist in the catalogue.
+    final exactOrder = List<int>.generate(tokens.length, (index) => index)
+      ..sort((left, right) => _englishTagKey(tokens[right])
+          .length
+          .compareTo(_englishTagKey(tokens[left]).length));
+    for (final index in exactOrder) {
+      if (resolved.contains(index)) continue;
+      final exact = _reverseExactTagCandidates(tokens[index]);
+      if (exact.isEmpty) continue;
+      recognized.addAll(exact);
+      resolved.add(index);
+    }
+
+    // Only after full labels have been taken out do we decompose clothing,
+    // hair and animal-feature phrases.  Any residue stays visible as a manual
+    // positive phrase instead of silently becoming a wrong partial selection.
+    for (var index = 0; index < tokens.length; index++) {
+      if (resolved.contains(index)) continue;
+      final token = tokens[index];
+      if (RegExp(r'^\d+\s*(girls?|boys?|people?|persons?)$',
+              caseSensitive: false)
+          .hasMatch(_englishTagKey(token))) {
         continue;
       }
       final tags = _reverseTagCandidates(token);
@@ -15344,14 +15581,67 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final key = _reverseExtraKey(token);
       if (key.isNotEmpty) uniqueUnknown.putIfAbsent(key, () => token);
     }
-    return _ReversePromptAnalysis(
+    return _ReversePersonAnalysis(
       tokens: tokens,
       matchedTags: uniqueTags.values.toList(),
       unmatchedTokens: uniqueUnknown.values.toList(),
-      peopleCount: importedPeopleCount,
-      gender: importedGender,
       detectedCharacter: detectedCharacter,
       detectedAnimeTag: detectedAnimeTag,
+    );
+  }
+
+  _ReversePromptAnalysis _analyzeReversePrompt(String value) {
+    final source = _reversePromptSource(value);
+    final tokens = _reverseTokensFromSource(source);
+    if (tokens.isEmpty) return const _ReversePromptAnalysis.empty();
+
+    int? importedPeopleCount;
+    String? importedGender;
+    for (final token in tokens) {
+      final peopleMatch = RegExp(
+        r'^(\d+)\s*(girls?|boys?|people?|persons?)$',
+        caseSensitive: false,
+      ).firstMatch(_englishTagKey(token));
+      if (peopleMatch != null) {
+        importedPeopleCount =
+            (int.tryParse(peopleMatch.group(1)!) ?? 1).clamp(1, 10).toInt();
+        final kind = peopleMatch.group(2)!.toLowerCase();
+        importedGender = kind.startsWith('girl')
+            ? '女性'
+            : kind.startsWith('boy')
+                ? '男性'
+                : '其他／混合';
+      }
+    }
+
+    final groups = _reversePersonGroups(
+      source,
+      expectedPeopleCount: importedPeopleCount,
+    );
+    var people = groups
+        .map((group) => _analyzeReverseTokens(
+            _reverseTokensFromSource(group.contentOf(source))))
+        .toList();
+    var shared = _analyzeReverseTokens(
+      _reverseTokensFromSource(_reverseSourceOutsideGroups(source, groups)),
+    );
+    // Legacy prompts may have no grouping at all.  Keep their one recognised
+    // character usable rather than treating that identity as a shared tag.
+    if (people.isEmpty && shared.detectedCharacter != null) {
+      people = [shared];
+      shared = const _ReversePersonAnalysis(
+        tokens: <String>[],
+        matchedTags: <TagItem>[],
+        unmatchedTokens: <String>[],
+      );
+    }
+    return _ReversePromptAnalysis(
+      tokens: tokens,
+      matchedTags: shared.matchedTags,
+      unmatchedTokens: shared.unmatchedTokens,
+      people: people,
+      peopleCount: importedPeopleCount,
+      gender: importedGender,
     );
   }
 
@@ -15373,76 +15663,68 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
-  void _reversePromptTags() {
-    // `:3` is a supported symbolic mouth expression. Shield it before
-    // stripping optional prompt-weight suffixes such as `tag:1.15`.
-    const colonThreeMarker = '__bw_symbol_colon_three__';
-    final normalized = _reversePrompt.text
-        .replaceAll(':3', colonThreeMarker)
-        .replaceAllMapped(RegExp(r':\s*-?(?:\d+(?:\.\d+)?|\.\d+)'), (_) => '')
-        .replaceAll(RegExp(r'[()\[\]{}]'), '');
-    final tokens = _reversePromptTokens(normalized)
-        .map((token) => token == colonThreeMarker ? ':3' : token)
-        .toList();
-    if (tokens.isEmpty) {
-      return;
-    }
+  Set<String> get _reverseGlobalGroups => {
+        _indoorSceneGroup,
+        _outdoorSceneGroup,
+        _outdoorTimeGroup,
+        ..._sceneEffectPickerGroups,
+        _cameraFramingGroup,
+        _cameraFaceFocusGroup,
+        _cameraFocusGroup,
+        _cameraCropGroup,
+        _cameraBedViewGroup,
+        '畫面',
+        '品質',
+        '其他',
+      };
 
-    final recognized = <TagItem>[];
-    final unknown = <String>[];
-    int? importedPeopleCount;
-    String? importedGender;
-    CatalogCharacter? detectedCharacter;
-    String? detectedAnimeTag;
-    for (final token in tokens) {
-      final peopleMatch = RegExp(
-        r'^(\d+)\s*(girls?|boys?|people?|persons?)$',
-        caseSensitive: false,
-      ).firstMatch(_englishTagKey(token));
-      if (peopleMatch != null) {
-        importedPeopleCount =
-            (int.tryParse(peopleMatch.group(1)!) ?? 1).clamp(1, 10).toInt();
-        final kind = peopleMatch.group(2)!.toLowerCase();
-        importedGender = kind.startsWith('girl')
-            ? '女性'
-            : kind.startsWith('boy')
-                ? '男性'
-                : '其他/異種';
-        continue;
-      }
-      final tokenKey = _englishTagKey(token);
-      CatalogCharacter? tokenCharacter;
-      String? tokenAnimeTag;
-      for (final character in _allCharacters) {
-        if (_englishTagKey(character.characterTag) == tokenKey) {
-          tokenCharacter = character;
-          break;
-        }
-        if (_englishTagKey(character.animeTag) == tokenKey) {
-          tokenAnimeTag = character.animeTag;
-          break;
-        }
-      }
-      tokenCharacter ??= _reverseCharacterMatch(token);
-      tokenAnimeTag ??= _reverseAnimeMatch(token);
-      if (tokenCharacter != null) {
-        detectedCharacter = tokenCharacter;
-        continue;
-      }
-      if (tokenAnimeTag != null) {
-        detectedAnimeTag = tokenAnimeTag;
-        continue;
-      }
-      final tags = _reverseTagCandidates(token);
-      if (tags.isEmpty) {
-        unknown.add(token);
-      } else {
-        recognized.addAll(tags);
+  void _applyReverseTagToTarget(
+    TagItem tag,
+    Set<String> target, {
+    int? personIndex,
+  }) {
+    if (tag.en == '1girl' || tag.en == '1boy' || tag.en == '1person') return;
+    final current = personIndex == null
+        ? _selectedTags
+        : _selectedTagsForPerson(personIndex);
+    if (!_physicalTraitColorGroups.contains(tag.group)) {
+      for (final conflict
+          in current.where((item) => _tagsConflict(item, tag))) {
+        target.remove(conflict.id);
       }
     }
+    target.add(tag.id);
+  }
 
+  void _applyReversePersonAnalysis(
+    int personIndex,
+    _ReversePersonAnalysis analysis,
+  ) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final slot = _personSlots[personIndex];
+    final character = analysis.detectedCharacter;
+    if (character != null) {
+      _resetCharacterFeatureSelections(personIndex, _characterForNew(slot));
+      slot
+        ..detailed = true
+        ..mode = '動漫角色'
+        ..characterId = character.id
+        ..animeTag = character.animeTag;
+      _removedCharacterTags.remove(personIndex);
+      _recentCharacterIds
+        ..remove(character.id)
+        ..insert(0, character.id);
+      if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
+    } else if (analysis.detectedAnimeTag != null) {
+      slot
+        ..detailed = true
+        ..mode = '動漫角色'
+        ..animeTag = analysis.detectedAnimeTag!;
+    }
+
+    final personIds = _personTagIds(personIndex);
     final reversePhysicalColorOrder = <String, List<String>>{};
-    for (final tag in recognized) {
+    for (final tag in analysis.matchedTags) {
       if (!_physicalTraitColorGroups.contains(tag.group)) continue;
       final ids = reversePhysicalColorOrder.putIfAbsent(
         tag.group,
@@ -15450,93 +15732,67 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       );
       if (!ids.contains(tag.id) && ids.length < 2) ids.add(tag.id);
     }
-    final globalGroups = {
-      _indoorSceneGroup,
-      _outdoorSceneGroup,
-      _outdoorTimeGroup,
-      ..._sceneEffectPickerGroups,
-      _cameraFramingGroup,
-      _cameraFaceFocusGroup,
-      _cameraFocusGroup,
-      _cameraCropGroup,
-      _cameraBedViewGroup,
-      '畫面',
-      '品質',
-      '其他',
-    };
+    for (final entry in reversePhysicalColorOrder.entries) {
+      personIds.removeWhere((id) => _tagsById[id]?.group == entry.key);
+      slot.physicalTraitGradientColorIds[entry.key] =
+          List<String>.from(entry.value);
+    }
+
+    for (final tag in analysis.matchedTags.toSet()) {
+      final isGlobal = _reverseGlobalGroups.contains(tag.group) ||
+          _isSharedActionGroup(tag.group);
+      _applyReverseTagToTarget(
+        tag,
+        isGlobal ? _selectedIds : personIds,
+        personIndex: isGlobal ? null : personIndex,
+      );
+    }
+    _syncHairGradientColorIds(personIndex, personIds);
+    _syncPhysicalTraitGradientColorIds(personIndex, personIds);
+    _syncAutoFurryIdentity(personIndex, personIds);
+  }
+
+  void _reversePromptTags() {
+    final analysis = _analyzeReversePrompt(_reversePrompt.text);
+    if (!analysis.hasInput || !analysis.hasMatches) return;
+
     setState(() {
-      final peopleCount = importedPeopleCount;
-      if (peopleCount != null) {
-        while (_personSlots.length < peopleCount) {
-          _personSlots.add(PersonSlot());
-        }
-        while (_personSlots.length > peopleCount) {
-          _personSlots.removeLast();
-        }
-        _personSelectedIds.removeWhere((index, _) => index >= peopleCount);
-        _removedCharacterTags.removeWhere((index, _) => index >= peopleCount);
-        _personTagQueries.removeWhere((index, _) => index >= peopleCount);
-        _personActiveGroups.removeWhere((key, _) =>
-            int.tryParse(key.split(':').first) != null &&
-            int.parse(key.split(':').first) >= peopleCount);
-        _peopleCount = peopleCount;
-        _gender = importedGender ?? _gender;
+      var targetPeopleCount = analysis.peopleCount ?? analysis.people.length;
+      if (analysis.people.length > targetPeopleCount) {
+        targetPeopleCount = analysis.people.length;
       }
+      targetPeopleCount = targetPeopleCount.clamp(1, 10).toInt();
+      while (_personSlots.length < targetPeopleCount) {
+        _personSlots.add(PersonSlot());
+      }
+      while (_personSlots.length > targetPeopleCount) {
+        _personSlots.removeLast();
+      }
+      _personSelectedIds.removeWhere((index, _) => index >= targetPeopleCount);
+      _removedCharacterTags
+          .removeWhere((index, _) => index >= targetPeopleCount);
+      _personTagQueries.removeWhere((index, _) => index >= targetPeopleCount);
+      _personActiveGroups.removeWhere((key, _) {
+        final person = int.tryParse(key.split(':').first);
+        return person != null && person >= targetPeopleCount;
+      });
+      _peopleCount = targetPeopleCount;
+      if (analysis.gender != null) _gender = analysis.gender!;
 
-      final character = detectedCharacter;
-      if (character != null) {
-        final slot = _personSlots[0];
-        _resetCharacterFeatureSelections(0, _characterForNew(slot));
-        slot.detailed = true;
-        slot.mode = '動漫角色';
-        slot.characterId = character.id;
-        slot.animeTag = character.animeTag;
-        _removedCharacterTags.remove(0);
-        _syncCharacterTraitsForSlot(0);
-        _recentCharacterIds
-          ..remove(character.id)
-          ..insert(0, character.id);
-        if (_recentCharacterIds.length > 10) _recentCharacterIds.removeLast();
-      } else if (detectedAnimeTag != null) {
-        _personSlots[0]
-          ..detailed = true
-          ..mode = '動漫角色'
-          ..animeTag = detectedAnimeTag;
+      for (var index = 0; index < analysis.people.length; index++) {
+        _applyReversePersonAnalysis(index, analysis.people[index]);
       }
-
-      final personIds = _personTagIds(0);
-      for (final entry in reversePhysicalColorOrder.entries) {
-        personIds.removeWhere((id) => _tagsById[id]?.group == entry.key);
-        _personSlots[0].physicalTraitGradientColorIds[entry.key] =
-            List<String>.from(entry.value);
+      for (final tag in analysis.matchedTags.toSet()) {
+        _applyReverseTagToTarget(tag, _selectedIds);
       }
-      for (final tag in recognized.toSet()) {
-        if (tag.en == '1girl' || tag.en == '1boy' || tag.en == '1person') {
-          continue;
-        }
-        final target =
-            globalGroups.contains(tag.group) || _isSharedActionGroup(tag.group)
-                ? _selectedIds
-                : _personTagIds(0);
-        final current =
-            target == _selectedIds ? _selectedTags : _selectedTagsForPerson(0);
-        if (!_physicalTraitColorGroups.contains(tag.group)) {
-          for (final conflict
-              in current.where((item) => _tagsConflict(item, tag))) {
-            target.remove(conflict.id);
-          }
-        }
-        target.add(tag.id);
-      }
-      _syncPhysicalTraitGradientColorIds(0, _personTagIds(0));
-      _syncAutoFurryIdentity(0, _personTagIds(0));
       _persist();
+      _reversePromptAnalysis = analysis;
     });
   }
 
   void _addReversePromptUnmatchedToExtraPositive() {
     final analysis = _analyzeReversePrompt(_reversePrompt.text);
-    if (analysis.unmatchedTokens.isEmpty) return;
+    if (analysis.allUnmatchedTokens.isEmpty) return;
     final existingExtra = _extraTags(_extraPositive.text);
     final existingKeys = existingExtra.map(_reverseExtraKey).toSet();
     for (final token in analysis.unmatchedTokens) {
@@ -15544,6 +15800,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     setState(() {
       _extraPositive.text = existingExtra.join(', ');
+      // A residual inside a person block needs to remain in that person's
+      // outer parentheses.  Store it as an individual natural pose/action
+      // phrase rather than moving it to the shared global-positive field.
+      for (var index = 0; index < analysis.people.length; index++) {
+        if (index >= _personSlots.length) break;
+        final slot = _personSlots[index];
+        final values = _poseExtraPrompts(slot.poseExtraPositive);
+        final keys = values.map(_reverseExtraKey).toSet();
+        for (final token in analysis.people[index].unmatchedTokens) {
+          if (keys.add(_reverseExtraKey(token))) values.add(token);
+        }
+        slot.poseExtraPositive = values.join('; ');
+      }
       _reversePromptAnalysis = analysis;
       _collectUnknownExtraPositiveTags();
       _persist();
@@ -15553,39 +15822,103 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _reversePromptPreviewPanel() {
     final analysis = _reversePromptAnalysis;
     if (!analysis.hasInput) return const SizedBox.shrink();
-    final character = analysis.detectedCharacter;
     final tone = Theme.of(context).colorScheme;
-    final recognizedChips = <Widget>[
-      if (analysis.peopleCount != null)
-        Chip(
-          avatar: const Icon(Icons.groups_outlined, size: 16),
-          label: Text(
-            '人物數量：${analysis.peopleCount}${analysis.gender == null ? '' : '（${analysis.gender}）'}',
+    List<Widget> matchedChips(_ReversePersonAnalysis section) => [
+          if (section.detectedCharacter case final character?)
+            Chip(
+              avatar: const Icon(Icons.person_outline, size: 16),
+              label: Text(
+                  '角色：${character.characterZh} · ${character.characterEn}'),
+              visualDensity: VisualDensity.compact,
+            )
+          else if (section.detectedAnimeTag case final animeTag?)
+            Chip(
+              avatar: const Icon(Icons.movie_outlined, size: 16),
+              label: Text('作品：$animeTag'),
+              visualDensity: VisualDensity.compact,
+            ),
+          ...section.matchedTags.map(
+            (tag) => Tooltip(
+              message: tag.en,
+              child: Chip(
+                label: Text('${tag.zh.isEmpty ? tag.en : tag.zh} · ${tag.en}'),
+                visualDensity: VisualDensity.compact,
+              ),
+            ),
           ),
-          visualDensity: VisualDensity.compact,
+        ];
+
+    Widget section(
+      String title,
+      _ReversePersonAnalysis value, {
+      bool shared = false,
+    }) {
+      final chips = matchedChips(value);
+      if (chips.isEmpty && value.unmatchedTokens.isEmpty) {
+        return const SizedBox.shrink();
+      }
+      return Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: TextStyle(
+                fontWeight: FontWeight.w700,
+                color: shared ? tone.secondary : tone.primary,
+              ),
+            ),
+            if (chips.isNotEmpty) ...[
+              const SizedBox(height: 5),
+              Wrap(spacing: 6, runSpacing: 6, children: chips),
+            ],
+            if (value.unmatchedTokens.isNotEmpty) ...[
+              const SizedBox(height: 7),
+              Text(
+                '未對應 ${value.unmatchedTokens.length} 詞（套用額外詞時會保留在${shared ? '共用' : '此人物'}區塊）',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                  color: tone.error,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: 6,
+                runSpacing: 6,
+                children: value.unmatchedTokens
+                    .map(
+                      (token) => Chip(
+                        label: Text(token),
+                        visualDensity: VisualDensity.compact,
+                        side: BorderSide(
+                            color: tone.error.withValues(alpha: .65)),
+                        backgroundColor:
+                            tone.errorContainer.withValues(alpha: .36),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ],
+          ],
         ),
-      if (character != null)
-        Chip(
-          avatar: const Icon(Icons.person_outline, size: 16),
-          label: Text('角色：${character.characterZh} · ${character.characterEn}'),
-          visualDensity: VisualDensity.compact,
-        )
-      else if (analysis.detectedAnimeTag != null)
-        Chip(
-          avatar: const Icon(Icons.movie_outlined, size: 16),
-          label: Text('作品：${analysis.detectedAnimeTag}'),
-          visualDensity: VisualDensity.compact,
-        ),
-      ...analysis.matchedTags.map(
-        (tag) => Tooltip(
-          message: tag.en,
-          child: Chip(
-            label: Text('${tag.zh.isEmpty ? tag.en : tag.zh} · ${tag.en}'),
-            visualDensity: VisualDensity.compact,
-          ),
-        ),
-      ),
-    ];
+      );
+    }
+
+    final shared = _ReversePersonAnalysis(
+      tokens: const <String>[],
+      matchedTags: analysis.matchedTags,
+      unmatchedTokens: analysis.unmatchedTokens,
+    );
+    final matchCount = analysis.matchedTags.length +
+        analysis.people.fold<int>(
+          0,
+          (count, person) =>
+              count +
+              person.matchedTags.length +
+              (person.detectedCharacter == null ? 0 : 1),
+        );
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 10),
@@ -15614,57 +15947,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ],
           ),
           const SizedBox(height: 10),
+          if (analysis.peopleCount != null)
+            Chip(
+              avatar: const Icon(Icons.groups_outlined, size: 16),
+              label: Text(
+                '人物數量：${analysis.peopleCount}${analysis.gender == null ? '' : '（${analysis.gender}）'}',
+              ),
+              visualDensity: VisualDensity.compact,
+            ),
+          const SizedBox(height: 8),
           Text(
-            recognizedChips.isEmpty
-                ? '目前沒有可對應的系統標籤。'
-                : '可對應的中文標籤 ${recognizedChips.length} 個',
+            matchCount == 0 ? '目前沒有可對應的系統標籤。' : '可對應標籤 $matchCount 個',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
-          if (recognizedChips.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 180),
-              child: SingleChildScrollView(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: recognizedChips,
-                ),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxHeight: 330),
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (var index = 0; index < analysis.people.length; index++)
+                    section('人物 ${index + 1}（括號區塊）', analysis.people[index]),
+                  section('共用／場景／鏡頭', shared, shared: true),
+                ],
               ),
             ),
-          ],
-          if (analysis.unmatchedTokens.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Text(
-              '尚未對應 ${analysis.unmatchedTokens.length} 詞（不會自動加入）',
-              style: TextStyle(
-                fontWeight: FontWeight.w700,
-                color: tone.error,
-              ),
-            ),
-            const SizedBox(height: 6),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxHeight: 130),
-              child: SingleChildScrollView(
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
-                  children: analysis.unmatchedTokens
-                      .map(
-                        (token) => Chip(
-                          label: Text(token),
-                          visualDensity: VisualDensity.compact,
-                          side: BorderSide(
-                              color: tone.error.withValues(alpha: .65)),
-                          backgroundColor:
-                              tone.errorContainer.withValues(alpha: .36),
-                        ),
-                      )
-                      .toList(),
-                ),
-              ),
-            ),
-          ],
+          ),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -15675,11 +15983,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 icon: const Icon(Icons.playlist_add_check_outlined),
                 label: const Text('套用已對應標籤'),
               ),
-              if (analysis.unmatchedTokens.isNotEmpty)
+              if (analysis.allUnmatchedTokens.isNotEmpty)
                 OutlinedButton.icon(
                   onPressed: _addReversePromptUnmatchedToExtraPositive,
                   icon: const Icon(Icons.add_circle_outline),
-                  label: const Text('未對應詞加入額外正向標籤'),
+                  label: const Text('未對應詞加入對應額外欄位'),
                 ),
             ],
           ),
