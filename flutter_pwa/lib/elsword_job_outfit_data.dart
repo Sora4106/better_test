@@ -14,7 +14,7 @@ class _ElswordJobOutfit {
   final String jobEn;
 
   String get id =>
-      'elsword_${characterEn.toLowerCase()}_${jobEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_').replaceAll(RegExp(r'_+$'), '')}';
+      'taxonomy_costume_elsword_${characterEn.toLowerCase()}_${jobEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_').replaceAll(RegExp(r'_+$'), '')}';
   String get zh => '$characterZh・$jobZh轉職服裝';
   String get en => 'Elsword $characterEn $jobEn official class outfit';
 }

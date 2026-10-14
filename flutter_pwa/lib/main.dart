@@ -13,7 +13,6 @@ import 'app_version.dart';
 import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'expanded_tag_data.dart';
-import 'elsword_job_outfit_data.dart';
 import 'expression_catalog_data.dart';
 import 'hair_style_package_data.dart';
 import 'outfit_reference_catalog.dart';
@@ -8269,7 +8268,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ...clothingTaxonomyTags,
     ...clothingDimensionTags,
     ...clothingOverallTags,
-    ...elswordJobOutfitTags,
   ].map(_catalogTag).toList();
   late final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
   final Set<String> _selectedIds = <String>{};

@@ -1,4 +1,5 @@
 import 'catalog_data.dart';
+import 'elsword_job_outfit_data.dart';
 
 String _clothingSlug(String value) => value
     .toLowerCase()
@@ -995,6 +996,7 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
         ('黑魔導女孩服裝', 'Dark Magician Girl outfit'),
       ],
       support: 'description'),
+  ...elswordJobOutfitTags,
   ..._garments(
       '特殊服裝',
       'costume',
