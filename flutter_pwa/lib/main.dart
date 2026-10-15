@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'app_version.dart';
 import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
+import 'elsword_job_outfit_data.dart';
 import 'expanded_tag_data.dart';
 import 'expression_catalog_data.dart';
 import 'hair_style_package_data.dart';
@@ -4304,7 +4305,8 @@ const _outfitMainStyleGroup = '服裝・主要風格';
 const _outfitSubStyleGroup = '服裝・子風格';
 const _outfitMoodGroup = '服裝・氣質';
 const _outfitOccasionGroup = '服裝・場合';
-const _elswordJobDetailGroup = '轉職服裝細節';
+bool _isElswordJobDetailGroup(String group) =>
+    elswordJobDetailGroups.contains(group);
 
 const _clothingGarmentPickerGroups = <String>[
   _clothingGroupHat,
@@ -8403,13 +8405,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final preserveClothingColorGroup = _isClothingColorGroup(tag.group);
       final preserveTaxonomyGarment = tag.id.startsWith('catalog_taxonomy_') &&
           _isClothingBaseGroup(tag.group);
+      // A class-detail phrase can intentionally share its English spelling
+      // with a generic tag (for example `wide sleeves`). Keep both IDs so an
+      // Elsword outfit reference always restores its own classified phrase.
+      final preserveElswordJobPhrase = _isElswordJobDetailGroup(tag.group);
       final key = preserveExpressionSymbol
           ? 'expression-symbol:${tag.en.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ')}'
           : englishKey.isEmpty
               ? 'id:${tag.id}'
               : (_isScopedClothingGroup(tag.group) ||
                       preserveClothingColorGroup ||
-                      preserveTaxonomyGarment)
+                      preserveTaxonomyGarment ||
+                      preserveElswordJobPhrase)
                   ? 'en:$englishKey:${tag.group}'
                   : 'en:$englishKey';
       unique.putIfAbsent(key, () => tag);
@@ -8936,8 +8943,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _outfitSubStyleGroup,
         _outfitMoodGroup,
         _outfitOccasionGroup,
-        _elswordJobDetailGroup,
       }.contains(group) ||
+      _isElswordJobDetailGroup(group) ||
       group.endsWith('邊線色');
 
   bool _isFaceExpressionTag(TagItem tag) =>
@@ -9479,7 +9486,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String? _clothingScopeForTag(TagItem tag) {
-    if (tag.group == _elswordJobDetailGroup) return 'costume';
+    if (_isElswordJobDetailGroup(tag.group)) return 'costume';
     if (_isScopedClothingGroup(tag.group)) {
       return _scopedClothingSlot(tag.group);
     }
@@ -9542,6 +9549,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _scopedClothingGroup(scope, 'detail_color'),
       _scopedClothingGroup(scope, 'pattern'),
     ];
+    if (base.id.contains('taxonomy_costume_elsword_')) {
+      groups.addAll(elswordJobDetailGroups);
+    }
     final colorGroup = _clothingColorGroupForBase(base);
     final trimColorGroup = _clothingTrimColorGroupForBase(base);
     if (colorGroup != null) groups.add(colorGroup);
@@ -9563,7 +9573,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..._clothingWearGroupsForBase(base),
         if (_clothingScopeForBase(base) == 'accessory') '配件位置',
         if (base.id.contains('taxonomy_costume_elsword_'))
-          _elswordJobDetailGroup,
+          ...elswordJobDetailGroups,
       };
 
   void _removeOrphanedClothingConfiguration(
@@ -10838,7 +10848,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ));
     }
     for (final tag in selected.where((tag) =>
-        tag.group == _elswordJobDetailGroup && !consumed.contains(tag.id))) {
+        _isElswordJobDetailGroup(tag.group) && !consumed.contains(tag.id))) {
       consumed.add(tag.id);
       result.add(_GeneratedOutputTag(
         zh: tag.zh,

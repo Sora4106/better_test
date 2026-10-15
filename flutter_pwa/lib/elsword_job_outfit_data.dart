@@ -1,6 +1,54 @@
 import 'catalog_data.dart';
 import 'outfit_reference_data.dart';
 
+/// Picker categories for phrases that describe a particular Elsword class
+/// design. They remain part of the costume prompt block, but are displayed by
+/// their visual role so users can find and remove them.
+const elswordJobDetailOutfitGroup = '艾爾之光・職業套裝';
+const elswordJobDetailUpperGroup = '艾爾之光・上身細節';
+const elswordJobDetailLowerGroup = '艾爾之光・下身與腿部';
+const elswordJobDetailFootwearGroup = '艾爾之光・鞋襪細節';
+const elswordJobDetailHeadGroup = '艾爾之光・頭部飾品';
+const elswordJobDetailTrimGroup = '艾爾之光・配色與飾邊';
+const elswordJobDetailAccessoryGroup = '艾爾之光・飾品與裝置';
+
+const elswordJobDetailGroups = <String>[
+  elswordJobDetailOutfitGroup,
+  elswordJobDetailUpperGroup,
+  elswordJobDetailLowerGroup,
+  elswordJobDetailFootwearGroup,
+  elswordJobDetailHeadGroup,
+  elswordJobDetailTrimGroup,
+  elswordJobDetailAccessoryGroup,
+];
+
+/// Keep class-specific visual descriptions as complete phrases whenever a
+/// regular one-word tag would lose the intended design detail.
+String elswordJobDetailGroupFor(String english) {
+  final value = english.toLowerCase();
+  if (value.endsWith(' outfit')) return elswordJobDetailOutfitGroup;
+  if (RegExp(r'\b(?:trim|pattern|markings|accents|lining)\b').hasMatch(value)) {
+    return elswordJobDetailTrimGroup;
+  }
+  if (RegExp(r'\b(?:hat|crown|head ornament|hairclip)\b').hasMatch(value)) {
+    return elswordJobDetailHeadGroup;
+  }
+  if (RegExp(
+          r'\b(?:boots?|shoes?|thighhighs?|socks?|leg guards?|leg wraps?|thigh strap)\b')
+      .hasMatch(value)) {
+    return elswordJobDetailFootwearGroup;
+  }
+  if (RegExp(r'\b(?:skirt|waist|sash|belt)\b').hasMatch(value)) {
+    return elswordJobDetailLowerGroup;
+  }
+  if (RegExp(
+          r'\b(?:coat|cape|capelet|mantle|sleeves?|bodice|vest|turtleneck|top|robe|dress|armor|jacket)\b')
+      .hasMatch(value)) {
+    return elswordJobDetailUpperGroup;
+  }
+  return elswordJobDetailAccessoryGroup;
+}
+
 /// A bilingual visual phrase that belongs inside a single class-outfit block.
 /// They are deliberately editable description helpers, not claims that every
 /// phrase is an exact model trigger tag.
@@ -766,7 +814,7 @@ final List<CatalogTagData> elswordJobVisualDetailTags =
       for (final detail in job.visualDetails) detail.en: detail,
   }.values.toList().asMap().entries.map((entry) => CatalogTagData(
         id: _elswordVisualDetailId(entry.value.en),
-        group: '轉職服裝細節',
+        group: elswordJobDetailGroupFor(entry.value.en),
         zh: entry.value.zh,
         en: entry.value.en,
         order: entry.key + 1,

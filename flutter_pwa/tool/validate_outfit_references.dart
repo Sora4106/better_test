@@ -1,6 +1,7 @@
 import '../lib/clothing_taxonomy.dart';
 import '../lib/blue_outfit_reference_data.dart';
 import '../lib/catalog_data.dart';
+import '../lib/elsword_job_outfit_data.dart';
 import '../lib/outfit_reference_catalog.dart';
 
 const _colors = <String>{
@@ -116,6 +117,14 @@ void main() {
   }
   if (ids.toSet().length != ids.length) {
     problems.add('Preset IDs are not unique.');
+  }
+  for (final tag in elswordJobVisualDetailTags) {
+    if (!elswordJobDetailGroups.contains(tag.group)) {
+      problems.add('${tag.id}: unknown Elsword detail group "${tag.group}".');
+    }
+    if (tag.zh.trim().isEmpty || tag.en.trim().isEmpty) {
+      problems.add('${tag.id}: Elsword detail is missing bilingual text.');
+    }
   }
 
   bool hasDimension(String scope, String kind, String value) {
