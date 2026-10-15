@@ -162,6 +162,67 @@ class _ElswordJobOutfit {
         .where((value) => seen.add(value.trim().toLowerCase()))
         .join(', ');
   }
+
+  /// Every class card can optionally attach one complete weapon description.
+  /// These are separate from the outfit phrase so users may retain a faithful
+  /// outfit silhouette without forcing its weapon into every prompt.
+  bool get usesElementalMasterStaff =>
+      characterEn == 'Aisha' && jobEn == 'Elemental Master';
+
+  String get weaponTagId {
+    if (usesElementalMasterStaff) {
+      return 'obj_fantasy_elemental_master_staff';
+    }
+    final character = characterEn
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_|_$'), '');
+    final job = jobEn
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_|_$'), '');
+    return 'obj_fantasy_elsword_${character}_${job}_weapon';
+  }
+
+  String get weaponZh => switch (characterEn) {
+        'Aisha' => '$jobZh專屬法杖',
+        'Rena' => '$jobZh專屬精靈弓',
+        'Eve' => '$jobZh專屬納斯德武裝',
+        'Ara' => '$jobZh專屬靈槍',
+        'Elesis' => '$jobZh專屬騎士劍',
+        _ => '$jobZh專屬武器',
+      };
+
+  String get weaponEn {
+    final descriptor = _elswordWeaponDescriptor(jobEn);
+    return switch (characterEn) {
+      'Aisha' =>
+        'ornate $descriptor magic staff with a glowing gemstone, official Elsword class weapon',
+      'Rena' =>
+        'ornate $descriptor elven bow with engraved limbs and a glowing bowstring, official Elsword ranger weapon',
+      'Eve' =>
+        'floating $descriptor nasod weapon drones with glowing energy cores, official Elsword nasod weapon',
+      'Ara' =>
+        'ornate $descriptor spirit spear with glowing talismans, official Elsword martial weapon',
+      'Elesis' =>
+        'ornate $descriptor knight sword with an engraved guard and a glowing crest, official Elsword knight weapon',
+      _ => 'ornate $descriptor fantasy weapon, official Elsword class weapon',
+    };
+  }
+}
+
+/// Avoid using the word "little" in prompt-facing class weapon descriptions.
+/// It is a part of several official job names, but unnecessary here and can be
+/// mistaken for an age reference by image-generation moderation.
+String _elswordWeaponDescriptor(String jobEn) {
+  const replacements = <String, String>{
+    'Little Hsien': 'celestial spirit',
+    'Little Devil': 'demonic spirit',
+    'Little Specter': 'spectral spirit',
+    'Little Helper': 'guardian spirit',
+  };
+  return replacements[jobEn] ??
+      jobEn.toLowerCase().replaceFirst('code:', 'nasod').trim();
 }
 
 String _elswordVisualDetailId(String english) =>
@@ -881,6 +942,24 @@ final List<CatalogTagData> elswordJobVisualDetailTags =
       )),
 );
 
+/// Optional one-phrase weapons for the class-outfit cards. The Elemental
+/// Master keeps its existing hand-authored staff phrase; every other job gets
+/// its own model-facing weapon description and can be selected independently.
+final List<CatalogTagData> elswordJobWeaponTags =
+    List<CatalogTagData>.unmodifiable(
+  _elswordJobs
+      .where((job) => !job.usesElementalMasterStaff)
+      .map((job) => CatalogTagData(
+            id: job.weaponTagId,
+            group: '物件',
+            zh: job.weaponZh,
+            en: job.weaponEn,
+            order: 5,
+            support: 'description',
+          ))
+      .toList(),
+);
+
 /// Complete built-in references. Each job is applied as one canonical outfit
 /// phrase so the original silhouette is kept intact. Full-body wear/exposure
 /// controls remain available after applying, while an optional class weapon is
@@ -899,10 +978,7 @@ final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
             featureTags: job.featureTags,
             unifiedPhraseZh: job.zh,
             unifiedPhraseEn: job.unifiedOutfitPhrase,
-            equipmentTagIds:
-                job.characterEn == 'Aisha' && job.jobEn == 'Elemental Master'
-                    ? const <String>['obj_fantasy_elemental_master_staff']
-                    : const <String>[],
+            equipmentTagIds: <String>[job.weaponTagId],
             ownerCharacterTags: job.ownerCharacterTag.isEmpty
                 ? const <String>[]
                 : <String>[job.ownerCharacterTag],

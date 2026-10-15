@@ -127,6 +127,19 @@ void main() {
       problems.add('${tag.id}: Elsword detail is missing bilingual text.');
     }
   }
+  final knownEquipmentTagIds = <String>{
+    ...objectCatalogTags.map((tag) => tag.id),
+    ...elswordJobWeaponTags.map((tag) => tag.id),
+  };
+  for (final tag in elswordJobWeaponTags) {
+    if (tag.group != '物件' ||
+        !tag.id.startsWith('obj_fantasy_elsword_') ||
+        tag.zh.trim().isEmpty ||
+        tag.en.trim().isEmpty) {
+      problems.add('${tag.id}: invalid Elsword class weapon data.');
+    }
+    validatePromptTerm('${tag.id} weapon', tag.en);
+  }
 
   bool hasDimension(String scope, String kind, String value) {
     final kinds = kind == 'cut'
@@ -166,7 +179,7 @@ void main() {
       }
     }
     for (final equipmentId in preset.equipmentTagIds) {
-      if (!objectCatalogTags.any((tag) => tag.id == equipmentId)) {
+      if (!knownEquipmentTagIds.contains(equipmentId)) {
         problems.add('${preset.id}: missing equipment tag "$equipmentId".');
       }
     }

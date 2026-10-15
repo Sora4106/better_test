@@ -8301,6 +8301,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ...expressionCatalogTags,
     ...expandedPromptTags,
     ...objectCatalogTags,
+    ...elswordJobWeaponTags,
     ...clothingTaxonomyTags,
     ...clothingDimensionTags,
     ...clothingOverallTags,
@@ -27922,6 +27923,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         isImageWorkspace && MediaQuery.sizeOf(context).width >= 900;
     final sideStepRailWidth =
         isImageWorkspace ? (showSideStepNames ? 158.0 : 50.0) : 0.0;
+    // Keep the step rail above the fixed copy/help controls.  On a short
+    // viewport its contents remain scrollable instead of becoming untappable
+    // behind those controls.
+    final sideRailTop = showSideStepNames ? 18.0 : 12.0;
+    final sideRailBottom = showSideStepNames ? 218.0 : 202.0;
+    const usageControlBottom = 16.0;
+    const copyControlBottom = 68.0;
     final contentLeftPadding = isImageWorkspace
         ? (_sideNavigationOnRight ? 16.0 : max(sideStepRailWidth + 14, 72.0))
         : 16.0;
@@ -28036,16 +28044,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             Positioned(
               left: _sideNavigationOnRight ? null : 6,
               right: _sideNavigationOnRight ? 6 : null,
-              top: 112,
+              top: sideRailTop,
+              bottom: sideRailBottom,
               child: SafeArea(
+                bottom: false,
                 child: SizedBox(
                   width: sideStepRailWidth,
                   child: Card(
                     margin: EdgeInsets.zero,
-                    child: Padding(
+                    clipBehavior: Clip.antiAlias,
+                    child: SingleChildScrollView(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 3, vertical: 6),
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
                           showSideStepNames
                               ? SizedBox(
@@ -28183,7 +28195,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           Positioned(
             left: _sideNavigationOnRight ? null : 8,
             right: _sideNavigationOnRight ? 8 : null,
-            bottom: 154,
+            bottom: usageControlBottom,
             child: SafeArea(
               child: IconButton.filledTonal(
                 constraints:
@@ -28200,7 +28212,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               right: _sideNavigationOnRight ? 6 : null,
               // Keep the fixed positive/negative copy controls clear of the
               // lower usage-prompt button and browser safe-area controls.
-              bottom: 82,
+              bottom: copyControlBottom,
               child: SafeArea(
                 child: SizedBox(
                   width: 56,
