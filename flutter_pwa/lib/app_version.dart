@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.249';
-const appBuildNumber = 251;
-const appVersionLabel = '1.1.249+251';
+﻿const appVersion = '1.1.250';
+const appBuildNumber = 252;
+const appVersionLabel = '1.1.250+252';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.250', 'build': '252', 'label': '1.1.250+252', 'date': '2026-10-15', 'notes': '新增自訂姿勢組合，可儲存目前姿勢、動作與自然敘述並一鍵套用。'},
   {'version': '1.1.249', 'build': '251', 'label': '1.1.249+251', 'date': '2026-10-15', 'notes': '左側步驟導覽上移並避開固定複製與提示按鈕；所有艾爾之光轉職套裝新增可選專屬武器片語，元素大師保留既有法杖。'},
   {'version': '1.1.248', 'build': '250', 'label': '1.1.248+250', 'date': '2026-10-15', 'notes': '修正轉職與角色套裝已套用後可直接移除，並同步清除套裝服飾、附帶特徵與專屬武器。'},
   {'version': '1.1.247', 'build': '249', 'label': '1.1.247+249', 'date': '2026-10-15', 'notes': '艾爾之光轉職套裝改為完整服裝片語，保留全身穿脫／暴露控制，並在套裝卡加入可選專屬武器。'},
   {'version': '1.1.246', 'build': '248', 'label': '1.1.246+248', 'date': '2026-10-15', 'notes': '新增裝備類型分類，將武器與防具和一般服裝分開；加入元素大師的法杖單一片語及手持／漂浮模式，並上移固定正負複製按鈕。'},
-  {'version': '1.1.245', 'build': '247', 'label': '1.1.245+247', 'date': '2026-10-15', 'notes': '修正艾爾之光轉職套裝預覽與套用對原始目錄細節 ID 的解析；不再誤報缺少設定或顯示 elsword_detail 內部 ID。'},
 ];

@@ -763,6 +763,7 @@ class PromptCombination {
     required this.name,
     required this.tagIds,
     required this.extraPositive,
+    this.kind = 'general',
   });
 
   final String id;
@@ -770,11 +771,16 @@ class PromptCombination {
   final List<String> tagIds;
   final String extraPositive;
 
+  /// Keeps specialised combinations in the workflow where they are useful.
+  /// Legacy combinations intentionally fall back to `general`.
+  final String kind;
+
   Map<String, dynamic> toJson() => {
         'id': id,
         'name': name,
         'tagIds': tagIds,
         'extraPositive': extraPositive,
+        'kind': kind,
       };
 
   factory PromptCombination.fromJson(Map<String, dynamic> json) =>
@@ -783,6 +789,7 @@ class PromptCombination {
         name: '${json['name'] ?? ''}',
         tagIds: (json['tagIds'] as List? ?? []).map((id) => '$id').toList(),
         extraPositive: '${json['extraPositive'] ?? ''}',
+        kind: '${json['kind'] ?? 'general'}',
       );
 }
 
@@ -9823,7 +9830,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .any((preset) => preset.combinationId == combinationId) ||
       _combinations.any((combination) =>
           combination.id == combinationId &&
-          _isClothingCombinationTags(_combinationTags(combination)));
+          _isClothingCombination(combination));
 
   void _markClothingTemplateCustomized(int personIndex) {
     _personCombinationIds[personIndex]?.removeWhere(_isClothingCombinationId);
@@ -18518,6 +18525,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             physicalLookGroups.contains(tag.group));
   }
 
+  bool _isClothingCombination(PromptCombination combination) =>
+      combination.kind == 'clothing' ||
+      _isClothingCombinationTags(_combinationTags(combination));
+
+  bool _isPoseCombination(PromptCombination combination) =>
+      combination.kind == 'pose';
+
   TagItem? _outfitReferenceExactTag(
     Iterable<TagItem> candidates,
     String value,
@@ -18991,6 +19005,103 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       name: trimmedName,
       tagIds: clothingTags.map((tag) => tag.id).toList(),
       extraPositive: '',
+      kind: 'clothing',
+    );
+    setState(() {
+      _combinations.insert(0, combination);
+      _persist();
+    });
+  }
+
+  List<TagItem> _poseCombinationTagsForPerson(int personIndex) =>
+      _selectedTagsForPerson(personIndex).where(_isPoseWorkflowTag).toList();
+
+  Future<void> _savePoseCombinationFromPerson(int personIndex) async {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final poseTags = _poseCombinationTagsForPerson(personIndex);
+    final naturalPrompts =
+        _poseExtraPrompts(_personSlots[personIndex].poseExtraPositive);
+    if (poseTags.isEmpty && naturalPrompts.isEmpty) return;
+
+    final nameController = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('儲存姿勢組合'),
+        content: SizedBox(
+          width: 460,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('將儲存人物 ${personIndex + 1} 目前選擇的姿勢、動作與自然敘述；之後可在此人物的姿勢區一鍵套用。'),
+              const SizedBox(height: 10),
+              if (poseTags.isNotEmpty) ...[
+                const Text('已選姿勢標籤',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 6),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxHeight: 160),
+                  child: SingleChildScrollView(
+                    child: Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: poseTags
+                          .map((tag) => Chip(
+                                label: Text('${tag.zh} · ${tag.en}'),
+                                visualDensity: VisualDensity.compact,
+                              ))
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ],
+              if (naturalPrompts.isNotEmpty) ...[
+                const SizedBox(height: 10),
+                const Text('姿勢自然敘述',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                const SizedBox(height: 4),
+                Text(naturalPrompts.join('\n')),
+              ],
+              const SizedBox(height: 12),
+              TextField(
+                controller: nameController,
+                autofocus: true,
+                textInputAction: TextInputAction.done,
+                decoration: const InputDecoration(
+                  labelText: '姿勢組合名稱',
+                  hintText: '例如坐椅子抬腿微笑',
+                ),
+                onSubmitted: (value) =>
+                    Navigator.pop(dialogContext, value.trim()),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text('取消'),
+          ),
+          FilledButton.icon(
+            onPressed: () =>
+                Navigator.pop(dialogContext, nameController.text.trim()),
+            icon: const Icon(Icons.bookmark_add_outlined),
+            label: const Text('儲存'),
+          ),
+        ],
+      ),
+    );
+    nameController.dispose();
+
+    final trimmedName = name?.trim() ?? '';
+    if (trimmedName.isEmpty) return;
+    final combination = PromptCombination(
+      id: 'combination_${DateTime.now().microsecondsSinceEpoch}',
+      name: trimmedName,
+      tagIds: poseTags.map((tag) => tag.id).toList(),
+      extraPositive: naturalPrompts.join('\n'),
+      kind: 'pose',
     );
     setState(() {
       _combinations.insert(0, combination);
@@ -19207,6 +19318,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       name: trimmedName,
                       tagIds: selected.toList(),
                       extraPositive: extra.text.trim(),
+                      kind: existing?.kind ?? 'general',
                     ),
                   );
                 },
@@ -19268,7 +19380,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final tags = storedTags.where((tag) => _showAdult || !tag.adult).toList();
     final skippedAdult = storedTags.length > tags.length;
     final replacesClothing =
-        !skippedAdult && _isClothingCombinationTags(storedTags);
+        !skippedAdult && _isClothingCombination(combination);
     final conflicts = <String, TagItem>{};
     for (final tag in tags) {
       for (final current in _selectedTagsForPerson(personIndex)) {
@@ -19299,7 +19411,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (replacesClothing) {
       _removeCurrentClothingForCombination(target);
       final clothingCombinationIds = _combinations
-          .where((item) => _isClothingCombinationTags(_combinationTags(item)))
+          .where(_isClothingCombination)
           .map((item) => item.id)
           .toSet()
         ..addAll(outfitReferencePresets.map((preset) => preset.combinationId));
@@ -19337,10 +19449,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  void _removeCombinationFromPerson(
+      PromptCombination combination, int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    setState(() {
+      _personTagIds(personIndex)
+          .removeAll(_combinationTags(combination).map((tag) => tag.id));
+      _personCombinationIds[personIndex]?.remove(combination.id);
+      _removeOrphanedPhysicalTraitColors(_personTagIds(personIndex),
+          personIndex: personIndex);
+      _syncAutoFurryIdentity(personIndex, _personTagIds(personIndex));
+      _persist();
+    });
+  }
+
   Widget _stepCombinations() {
     final combinations = _combinations
         .where((combination) =>
-            !_isClothingCombinationTags(_combinationTags(combination)))
+            !_isClothingCombination(combination) &&
+            !_isPoseCombination(combination))
         .toList();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -19358,7 +19485,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ...combinations.map((combination) {
             final tags = _combinationTags(combination);
             final preview = _combinationPreviewTags(tags);
-            final isClothingCombination = _isClothingCombinationTags(tags);
+            final isClothingCombination = _isClothingCombination(combination);
             return Card(
               margin: const EdgeInsets.only(bottom: 10),
               clipBehavior: Clip.antiAlias,
@@ -19458,10 +19585,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _savedClothingCombinationPicker(int personIndex) {
-    final combinations = _combinations
-        .where((combination) =>
-            _isClothingCombinationTags(_combinationTags(combination)))
-        .toList();
+    final combinations = _combinations.where(_isClothingCombination).toList();
     if (combinations.isEmpty) return const SizedBox.shrink();
     return Card(
       margin: const EdgeInsets.only(top: 8, bottom: 12),
@@ -19542,6 +19666,133 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _savedPoseCombinationPicker(int personIndex) {
+    final combinations = _combinations.where(_isPoseCombination).toList();
+    final hasCurrentPose =
+        _poseCombinationTagsForPerson(personIndex).isNotEmpty ||
+            _poseExtraPrompts(_personSlots[personIndex].poseExtraPositive)
+                .isNotEmpty;
+    return Card(
+      margin: const EdgeInsets.only(top: 10, bottom: 2),
+      color: const Color(0xff183246),
+      child: ExpansionTile(
+        key: PageStorageKey<String>('saved-pose-combination-$personIndex'),
+        leading: const Icon(Icons.bookmarks_outlined, color: Color(0xff7dd3fc)),
+        title: Text('我的姿勢組合（${combinations.length} 組）',
+            style: const TextStyle(fontWeight: FontWeight.w800)),
+        subtitle:
+            const Text('儲存目前姿勢後，可直接一鍵套用或移除', style: TextStyle(fontSize: 12)),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        children: [
+          Align(
+            alignment: Alignment.centerRight,
+            child: OutlinedButton.icon(
+              onPressed: hasCurrentPose
+                  ? () => _savePoseCombinationFromPerson(personIndex)
+                  : null,
+              icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+              label: const Text('儲存目前姿勢組合'),
+            ),
+          ),
+          if (!hasCurrentPose)
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Text('先選擇姿勢、動作或填入姿勢自然敘述後即可儲存。',
+                    style: TextStyle(fontSize: 12)),
+              ),
+            ),
+          if (combinations.isEmpty)
+            const Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text('尚未儲存自訂姿勢組合。'),
+              ),
+            )
+          else
+            ...combinations.map((combination) {
+              final preview =
+                  _combinationPreviewTags(_combinationTags(combination));
+              final applied = _personCombinationIds[personIndex]
+                      ?.contains(combination.id) ??
+                  false;
+              return Card(
+                margin: const EdgeInsets.only(top: 8),
+                clipBehavior: Clip.antiAlias,
+                child: ExpansionTile(
+                  key: PageStorageKey<String>(
+                      'saved-pose-combination-item-${combination.id}-$personIndex'),
+                  title: Text(combination.name,
+                      style: const TextStyle(fontWeight: FontWeight.w700)),
+                  subtitle: Text(applied ? '已套用・可個別調整' : '點選展開預覽與套用'),
+                  childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 10),
+                  children: [
+                    if (preview.isNotEmpty)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Wrap(
+                          spacing: 6,
+                          runSpacing: 6,
+                          children: preview
+                              .map((tag) => Chip(
+                                    label: Text('${tag.zh} · ${tag.en}'),
+                                    visualDensity: VisualDensity.compact,
+                                  ))
+                              .toList(),
+                        ),
+                      ),
+                    if (combination.extraPositive.trim().isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                              '自然敘述：${_extraTags(combination.extraPositive).map(_positiveEnglishTag).join(', ')}'),
+                        ),
+                      ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        FilledButton.icon(
+                          onPressed: applied
+                              ? () => _removeCombinationFromPerson(
+                                  combination, personIndex)
+                              : () =>
+                                  _applyCombination(combination, personIndex),
+                          icon: Icon(
+                            applied
+                                ? Icons.remove_circle_outline
+                                : Icons.playlist_add,
+                            size: 18,
+                          ),
+                          label: Text(applied ? '移除套用' : '套用到此人物'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () =>
+                              _editCombination(existing: combination),
+                          icon: const Icon(Icons.edit_outlined, size: 18),
+                          label: const Text('編輯'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => _deleteCombination(combination),
+                          icon: const Icon(Icons.delete_outline, size: 18),
+                          label: const Text('刪除'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+        ],
       ),
     );
   }
@@ -23336,6 +23587,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                     ],
                   ),
+                  _savedPoseCombinationPicker(index),
                   Card(
                     margin: const EdgeInsets.only(top: 10),
                     color: const Color(0xff1d2942),
