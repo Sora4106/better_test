@@ -63,6 +63,8 @@ const _expressionTeasingGroup = '頭部動態・挑逗';
 const _expressionSymbolGroup = '頭部動態・符號表情';
 const _expressionOtherGroup = '頭部動態・情緒／其他';
 const _objectInteractionGroup = '互動・物件動作';
+const _objectInteractionModeConflictGroup = 'object_interaction_mode';
+const _weaponPresentationModeConflictGroup = 'weapon_presentation_mode';
 const _objectColorGroup = '物件顏色';
 const _canonicalOutfitFeatureGroup = '原作角色服裝';
 const _canonicalOutfitTagId = 'feature_original_canonical_outfit';
@@ -7550,12 +7552,15 @@ List<TagItem> _seedTags() => [
       _tag('action_holding_object_overhead', '動作', '高舉物件',
           'holding object overhead', 4,
           conflictGroup: 'object_interaction_mode'),
-      _tag('action_holding_staff', '動作', '手持法杖', 'holding staff', 4,
-          conflictGroup: 'object_interaction_mode'),
-      _tag('action_floating_staff', '動作', '漂浮法杖', 'floating staff', 4,
-          conflictGroup: 'object_interaction_mode'),
+      _tag('action_holding_staff', '動作', '手持已選武器', 'holding selected weapon', 4,
+          conflictGroup: _weaponPresentationModeConflictGroup),
+      _tag('action_floating_staff', '動作', '已選武器漂浮', 'selected weapon floating',
+          4,
+          conflictGroup: _weaponPresentationModeConflictGroup),
+      // Retained for saved prompts from earlier releases.  It now uses the
+      // same weapon-only presentation channel instead of all selected props.
       _tag('action_holding_magic_wand', '動作', '手持魔法棒', 'holding magic wand', 4,
-          conflictGroup: 'object_interaction_mode'),
+          conflictGroup: _weaponPresentationModeConflictGroup),
       _tag('action_carrying_object', '動作', '抱持物件', 'carrying object', 4,
           conflictGroup: 'object_interaction_mode'),
       _tag('action_sitting_on_object', '動作', '坐在物件上', 'sitting on object', 4,
@@ -8779,7 +8784,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (group == '動作') {
       return (_tagsByGroupCache!['動作'] ?? const <TagItem>[])
-          .where((tag) => !_isObjectInteractionTag(tag))
+          .where((tag) =>
+              !_isObjectInteractionTag(tag) && !_isWeaponPresentationTag(tag))
           .toList();
     }
     return _tagsByGroupCache![group] ?? const <TagItem>[];
@@ -9083,7 +9089,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       tag.group == '臉部特徵' && _staticFaceAppearanceIds.contains(tag.id);
 
   bool _isObjectInteractionTag(TagItem tag) =>
-      tag.group == '動作' && tag.conflictGroup == 'object_interaction_mode';
+      tag.group == '動作' &&
+      tag.conflictGroup == _objectInteractionModeConflictGroup;
+
+  /// Weapon presentation is deliberately separate from general prop
+  /// interaction.  A selected weapon can therefore be held or floated while
+  /// another selected prop keeps its own interaction.
+  bool _isWeaponPresentationTag(TagItem tag) =>
+      tag.group == '動作' &&
+      tag.conflictGroup == _weaponPresentationModeConflictGroup;
 
   bool _isDynamicHeadActionTag(TagItem tag) =>
       tag.group == '表情' ||
@@ -9155,10 +9169,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     return !fantasyPropIds.contains(id);
   }
-
-  bool _isStaffEquipmentTag(TagItem tag) =>
-      _isEquipmentWeaponTag(tag) &&
-      RegExp(r'\b(?:staff|wand)\b', caseSensitive: false).hasMatch(tag.en);
 
   bool _isEquipmentArmorTag(TagItem tag) {
     const armorTerms = <String>{
@@ -11559,14 +11569,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<_GeneratedOutputTag> _objectInteractionOutputTagsForPerson(
       int personIndex) {
     final selected = _selectedTagsForPerson(personIndex);
-    final mode = selected.cast<TagItem?>().firstWhere(
-          (tag) => tag?.conflictGroup == 'object_interaction_mode',
+    final objectMode = selected.cast<TagItem?>().firstWhere(
+          (tag) => tag?.conflictGroup == _objectInteractionModeConflictGroup,
           orElse: () => null,
         );
-    if (mode == null) return const <_GeneratedOutputTag>[];
+    final weaponMode = selected.cast<TagItem?>().firstWhere(
+          (tag) => tag?.conflictGroup == _weaponPresentationModeConflictGroup,
+          orElse: () => null,
+        );
+    if (objectMode == null && weaponMode == null) {
+      return const <_GeneratedOutputTag>[];
+    }
 
-    final objects = selected.where((tag) => tag.group == '物件').toList();
-    if (objects.isEmpty) return const <_GeneratedOutputTag>[];
+    // A general object action must not consume a weapon, while a weapon
+    // presentation must not consume a book, ball, or other ordinary prop.
+    // Keeping the noun sets separate prevents e.g. "holding staff" from
+    // turning a separately selected basketball into "holding basketball".
+    final objects = selected
+        .where((tag) => tag.group == '物件' && !_isEquipmentWeaponTag(tag))
+        .toList();
+    final weapons = selected.where(_isEquipmentWeaponTag).toList();
 
     final colorKey = _personSlots[personIndex].objectColorKey;
     final colorZh = _promptColorChinese[colorKey] ?? colorKey;
@@ -11575,7 +11597,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     String objectChinese(TagItem object) =>
         colorKey.isEmpty ? object.zh : '$colorZh${object.zh}';
 
-    String englishFor(TagItem object) {
+    String englishFor(TagItem mode, TagItem object) {
       final noun = objectEnglish(object);
       switch (mode.id) {
         case 'action_hugging_object':
@@ -11633,7 +11655,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
-    String chineseFor(TagItem object) {
+    String chineseFor(TagItem mode, TagItem object) {
       final noun = objectChinese(object);
       switch (mode.id) {
         case 'action_hugging_object':
@@ -11691,14 +11713,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
-    return objects
-        .map((object) => _GeneratedOutputTag(
-              zh: chineseFor(object),
-              en: englishFor(object),
-              tagIds: [mode.id, object.id],
-              personIndex: personIndex,
-            ))
-        .toList();
+    List<_GeneratedOutputTag> outputFor(
+        TagItem? mode, Iterable<TagItem> nouns) {
+      if (mode == null) return const <_GeneratedOutputTag>[];
+      return nouns
+          .map((object) => _GeneratedOutputTag(
+                zh: chineseFor(mode, object),
+                en: englishFor(mode, object),
+                tagIds: [mode.id, object.id],
+                personIndex: personIndex,
+              ))
+          .toList();
+    }
+
+    return [
+      ...outputFor(objectMode, objects),
+      ...outputFor(weaponMode, weapons),
+    ];
   }
 
   List<_GeneratedOutputTag> _combinationExtraOutputTagsForPerson(
@@ -11827,6 +11858,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .map((tag) => tag.id),
       ...extra.expand((tag) => tag.tagIds),
       ...objectInteractions.expand((tag) => tag.tagIds),
+      // Presentation modes are meaningful only when a matching noun exists.
+      // Suppress a stale mode after its weapon/prop was removed instead of
+      // emitting a bare phrase such as "holding selected weapon".
+      ...selected
+          .where((tag) =>
+              _isObjectInteractionTag(tag) || _isWeaponPresentationTag(tag))
+          .map((tag) => tag.id),
       ...combinationExtra.expand((tag) => tag.tagIds),
     };
     final other = selected
@@ -14418,6 +14456,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _tagsConflict(TagItem first, TagItem second) {
+    final firstGroup = _conflictGroup(first);
+    final secondGroup = _conflictGroup(second);
+    // Weapon presentation has exactly one target state: held or floating.
+    // Keep this narrow exception while leaving ordinary poses composable.
+    if (firstGroup == _weaponPresentationModeConflictGroup &&
+        firstGroup == secondGroup) {
+      return true;
+    }
     // Clothing and pose tags are intentionally composable. A character may
     // wear multiple layers/details and combine several posture/action tags,
     // so do not auto-replace these selections through conflict handling.
@@ -14429,8 +14475,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     // intentionally have layered, windswept, braided long hair at once.
     // Hair colour and hair length keep their own dedicated replacement logic.
     if (_isHairStyleTag(first) && _isHairStyleTag(second)) return false;
-    final firstGroup = _conflictGroup(first);
-    final secondGroup = _conflictGroup(second);
     if (firstGroup != null && firstGroup == secondGroup) {
       if (firstGroup == 'top_style' || firstGroup == 'bottom_style') {
         return false;
@@ -15598,10 +15642,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (modeId == null || remainder.isEmpty) return const <TagItem>[];
     final object = _tagByReverseLabel(remainder);
-    final mode = _tagsById[modeId];
-    if (mode == null || object == null || object.group != '物件') {
+    if (object == null || object.group != '物件') {
       return const <TagItem>[];
     }
+    // Reverse "holding sword" / "staff floating beside person" into the
+    // weapon-only presentation state.  This preserves the noun-to-weapon
+    // association and prevents a normal prop interaction from being restored.
+    if (modeId == 'action_holding_object' && _isEquipmentWeaponTag(object)) {
+      modeId = 'action_holding_staff';
+    }
+    const weaponPresentationModes = <String>{
+      'action_holding_staff',
+      'action_floating_staff',
+      'action_holding_magic_wand',
+    };
+    if (weaponPresentationModes.contains(modeId) &&
+        !_isEquipmentWeaponTag(object)) {
+      return const <TagItem>[];
+    }
+    final mode = _tagsById[modeId];
+    if (mode == null) return const <TagItem>[];
     return [mode, object];
   }
 
@@ -21040,16 +21100,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
-  /// Equipment remains an object at prompt time, but staff presentation is a
-  /// character-level choice. Surface the two useful staff modes beside the
-  /// equipment picker so they do not have to be hunted down in the action UI.
-  Widget _staffEquipmentInteractionControl(int personIndex) {
+  /// Weapon presentation is a character-level choice.  It is intentionally
+  /// kept beside the equipment picker so its state always binds to selected
+  /// weapon nouns rather than other props chosen in the pose workflow.
+  Widget _weaponEquipmentInteractionControl(int personIndex) {
     if (personIndex < 0 || personIndex >= _personSlots.length) {
       return const SizedBox.shrink();
     }
-    final hasStaff =
-        _selectedTagsForPerson(personIndex).any(_isStaffEquipmentTag);
-    if (!hasStaff) return const SizedBox.shrink();
+    final weapons = _selectedTagsForPerson(personIndex)
+        .where(_isEquipmentWeaponTag)
+        .toList();
+    if (weapons.isEmpty) return const SizedBox.shrink();
     final choices = [
       _tagsById['action_holding_staff'],
       _tagsById['action_floating_staff'],
@@ -21068,9 +21129,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('法杖呈現方式', style: TextStyle(fontWeight: FontWeight.w800)),
+          const Text('武器呈現方式', style: TextStyle(fontWeight: FontWeight.w800)),
           const SizedBox(height: 3),
-          const Text('手持與漂浮擇一；會直接和目前選擇的法杖組成完整提示詞。',
+          Text(
+              '手持與漂浮擇一；會直接與「${weapons.map((tag) => tag.zh).join('、')}」組成完整提示詞，不會套用到一般物件。',
               style: TextStyle(fontSize: 12)),
           const SizedBox(height: 7),
           Wrap(
@@ -24680,7 +24742,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           showGroupClear: true,
                           pickerStateKey: 'clothing-equipment',
                         ),
-                        _staffEquipmentInteractionControl(index),
+                        _weaponEquipmentInteractionControl(index),
                         if (selectedEquipmentArmorBases.isNotEmpty) ...[
                           const SizedBox(height: 10),
                           const Text(
