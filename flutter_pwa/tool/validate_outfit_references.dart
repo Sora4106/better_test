@@ -1,5 +1,6 @@
 import '../lib/clothing_taxonomy.dart';
 import '../lib/blue_outfit_reference_data.dart';
+import '../lib/catalog_data.dart';
 import '../lib/outfit_reference_catalog.dart';
 
 const _colors = <String>{
@@ -90,6 +91,8 @@ const _colors = <String>{
 
 void main() {
   final problems = <String>[];
+  String characterKey(String value) =>
+      value.trim().toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), ' ').trim();
   final ageSensitive = RegExp(
     r'\b(cute|short|slim|baby|child|children|kid|kids|teen|teenage|minor|underage|loli|shota)\b|\b(school|student) uniform\b|\bserafuku\b',
     caseSensitive: false,
@@ -128,6 +131,19 @@ void main() {
   for (final preset in outfitReferencePresets) {
     if (preset.pieces.isEmpty) {
       problems.add('${preset.id}: no garment pieces.');
+    }
+    for (final ownerTag in preset.requiredCharacterTags) {
+      final ownerExists = catalogCharacters.any(
+        (character) =>
+            characterKey(character.characterTag) == characterKey(ownerTag),
+      );
+      if (!ownerExists) {
+        problems.add('${preset.id}: unknown owner character "$ownerTag".');
+      }
+    }
+    if (preset.isCharacterSpecific &&
+        preset.requiredCharacterLabel.trim().isEmpty) {
+      problems.add('${preset.id}: missing owner character label.');
     }
     for (final detailId in preset.detailTagIds) {
       if (!clothingTaxonomyTags.any((tag) => tag.id == detailId)) {

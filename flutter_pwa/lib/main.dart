@@ -18485,6 +18485,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Future<void> _applyOutfitReference(
       OutfitReferencePresetData preset, int personIndex) async {
+    if (!_isOutfitReferenceAvailableForPerson(preset, personIndex)) return;
     final resolution = _resolveOutfitReference(preset);
     if (resolution.missing.isNotEmpty) {
       return;
@@ -18521,6 +18522,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Future<void> _showOutfitReferencePreview(
       OutfitReferencePresetData preset, int personIndex) async {
+    if (!_isOutfitReferenceAvailableForPerson(preset, personIndex)) return;
     final resolution = _resolveOutfitReference(preset);
     final preview = _combinationPreviewTags(resolution.tags);
     final apply = await showDialog<bool>(
@@ -23447,6 +23449,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _ => const Color(0xff94a3b8),
       };
 
+  bool _isOutfitReferenceAvailableForPerson(
+    OutfitReferencePresetData preset,
+    int personIndex,
+  ) {
+    final ownerTags = preset.requiredCharacterTags;
+    if (ownerTags.isEmpty) return true;
+    if (personIndex < 0 || personIndex >= _personSlots.length) return false;
+    final character = _characterForNew(_personSlots[personIndex]);
+    if (character == null) return false;
+    final selectedKey = _canonicalCharacterTagKey(character.characterTag);
+    return ownerTags.any(
+      (tag) => _canonicalCharacterTagKey(tag) == selectedKey,
+    );
+  }
+
+  String _outfitReferenceAvailabilityText(
+    int personIndex,
+    Iterable<OutfitReferencePresetData> available,
+  ) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return '通用套裝可直接使用。';
+    }
+    final character = _characterForNew(_personSlots[personIndex]);
+    if (character == null) {
+      return '先選擇角色後，才會顯示該角色的專屬服裝套件。';
+    }
+    final personalCount =
+        available.where((preset) => preset.isCharacterSpecific).length;
+    if (personalCount == 0) {
+      return '「${character.characterZh}」目前沒有專屬套裝；通用套裝仍可使用。';
+    }
+    return '已顯示「${character.characterZh}」的 $personalCount 套專屬服裝；通用套裝仍可使用。';
+  }
+
   Widget _canonicalOutfitAdjustmentPanel(int personIndex) {
     final top = _tagsById[_canonicalOutfitTopAdjustmentId];
     final bottom = _tagsById[_canonicalOutfitBottomAdjustmentId];
@@ -23494,16 +23530,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _outfitReferencePicker(int personIndex) {
-    final categories = outfitReferencePresets
-        .map((preset) => preset.category)
-        .toSet()
+    final availablePresets = outfitReferencePresets
+        .where((preset) =>
+            _isOutfitReferenceAvailableForPerson(preset, personIndex))
         .toList();
+    final categories =
+        availablePresets.map((preset) => preset.category).toSet().toList();
     final stateKey = 'outfit-reference:$personIndex';
     final stored = _personActiveGroups[stateKey];
     final activeCategory = stored != null && categories.contains(stored)
         ? stored
         : categories.first;
-    final visible = outfitReferencePresets
+    final visible = availablePresets
         .where((preset) => preset.category == activeCategory)
         .toList();
     final tone = _outfitReferenceTone(activeCategory);
@@ -23516,10 +23554,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         key: PageStorageKey<String>('outfit-reference-$personIndex'),
         leading: Icon(Icons.auto_awesome, color: tone),
         title: Text(
-          '女子服裝靈感套裝（${outfitReferencePresets.length} 套）',
+          '女子服裝靈感套裝（${availablePresets.length} 套）',
           style: const TextStyle(fontWeight: FontWeight.w800),
         ),
-        subtitle: const Text('套用為一次性副本；之後可改顏色、款式與細節，原始模板不會變更'),
+        subtitle: Text(
+          _outfitReferenceAvailabilityText(personIndex, availablePresets),
+        ),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
         children: [
           Align(

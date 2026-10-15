@@ -51,6 +51,8 @@ class OutfitReferencePresetData {
     this.featureTags = const <String>[],
     this.detailTags = const <String>[],
     this.detailTagIds = const <String>[],
+    this.ownerCharacterTags = const <String>[],
+    this.ownerCharacterLabel = '',
   });
 
   final String id;
@@ -77,6 +79,30 @@ class OutfitReferencePresetData {
   /// phrase is intentionally shared by more than one reference, so applying a
   /// template never resolves the phrase to another outfit's tag by accident.
   final List<String> detailTagIds;
+
+  /// Model-facing character tags that are allowed to use this preset. Empty
+  /// means the outfit is general-purpose and remains available to all people.
+  final List<String> ownerCharacterTags;
+
+  /// A short Chinese name used when explaining a character-specific preset.
+  final String ownerCharacterLabel;
+
+  /// Existing 25ji Kanade references were grouped before character ownership
+  /// metadata existed. Keep that category compatible while treating it as the
+  /// character-specific collection it has always represented.
+  List<String> get requiredCharacterTags {
+    if (ownerCharacterTags.isNotEmpty) return ownerCharacterTags;
+    return category == '25時・奏'
+        ? const <String>['yoisaki_kanade']
+        : const <String>[];
+  }
+
+  String get requiredCharacterLabel {
+    if (ownerCharacterLabel.isNotEmpty) return ownerCharacterLabel;
+    return category == '25時・奏' ? '宵崎奏' : '';
+  }
+
+  bool get isCharacterSpecific => requiredCharacterTags.isNotEmpty;
 
   String get combinationId => 'builtin_outfit_reference_$id';
 }

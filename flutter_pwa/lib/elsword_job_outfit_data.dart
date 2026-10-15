@@ -39,6 +39,15 @@ class _ElswordJobOutfit {
   String get zh => '$characterZh・$jobZh轉職服裝';
   String get en => 'Elsword $characterEn $jobEn official class outfit';
 
+  String get ownerCharacterTag => switch (characterEn) {
+        'Aisha' => 'aisha landar',
+        'Rena' => 'rena erindel',
+        'Eve' => 'eve (elsword)',
+        'Ara' => 'ara haan',
+        'Elesis' => 'elesis (elsword)',
+        _ => '',
+      };
+
   _ElswordJobLook get look {
     final looks = switch (characterEn) {
       'Aisha' => _aishaLooks,
@@ -785,6 +794,10 @@ final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
             detailTagIds: job.visualDetails
                 .map((detail) => _elswordVisualDetailId(detail.en))
                 .toList(),
+            ownerCharacterTags: job.ownerCharacterTag.isEmpty
+                ? const <String>[]
+                : <String>[job.ownerCharacterTag],
+            ownerCharacterLabel: job.characterZh,
           ))
       .toList(),
 );
