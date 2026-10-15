@@ -160,6 +160,15 @@ void main() {
       problems
           .add('${preset.id}: unified outfit phrase is missing Chinese text.');
     }
+    for (final phrase in preset.contextPhrases) {
+      if (phrase.id.trim().isEmpty ||
+          phrase.group.trim().isEmpty ||
+          phrase.zh.trim().isEmpty ||
+          phrase.en.trim().isEmpty) {
+        problems.add('${preset.id}: incomplete outfit context phrase.');
+      }
+      validatePromptTerm('${preset.id} context phrase', phrase.en);
+    }
     for (final ownerTag in preset.requiredCharacterTags) {
       final ownerExists = catalogCharacters.any(
         (character) =>
@@ -251,6 +260,32 @@ void main() {
               .any((tag) => tag.group == entry.key && tag.en == value)) {
         problems.add('${preset.id}: missing ${entry.key} "$value".');
       }
+    }
+  }
+
+  final elementalMaster = outfitReferencePresets
+      .where((preset) =>
+          preset.id == 'taxonomy_costume_elsword_aisha_elemental_master')
+      .toList();
+  if (elementalMaster.length != 1) {
+    problems.add('Missing Aisha Elemental Master outfit reference.');
+  } else {
+    final preset = elementalMaster.single;
+    const expectedContextIds = {'identity', 'official_design', 'head_profile'};
+    final contextIds = preset.contextPhrases.map((phrase) => phrase.id).toSet();
+    if (!contextIds.containsAll(expectedContextIds) ||
+        contextIds.length != expectedContextIds.length) {
+      problems.add(
+          '${preset.id}: expected identity, official-design, and head-profile phrases.');
+    }
+    if (preset.featureTags.isNotEmpty) {
+      problems.add(
+          '${preset.id}: class profile must not use generic feature tags.');
+    }
+    final clothingPhrase = preset.unifiedPhraseEn?.toLowerCase() ?? '';
+    if (clothingPhrase.contains('official outfit') ||
+        clothingPhrase.contains('elsword aisha elemental master')) {
+      problems.add('${preset.id}: class context leaked into clothing phrase.');
     }
   }
 

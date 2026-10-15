@@ -12,6 +12,19 @@ const elswordJobDetailHeadGroup = '艾爾之光・頭部飾品';
 const elswordJobDetailTrimGroup = '艾爾之光・配色與飾邊';
 const elswordJobDetailAccessoryGroup = '艾爾之光・飾品與裝置';
 
+/// These are complete, class-scoped phrase blocks.  They are intentionally
+/// outside [elswordJobDetailGroups] so they do not behave like individually
+/// editable clothing dimensions after a canonical outfit is selected.
+const elswordJobIdentityGroup = '艾爾之光・職業識別';
+const elswordJobOfficialDesignGroup = '艾爾之光・原作服裝設定';
+const elswordJobHeadFeatureGroup = '艾爾之光・職業頭部特徵';
+
+const elswordJobContextPhraseGroups = <String>[
+  elswordJobIdentityGroup,
+  elswordJobOfficialDesignGroup,
+  elswordJobHeadFeatureGroup,
+];
+
 const elswordJobDetailGroups = <String>[
   elswordJobDetailOutfitGroup,
   elswordJobDetailUpperGroup,
@@ -118,6 +131,10 @@ class _ElswordJobOutfit {
   }
 
   List<String> get featureTags {
+    // Elemental Master's job-specific hair/face profile belongs to the
+    // canonical class phrase below. Do not select it as generic Aisha traits,
+    // otherwise switching to another class leaves those traits behind.
+    if (usesElementalMasterProfile) return const <String>[];
     final base = switch (characterEn) {
       'Aisha' => const ['purple hair', 'long hair', 'purple eyes'],
       'Rena' => const ['green hair', 'long hair'],
@@ -143,10 +160,70 @@ class _ElswordJobOutfit {
         ...look.details,
       ];
 
+  bool get usesElementalMasterProfile =>
+      characterEn == 'Aisha' && jobEn == 'Elemental Master';
+
+  /// Complete non-clothing blocks that are emitted in front of the canonical
+  /// outfit. Keeping each one as one tag makes the order predictable and lets
+  /// the user turn the job's head profile off without changing global Aisha
+  /// traits.
+  List<OutfitReferenceContextPhraseData> get contextPhrases {
+    if (!usesElementalMasterProfile) {
+      return const <OutfitReferenceContextPhraseData>[];
+    }
+    return const <OutfitReferenceContextPhraseData>[
+      OutfitReferenceContextPhraseData(
+        id: 'identity',
+        group: elswordJobIdentityGroup,
+        zh: '元素大師・職業標籤',
+        en: 'elemental_master, elemental master aisha',
+      ),
+      OutfitReferenceContextPhraseData(
+        id: 'official_design',
+        group: elswordJobOfficialDesignGroup,
+        zh: '元素大師・原作設定服裝',
+        en: 'official outfit, canon outfit, official character design, character accurate, official game style, original class outfit',
+      ),
+      OutfitReferenceContextPhraseData(
+        id: 'head_profile',
+        group: elswordJobHeadFeatureGroup,
+        zh: '元素大師・頭部特徵',
+        en: 'purple hair, long hair, low twintails, ahoge, purple eyes, x-shaped hairclip, (oval face:1.15), (slightly elongated facial proportions:1.15), (tapered jawline:1.12), (defined nose bridge:1.12), (defined lower eyelids:1.1), (refined lips:1.1), (subtle cheekbone definition:1.08), (refined facial features:1.1), detailed face, highly detailed face, detailed eyes, consistent facial proportions, facial detail emphasis',
+      ),
+    ];
+  }
+
+  /// Older releases added these traits as normal feature chips.  Retain the
+  /// values only for one-way local-storage migration to the class head phrase.
+  List<String> get legacyFeatureTagsForMigration => usesElementalMasterProfile
+      ? const <String>[
+          'purple hair',
+          'long hair',
+          'purple eyes',
+          'low twintails',
+          'ahoge',
+          'x-shaped hairclip',
+        ]
+      : const <String>[];
+
+  /// The Elemental Master card keeps its class identity, official-design cues,
+  /// and head profile in separate context blocks. Its clothing block therefore
+  /// contains clothing only, preventing the same information from being
+  /// rendered twice or resolved as an ordinary character feature.
+  String get outfitOnlyPhrase {
+    final seen = <String>{};
+    return visualDetails
+        .map((detail) => detail.en)
+        .where((value) => value.trim().isNotEmpty)
+        .where((value) => seen.add(value.trim().toLowerCase()))
+        .join(', ');
+  }
+
   /// A canonical job outfit needs to survive as one visual unit.  Retain the
   /// detailed phrases inside one tag instead of exposing every component as a
   /// separately editable garment after it is applied.
   String get unifiedOutfitPhrase {
+    if (usesElementalMasterProfile) return outfitOnlyPhrase;
     final seen = <String>{};
     return <String>[
       en,
@@ -166,8 +243,7 @@ class _ElswordJobOutfit {
   /// Every class card can optionally attach one complete weapon description.
   /// These are separate from the outfit phrase so users may retain a faithful
   /// outfit silhouette without forcing its weapon into every prompt.
-  bool get usesElementalMasterStaff =>
-      characterEn == 'Aisha' && jobEn == 'Elemental Master';
+  bool get usesElementalMasterStaff => usesElementalMasterProfile;
 
   String get weaponTagId {
     if (usesElementalMasterStaff) {
@@ -976,6 +1052,8 @@ final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
                 '套用 ${job.characterZh}・${job.jobZh} 的完整原作轉職服裝片語；保留整體造型，只開放全身穿脫／暴露狀態調整。專屬武器可在此套裝卡中另行選擇。',
             pieces: const <OutfitPiecePresetData>[],
             featureTags: job.featureTags,
+            contextPhrases: job.contextPhrases,
+            legacyFeatureTagsForMigration: job.legacyFeatureTagsForMigration,
             unifiedPhraseZh: job.zh,
             unifiedPhraseEn: job.unifiedOutfitPhrase,
             equipmentTagIds: <String>[job.weaponTagId],

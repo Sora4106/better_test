@@ -36,6 +36,24 @@ class OutfitPiecePresetData {
   final List<String> patterns;
 }
 
+/// A complete phrase that accompanies a reference outfit without being exposed
+/// as an ordinary, reusable character trait.  This is used for class-specific
+/// identity, official-design, and canonical-head-description blocks whose
+/// wording must stay together with the outfit that introduced them.
+class OutfitReferenceContextPhraseData {
+  const OutfitReferenceContextPhraseData({
+    required this.id,
+    required this.group,
+    required this.zh,
+    required this.en,
+  });
+
+  final String id;
+  final String group;
+  final String zh;
+  final String en;
+}
+
 class OutfitReferencePresetData {
   const OutfitReferencePresetData({
     required this.id,
@@ -49,6 +67,8 @@ class OutfitReferencePresetData {
     this.mood,
     this.occasion,
     this.featureTags = const <String>[],
+    this.contextPhrases = const <OutfitReferenceContextPhraseData>[],
+    this.legacyFeatureTagsForMigration = const <String>[],
     this.detailTags = const <String>[],
     this.detailTagIds = const <String>[],
     this.unifiedPhraseZh,
@@ -72,6 +92,17 @@ class OutfitReferencePresetData {
   /// Optional non-clothing traits that belong to the complete look, such as
   /// coloured animal ears or a tail. They remain editable after applying.
   final List<String> featureTags;
+
+  /// Complete class/canonical-character phrase blocks that are selected with
+  /// this reference only. They are deliberately separate from [featureTags]
+  /// so a job-specific hairstyle or facial profile cannot leak into another
+  /// job for the same character.
+  final List<OutfitReferenceContextPhraseData> contextPhrases;
+
+  /// Obsolete ordinary feature tags previously applied by this reference.
+  /// Runtime restore uses this only to replace old saved selections with
+  /// [contextPhrases]; new references never emit these separately.
+  final List<String> legacyFeatureTagsForMigration;
 
   /// Optional outfit-specific descriptions. These are kept in the clothing
   /// block of a template (rather than becoming general positive tags), which

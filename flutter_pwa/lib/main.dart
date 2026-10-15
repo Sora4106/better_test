@@ -17,6 +17,7 @@ import 'expanded_tag_data.dart';
 import 'expression_catalog_data.dart';
 import 'hair_style_package_data.dart';
 import 'outfit_reference_catalog.dart';
+import 'outfit_reference_data.dart' hide outfitReferencePresets;
 import 'object_catalog_data.dart';
 import 'prompt_package_data.dart';
 
@@ -4314,6 +4315,7 @@ const _scopedClothingPrefix = 'clothing_scope_';
 // UI-only group: all selected clothing wear-state tags are shown together.
 const _allClothingWearGroup = 'clothing_all_wear';
 const _unifiedOutfitPhraseTagIdPrefix = 'outfit_phrase_';
+const _outfitReferenceContextPhraseTagIdPrefix = 'outfit_context_';
 const _unifiedOutfitWearScopes = <String>[
   'outerwear',
   'top',
@@ -8303,6 +8305,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   late final List<TagItem> _builtIns = _seedTags();
   late final List<TagItem> _unifiedOutfitPhraseTags =
       _createUnifiedOutfitPhraseTags();
+  late final List<TagItem> _outfitReferenceContextPhraseTags =
+      _createOutfitReferenceContextPhraseTags();
   late final List<TagItem> _supplemental = [
     ...supplementalTags,
     ...expressionCatalogTags,
@@ -8423,6 +8427,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     for (final tag in [
       ..._builtIns,
       ..._unifiedOutfitPhraseTags,
+      ..._outfitReferenceContextPhraseTags,
       ..._supplemental,
       ..._scopedClothingTags,
       ...catalogTraitTags,
@@ -8451,6 +8456,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // with a generic tag (for example `wide sleeves`). Keep both IDs so an
       // Elsword outfit reference always restores its own classified phrase.
       final preserveElswordJobPhrase = _isElswordJobDetailGroup(tag.group);
+      final preserveOutfitReferenceContextPhrase =
+          _isOutfitReferenceContextPhraseTag(tag);
       final key = preserveExpressionSymbol
           ? 'expression-symbol:${tag.en.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ')}'
           : englishKey.isEmpty
@@ -8458,7 +8465,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               : (_isScopedClothingGroup(tag.group) ||
                       preserveClothingColorGroup ||
                       preserveTaxonomyGarment ||
-                      preserveElswordJobPhrase)
+                      preserveElswordJobPhrase ||
+                      preserveOutfitReferenceContextPhrase)
                   ? 'en:$englishKey:${tag.group}'
                   : 'en:$englishKey';
       unique.putIfAbsent(key, () => tag);
@@ -8543,6 +8551,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _unifiedOutfitPhraseTagId(OutfitReferencePresetData preset) =>
       '$_unifiedOutfitPhraseTagIdPrefix${preset.id}';
 
+  String _outfitReferenceContextPhraseTagId(
+    OutfitReferencePresetData preset,
+    OutfitReferenceContextPhraseData phrase,
+  ) =>
+      '$_outfitReferenceContextPhraseTagIdPrefix${preset.id}_${phrase.id}';
+
   List<TagItem> _createUnifiedOutfitPhraseTags() {
     var order = 1;
     return <TagItem>[
@@ -8559,8 +8573,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ];
   }
 
+  List<TagItem> _createOutfitReferenceContextPhraseTags() {
+    var order = 1;
+    return <TagItem>[
+      for (final preset in outfitReferencePresets)
+        for (final phrase in preset.contextPhrases)
+          TagItem(
+            id: _outfitReferenceContextPhraseTagId(preset, phrase),
+            group: phrase.group,
+            zh: phrase.zh.trim(),
+            en: phrase.en.trim(),
+            order: order++,
+            support: 'description',
+          ),
+    ];
+  }
+
   bool _isUnifiedOutfitPhraseTag(TagItem tag) =>
       tag.id.startsWith(_unifiedOutfitPhraseTagIdPrefix);
+
+  bool _isOutfitReferenceContextPhraseTag(TagItem tag) =>
+      tag.id.startsWith(_outfitReferenceContextPhraseTagIdPrefix);
 
   /// Old Elsword job garment entries stay registered for saved prompts and
   /// reverse matching, but new selections go through the one-piece canonical
@@ -8817,6 +8850,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ].toSet().toList();
 
   int _outputGroupOrder(String group) {
+    // Canonical class outfit context must follow the selected character/source
+    // and precede the actual clothing block.
+    if (group == elswordJobIdentityGroup) return 9;
+    if (group == elswordJobOfficialDesignGroup) return 9;
+    if (group == elswordJobHeadFeatureGroup) return 9;
     if (group == _animalTraitGroup) return 18;
     if (group == _wingTypeGroup || _physicalTraitColorGroups.contains(group)) {
       return 18;
@@ -9069,6 +9107,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '胸部',
         '裸露',
         _canonicalOutfitFeatureGroup,
+        elswordJobIdentityGroup,
+        elswordJobOfficialDesignGroup,
+        elswordJobHeadFeatureGroup,
       }.contains(tag.group) ||
       _isStaticFaceAppearanceTag(tag);
 
@@ -11881,6 +11922,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     '髮色',
     '髮長',
     '髮型',
+    elswordJobIdentityGroup,
+    elswordJobOfficialDesignGroup,
+    elswordJobHeadFeatureGroup,
     '額外特徵',
     '額外特徵位置',
     '額外特徵顏色',
@@ -12062,6 +12106,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .map((tag) => tag.group)
             .where((group) => !_isScopedClothingGroup(group))
             .where((group) => group != '髮色' && group != '臉部特徵')
+            .where((group) => !elswordJobContextPhraseGroups.contains(group))
             .toSet(),
         _staticFaceAppearanceGroup,
         _expressionEyesGroup,
@@ -12354,6 +12399,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
   }
 
+  /// Replaces the Elemental Master traits that older builds stored as ordinary
+  /// Aisha feature chips with the class-scoped phrase blocks introduced later.
+  /// This only runs when that exact canonical outfit is already selected.
+  bool _migrateOutfitReferenceContextPhrases(Set<String> ids) {
+    var changed = false;
+    for (final preset in outfitReferencePresets) {
+      if (preset.contextPhrases.isEmpty || !preset.usesUnifiedPhrase) continue;
+      if (!ids.contains(_unifiedOutfitPhraseTagId(preset))) continue;
+
+      for (final phrase in preset.contextPhrases) {
+        changed = ids.add(_outfitReferenceContextPhraseTagId(preset, phrase)) ||
+            changed;
+      }
+      for (final value in preset.legacyFeatureTagsForMigration) {
+        final legacy = _outfitReferenceExactTag(_allTags, value);
+        if (legacy != null && ids.remove(legacy.id)) changed = true;
+      }
+    }
+    return changed;
+  }
+
   void _restore() {
     final raw = html.window.localStorage[_storageKey];
     if (raw == null) return;
@@ -12508,6 +12574,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _migrateConsolidatedWearTagIds(ids);
         _migrateClothingTaxonomyTagIds(ids);
         _migrateLegacyLowerBodyColorIds(ids);
+        restoredDuplicatesMigrated =
+            _migrateOutfitReferenceContextPhrases(ids) ||
+                restoredDuplicatesMigrated;
       }
       for (final combination in _combinations) {
         final migrated = combination.tagIds.toSet();
@@ -13948,7 +14017,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ).hasMatch(result)) {
       return '';
     }
-    return _canonicalModelTag(result);
+    // Keep explicitly weighted sub-phrases intact. Escaping their parentheses
+    // would turn `(oval face:1.15)` into literal text instead of a model
+    // weight, which is especially harmful for canonical class-head profiles.
+    final hasExplicitWeight =
+        RegExp(r'\([^()]+:\s*\d+(?:\.\d+)?\)').hasMatch(result);
+    return _canonicalModelTag(result, escapeParentheses: !hasExplicitWeight);
   }
 
   List<String> get _negativeTokens {
@@ -18567,6 +18641,41 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList(growable: false);
   }
 
+  List<TagItem> _outfitReferenceContextTags(OutfitReferencePresetData preset) {
+    return preset.contextPhrases
+        .map((phrase) =>
+            _tagsById[_outfitReferenceContextPhraseTagId(preset, phrase)])
+        .whereType<TagItem>()
+        .toList(growable: false);
+  }
+
+  bool _outfitReferenceContextPhraseSelected(
+    OutfitReferencePresetData preset,
+    OutfitReferenceContextPhraseData phrase,
+    int personIndex,
+  ) =>
+      _personTagIds(personIndex)
+          .contains(_outfitReferenceContextPhraseTagId(preset, phrase));
+
+  void _toggleOutfitReferenceContextPhrase(
+    OutfitReferencePresetData preset,
+    OutfitReferenceContextPhraseData phrase,
+    int personIndex,
+    bool include,
+  ) {
+    final id = _outfitReferenceContextPhraseTagId(preset, phrase);
+    if (!_tagsById.containsKey(id)) return;
+    setState(() {
+      final selected = _personTagIds(personIndex);
+      if (include) {
+        selected.add(id);
+      } else {
+        selected.remove(id);
+      }
+      _persist();
+    });
+  }
+
   bool _outfitReferenceEquipmentSelected(
     OutfitReferencePresetData preset,
     int personIndex,
@@ -18724,6 +18833,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
 
+    for (final phrase in preset.contextPhrases) {
+      addTag(
+        _tagsById[_outfitReferenceContextPhraseTagId(preset, phrase)],
+        '套裝片語／${phrase.zh}',
+      );
+    }
     for (final value in preset.featureTags) {
       addTag(_outfitReferenceExactTag(_allTags, value), '角色特徵／$value');
     }
@@ -18765,6 +18880,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       name: preset.name,
       tagIds: resolved.tags.map((tag) => tag.id).toList(),
       extraPositive: '',
+      kind: 'clothing',
     );
   }
 
@@ -18914,13 +19030,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               tagId: tag.id,
               tagIds: [tag.id],
             ));
-    return [...clothing, ...other];
+    final beforeClothing = other.where((tag) {
+      final source = _tagsById[tag.tagId];
+      return source != null && _outputGroupOrder(source.group) < 20;
+    });
+    final afterClothing = other.where((tag) {
+      final source = _tagsById[tag.tagId];
+      return source == null || _outputGroupOrder(source.group) >= 20;
+    });
+    return [...beforeClothing, ...clothing, ...afterClothing];
   }
 
   void _removeCurrentClothingForCombination(Set<String> selectedIds) {
     selectedIds.removeWhere((id) {
       final tag = _tagsById[id];
-      return tag != null && _isClothingOrEquipmentTag(tag);
+      return tag != null &&
+          (_isClothingOrEquipmentTag(tag) ||
+              _isOutfitReferenceContextPhraseTag(tag));
     });
   }
 
@@ -24237,6 +24363,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   final equipment = _outfitReferenceEquipmentTags(preset);
                   final equipmentSelected =
                       _outfitReferenceEquipmentSelected(preset, personIndex);
+                  final contextTags = _outfitReferenceContextTags(preset);
                   return SizedBox(
                     width: cardWidth,
                     child: Container(
@@ -24283,6 +24410,41 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           ),
                           const SizedBox(height: 6),
                           Text(preset.description),
+                          if (contextTags.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            const Text(
+                              '職業設定與頭部特徵',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                for (final phrase in preset.contextPhrases)
+                                  FilterChip(
+                                    avatar: const Icon(Icons.auto_awesome,
+                                        size: 16),
+                                    label: Text(phrase.zh),
+                                    selected:
+                                        _outfitReferenceContextPhraseSelected(
+                                      preset,
+                                      phrase,
+                                      personIndex,
+                                    ),
+                                    onSelected: outfitSelected
+                                        ? (selected) =>
+                                            _toggleOutfitReferenceContextPhrase(
+                                              preset,
+                                              phrase,
+                                              personIndex,
+                                              selected,
+                                            )
+                                        : null,
+                                  ),
+                              ],
+                            ),
+                          ],
                           if (equipment.isNotEmpty) ...[
                             const SizedBox(height: 10),
                             const Text(
