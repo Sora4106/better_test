@@ -142,6 +142,26 @@ class _ElswordJobOutfit {
         _ElswordStyleDetail('$jobZh職業套裝', '${jobEn.toLowerCase()} outfit'),
         ...look.details,
       ];
+
+  /// A canonical job outfit needs to survive as one visual unit.  Retain the
+  /// detailed phrases inside one tag instead of exposing every component as a
+  /// separately editable garment after it is applied.
+  String get unifiedOutfitPhrase {
+    final seen = <String>{};
+    return <String>[
+      en,
+      'official outfit',
+      'canon outfit',
+      'official character design',
+      'character accurate',
+      'official game style',
+      'original class outfit',
+      ...visualDetails.map((detail) => detail.en),
+    ]
+        .where((value) => value.trim().isNotEmpty)
+        .where((value) => seen.add(value.trim().toLowerCase()))
+        .join(', ');
+  }
 }
 
 String _elswordVisualDetailId(String english) =>
@@ -861,9 +881,10 @@ final List<CatalogTagData> elswordJobVisualDetailTags =
       )),
 );
 
-/// Complete built-in references. Aisha's Elemental Master uses the detailed
-/// user-provided silhouette; the other paths are editable visual references
-/// aligned with their official class names and themes.
+/// Complete built-in references. Each job is applied as one canonical outfit
+/// phrase so the original silhouette is kept intact. Full-body wear/exposure
+/// controls remain available after applying, while an optional class weapon is
+/// shown next to the outfit card when the catalog contains one.
 final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
     List<OutfitReferencePresetData>.unmodifiable(
   _elswordJobs
@@ -873,14 +894,15 @@ final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
             name: job.zh,
             palette: job.look.palette,
             description:
-                '套用 ${job.characterZh}・${job.jobZh} 的職業服裝與髮型參考；服裝部位、顏色、穿脫與髮型皆可於套用後自行調整。',
-            pieces: [
-              OutfitPiecePresetData(scope: 'costume', garment: job.en),
-            ],
+                '套用 ${job.characterZh}・${job.jobZh} 的完整原作轉職服裝片語；保留整體造型，只開放全身穿脫／暴露狀態調整。專屬武器可在此套裝卡中另行選擇。',
+            pieces: const <OutfitPiecePresetData>[],
             featureTags: job.featureTags,
-            detailTagIds: job.presetVisualDetails
-                .map((detail) => _elswordVisualDetailId(detail.en))
-                .toList(),
+            unifiedPhraseZh: job.zh,
+            unifiedPhraseEn: job.unifiedOutfitPhrase,
+            equipmentTagIds:
+                job.characterEn == 'Aisha' && job.jobEn == 'Elemental Master'
+                    ? const <String>['obj_fantasy_elemental_master_staff']
+                    : const <String>[],
             ownerCharacterTags: job.ownerCharacterTag.isEmpty
                 ? const <String>[]
                 : <String>[job.ownerCharacterTag],

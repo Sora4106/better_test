@@ -4306,6 +4306,23 @@ const _legacyClothingWearGroup = '\u7A7F\u812B\u72C0\u614B';
 const _scopedClothingPrefix = 'clothing_scope_';
 // UI-only group: all selected clothing wear-state tags are shown together.
 const _allClothingWearGroup = 'clothing_all_wear';
+const _unifiedOutfitPhraseTagIdPrefix = 'outfit_phrase_';
+const _unifiedOutfitWearScopes = <String>[
+  'outerwear',
+  'top',
+  'sleeves',
+  'onepiece',
+  'costume',
+  'pants',
+  'shorts',
+  'skirt',
+  'underwear',
+  'bra',
+  'panties',
+  'socks',
+  'shoes',
+  'accessory',
+];
 const _outfitMainStyleGroup = '服裝・主要風格';
 const _outfitSubStyleGroup = '服裝・子風格';
 const _outfitMoodGroup = '服裝・氣質';
@@ -8277,6 +8294,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   ];
 
   late final List<TagItem> _builtIns = _seedTags();
+  late final List<TagItem> _unifiedOutfitPhraseTags =
+      _createUnifiedOutfitPhraseTags();
   late final List<TagItem> _supplemental = [
     ...supplementalTags,
     ...expressionCatalogTags,
@@ -8395,6 +8414,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final unique = <String, TagItem>{};
     for (final tag in [
       ..._builtIns,
+      ..._unifiedOutfitPhraseTags,
       ..._supplemental,
       ..._scopedClothingTags,
       ...catalogTraitTags,
@@ -8511,6 +8531,34 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
     ];
   }
+
+  String _unifiedOutfitPhraseTagId(OutfitReferencePresetData preset) =>
+      '$_unifiedOutfitPhraseTagIdPrefix${preset.id}';
+
+  List<TagItem> _createUnifiedOutfitPhraseTags() {
+    var order = 1;
+    return <TagItem>[
+      for (final preset in outfitReferencePresets)
+        if (preset.usesUnifiedPhrase)
+          TagItem(
+            id: _unifiedOutfitPhraseTagId(preset),
+            group: _clothingGroupCostume,
+            zh: preset.unifiedPhraseZh!.trim(),
+            en: preset.unifiedPhraseEn!.trim(),
+            order: order++,
+            support: 'description',
+          ),
+    ];
+  }
+
+  bool _isUnifiedOutfitPhraseTag(TagItem tag) =>
+      tag.id.startsWith(_unifiedOutfitPhraseTagIdPrefix);
+
+  /// Old Elsword job garment entries stay registered for saved prompts and
+  /// reverse matching, but new selections go through the one-piece canonical
+  /// phrase on the outfit-reference card instead of exposing their components.
+  bool _isLegacyElswordOutfitBaseTag(TagItem tag) =>
+      tag.id.startsWith('catalog_taxonomy_costume_elsword_');
 
   /// Returns the colour part of a hair descriptor while rejecting lengths and
   /// hairstyles. This also recognises catalogue-specific shades such as
@@ -8662,7 +8710,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     if (clothingBaseGroups.contains(group)) {
       return (_clothingBasesByDisplayGroupCache![group] ?? const <TagItem>[])
-          .where((tag) => !_isEquipmentArmorTag(tag))
+          .where((tag) =>
+              !_isEquipmentArmorTag(tag) &&
+              !_isUnifiedOutfitPhraseTag(tag) &&
+              !_isLegacyElswordOutfitBaseTag(tag))
           .toList();
     }
     if (group == _allClothingWearGroup) {
@@ -9603,6 +9654,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> _clothingStyleGroupsForBase(TagItem base) {
+    if (_isUnifiedOutfitPhraseTag(base)) return const <String>[];
     if (_isClothingAbsenceBase(base)) return const <String>[];
     final scope = _clothingScopeForBase(base);
     if (scope == null) return const <String>[];
@@ -9618,6 +9670,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> _clothingDetailGroupsForBase(TagItem base) {
+    if (_isUnifiedOutfitPhraseTag(base)) return const <String>[];
     if (_isClothingAbsenceBase(base)) return const <String>[];
     final scope = _clothingScopeForBase(base);
     if (scope == null) return const <String>[];
@@ -9643,6 +9696,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   List<String> _clothingWearGroupsForBase(TagItem base) {
+    if (_isUnifiedOutfitPhraseTag(base)) {
+      return <String>[
+        _legacyClothingWearGroup,
+        for (final scope in _unifiedOutfitWearScopes)
+          _scopedClothingGroup(scope, 'wear'),
+      ];
+    }
     if (_isClothingAbsenceBase(base)) return const <String>[];
     final scope = _clothingScopeForBase(base);
     return scope == null
@@ -9843,6 +9903,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String? _clothingColorGroupForBase(TagItem base) {
+    if (_isUnifiedOutfitPhraseTag(base)) return null;
     if (_isClothingAbsenceBase(base)) return null;
     return switch (_clothingScopeForBase(base)) {
       'sleeves' => '上衣袖子顏色',
@@ -9867,6 +9928,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String? _clothingTrimColorGroupForBase(TagItem base) {
+    if (_isUnifiedOutfitPhraseTag(base)) return null;
     if (_isClothingAbsenceBase(base)) return null;
     return switch (_clothingScopeForBase(base)) {
       'sleeves' => '上衣袖子次色',
@@ -10698,8 +10760,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     Iterable<TagItem> source, {
     int? personIndex,
   }) {
-    final selected =
-        source.where((tag) => _isClothingGroup(tag.group)).toList();
+    final selected = source
+        .where((tag) => _isClothingGroup(tag.group) || _isEquipmentTag(tag))
+        .toList();
     final bases = _clothingDesignBases(selected);
     final consumed = <String>{};
     final result = <_GeneratedOutputTag>[];
@@ -10707,6 +10770,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     for (final base in bases) {
       final scope = _clothingScopeForBase(base);
       if (scope == null) continue;
+      if (_isUnifiedOutfitPhraseTag(base)) {
+        // Keep canonical class outfits intact.  The long phrase is one
+        // clothing component by design; only separately selected full-body
+        // wear / exposure states may be appended to its block below.
+        consumed.add(base.id);
+        result.add(_GeneratedOutputTag(
+          zh: base.zh,
+          en: base.en,
+          tagId: base.id,
+          tagIds: [base.id],
+          personIndex: personIndex,
+          clothingBlockKey: 'costume',
+        ));
+        continue;
+      }
       final related = <TagItem>[base];
       final colorGroup = _clothingColorGroupForBase(base);
       final mainColor = colorGroup == null
@@ -10945,8 +11023,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     for (final base in bases) {
       final scope = _clothingScopeForBase(base);
       if (scope == null) continue;
-      for (final tag in selected
-          .where((tag) => tag.group == _scopedClothingGroup(scope, 'wear'))) {
+      final wearGroups = _isUnifiedOutfitPhraseTag(base)
+          ? <String>{
+              _legacyClothingWearGroup,
+              for (final slot in _unifiedOutfitWearScopes)
+                _scopedClothingGroup(slot, 'wear'),
+            }
+          : <String>{_scopedClothingGroup(scope, 'wear')};
+      for (final tag in selected.where((tag) =>
+          wearGroups.contains(tag.group) && !consumed.contains(tag.id))) {
         consumed.add(tag.id);
         result.add(_GeneratedOutputTag(
           zh: tag.zh,
@@ -10954,7 +11039,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           tagId: tag.id,
           tagIds: [tag.id],
           personIndex: personIndex,
-          clothingBlockKey: _clothingPromptBlockKey(scope, base),
+          clothingBlockKey: _isUnifiedOutfitPhraseTag(base)
+              ? 'costume'
+              : _clothingPromptBlockKey(scope, base),
         ));
       }
     }
@@ -10965,6 +11052,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         tagId: tag.id,
         tagIds: [tag.id],
         personIndex: personIndex,
+        clothingBlockKey: _isEquipmentTag(tag) ? 'equipment' : null,
       ));
     }
     return result;
@@ -11693,8 +11781,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...combinationExtra.expand((tag) => tag.tagIds),
     };
     final other = selected
-        .where(
-            (tag) => !_isClothingGroup(tag.group) && !covered.contains(tag.id))
+        .where((tag) =>
+            !_isClothingOrEquipmentTag(tag) && !covered.contains(tag.id))
         .map((tag) => _GeneratedOutputTag(
               zh: tag.zh,
               en: tag.en,
@@ -18456,6 +18544,41 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
+  List<TagItem> _outfitReferenceEquipmentTags(
+      OutfitReferencePresetData preset) {
+    return preset.equipmentTagIds
+        .map(_outfitReferenceDetailTagById)
+        .whereType<TagItem>()
+        .toList(growable: false);
+  }
+
+  bool _outfitReferenceEquipmentSelected(
+    OutfitReferencePresetData preset,
+    int personIndex,
+  ) {
+    final equipment = _outfitReferenceEquipmentTags(preset);
+    return equipment.isNotEmpty &&
+        equipment.every((tag) => _personTagIds(personIndex).contains(tag.id));
+  }
+
+  void _toggleOutfitReferenceEquipment(
+    OutfitReferencePresetData preset,
+    int personIndex,
+    bool include,
+  ) {
+    final equipment = _outfitReferenceEquipmentTags(preset);
+    if (equipment.isEmpty) return;
+    setState(() {
+      final selected = _personTagIds(personIndex);
+      if (include) {
+        selected.addAll(equipment.map((tag) => tag.id));
+      } else {
+        selected.removeAll(equipment.map((tag) => tag.id));
+      }
+      _persist();
+    });
+  }
+
   _OutfitReferenceResolution _resolveOutfitReference(
       OutfitReferencePresetData preset) {
     final cached = _outfitReferenceCache[preset.id];
@@ -18473,109 +18596,116 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       if (ids.add(tag.id)) tags.add(tag);
     }
 
-    for (final piece in preset.pieces) {
-      final hiddenTaxonomyIds =
-          _hiddenTaxonomyDuplicateIdsCache ?? const <String>{};
-      final baseCandidates = _allTags
-          .where(_isClothingBaseTag)
-          .where((tag) => _clothingScopeForBase(tag) == piece.scope)
-          .toList()
-        ..sort((a, b) {
-          // The picker hides taxonomy tags that duplicate a visible legacy
-          // tag. Prefer that visible equivalent so a template's base garment
-          // remains visibly checked after applying the template.
-          final aHidden = hiddenTaxonomyIds.contains(a.id);
-          final bHidden = hiddenTaxonomyIds.contains(b.id);
-          if (aHidden != bHidden) return aHidden ? 1 : -1;
-          final aTaxonomy = a.id.startsWith('catalog_taxonomy_') ? 0 : 1;
-          final bTaxonomy = b.id.startsWith('catalog_taxonomy_') ? 0 : 1;
-          return aTaxonomy.compareTo(bTaxonomy);
-        });
-      final base = _outfitReferenceExactTag(baseCandidates, piece.garment);
-      addTag(base, '${piece.garment}（服裝主體）');
-      if (base == null) continue;
+    if (preset.usesUnifiedPhrase) {
+      addTag(
+        _outfitReferenceExactTag(_allTags, preset.unifiedPhraseEn!),
+        '完整套裝片語／${preset.name}',
+      );
+    } else {
+      for (final piece in preset.pieces) {
+        final hiddenTaxonomyIds =
+            _hiddenTaxonomyDuplicateIdsCache ?? const <String>{};
+        final baseCandidates = _allTags
+            .where(_isClothingBaseTag)
+            .where((tag) => _clothingScopeForBase(tag) == piece.scope)
+            .toList()
+          ..sort((a, b) {
+            // The picker hides taxonomy tags that duplicate a visible legacy
+            // tag. Prefer that visible equivalent so a template's base garment
+            // remains visibly checked after applying the template.
+            final aHidden = hiddenTaxonomyIds.contains(a.id);
+            final bHidden = hiddenTaxonomyIds.contains(b.id);
+            if (aHidden != bHidden) return aHidden ? 1 : -1;
+            final aTaxonomy = a.id.startsWith('catalog_taxonomy_') ? 0 : 1;
+            final bTaxonomy = b.id.startsWith('catalog_taxonomy_') ? 0 : 1;
+            return aTaxonomy.compareTo(bTaxonomy);
+          });
+        final base = _outfitReferenceExactTag(baseCandidates, piece.garment);
+        addTag(base, '${piece.garment}（服裝主體）');
+        if (base == null) continue;
 
-      TagItem? dimension(String kind, String value) {
-        final kinds = kind == 'cut'
-            ? const ['cut', 'upper_cut', 'lower_cut']
-            : <String>[kind];
-        return _outfitReferenceExactTag(
-          kinds.expand(
-            (candidateKind) =>
-                _tagsByGroup[
-                    _scopedClothingGroup(piece.scope, candidateKind)] ??
-                const <TagItem>[],
-          ),
-          value,
-        );
-      }
+        TagItem? dimension(String kind, String value) {
+          final kinds = kind == 'cut'
+              ? const ['cut', 'upper_cut', 'lower_cut']
+              : <String>[kind];
+          return _outfitReferenceExactTag(
+            kinds.expand(
+              (candidateKind) =>
+                  _tagsByGroup[
+                      _scopedClothingGroup(piece.scope, candidateKind)] ??
+                  const <TagItem>[],
+            ),
+            value,
+          );
+        }
 
-      TagItem? colorForGroup(String? group, String color) {
-        if (group == null) return null;
-        final expected = _englishTagKey(color);
-        return (_tagsByGroup[group] ?? const <TagItem>[])
-            .cast<TagItem?>()
-            .firstWhere(
-          (tag) {
-            if (tag == null) return false;
-            final tagColor = _clothingColorWord(tag);
-            if (tagColor == color) return true;
-            final tagKey = _englishTagKey(tag.en);
-            return tagKey == expected || tagKey.startsWith('$expected ');
-          },
-          orElse: () => null,
-        );
-      }
+        TagItem? colorForGroup(String? group, String color) {
+          if (group == null) return null;
+          final expected = _englishTagKey(color);
+          return (_tagsByGroup[group] ?? const <TagItem>[])
+              .cast<TagItem?>()
+              .firstWhere(
+            (tag) {
+              if (tag == null) return false;
+              final tagColor = _clothingColorWord(tag);
+              if (tagColor == color) return true;
+              final tagKey = _englishTagKey(tag.en);
+              return tagKey == expected || tagKey.startsWith('$expected ');
+            },
+            orElse: () => null,
+          );
+        }
 
-      if (piece.cut != null) {
-        addTag(dimension('cut', piece.cut!), '${piece.garment}／${piece.cut}');
-      }
-      if (piece.fit != null) {
-        addTag(dimension('fit', piece.fit!), '${piece.garment}／${piece.fit}');
-      }
-      if (piece.length != null) {
-        addTag(dimension('length', piece.length!),
-            '${piece.garment}／${piece.length}');
-      }
-      for (final value in piece.materials) {
-        addTag(dimension('material', value), '${piece.garment}／$value');
-      }
-      for (final value in piece.details) {
-        addTag(dimension('detail', value), '${piece.garment}／$value');
-      }
-      for (final value in piece.patterns) {
-        addTag(dimension('pattern', value), '${piece.garment}／$value');
-      }
-      for (final value in piece.styles) {
-        final styleCandidates = _allTags.where((tag) {
-          if (_clothingScopeForTag(tag) != piece.scope) return false;
-          return _scopedClothingKind(tag.group) == 'style' ||
-              _isLegacyClothingStyleTag(tag);
-        });
-        addTag(_outfitReferenceExactTag(styleCandidates, value),
-            '${piece.garment}／$value');
-      }
+        if (piece.cut != null) {
+          addTag(dimension('cut', piece.cut!), '${piece.garment}／${piece.cut}');
+        }
+        if (piece.fit != null) {
+          addTag(dimension('fit', piece.fit!), '${piece.garment}／${piece.fit}');
+        }
+        if (piece.length != null) {
+          addTag(dimension('length', piece.length!),
+              '${piece.garment}／${piece.length}');
+        }
+        for (final value in piece.materials) {
+          addTag(dimension('material', value), '${piece.garment}／$value');
+        }
+        for (final value in piece.details) {
+          addTag(dimension('detail', value), '${piece.garment}／$value');
+        }
+        for (final value in piece.patterns) {
+          addTag(dimension('pattern', value), '${piece.garment}／$value');
+        }
+        for (final value in piece.styles) {
+          final styleCandidates = _allTags.where((tag) {
+            if (_clothingScopeForTag(tag) != piece.scope) return false;
+            return _scopedClothingKind(tag.group) == 'style' ||
+                _isLegacyClothingStyleTag(tag);
+          });
+          addTag(_outfitReferenceExactTag(styleCandidates, value),
+              '${piece.garment}／$value');
+        }
 
-      if (piece.mainColor != null) {
-        final color = colorForGroup(
-          _clothingColorGroupForBase(base),
-          piece.mainColor!,
-        );
-        addTag(color, '${piece.garment}／主色 ${piece.mainColor}');
-      }
-      if (piece.secondaryColor != null) {
-        final color = colorForGroup(
-          _clothingTrimColorGroupForBase(base),
-          piece.secondaryColor!,
-        );
-        addTag(color, '${piece.garment}／次色 ${piece.secondaryColor}');
-      }
-      if (piece.detailColor != null) {
-        final color = colorForGroup(
-          _scopedClothingGroup(piece.scope, 'detail_color'),
-          piece.detailColor!,
-        );
-        addTag(color, '${piece.garment}／細節色 ${piece.detailColor}');
+        if (piece.mainColor != null) {
+          final color = colorForGroup(
+            _clothingColorGroupForBase(base),
+            piece.mainColor!,
+          );
+          addTag(color, '${piece.garment}／主色 ${piece.mainColor}');
+        }
+        if (piece.secondaryColor != null) {
+          final color = colorForGroup(
+            _clothingTrimColorGroupForBase(base),
+            piece.secondaryColor!,
+          );
+          addTag(color, '${piece.garment}／次色 ${piece.secondaryColor}');
+        }
+        if (piece.detailColor != null) {
+          final color = colorForGroup(
+            _scopedClothingGroup(piece.scope, 'detail_color'),
+            piece.detailColor!,
+          );
+          addTag(color, '${piece.garment}／細節色 ${piece.detailColor}');
+        }
       }
     }
 
@@ -18632,8 +18762,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     await _applyCombination(_outfitReferenceCombination(preset), personIndex);
     if (!mounted) return;
-    final firstScope =
-        preset.pieces.map((piece) => piece.scope).cast<String?>().firstWhere(
+    final firstScope = preset.usesUnifiedPhrase
+        ? 'costume'
+        : preset.pieces.map((piece) => piece.scope).cast<String?>().firstWhere(
               (scope) => scope != null && scope.isNotEmpty,
               orElse: () => null,
             );
@@ -20719,11 +20850,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .map(_clothingScopeForBase)
             .whereType<String>()
             .toSet();
+    final hasUnifiedOutfitPhrase = personIndex != null &&
+        _clothingDesignBases(_selectedTagsForPerson(personIndex))
+            .any(_isUnifiedOutfitPhraseTag);
     final hiddenTaxonomyIds = _hiddenTaxonomyDuplicateIdsCache!;
     final tags = pickerTags.where((tag) {
       final allClothingWear = activeGroup == _allClothingWearGroup &&
           _scopedClothingKind(tag.group) == 'wear' &&
           (personIndex == null ||
+              hasUnifiedOutfitPhrase ||
               selectedClothingScopes.contains(_scopedClothingSlot(tag.group)));
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup = activeGroup == '表情' &&
@@ -23419,6 +23554,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<String> _clothingWearGroups(int personIndex, {String? activeGroup}) {
     final bases = _clothingBasesForActiveGroup(personIndex, activeGroup);
     if (bases.isEmpty) return const <String>[];
+    // A canonical outfit phrase has no editable garment components. Present
+    // all compatible wear / exposure controls through one virtual picker so
+    // the whole costume can be adjusted without first selecting every slot.
+    if (bases.any(_isUnifiedOutfitPhraseTag)) {
+      return const <String>[_allClothingWearGroup];
+    }
     return <String>[
       _legacyClothingWearGroup,
       ...bases.expand(_clothingWearGroupsForBase).toSet(),
@@ -23803,6 +23944,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   final applied = _personCombinationIds[personIndex]
                           ?.contains(preset.combinationId) ==
                       true;
+                  final outfitSelected = preset.usesUnifiedPhrase
+                      ? _personTagIds(personIndex)
+                          .contains(_unifiedOutfitPhraseTagId(preset))
+                      : applied;
+                  final equipment = _outfitReferenceEquipmentTags(preset);
+                  final equipmentSelected =
+                      _outfitReferenceEquipmentSelected(preset, personIndex);
                   return SizedBox(
                     width: cardWidth,
                     child: Container(
@@ -23847,6 +23995,56 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           ),
                           const SizedBox(height: 6),
                           Text(preset.description),
+                          if (equipment.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            const Text(
+                              '專屬武器／裝備',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: const Text('不含武器'),
+                                  selected: !equipmentSelected,
+                                  onSelected: outfitSelected
+                                      ? (selected) {
+                                          if (selected) {
+                                            _toggleOutfitReferenceEquipment(
+                                                preset, personIndex, false);
+                                          }
+                                        }
+                                      : null,
+                                ),
+                                ChoiceChip(
+                                  avatar:
+                                      const Icon(Icons.auto_fix_high, size: 17),
+                                  label: Text(
+                                    '含${equipment.map((tag) => tag.zh).join('、')}',
+                                  ),
+                                  selected: equipmentSelected,
+                                  onSelected: outfitSelected
+                                      ? (selected) {
+                                          if (selected) {
+                                            _toggleOutfitReferenceEquipment(
+                                                preset, personIndex, true);
+                                          }
+                                        }
+                                      : null,
+                                ),
+                              ],
+                            ),
+                            if (!outfitSelected)
+                              const Padding(
+                                padding: EdgeInsets.only(top: 5),
+                                child: Text(
+                                  '先套用服裝，再選擇是否附帶專屬武器。',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                          ],
                           if (resolution.missing.isNotEmpty) ...[
                             const SizedBox(height: 6),
                             Text(

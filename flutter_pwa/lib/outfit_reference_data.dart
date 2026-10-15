@@ -51,6 +51,9 @@ class OutfitReferencePresetData {
     this.featureTags = const <String>[],
     this.detailTags = const <String>[],
     this.detailTagIds = const <String>[],
+    this.unifiedPhraseZh,
+    this.unifiedPhraseEn,
+    this.equipmentTagIds = const <String>[],
     this.ownerCharacterTags = const <String>[],
     this.ownerCharacterLabel = '',
   });
@@ -83,6 +86,20 @@ class OutfitReferencePresetData {
   /// accident.
   final List<String> detailTagIds;
 
+  /// A complete outfit phrase that is emitted as one clothing block.  It is
+  /// useful for canonical character outfits whose silhouette should remain
+  /// intact instead of being rebuilt from individually editable garments.
+  /// When present, [pieces] is intentionally empty and the app only exposes
+  /// full-body wear / exposure controls for the selected outfit.
+  final String? unifiedPhraseZh;
+  final String? unifiedPhraseEn;
+
+  /// Optional equipment shown beside this outfit reference.  These store raw
+  /// [CatalogTagData.id] values and are deliberately not applied by default,
+  /// so a user can choose between the outfit alone and the outfit with its
+  /// associated weapon or equipment.
+  final List<String> equipmentTagIds;
+
   /// Model-facing character tags that are allowed to use this preset. Empty
   /// means the outfit is general-purpose and remains available to all people.
   final List<String> ownerCharacterTags;
@@ -106,6 +123,9 @@ class OutfitReferencePresetData {
   }
 
   bool get isCharacterSpecific => requiredCharacterTags.isNotEmpty;
+
+  bool get usesUnifiedPhrase =>
+      unifiedPhraseEn != null && unifiedPhraseEn!.trim().isNotEmpty;
 
   String get combinationId => 'builtin_outfit_reference_$id';
 }

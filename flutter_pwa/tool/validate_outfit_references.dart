@@ -2,6 +2,7 @@ import '../lib/clothing_taxonomy.dart';
 import '../lib/blue_outfit_reference_data.dart';
 import '../lib/catalog_data.dart';
 import '../lib/elsword_job_outfit_data.dart';
+import '../lib/object_catalog_data.dart';
 import '../lib/outfit_reference_catalog.dart';
 
 const _colors = <String>{
@@ -138,8 +139,13 @@ void main() {
   }
 
   for (final preset in outfitReferencePresets) {
-    if (preset.pieces.isEmpty) {
+    if (preset.pieces.isEmpty && !preset.usesUnifiedPhrase) {
       problems.add('${preset.id}: no garment pieces.');
+    }
+    if (preset.usesUnifiedPhrase &&
+        (preset.unifiedPhraseZh?.trim().isEmpty ?? true)) {
+      problems
+          .add('${preset.id}: unified outfit phrase is missing Chinese text.');
     }
     for (final ownerTag in preset.requiredCharacterTags) {
       final ownerExists = catalogCharacters.any(
@@ -157,6 +163,11 @@ void main() {
     for (final detailId in preset.detailTagIds) {
       if (!clothingTaxonomyTags.any((tag) => tag.id == detailId)) {
         problems.add('${preset.id}: missing outfit detail tag "$detailId".');
+      }
+    }
+    for (final equipmentId in preset.equipmentTagIds) {
+      if (!objectCatalogTags.any((tag) => tag.id == equipmentId)) {
+        problems.add('${preset.id}: missing equipment tag "$equipmentId".');
       }
     }
     for (final piece in preset.pieces) {
