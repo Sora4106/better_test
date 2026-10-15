@@ -18352,6 +18352,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return null;
   }
 
+  /// [OutfitReferencePresetData.detailTagIds] stores the stable raw ID from
+  /// [CatalogTagData]. Runtime picker tags are intentionally namespaced with
+  /// `catalog_`, so resolve both representations here. Without this bridge a
+  /// valid catalog detail was falsely reported as a missing setting and its
+  /// internal snake-case ID leaked into the reference-card preview.
+  TagItem? _outfitReferenceDetailTagById(String id) {
+    final raw = id.trim();
+    if (raw.isEmpty) return null;
+    final direct = _tagsById[raw];
+    if (direct != null) return direct;
+    if (!raw.startsWith('catalog_')) {
+      return _tagsById['catalog_$raw'];
+    }
+    return null;
+  }
+
   _OutfitReferenceResolution _resolveOutfitReference(
       OutfitReferencePresetData preset) {
     final cached = _outfitReferenceCache[preset.id];
@@ -18482,13 +18498,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       addTag(_outfitReferenceExactTag(_allTags, value), '套裝細節／$value');
     }
     for (final id in preset.detailTagIds) {
-      addTag(
-        _allTags.cast<TagItem?>().firstWhere(
-              (tag) => tag?.id == id,
-              orElse: () => null,
-            ),
-        '套裝細節／$id',
-      );
+      final detail = _outfitReferenceDetailTagById(id);
+      addTag(detail, '套裝細節／${detail?.en ?? id}');
     }
 
     void addOverall(String group, String? value) {

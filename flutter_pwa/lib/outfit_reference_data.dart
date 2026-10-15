@@ -75,9 +75,12 @@ class OutfitReferencePresetData {
   /// is useful for class outfits with signature coats, ornaments, or trims.
   final List<String> detailTags;
 
-  /// Optional direct catalog IDs for outfit details. Use this when a visual
-  /// phrase is intentionally shared by more than one reference, so applying a
-  /// template never resolves the phrase to another outfit's tag by accident.
+  /// Optional raw [CatalogTagData.id] values for outfit details. Runtime picker
+  /// IDs are namespaced separately, so consumers must resolve these as catalog
+  /// IDs rather than treating them as a rendered [TagItem.id]. Use this when a
+  /// visual phrase is intentionally shared by more than one reference, so
+  /// applying a template never resolves the phrase to another outfit's tag by
+  /// accident.
   final List<String> detailTagIds;
 
   /// Model-facing character tags that are allowed to use this preset. Empty
