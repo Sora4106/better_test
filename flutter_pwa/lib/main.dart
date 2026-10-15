@@ -18791,6 +18791,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  /// Removes the complete preset selection without touching the selected
+  /// character identity.  Outfit-reference presets may add hairstyle and
+  /// physical-trait tags as part of their canonical look, so those tags are
+  /// removed together with the clothing phrase.  The preset's optional weapon
+  /// is also part of this one-click selection.
+  void _removeOutfitReference(
+    OutfitReferencePresetData preset,
+    int personIndex,
+  ) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final resolution = _resolveOutfitReference(preset);
+    final selectedIds = _personTagIds(personIndex);
+    final removedBases = <TagItem>[];
+
+    for (final tag in resolution.tags) {
+      if (selectedIds.remove(tag.id) && _isClothingBaseTag(tag)) {
+        removedBases.add(tag);
+      }
+    }
+    selectedIds.removeAll(
+      _outfitReferenceEquipmentTags(preset).map((tag) => tag.id),
+    );
+
+    for (final base in removedBases) {
+      _removeOrphanedClothingConfiguration(selectedIds, base);
+    }
+    _personCombinationIds[personIndex]?.remove(preset.combinationId);
+    _removeOrphanedPhysicalTraitColors(selectedIds, personIndex: personIndex);
+    _syncHairGradientColorIds(personIndex, selectedIds);
+    _syncAutoFurryIdentity(personIndex, selectedIds);
+    setState(_persist);
+  }
+
   Future<void> _showOutfitReferencePreview(
       OutfitReferencePresetData preset, int personIndex) async {
     if (!_isOutfitReferenceAvailableForPerson(preset, personIndex)) return;
@@ -23956,7 +23989,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     child: Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: applied
+                        color: outfitSelected
                             ? tone.withValues(alpha: .24)
                             : Theme.of(context)
                                 .colorScheme
@@ -23964,8 +23997,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 .withValues(alpha: .38),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: applied ? tone : tone.withValues(alpha: .48),
-                          width: applied ? 2 : 1,
+                          color: outfitSelected
+                              ? tone
+                              : tone.withValues(alpha: .48),
+                          width: outfitSelected ? 2 : 1,
                         ),
                       ),
                       child: Column(
@@ -23981,7 +24016,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                       fontSize: 15),
                                 ),
                               ),
-                              if (applied)
+                              if (outfitSelected)
                                 Icon(Icons.check_circle, color: tone, size: 20),
                             ],
                           ),
@@ -24068,17 +24103,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 label: const Text('預覽'),
                               ),
                               FilledButton.icon(
-                                onPressed: resolution.missing.isEmpty
-                                    ? () => _applyOutfitReference(
+                                onPressed: outfitSelected
+                                    ? () => _removeOutfitReference(
                                         preset, personIndex)
-                                    : null,
+                                    : resolution.missing.isEmpty
+                                        ? () => _applyOutfitReference(
+                                            preset, personIndex)
+                                        : null,
                                 icon: Icon(
-                                  applied
-                                      ? Icons.check
+                                  outfitSelected
+                                      ? Icons.remove_circle_outline
                                       : Icons.checkroom_outlined,
                                   size: 18,
                                 ),
-                                label: Text(applied ? '已套用・可修改' : '套用'),
+                                label: Text(outfitSelected ? '移除套裝' : '套用'),
                               ),
                             ],
                           ),
