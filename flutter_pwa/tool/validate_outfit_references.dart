@@ -129,6 +129,11 @@ void main() {
     if (preset.pieces.isEmpty) {
       problems.add('${preset.id}: no garment pieces.');
     }
+    for (final detailId in preset.detailTagIds) {
+      if (!clothingTaxonomyTags.any((tag) => tag.id == detailId)) {
+        problems.add('${preset.id}: missing outfit detail tag "$detailId".');
+      }
+    }
     for (final piece in preset.pieces) {
       validatePromptTerm('${preset.id} garment', piece.garment);
       final hasGarment = clothingTaxonomyTags.any((tag) =>

@@ -22,7 +22,11 @@ void main() {
     if (tag.en.toLowerCase().contains('lolita')) {
       throw StateError('Forbidden clothing term: ${tag.en}');
     }
-    final moderationSafeSourceTerm = tag.en.toLowerCase() == 'short sleeves';
+    // This is an unambiguous clothing noun. `short` describes a garment's
+    // sleeve length here, rather than a person.
+    const moderationSafeSourceTerms = <String>{'short sleeves'};
+    final moderationSafeSourceTerm =
+        moderationSafeSourceTerms.contains(tag.en.toLowerCase());
     if ((!moderationSafeSourceTerm &&
             RegExp(r'\b(cute|short|slim)\b', caseSensitive: false)
                 .hasMatch(tag.en)) ||

@@ -997,6 +997,7 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
       ],
       support: 'description'),
   ...elswordJobOutfitTags,
+  ...elswordJobVisualDetailTags,
   ..._garments(
       '特殊服裝',
       'costume',
@@ -1104,6 +1105,7 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('蝴蝶結髮飾', 'hair bow'),
     ('大蝴蝶結髮飾', 'large hair bow'),
     ('髮夾', 'hairclip'),
+    ('X 型髮夾', 'x-shaped hairclip'),
     ('髮飾', 'hair ornament'),
     ('髮帶蝴蝶結', 'hair ribbon'),
     ('髮花', 'hair flower'),

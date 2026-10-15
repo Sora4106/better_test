@@ -4304,6 +4304,7 @@ const _outfitMainStyleGroup = '服裝・主要風格';
 const _outfitSubStyleGroup = '服裝・子風格';
 const _outfitMoodGroup = '服裝・氣質';
 const _outfitOccasionGroup = '服裝・場合';
+const _elswordJobDetailGroup = '轉職服裝細節';
 
 const _clothingGarmentPickerGroups = <String>[
   _clothingGroupHat,
@@ -8935,6 +8936,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _outfitSubStyleGroup,
         _outfitMoodGroup,
         _outfitOccasionGroup,
+        _elswordJobDetailGroup,
       }.contains(group) ||
       group.endsWith('邊線色');
 
@@ -9477,6 +9479,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String? _clothingScopeForTag(TagItem tag) {
+    if (tag.group == _elswordJobDetailGroup) return 'costume';
     if (_isScopedClothingGroup(tag.group)) {
       return _scopedClothingSlot(tag.group);
     }
@@ -9559,6 +9562,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..._clothingDetailGroupsForBase(base),
         ..._clothingWearGroupsForBase(base),
         if (_clothingScopeForBase(base) == 'accessory') '配件位置',
+        if (base.id.contains('taxonomy_costume_elsword_'))
+          _elswordJobDetailGroup,
       };
 
   void _removeOrphanedClothingConfiguration(
@@ -10830,6 +10835,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         tagId: tag.id,
         tagIds: [tag.id],
         personIndex: personIndex,
+      ));
+    }
+    for (final tag in selected.where((tag) =>
+        tag.group == _elswordJobDetailGroup && !consumed.contains(tag.id))) {
+      consumed.add(tag.id);
+      result.add(_GeneratedOutputTag(
+        zh: tag.zh,
+        en: tag.en,
+        tagId: tag.id,
+        tagIds: [tag.id],
+        personIndex: personIndex,
+        clothingBlockKey: 'costume',
       ));
     }
     for (final base in bases) {
@@ -18419,6 +18436,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     for (final value in preset.featureTags) {
       addTag(_outfitReferenceExactTag(_allTags, value), '角色特徵／$value');
+    }
+    for (final value in preset.detailTags) {
+      addTag(_outfitReferenceExactTag(_allTags, value), '套裝細節／$value');
+    }
+    for (final id in preset.detailTagIds) {
+      addTag(
+        _allTags.cast<TagItem?>().firstWhere(
+              (tag) => tag?.id == id,
+              orElse: () => null,
+            ),
+        '套裝細節／$id',
+      );
     }
 
     void addOverall(String group, String? value) {

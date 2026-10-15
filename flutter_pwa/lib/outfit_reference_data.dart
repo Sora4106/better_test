@@ -49,6 +49,8 @@ class OutfitReferencePresetData {
     this.mood,
     this.occasion,
     this.featureTags = const <String>[],
+    this.detailTags = const <String>[],
+    this.detailTagIds = const <String>[],
   });
 
   final String id;
@@ -65,6 +67,16 @@ class OutfitReferencePresetData {
   /// Optional non-clothing traits that belong to the complete look, such as
   /// coloured animal ears or a tail. They remain editable after applying.
   final List<String> featureTags;
+
+  /// Optional outfit-specific descriptions. These are kept in the clothing
+  /// block of a template (rather than becoming general positive tags), which
+  /// is useful for class outfits with signature coats, ornaments, or trims.
+  final List<String> detailTags;
+
+  /// Optional direct catalog IDs for outfit details. Use this when a visual
+  /// phrase is intentionally shared by more than one reference, so applying a
+  /// template never resolves the phrase to another outfit's tag by accident.
+  final List<String> detailTagIds;
 
   String get combinationId => 'builtin_outfit_reference_$id';
 }
