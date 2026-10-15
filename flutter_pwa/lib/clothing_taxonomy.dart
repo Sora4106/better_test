@@ -984,6 +984,24 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('海盜套裝', 'pirate outfit'),
     ('哥德式典禮服', 'gothic ceremonial outfit'),
   ]),
+  // Wearable defense pieces are shown in the dedicated equipment picker.
+  // They retain the costume scope so their color and wear-state controls work
+  // exactly like other worn items in the generated prompt.
+  ..._garments(
+      '特殊服裝',
+      'costume',
+      const [
+        ('胸甲', 'breastplate'),
+        ('肩甲', 'pauldrons'),
+        ('護臂', 'arm guards'),
+        ('鎧甲手套', 'armored gauntlets'),
+        ('護脛', 'greaves'),
+        ('鎧甲長靴', 'armored boots'),
+        ('鎖子甲', 'chainmail'),
+        ('鱗甲', 'scale armor'),
+        ('皮甲', 'leather armor'),
+      ],
+      support: 'description'),
   ..._garments(
       '特殊服裝',
       'costume',

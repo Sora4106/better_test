@@ -81,7 +81,11 @@ const _objectStudyGroup = '物件・學習／藝術／音樂';
 const _objectTechGroup = '物件・科技／媒體';
 const _objectSportGroup = '物件・運動／戶外';
 const _objectToolGroup = '物件・工具／科學／遊戲';
-const _objectFantasyGroup = '物件・武器／奇幻';
+// Weapons are selected with a character's equipment, while non-wearable
+// fantasy props remain in the regular object picker.
+const _objectFantasyGroup = '物件・奇幻道具';
+const _equipmentWeaponGroup = '裝備類型・武器／法具';
+const _equipmentArmorGroup = '裝備類型・防具／護具';
 const _objectTravelGroup = '物件・交通／旅行';
 const _objectDailyGroup = '物件・日常／裝飾';
 const _objectClothingGroup = '物件・衣物／貼身衣物';
@@ -97,6 +101,7 @@ const _objectPickerGroups = <String>{
   _objectSportGroup,
   _objectToolGroup,
   _objectFantasyGroup,
+  _equipmentWeaponGroup,
   _objectTravelGroup,
   _objectDailyGroup,
 };
@@ -7521,6 +7526,8 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'object_interaction_mode'),
       _tag('action_holding_staff', '動作', '手持法杖', 'holding staff', 4,
           conflictGroup: 'object_interaction_mode'),
+      _tag('action_floating_staff', '動作', '漂浮法杖', 'floating staff', 4,
+          conflictGroup: 'object_interaction_mode'),
       _tag('action_holding_magic_wand', '動作', '手持魔法棒', 'holding magic wand', 4,
           conflictGroup: 'object_interaction_mode'),
       _tag('action_carrying_object', '動作', '抱持物件', 'carrying object', 4,
@@ -8624,6 +8631,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _objectInteractionGroup) {
       return _allTags.where(_isObjectInteractionTag).toList();
     }
+    if (group == _equipmentArmorGroup) {
+      return _allTags.where(_isEquipmentArmorTag).toList();
+    }
     if (_isObjectPickerGroup(group)) {
       return _allTags
           .where((tag) => _objectPickerGroupForTag(tag) == group)
@@ -8651,7 +8661,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _clothingGroupAccessory,
     };
     if (clothingBaseGroups.contains(group)) {
-      return _clothingBasesByDisplayGroupCache![group] ?? const <TagItem>[];
+      return (_clothingBasesByDisplayGroupCache![group] ?? const <TagItem>[])
+          .where((tag) => !_isEquipmentArmorTag(tag))
+          .toList();
     }
     if (group == _allClothingWearGroup) {
       return _allClothingWearTagsCache!;
@@ -9002,20 +9014,84 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _isStaticFaceAppearanceTag(tag);
 
   bool _isPoseWorkflowTag(TagItem tag) =>
-      _isDynamicHeadActionTag(tag) ||
-      const {'姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'}.contains(tag.group) ||
-      expandedPickerTagGroups.contains(tag.group);
+      !_isEquipmentWeaponTag(tag) &&
+      (_isDynamicHeadActionTag(tag) ||
+          const {'姿勢', '動作', '物件', '成人道具', '性行為', '性姿勢'}.contains(tag.group) ||
+          expandedPickerTagGroups.contains(tag.group));
 
   bool _isObjectPickerGroup(String group) =>
       _objectPickerGroups.contains(group);
 
   bool _isObjectTag(TagItem tag) => tag.group == '物件';
 
+  /// Catalog tags are stored with a `catalog_` namespace at runtime, while
+  /// legacy tags retain their original ID.  Picker routing must work for both.
+  String _rawCatalogTagId(TagItem tag) => tag.id.startsWith('catalog_')
+      ? tag.id.substring('catalog_'.length)
+      : tag.id;
+
+  bool _isEquipmentWeaponTag(TagItem tag) {
+    if (!_isObjectTag(tag)) return false;
+    final id = _rawCatalogTagId(tag);
+    const directWeaponIds = <String>{
+      'object_bow',
+      'object_arrow',
+      'object_sword',
+      'object_staff',
+      'object_magic_wand',
+      'object_shield',
+      'object_yumi_bow',
+      'object_japanese_longbow',
+    };
+    if (directWeaponIds.contains(id)) return true;
+    if (!id.startsWith('obj_fantasy_')) return false;
+    const fantasyPropIds = <String>{
+      'obj_fantasy_magic_book',
+      'obj_fantasy_crystal_ball',
+      'obj_fantasy_potion_bottle',
+      'obj_fantasy_treasure_chest',
+      'obj_fantasy_crown',
+      'obj_fantasy_glowing_crystal',
+    };
+    return !fantasyPropIds.contains(id);
+  }
+
+  bool _isStaffEquipmentTag(TagItem tag) =>
+      _isEquipmentWeaponTag(tag) &&
+      RegExp(r'\b(?:staff|wand)\b', caseSensitive: false).hasMatch(tag.en);
+
+  bool _isEquipmentArmorTag(TagItem tag) {
+    const armorTerms = <String>{
+      'armor',
+      'armored dress',
+      'bikini armor',
+      'reverse bikini armor',
+      'helmet',
+      'breastplate',
+      'pauldrons',
+      'arm guards',
+      'armored gauntlets',
+      'greaves',
+      'armored boots',
+      'chainmail',
+      'scale armor',
+      'leather armor',
+    };
+    return armorTerms.contains(_englishTagKey(tag.en));
+  }
+
+  bool _isEquipmentTag(TagItem tag) =>
+      _isEquipmentWeaponTag(tag) || _isEquipmentArmorTag(tag);
+
+  bool _isClothingOrEquipmentTag(TagItem tag) =>
+      _isClothingGroup(tag.group) || _isEquipmentTag(tag);
+
   /// Maps both legacy and new object IDs into visual picker sections while
   /// keeping their stored group as 物件 for saved prompts and interactions.
   String? _objectPickerGroupForTag(TagItem tag) {
     if (!_isObjectTag(tag)) return null;
-    final id = tag.id;
+    final id = _rawCatalogTagId(tag);
+    if (_isEquipmentWeaponTag(tag)) return _equipmentWeaponGroup;
     if (id.startsWith('obj_glass_')) return _objectGlassGroup;
     if (id.startsWith('obj_furniture_') ||
         const {
@@ -11381,6 +11457,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return 'holding $noun overhead';
         case 'action_holding_staff':
           return 'holding $noun';
+        case 'action_floating_staff':
+          return '$noun floating beside person';
         case 'action_holding_magic_wand':
           return 'holding $noun';
         case 'action_carrying_object':
@@ -11437,6 +11515,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return '高舉$noun';
         case 'action_holding_staff':
           return '手持$noun';
+        case 'action_floating_staff':
+          return '$noun漂浮在身旁';
         case 'action_holding_magic_wand':
           return '手持$noun';
         case 'action_carrying_object':
@@ -11810,7 +11890,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (_isHairOrHeadAccessoryOutputTag(output)) return false;
     return output.tagIds.any((id) {
       final tag = _tagsById[id];
-      return tag != null && _isClothingGroup(tag.group);
+      return tag != null && _isClothingOrEquipmentTag(tag);
     });
   }
 
@@ -14095,7 +14175,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       expandedSexualActGroups.contains(tag.group);
 
   bool _isUnrestrictedCompositionTag(TagItem tag) =>
-      _isClothingGroup(tag.group) ||
+      _isClothingOrEquipmentTag(tag) ||
       _isPoseCompositionTag(tag) ||
       _isFaceExpressionTag(tag);
 
@@ -14798,7 +14878,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         targetIds.remove(tag.id);
         if (personIndex != null) {
           _removeOrphanedClothingConfiguration(targetIds, tag);
-          if (_isClothingGroup(tag.group)) {
+          if (_isClothingOrEquipmentTag(tag)) {
             _markClothingTemplateCustomized(personIndex);
           }
         }
@@ -14887,7 +14967,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
         _syncAutoFurryIdentity(personIndex, targetIds);
         _removeOrphanedPhysicalTraitColors(targetIds, personIndex: personIndex);
-        if (_isClothingGroup(tag.group)) {
+        if (_isClothingOrEquipmentTag(tag)) {
           _markClothingTemplateCustomized(personIndex);
         }
         final character = _characterForNew(_personSlots[personIndex]);
@@ -15302,7 +15382,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     String? modeId;
     String remainder = '';
-    if (key.endsWith(' on floor beside person')) {
+    if (key.endsWith(' floating beside person')) {
+      modeId = 'action_floating_staff';
+      remainder = key
+          .substring(0, key.length - ' floating beside person'.length)
+          .trim();
+    } else if (key.endsWith(' on floor beside person')) {
       modeId = 'action_object_on_floor_beside';
       remainder = key
           .substring(0, key.length - ' on floor beside person'.length)
@@ -16433,7 +16518,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
           break;
         case 4:
-          removePersonTagsWhere((tag) => _isClothingGroup(tag.group));
+          removePersonTagsWhere(_isClothingOrEquipmentTag);
           for (var personIndex = 0;
               personIndex < _personSlots.length;
               personIndex++) {
@@ -16545,6 +16630,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       if (group == _objectInteractionGroup) {
         return _isObjectInteractionTag(tag);
+      }
+      if (group == _equipmentArmorGroup) {
+        return _isEquipmentArmorTag(tag);
       }
       if (_isObjectPickerGroup(group)) {
         return _objectPickerGroupForTag(tag) == group;
@@ -18335,9 +18423,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _wingTypeGroup,
       _wingColorGroup,
     };
-    return values.any((tag) => _isClothingGroup(tag.group)) &&
+    return values.any(_isClothingOrEquipmentTag) &&
         values.every((tag) =>
-            _isClothingGroup(tag.group) ||
+            _isClothingOrEquipmentTag(tag) ||
             physicalLookGroups.contains(tag.group));
   }
 
@@ -18653,13 +18741,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void _removeCurrentClothingForCombination(Set<String> selectedIds) {
     selectedIds.removeWhere((id) {
       final tag = _tagsById[id];
-      return tag != null && _isClothingGroup(tag.group);
+      return tag != null && _isClothingOrEquipmentTag(tag);
     });
   }
 
   Future<void> _saveClothingCombinationFromPerson(int personIndex) async {
     final clothingTags = _selectedTagsForPerson(personIndex)
-        .where((tag) => _isClothingGroup(tag.group))
+        .where(_isClothingOrEquipmentTag)
         .toList();
     if (clothingTags.isEmpty) {
       return;
@@ -19692,6 +19780,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _objectSportGroup: Color(0xff34d399),
       _objectToolGroup: Color(0xfffbbf24),
       _objectFantasyGroup: Color(0xffc084fc),
+      _equipmentWeaponGroup: Color(0xfff59e0b),
+      _equipmentArmorGroup: Color(0xfffb7185),
       _objectTravelGroup: Color(0xff38bdf8),
       _objectClothingGroup: Color(0xfff472b6),
       _objectDailyGroup: Color(0xfff9a8d4),
@@ -19825,11 +19915,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         colorOrder: colorOrder,
       );
     }
-    final tone = _pickerLayerTone(tag.group);
+    final tone = _isEquipmentTag(tag)
+        ? const Color(0xfff59e0b)
+        : _pickerLayerTone(tag.group);
     final isHairStyle = tag.group == '髮型';
     final officialHairStyle =
         isHairStyle ? _isOfficialHairStyleTag(tag) : false;
-    final isClothing = _isClothingGroup(tag.group);
+    final isClothing = _isClothingOrEquipmentTag(tag);
     return Tooltip(
       message: '${tag.zh} · ${tag.en}',
       child: ConstrainedBox(
@@ -20406,6 +20498,51 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  /// Equipment remains an object at prompt time, but staff presentation is a
+  /// character-level choice. Surface the two useful staff modes beside the
+  /// equipment picker so they do not have to be hunted down in the action UI.
+  Widget _staffEquipmentInteractionControl(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const SizedBox.shrink();
+    }
+    final hasStaff =
+        _selectedTagsForPerson(personIndex).any(_isStaffEquipmentTag);
+    if (!hasStaff) return const SizedBox.shrink();
+    final choices = [
+      _tagsById['action_holding_staff'],
+      _tagsById['action_floating_staff'],
+    ].whereType<TagItem>().toList();
+    if (choices.isEmpty) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: const Color(0xff3a2b14),
+        borderRadius: BorderRadius.circular(10),
+        border:
+            Border.all(color: const Color(0xfff59e0b).withValues(alpha: .78)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('法杖呈現方式', style: TextStyle(fontWeight: FontWeight.w800)),
+          const SizedBox(height: 3),
+          const Text('手持與漂浮擇一；會直接和目前選擇的法杖組成完整提示詞。',
+              style: TextStyle(fontSize: 12)),
+          const SizedBox(height: 7),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: choices
+                .map((tag) => _tagChip(tag, personIndex: personIndex))
+                .toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   String _wizardGroupLabel(String group) {
     const clothingColorLabels = <String, String>{
       '上衣袖子顏色': '袖子色彩 1',
@@ -20448,6 +20585,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     final clothingColorLabel = clothingColorLabels[group];
     if (clothingColorLabel != null) return clothingColorLabel;
+    if (group == _equipmentWeaponGroup) return '武器／法具';
+    if (group == _equipmentArmorGroup) return '防具／護具';
     if (group == _allClothingWearGroup) return '\u7A7F\u812B\u72C0\u614B';
     if (group == _cosplayGroup) return 'Cosplay／角色扮演';
     if (group == _indoorSceneGroup) return '室內場景';
@@ -20607,6 +20746,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final objectCategoryMatch = objectPickerGroup == activeGroup;
       final objectInPickerGroups =
           objectPickerGroup != null && groups.contains(objectPickerGroup);
+      final equipmentArmorMatch =
+          activeGroup == _equipmentArmorGroup && _isEquipmentArmorTag(tag);
+      final equipmentArmorInPickerGroups =
+          groups.contains(_equipmentArmorGroup) && _isEquipmentArmorTag(tag);
       final breastPickerGroup = _breastPickerGroupForTag(tag);
       final breastCategoryMatch = breastPickerGroup == activeGroup;
       final breastInPickerGroups =
@@ -20643,6 +20786,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ? clothingBaseDisplayMatch
           : tag.group == activeGroup ||
               objectCategoryMatch ||
+              equipmentArmorMatch ||
               breastCategoryMatch ||
               staticFaceAppearanceMatch ||
               objectInteractionMatch;
@@ -20650,6 +20794,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ? pickerTagIds.contains(tag.id)
           : (groups.contains(tag.group) ||
                   objectInPickerGroups ||
+                  equipmentArmorInPickerGroups ||
                   breastInPickerGroups ||
                   staticFaceInPickerGroups ||
                   objectInteractionInPickerGroups ||
@@ -20660,6 +20805,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   faceExpressionInSubgroup) &&
               (activeGroup == null ||
                   directActiveGroupMatch ||
+                  equipmentArmorMatch ||
                   allClothingWear ||
                   hairColorInHairGroup ||
                   faceExpressionInMergedGroup ||
@@ -23753,6 +23899,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Widget _stepClothing() {
     const garmentGroups = _clothingGarmentPickerGroups;
+    const equipmentGroups = <String>[
+      _equipmentWeaponGroup,
+      _equipmentArmorGroup,
+    ];
     const overallGroups = [
       _outfitMainStyleGroup,
       _outfitSubStyleGroup,
@@ -23777,6 +23927,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               _clothingDetailGroups(index, activeGroup: activeClothingGroup);
           final activeClothingBases =
               _clothingBasesForActiveGroup(index, activeClothingGroup);
+          final selectedEquipmentArmorBases = _selectedTagsForPerson(index)
+              .where(_isEquipmentArmorTag)
+              .where(_isClothingBaseTag)
+              .toList();
           final colorPairBases = <TagItem>[];
           final colorPairGroups = <String>{};
           for (final base in activeClothingBases) {
@@ -23856,6 +24010,37 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       showNext: false,
                       showGroupClear: true,
                       autoCollapseGroups: _autoCollapseClothingBaseGroups,
+                    ),
+                  ),
+                  _pickerStage(
+                    icon: Icons.shield_outlined,
+                    tone: const Color(0xfff59e0b),
+                    title: '2. 裝備類型',
+                    description:
+                        '武器、法具、盾牌與防具集中在此；一般衣服維持在上方服裝部位。武器的持握、揮動等互動仍可在「姿勢與互動」中另外設定。',
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _stepTagPicker(
+                          equipmentGroups,
+                          nextLabel: '繼續',
+                          personIndex: index,
+                          showNext: false,
+                          showGroupClear: true,
+                          pickerStateKey: 'clothing-equipment',
+                        ),
+                        _staffEquipmentInteractionControl(index),
+                        if (selectedEquipmentArmorBases.isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          const Text(
+                            '已選防具配色',
+                            style: TextStyle(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 6),
+                          ...selectedEquipmentArmorBases.map((base) =>
+                              _clothingColorPairControl(index, [base])),
+                        ],
+                      ],
                     ),
                   ),
                   Card(
@@ -27037,8 +27222,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   bool _isSummaryClothingOutputTag(_GeneratedOutputTag output) {
     if (output.personIndex == null) return false;
     return output.personClothingExtraValue != null ||
-        _generatedOutputSourceTags(output)
-            .any((tag) => _isClothingGroup(tag.group));
+        _generatedOutputSourceTags(output).any(_isClothingOrEquipmentTag);
   }
 
   bool _isSummaryIndividualPoseOutputTag(_GeneratedOutputTag output) {
@@ -27085,8 +27269,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (personIndex != null) {
       final personLabel = '人物 ${personIndex + 1}';
       if (output.personClothingExtraValue != null ||
-          sourceTags.any((tag) => _isClothingGroup(tag.group))) {
-        return '$personLabel・服裝';
+          sourceTags.any(_isClothingOrEquipmentTag)) {
+        return '$personLabel・服裝／裝備';
       }
       if (output.personPoseExtraValue != null ||
           sourceTags.any(_isPoseWorkflowTag)) {
@@ -27778,7 +27962,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             Positioned(
               left: _sideNavigationOnRight ? null : 6,
               right: _sideNavigationOnRight ? 6 : null,
-              bottom: 12,
+              // Keep the fixed positive/negative copy controls clear of the
+              // lower usage-prompt button and browser safe-area controls.
+              bottom: 82,
               child: SafeArea(
                 child: SizedBox(
                   width: 56,

@@ -454,6 +454,13 @@ const objectCatalogTags = <CatalogTagData>[
       order: 4,
       support: 'description'),
   CatalogTagData(
+      id: 'obj_fantasy_elemental_master_staff',
+      group: '物件',
+      zh: '元素大師的法杖',
+      en: 'ornate elemental magic staff with a long white and pink gemstone shaft, purple accents, jewel-topped decorative staff head, glowing crystal, official-style mage weapon',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
       id: 'obj_fantasy_elemental_magic_staff',
       group: '物件',
       zh: '元素魔法法杖',
