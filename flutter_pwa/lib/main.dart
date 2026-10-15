@@ -7747,6 +7747,13 @@ List<TagItem> _seedTags() => [
         2,
       ),
       _tag(
+        'feature_official_game_style',
+        _canonicalOutfitFeatureGroup,
+        '原作遊戲風格',
+        'official game style, original class outfit',
+        2,
+      ),
+      _tag(
         _canonicalOutfitTopAdjustmentId,
         '上衣',
         '原作上衣狀態',
@@ -15200,6 +15207,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'risa momioka': 'momioka_risa',
       'mikado ryouko': 'mikado_ryouko',
       'ryouko mikado': 'mikado_ryouko',
+      // URL/database notation accepted by reverse import only. The emitted
+      // character prompt remains the model label `aisha landar`.
+      'aisha elsword': 'aisha landar',
     };
     final canonicalTag = characterTagAliases[_englishTagKey(token)];
     if (canonicalTag != null) {
@@ -15468,6 +15478,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final key = _englishTagKey(value);
     if (key.isEmpty) return const <TagItem>[];
 
+    // Special/cosplay garments are complete phrases rather than composable
+    // base garments. Let reverse import restore the actual selectable costume
+    // instead of leaving a class-outfit name as an unmatched extra phrase.
+    final specialCostumes = _allTags
+        .where((tag) => tag.group == '特殊服裝' && _englishTagKey(tag.en) == key)
+        .toList()
+      ..sort((left, right) => left.order.compareTo(right.order));
+    if (specialCostumes.isNotEmpty) return [specialCostumes.first];
+
     final objectInteraction = _reverseObjectInteractionCandidates(value);
     if (objectInteraction.isNotEmpty) return objectInteraction;
 
@@ -15611,6 +15630,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _reversePromptSource(String value) {
     const colonThreeMarker = '__bw_symbol_colon_three__';
     return value
+        // These are database/URL-style aliases, not the prompt labels emitted
+        // by this builder. Normalise them before parentheses are parsed so
+        // `aisha_(elsword)` never becomes a broken structural group or an
+        // unmatched underscore token after reverse import.
+        .replaceAllMapped(
+            RegExp(r'\baisha_\s*\(\s*elsword\s*\)', caseSensitive: false),
+            (_) => 'aisha landar')
+        .replaceAllMapped(RegExp(r'\belemental_master\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Elemental Master official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\belemental\s+master\s+aisha\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Elemental Master official class outfit')
         .replaceAll(':3', colonThreeMarker)
         .replaceAllMapped(RegExp(r':\s*-?(?:\d+(?:\.\d+)?|\.\d+)'), (_) => '')
         .replaceAll(RegExp(r'[\[\]{}]'), ' ');

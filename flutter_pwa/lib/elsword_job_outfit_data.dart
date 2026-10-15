@@ -26,7 +26,14 @@ const elswordJobDetailGroups = <String>[
 /// regular one-word tag would lose the intended design detail.
 String elswordJobDetailGroupFor(String english) {
   final value = english.toLowerCase();
-  if (value.endsWith(' outfit')) return elswordJobDetailOutfitGroup;
+  if (value.endsWith(' outfit') ||
+      const {
+        'elemental mage',
+        'magic user',
+        'official elsword style',
+      }.contains(value)) {
+    return elswordJobDetailOutfitGroup;
+  }
   if (RegExp(r'\b(?:trim|pattern|markings|accents|lining)\b').hasMatch(value)) {
     return elswordJobDetailTrimGroup;
   }
@@ -66,11 +73,13 @@ class _ElswordJobLook {
     required this.palette,
     this.hairTags = const <String>[],
     this.details = const <_ElswordStyleDetail>[],
+    this.optionalDetails = const <_ElswordStyleDetail>[],
   });
 
   final String palette;
   final List<String> hairTags;
   final List<_ElswordStyleDetail> details;
+  final List<_ElswordStyleDetail> optionalDetails;
 }
 
 class _ElswordJobOutfit {
@@ -123,6 +132,15 @@ class _ElswordJobOutfit {
   List<_ElswordStyleDetail> get visualDetails => [
         _ElswordStyleDetail('$jobZh職業套裝', '${jobEn.toLowerCase()} outfit'),
         ...look.details,
+        ...look.optionalDetails,
+      ];
+
+  /// The reference-card action uses one concise, canonical description. Extra
+  /// source phrases stay selectable, but do not all pile into the default
+  /// prompt as duplicate synonyms.
+  List<_ElswordStyleDetail> get presetVisualDetails => [
+        _ElswordStyleDetail('$jobZh職業套裝', '${jobEn.toLowerCase()} outfit'),
+        ...look.details,
       ];
 }
 
@@ -164,6 +182,7 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('黑紫色貼身馬甲', 'black and purple fitted bodice'),
       _ElswordStyleDetail('黑色背心層', 'black vest'),
       _ElswordStyleDetail('白色寬大袖子', 'white oversized sleeves'),
+      _ElswordStyleDetail('棕色皮革手套', 'brown leather gloves'),
       _ElswordStyleDetail('紫色百褶迷你裙', 'purple pleated miniskirt'),
       _ElswordStyleDetail('粉紅色裙裝點綴', 'pink skirt accents'),
       _ElswordStyleDetail('黑色大腿襪', 'black thighhighs'),
@@ -172,6 +191,26 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('白粉寶石踝靴', 'white and pink jeweled ankle boots'),
       _ElswordStyleDetail(
           '水晶流蘇飾件', 'hanging crystal ornaments and crystal tassels'),
+    ],
+    optionalDetails: [
+      _ElswordStyleDetail('白色長外套', 'long white coat'),
+      _ElswordStyleDetail('連帽短斗篷', 'hooded capelet'),
+      _ElswordStyleDetail('大型粉紅蝴蝶結', 'large pink bow'),
+      _ElswordStyleDetail('胸前大型寶石', 'large jewel on chest'),
+      _ElswordStyleDetail('白色寬袖', 'white wide sleeves'),
+      _ElswordStyleDetail('棕色手套', 'brown gloves'),
+      _ElswordStyleDetail('粉紅點綴', 'pink accents'),
+      _ElswordStyleDetail('白色踝靴', 'white ankle boots'),
+      _ElswordStyleDetail('白粉長靴', 'white and pink boots'),
+      _ElswordStyleDetail('寶石靴', 'jeweled boots'),
+      _ElswordStyleDetail('垂墜水晶飾品', 'hanging crystal ornaments'),
+      _ElswordStyleDetail('水晶流蘇', 'crystal tassels'),
+      _ElswordStyleDetail('魔法飾品', 'magical accessories'),
+      _ElswordStyleDetail('魔法徽章', 'emblem'),
+      _ElswordStyleDetail('奇幻法師服裝', 'fantasy mage outfit'),
+      _ElswordStyleDetail('元素法師', 'elemental mage'),
+      _ElswordStyleDetail('魔法使用者', 'magic user'),
+      _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
   'Aether Sage': _ElswordJobLook(
@@ -839,7 +878,7 @@ final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
               OutfitPiecePresetData(scope: 'costume', garment: job.en),
             ],
             featureTags: job.featureTags,
-            detailTagIds: job.visualDetails
+            detailTagIds: job.presetVisualDetails
                 .map((detail) => _elswordVisualDetailId(detail.en))
                 .toList(),
             ownerCharacterTags: job.ownerCharacterTag.isEmpty

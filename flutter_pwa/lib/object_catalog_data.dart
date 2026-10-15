@@ -394,7 +394,7 @@ const objectCatalogTags = <CatalogTagData>[
       en: 'chessboard',
       order: 4),
 
-  // 武器／奇幻（12）
+  // 武器／奇幻（25）
   CatalogTagData(
       id: 'obj_fantasy_dagger', group: '物件', zh: '匕首', en: 'dagger', order: 4),
   CatalogTagData(
@@ -439,6 +439,97 @@ const objectCatalogTags = <CatalogTagData>[
       order: 4),
   CatalogTagData(
       id: 'obj_fantasy_crown', group: '物件', zh: '王冠', en: 'crown', order: 4),
+  CatalogTagData(
+      id: 'obj_fantasy_ornate_magic_staff',
+      group: '物件',
+      zh: '華麗魔法法杖',
+      en: 'ornate magic staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_mage_staff',
+      group: '物件',
+      zh: '奇幻法師法杖',
+      en: 'fantasy mage staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_elemental_magic_staff',
+      group: '物件',
+      zh: '元素魔法法杖',
+      en: 'elemental magic staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_long_magical_staff',
+      group: '物件',
+      zh: '長柄魔法法杖',
+      en: 'long magical staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_magical_staff',
+      group: '物件',
+      zh: '魔法法杖',
+      en: 'magical staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_white_pink_staff',
+      group: '物件',
+      zh: '白粉法杖',
+      en: 'white and pink staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_white_pink_gemstone_staff',
+      group: '物件',
+      zh: '白粉寶石法杖',
+      en: 'white and pink gemstone staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_purple_staff_accents',
+      group: '物件',
+      zh: '紫色法杖點綴',
+      en: 'purple staff accents',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_gemstone_staff',
+      group: '物件',
+      zh: '寶石法杖',
+      en: 'gemstone staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_jewel_topped_staff',
+      group: '物件',
+      zh: '寶石頂端法杖',
+      en: 'jewel-topped staff',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_decorative_staff_head',
+      group: '物件',
+      zh: '裝飾法杖頂端',
+      en: 'decorative staff head',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_glowing_crystal',
+      group: '物件',
+      zh: '發光水晶',
+      en: 'glowing crystal',
+      order: 4,
+      support: 'description'),
+  CatalogTagData(
+      id: 'obj_fantasy_official_mage_weapon',
+      group: '物件',
+      zh: '原作風格法師武器',
+      en: 'official-style mage weapon',
+      order: 4,
+      support: 'description'),
 
   // 交通／旅行（12）
   CatalogTagData(
