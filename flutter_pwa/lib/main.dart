@@ -14622,10 +14622,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               !_isClothingWeightOutputTag(tag))
           .toList();
       if (!slot.promptWeightEnabled) {
-        // Default, unweighted layout: model character tags and their fixed
-        // appearance stay as plain tags. Only garments and individual actions
-        // need parentheses. This preserves `aisha_(elsword), elsword,
-        // elemental_master, ...` exactly as a model-facing identity sequence.
+        // Default layout: use one structural outer group for each character's
+        // identity, fixed appearance and clothing, but do not add a numeric
+        // weight. The inner identity tags stay plain, preserving
+        // `aisha_(elsword), elsword, elemental_master, ...`; individual
+        // actions deliberately remain outside the character-core group.
         final identityLine = _inlinePromptTags([
           ...regularCharacterFeatures.where((tag) => tag.characterTag),
           ...classIdentity,
@@ -14649,7 +14650,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         final clothingLine =
             _groupedClothingPromptBlock(clothing, weightSlot: slot);
         final actionLine = _promptTagBlock(individualActions);
-        final sections = <String>[];
+        final coreSections = <String>[];
 
         if (officialDesignLine.isEmpty) {
           // Without a class-design phrase, hair and fixed appearance follow
@@ -14657,19 +14658,29 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final characterLine = [identityLine, fullAppearanceLine]
               .where((value) => value.isNotEmpty)
               .join(', ');
-          if (characterLine.isNotEmpty) sections.add(characterLine);
+          if (characterLine.isNotEmpty) coreSections.add(characterLine);
         } else {
           // A selected job keeps identity and official design adjacent, then
           // leaves one blank line before the job-specific hair/head profile.
           final identitySection = [identityLine, officialDesignLine]
               .where((value) => value.isNotEmpty)
               .join(',\n');
-          if (identitySection.isNotEmpty) sections.add(identitySection);
-          if (fullAppearanceLine.isNotEmpty) sections.add(fullAppearanceLine);
+          if (identitySection.isNotEmpty) coreSections.add(identitySection);
+          if (fullAppearanceLine.isNotEmpty) {
+            coreSections.add(fullAppearanceLine);
+          }
         }
-        if (clothingLine.isNotEmpty) sections.add(clothingLine);
-        if (actionLine.isNotEmpty) sections.add(actionLine);
-        addPersonBlock(sections.join(',\n\n'));
+        if (clothingLine.isNotEmpty) coreSections.add(clothingLine);
+
+        // Keep the overall person delimiter even without a numeric weight.
+        // It closes immediately after clothing, so a separately selected
+        // action reads as its own `(action, pose, ...)` group afterwards.
+        final coreBlock =
+            coreSections.isEmpty ? '' : '(${coreSections.join(',\n\n')})';
+        final personBlock = [coreBlock, actionLine]
+            .where((value) => value.isNotEmpty)
+            .join(',\n\n');
+        addPersonBlock(personBlock);
       } else {
         // Explicit whole-person weighting still needs one outer block so the
         // selected weight applies to every character, garment, and action tag.
