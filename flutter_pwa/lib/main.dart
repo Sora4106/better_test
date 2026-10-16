@@ -4057,7 +4057,13 @@ class PersonSlot {
   // Legacy saved values are retained solely so older local saves can be read.
   // New prompt output and controls use [personPromptWeight].
   double characterPromptWeight = 1.05;
+  // Clothing can be emphasized as one complete look or by individual garment
+  // block.  Block keys follow the existing head-to-foot output scopes (top,
+  // skirt, shoes, accessory groups, etc.), so changing a garment keeps the
+  // local emphasis on that same clothing position.
+  bool clothingPromptWeightAllEnabled = false;
   double clothingPromptWeight = 1.05;
+  Map<String, double> clothingPromptWeightByBlock = <String, double>{};
   // This local emphasis applies to all selected hair characteristics (colour,
   // length and style). The former colour-only saved fields are read below for
   // backwards compatibility.
@@ -4103,7 +4109,9 @@ class PersonSlot {
         'promptWeightEnabled': promptWeightEnabled,
         'personPromptWeight': personPromptWeight,
         'characterPromptWeight': characterPromptWeight,
+        'clothingPromptWeightAllEnabled': clothingPromptWeightAllEnabled,
         'clothingPromptWeight': clothingPromptWeight,
+        'clothingPromptWeightByBlock': clothingPromptWeightByBlock,
         'hairPromptWeightEnabled': hairPromptWeightEnabled,
         'hairPromptWeight': hairPromptWeight,
         // Keep these two keys while old browser saves may still be opened by
@@ -4164,10 +4172,23 @@ class PersonSlot {
                     1.05)
                 .clamp(0.50, 1.50)
                 .toDouble()
+        ..clothingPromptWeightAllEnabled =
+            json['clothingPromptWeightAllEnabled'] == true
         ..clothingPromptWeight =
             (double.tryParse('${json['clothingPromptWeight'] ?? 1.05}') ?? 1.05)
                 .clamp(0.50, 1.50)
                 .toDouble()
+        ..clothingPromptWeightByBlock =
+            json['clothingPromptWeightByBlock'] is Map
+                ? (json['clothingPromptWeightByBlock'] as Map).map(
+                    (key, value) => MapEntry(
+                      '$key',
+                      (double.tryParse('$value') ?? 1.05)
+                          .clamp(0.50, 1.50)
+                          .toDouble(),
+                    ),
+                  )
+                : <String, double>{}
         ..hairPromptWeightEnabled = json['hairPromptWeightEnabled'] == true ||
             json['hairColorWeightEnabled'] == true
         ..hairPromptWeight = (double.tryParse(
@@ -7836,6 +7857,35 @@ List<TagItem> _seedTags() => [
       // Sex acts and sexual positions. All are adult-only and off by the adult filter.
       _tag('act_sex', '性行為', '性行為（成年角色）', 'sex', 7, adult: true),
       _tag('act_vaginal', '性行為', '陰道性交（成年角色）', 'vaginal', 7, adult: true),
+      _tag(
+        'act_full_penetration',
+        '性行為',
+        '完全插入（成年角色）',
+        'full penetration',
+        7,
+        adult: true,
+        conflictGroup: 'penetration_depth',
+      ),
+      _tag(
+        'act_deep_penetration',
+        '性行為',
+        '深度插入（成年角色）',
+        'deep penetration',
+        7,
+        adult: true,
+        conflictGroup: 'penetration_depth',
+      ),
+      // An adult-only visual modifier that may be combined with either
+      // insertion depth. It renders a cutaway-style anatomical view rather
+      // than replacing the selected position or depth.
+      _tag(
+        'act_penetration_xray',
+        '性行為',
+        '深度插入剖面（成年角色）',
+        'cervix, x-ray',
+        7,
+        adult: true,
+      ),
       _tag('act_triple_vaginal', '性行為', '三人陰道性交（成年角色）', 'triple vaginal', 7,
           adult: true),
       _tag('act_anal', '性行為', '肛交（成年角色）', 'anal', 7, adult: true),
@@ -12109,28 +12159,92 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   /// The inner parentheses do not introduce an extra weight. They merely keep
   /// each garment's type, material, details, colours, and local wear state
   /// together so BetterWaifu receives the intended combinations clearly.
-  String _groupedClothingPromptBlock(Iterable<_GeneratedOutputTag> tags) {
+  static const _unscopedClothingWeightBlockKey = '__clothing_overall__';
+
+  String _clothingWeightBlockKeyForOutput(_GeneratedOutputTag tag) {
+    final key = tag.clothingBlockKey?.trim() ?? '';
+    return key.isEmpty ? _unscopedClothingWeightBlockKey : key;
+  }
+
+  Map<String, List<_GeneratedOutputTag>> _clothingWeightBlocksForPerson(
+      int personIndex) {
+    final blocks = <String, List<_GeneratedOutputTag>>{};
+    for (final tag in _clothingOutputTagsForPerson(personIndex)) {
+      final key = _clothingWeightBlockKeyForOutput(tag);
+      blocks.putIfAbsent(key, () => <_GeneratedOutputTag>[]).add(tag);
+    }
+    return blocks;
+  }
+
+  String _clothingWeightBlockLabel(
+    String key,
+    List<_GeneratedOutputTag> tags,
+  ) {
+    final scopeLabel = switch (key) {
+      'top' => '上衣',
+      'pants' => '長褲',
+      'shorts' => '短褲',
+      'skirt' => '裙子',
+      'onepiece' => '連身裝',
+      'outerwear' => '外套',
+      'costume' => '整套服裝',
+      'underwear' => '內衣',
+      'bra' => '胸罩',
+      'panties' => '內褲',
+      'socks' => '襪子',
+      'shoes' => '鞋子',
+      'equipment' => '裝備',
+      _unscopedClothingWeightBlockKey => '整體服裝設定',
+      _ when key.startsWith('accessory:') => '配件',
+      _ when key.startsWith('manual-clothing-') => '額外服裝標籤',
+      _ => '服裝部位',
+    };
+    if (tags.isEmpty) return scopeLabel;
+    final preview = tags.first.zh.trim();
+    return preview.isEmpty ? scopeLabel : '$scopeLabel・$preview';
+  }
+
+  double? _clothingWeightForBlock(PersonSlot slot, String key) {
+    final override = slot.clothingPromptWeightByBlock[key];
+    if (override != null) return _boundedPromptWeight(override);
+    if (slot.clothingPromptWeightAllEnabled) {
+      return _boundedPromptWeight(slot.clothingPromptWeight);
+    }
+    return null;
+  }
+
+  String _groupedClothingPromptBlock(
+    Iterable<_GeneratedOutputTag> tags, {
+    PersonSlot? weightSlot,
+  }) {
     final grouped = <String, List<String>>{};
-    final ungrouped = <String>[];
     final seen = <String>{};
 
     for (final tag in tags) {
       final value = _moderationSafePromptTag(tag.en);
       if (value.isEmpty || !seen.add(value.toLowerCase())) continue;
-      final key = tag.clothingBlockKey;
-      if (key == null || key.isEmpty) {
-        ungrouped.add(value);
-      } else {
-        grouped.putIfAbsent(key, () => <String>[]).add(value);
-      }
+      final key = _clothingWeightBlockKeyForOutput(tag);
+      grouped.putIfAbsent(key, () => <String>[]).add(value);
     }
 
-    final sections = <String>[
-      ...grouped.values
-          .where((values) => values.isNotEmpty)
-          .map((values) => '(${values.join(', ')})'),
-      if (ungrouped.isNotEmpty) ungrouped.join(', '),
-    ];
+    final sections = <String>[];
+    for (final entry in grouped.entries) {
+      final values = entry.value;
+      if (values.isEmpty) continue;
+      final weight = weightSlot == null
+          ? null
+          : _clothingWeightForBlock(weightSlot, entry.key);
+      final suffix = weight == null
+          ? ''
+          : ':${_boundedPromptWeight(weight).toStringAsFixed(2)}';
+      // Preserve the compact historical output for global outfit descriptors
+      // unless the user explicitly selects this block for local emphasis.
+      if (entry.key == _unscopedClothingWeightBlockKey && weight == null) {
+        sections.add(values.join(', '));
+      } else {
+        sections.add('(${values.join(', ')}$suffix)');
+      }
+    }
     if (sections.isEmpty) return '';
     return sections.join(', ');
   }
@@ -14166,7 +14280,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             emphasizeHair,
             weight: slot.hairPromptWeightEnabled ? slot.hairPromptWeight : null,
           ),
-        _groupedClothingPromptBlock(clothing),
+        _groupedClothingPromptBlock(clothing, weightSlot: slot),
         _promptTagBlock(individualActions),
       ].where((block) => block.isNotEmpty).toList();
       if (segments.isNotEmpty) {
@@ -21317,22 +21431,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final pickerTagIds = searchAcrossGroups
         ? pickerTags.map((tag) => tag.id).toSet()
         : const <String>{};
-    final selectedClothingScopes = personIndex == null
-        ? const <String>{}
-        : _clothingDesignBases(_selectedTagsForPerson(personIndex))
-            .map(_clothingScopeForBase)
-            .whereType<String>()
-            .toSet();
-    final hasUnifiedOutfitPhrase = personIndex != null &&
-        _clothingDesignBases(_selectedTagsForPerson(personIndex))
-            .any(_isUnifiedOutfitPhraseTag);
     final hiddenTaxonomyIds = _hiddenTaxonomyDuplicateIdsCache!;
     final tags = pickerTags.where((tag) {
       final allClothingWear = activeGroup == _allClothingWearGroup &&
-          _scopedClothingKind(tag.group) == 'wear' &&
-          (personIndex == null ||
-              hasUnifiedOutfitPhrase ||
-              selectedClothingScopes.contains(_scopedClothingSlot(tag.group)));
+          (_scopedClothingKind(tag.group) == 'wear' ||
+              tag.group == _legacyClothingWearGroup);
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup = activeGroup == '表情' &&
           tag.group == '臉部特徵' &&
@@ -21656,6 +21759,181 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               '可輸入或拖曳設定 0.50–1.50；未勾選時髮長、髮型與髮色會維持在角色基本特徵權重區塊。',
               style: TextStyle(fontSize: 11),
             ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _clothingPromptWeightControl(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const SizedBox.shrink();
+    }
+    final slot = _personSlots[personIndex];
+    final blocks = _clothingWeightBlocksForPerson(personIndex);
+    final selectedBlockKeys = blocks.keys
+        .where(slot.clothingPromptWeightByBlock.containsKey)
+        .toList();
+
+    void setBlockSelected(String key, bool selected) {
+      setState(() {
+        if (selected) {
+          slot.clothingPromptWeightByBlock.putIfAbsent(
+            key,
+            () => _boundedPromptWeight(slot.clothingPromptWeight),
+          );
+        } else {
+          slot.clothingPromptWeightByBlock.remove(key);
+        }
+        _persist();
+      });
+    }
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xff2c2444),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xffc4b5fd).withValues(alpha: .8),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SwitchListTile.adaptive(
+            contentPadding: EdgeInsets.zero,
+            value: slot.clothingPromptWeightAllEnabled,
+            title: const Text('整套服裝權重',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+            subtitle: Text(
+              blocks.isEmpty
+                  ? '先選擇服裝、配件或裝備後即可設定。'
+                  : '開啟時所有服裝部位都套用同一權重；關閉後只加強下方勾選的部位。',
+              style: const TextStyle(fontSize: 12),
+            ),
+            onChanged: blocks.isEmpty
+                ? null
+                : (enabled) => setState(() {
+                      slot.clothingPromptWeightAllEnabled = enabled;
+                      _persist();
+                    }),
+          ),
+          if (slot.clothingPromptWeightAllEnabled && blocks.isNotEmpty)
+            _promptWeightControl(
+              title: '整套服裝權重',
+              icon: Icons.checkroom_outlined,
+              value: _boundedPromptWeight(slot.clothingPromptWeight),
+              onChanged: (value) => setState(() {
+                slot.clothingPromptWeight = _boundedPromptWeight(value);
+                _persist();
+              }),
+            ),
+          if (blocks.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            const Text('個別服裝部位加強',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 3),
+            const Text(
+              '可勾選單一部位並設定自己的權重；已啟用整套權重時，勾選的部位會覆寫整套數值。',
+              style: TextStyle(fontSize: 11),
+            ),
+            const SizedBox(height: 7),
+            Wrap(
+              spacing: 7,
+              runSpacing: 7,
+              children: blocks.entries.map((entry) {
+                final selected =
+                    slot.clothingPromptWeightByBlock.containsKey(entry.key);
+                return FilterChip(
+                  selected: selected,
+                  label:
+                      Text(_clothingWeightBlockLabel(entry.key, entry.value)),
+                  tooltip: entry.value.map((tag) => tag.en).join(', '),
+                  onSelected: (next) => setBlockSelected(entry.key, next),
+                );
+              }).toList(),
+            ),
+          ],
+          if (selectedBlockKeys.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            ...selectedBlockKeys.map((key) {
+              final tags = blocks[key] ?? const <_GeneratedOutputTag>[];
+              final value = _boundedPromptWeight(
+                slot.clothingPromptWeightByBlock[key] ??
+                    slot.clothingPromptWeight,
+              );
+              return Container(
+                margin: const EdgeInsets.only(bottom: 8),
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 5),
+                decoration: BoxDecoration(
+                  color: const Color(0xff171329).withValues(alpha: .72),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            _clothingWeightBlockLabel(key, tags),
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                        ),
+                        SizedBox(
+                          width: 82,
+                          child: TextFormField(
+                            key: ValueKey<String>(
+                              'clothing-prompt-weight-$personIndex-$key-${value.toStringAsFixed(2)}',
+                            ),
+                            initialValue: value.toStringAsFixed(2),
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            textAlign: TextAlign.center,
+                            decoration: const InputDecoration(
+                              isDense: true,
+                              suffixText: 'x',
+                            ),
+                            onChanged: (input) {
+                              final parsed = double.tryParse(input.trim());
+                              if (parsed == null) return;
+                              slot.clothingPromptWeightByBlock[key] =
+                                  _boundedPromptWeight(parsed);
+                              _persist();
+                            },
+                            onFieldSubmitted: (input) {
+                              final parsed = double.tryParse(input.trim());
+                              if (parsed == null) return;
+                              setState(() {
+                                slot.clothingPromptWeightByBlock[key] =
+                                    _boundedPromptWeight(parsed);
+                                _persist();
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    Slider(
+                      min: _minimumPromptWeight,
+                      max: _maximumPromptWeight,
+                      divisions: 20,
+                      value: value,
+                      label: value.toStringAsFixed(2),
+                      onChanged: (next) => setState(() {
+                        slot.clothingPromptWeightByBlock[key] =
+                            _boundedPromptWeight(next);
+                        _persist();
+                      }),
+                    ),
+                  ],
+                ),
+              );
+            }),
           ],
         ],
       ),
@@ -23775,6 +24053,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                     ],
                   ),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton.icon(
+                      onPressed:
+                          (_poseCombinationTagsForPerson(index).isNotEmpty ||
+                                  _poseExtraPrompts(slot.poseExtraPositive)
+                                      .isNotEmpty)
+                              ? () => _savePoseCombinationFromPerson(index)
+                              : null,
+                      icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+                      label: const Text('儲存目前姿勢組合'),
+                    ),
+                  ),
                   _savedPoseCombinationPicker(index),
                   Card(
                     margin: const EdgeInsets.only(top: 10),
@@ -24025,21 +24316,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
-  List<String> _clothingWearGroups(int personIndex, {String? activeGroup}) {
-    final bases = _clothingBasesForActiveGroup(personIndex, activeGroup);
-    if (bases.isEmpty) return const <String>[];
-    // A canonical outfit phrase has no editable garment components. Present
-    // all compatible wear / exposure controls through one virtual picker so
-    // the whole costume can be adjusted without first selecting every slot.
-    if (bases.any(_isUnifiedOutfitPhraseTag)) {
-      return const <String>[_allClothingWearGroup];
-    }
-    return <String>[
-      _legacyClothingWearGroup,
-      ...bases.expand(_clothingWearGroupsForBase).toSet(),
-    ]
-        .where((group) => (_tagsByGroup[group] ?? const <TagItem>[]).isNotEmpty)
-        .toList();
+  List<String> _clothingWearGroups() {
+    // Wear, undressing, exposure and damage can describe a character even
+    // before a garment is selected. Keep the complete catalogue available in
+    // the clothing step instead of hiding it behind the chosen base pieces.
+    return const <String>[_allClothingWearGroup];
   }
 
   // ignore: unused_element
@@ -24658,7 +24939,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final nonColorAdaptiveDetails = adaptiveDetails
               .where((group) => !colorGroups.contains(group))
               .toList();
-          final adaptiveWear = _clothingWearGroups(index);
+          final adaptiveWear = _clothingWearGroups();
           final activeClothingLabel = _wizardGroupLabel(activeClothingGroup);
           final title =
               characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
@@ -24771,6 +25052,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       children: [_outfitPaletteTable(index)],
                     ),
                   ),
+                  _clothingPromptWeightControl(index),
                   if (adaptiveDetails.isNotEmpty)
                     _pickerStage(
                       icon: Icons.palette_outlined,
@@ -24818,7 +25100,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       icon: Icons.dry_cleaning_outlined,
                       tone: const Color(0xfff87171),
                       title: '5. 各部位穿脫／暴露狀態',
-                      description: '依已選服裝顯示各部位專用狀態；18+ 模式另提供單側露出、滑出與透視可見等選項。',
+                      description:
+                          '全部部位皆可直接選擇，不必先挑服裝；18+ 模式另提供單側露出、滑出與透視可見等選項。',
                       child: _stepTagPicker(
                         adaptiveWear,
                         nextLabel: '下一步',
@@ -25317,7 +25600,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ));
         }
       } else if (stepIndex == 4) {
-        segments.add(_groupedClothingPromptBlock(blockTags));
+        segments.add(_groupedClothingPromptBlock(
+          blockTags,
+          weightSlot: _personSlots[personIndex],
+        ));
       } else {
         segments.add(_promptTagBlock(blockTags));
       }
