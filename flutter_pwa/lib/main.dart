@@ -12300,14 +12300,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toDouble();
   }
 
-  String _formatPromptLineBreaks(String value, {String indent = '    '}) =>
-      value.replaceAll(RegExp(r',\s*'), ',\n$indent');
+  /// Keeps the contents of one semantic prompt block on a single line.
+  ///
+  /// Prompt output intentionally inserts line breaks *between* completed
+  /// blocks (character, top, skirt, action, etc.). Splitting every comma made
+  /// a single garment's colour, cut, material, and trim difficult to read and
+  /// made copied prompts unnecessarily tall.
+  String _normalizeInlinePromptValue(String value) =>
+      value.replaceAll(RegExp(r'\s+'), ' ').trim();
 
   String _promptTagBlock(
     Iterable<_GeneratedOutputTag> tags, {
     double? weight,
-    bool multiline = false,
-    String continuationIndent = '    ',
   }) {
     final values = <String>[];
     final seen = <String>{};
@@ -12323,13 +12327,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final suffix = weight == null
         ? ''
         : ':${_boundedPromptWeight(weight).toStringAsFixed(2)}';
-    final separator = multiline ? ',\n$continuationIndent' : ', ';
-    final rendered = multiline
-        ? values
-            .map((value) =>
-                _formatPromptLineBreaks(value, indent: continuationIndent))
-            .join(separator)
-        : values.join(separator);
+    final rendered = values.map(_normalizeInlinePromptValue).join(', ');
     return '($rendered$suffix)';
   }
 
@@ -12421,12 +12419,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // Preserve the compact historical output for global outfit descriptors
       // unless the user explicitly selects this block for local emphasis.
       if (entry.key == _unscopedClothingWeightBlockKey && weight == null) {
-        sections.add(values
-            .map((value) => _formatPromptLineBreaks(value))
-            .join(',\n    '));
+        sections.add(values.map(_normalizeInlinePromptValue).join(', '));
       } else {
         sections.add(
-            '(${values.map(_formatPromptLineBreaks).join(',\n    ')}$suffix)');
+            '(${values.map(_normalizeInlinePromptValue).join(', ')}$suffix)');
       }
     }
     if (sections.isEmpty) return '';
@@ -14591,24 +14587,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               !_isClothingWeightOutputTag(tag))
           .toList();
       final segments = <String>[
-        _promptTagBlock(regularCharacterFeatures, multiline: true),
-        _promptTagBlock(classIdentity, multiline: true),
-        _promptTagBlock(classOfficialDesign, multiline: true),
-        _promptTagBlock(classHeadProfile, multiline: true),
+        _promptTagBlock(regularCharacterFeatures),
+        _promptTagBlock(classIdentity),
+        _promptTagBlock(classOfficialDesign),
+        _promptTagBlock(classHeadProfile),
         if (emphasizeHair.isNotEmpty)
           _promptTagBlock(
             emphasizeHair,
             weight: slot.hairPromptWeightEnabled ? slot.hairPromptWeight : null,
-            multiline: true,
           ),
         _groupedClothingPromptBlock(clothing, weightSlot: slot),
-        _promptTagBlock(individualActions, multiline: true),
+        _promptTagBlock(individualActions),
       ].where((block) => block.isNotEmpty).toList();
       if (segments.isNotEmpty) {
         final suffix = slot.promptWeightEnabled
             ? ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}'
             : '';
-        output.add('(\n  ${segments.join(',\n  ')}$suffix)');
+        // Every segment remains intact: e.g. one line for a top (including
+        // cut/material/trim) and the next line for a skirt. This results in
+        // `((character block),\n  (top block),\n  (skirt block))` rather than
+        // one line per individual tag.
+        output.add('(${segments.join(',\n  ')}$suffix)');
       }
       usedShared.addAll(
         personal
@@ -14628,7 +14627,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     addSharedTokens(
         _sharedPoseExtraOutputTags().map((tag) => tag.en), sharedTokens);
     if (sharedTokens.isNotEmpty) output.add(sharedTokens.join(', '));
-    return output.join(',\n\n');
+    // A separator after a completed outer block is enough visual structure;
+    // blank lines between every category make long prompts needlessly tall.
+    return output.join(',\n');
   }
 
   String get _positiveText {

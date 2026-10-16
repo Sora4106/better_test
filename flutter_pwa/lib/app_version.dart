@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.258';
-const appBuildNumber = 260;
-const appVersionLabel = '1.1.258+260';
+﻿const appVersion = '1.1.259';
+const appBuildNumber = 261;
+const appVersionLabel = '1.1.259+261';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.259', 'build': '261', 'label': '1.1.259+261', 'date': '2026-10-16', 'notes': '提示詞改為依角色與服飾區塊換行；同類標籤維持同列'},
   {'version': '1.1.258', 'build': '260', 'label': '1.1.258+260', 'date': '2026-10-16', 'notes': '擴充官方體液詞表至血液、唾液、汗水、眼淚、精液、前液、陰道分泌與泌乳細項；移除所有 pee／排尿相關選項，舊儲存選取會自動清理。'},
   {'version': '1.1.257', 'build': '259', 'label': '1.1.257+259', 'date': '2026-10-16', 'notes': '依官方成人標籤詞表補齊足交、手交、口交、肛交與陰道性交詞彙；五類重新分類，新增完整性檢查。'},
   {'version': '1.1.256', 'build': '258', 'label': '1.1.256+258', 'date': '2026-10-16', 'notes': '轉職套裝可個別保留或移除上身、下身、鞋襪、飾邊與配件，設定會隨人物記憶。'},
   {'version': '1.1.255', 'build': '257', 'label': '1.1.255+257', 'date': '2026-10-16', 'notes': '分段提示詞輸出與元素大師完整職業服裝片語'},
-  {'version': '1.1.254', 'build': '256', 'label': '1.1.254+256', 'date': '2026-10-16', 'notes': '新增官方顫動陰莖姿勢標籤；不需細節人物可設定個人姿勢；整套／轉職服裝可保留並加選胸罩、內褲與襪子。'},
 ];
