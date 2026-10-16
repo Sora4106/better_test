@@ -11831,7 +11831,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return const <_GeneratedOutputTag>[];
     }
     final slot = _personSlots[personIndex];
-    if (!slot.detailed) return const <_GeneratedOutputTag>[];
     return _poseExtraPrompts(slot.poseExtraPositive)
         .map((value) => _GeneratedOutputTag(
               zh: _positiveChineseTag(value),
@@ -12156,7 +12155,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toDouble();
   }
 
-  String _promptTagBlock(Iterable<_GeneratedOutputTag> tags, {double? weight}) {
+  String _formatPromptLineBreaks(String value, {String indent = '    '}) =>
+      value.replaceAll(RegExp(r',\s*'), ',\n$indent');
+
+  String _promptTagBlock(
+    Iterable<_GeneratedOutputTag> tags, {
+    double? weight,
+    bool multiline = false,
+    String continuationIndent = '    ',
+  }) {
     final values = <String>[];
     final seen = <String>{};
     void addValue(String raw) {
@@ -12171,7 +12178,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final suffix = weight == null
         ? ''
         : ':${_boundedPromptWeight(weight).toStringAsFixed(2)}';
-    return '(${values.join(', ')}$suffix)';
+    final separator = multiline ? ',\n$continuationIndent' : ', ';
+    final rendered = multiline
+        ? values
+            .map((value) =>
+                _formatPromptLineBreaks(value, indent: continuationIndent))
+            .join(separator)
+        : values.join(separator);
+    return '($rendered$suffix)';
   }
 
   /// Renders clothing as readable garment-level sub-blocks. The surrounding
@@ -12262,13 +12276,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       // Preserve the compact historical output for global outfit descriptors
       // unless the user explicitly selects this block for local emphasis.
       if (entry.key == _unscopedClothingWeightBlockKey && weight == null) {
-        sections.add(values.join(', '));
+        sections.add(values
+            .map((value) => _formatPromptLineBreaks(value))
+            .join(',\n    '));
       } else {
-        sections.add('(${values.join(', ')}$suffix)');
+        sections.add(
+            '(${values.map(_formatPromptLineBreaks).join(',\n    ')}$suffix)');
       }
     }
     if (sections.isEmpty) return '';
-    return sections.join(', ');
+    return sections.join(',\n    ');
   }
 
   int get _personSelectedCount =>
@@ -14258,21 +14275,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _groupedPositiveText() {
     final output = <String>[];
     final usedShared = <String>{};
-    void addSharedTokens(Iterable<String> values) {
+    void addSharedTokens(Iterable<String> values, List<String> destination) {
       for (final value in values.map(_moderationSafePromptTag)) {
         if (value.isNotEmpty && usedShared.add(value.toLowerCase())) {
-          output.add(value);
+          destination.add(value);
         }
       }
     }
 
+    bool comesFromGroup(_GeneratedOutputTag tag, String group) =>
+        tag.tagIds.any((id) => _tagsById[id]?.group == group);
+
     // Shared scene/camera terms deliberately lead the prompt. The following
     // person blocks retain their own internal feature → clothing → action
     // order so multi-person details do not get reassigned by the model.
-    addSharedTokens(_selectedTags
-        .where((tag) => _isSceneVisualPromptGroup(tag.group))
-        .map((tag) => tag.en));
-    addSharedTokens(_peopleTokensNew());
+    final sceneTokens = <String>[];
+    addSharedTokens(
+        _selectedTags
+            .where((tag) => _isSceneVisualPromptGroup(tag.group))
+            .map((tag) => tag.en),
+        sceneTokens);
+    if (sceneTokens.isNotEmpty) output.add(sceneTokens.join(', '));
+
+    final peopleTokens = <String>[];
+    addSharedTokens(_peopleTokensNew(), peopleTokens);
+    if (peopleTokens.isNotEmpty) output.add(peopleTokens.join(', '));
+
     for (var index = 0; index < _personSlots.length; index++) {
       final slot = _personSlots[index];
       final personal = _deduplicatePromptOutputTags([
@@ -14289,6 +14317,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final characterFeatures = personal.where((tag) =>
           _isCharacterWeightOutputTag(tag) &&
           !_isHairPromptOutputTag(index, tag));
+      final classIdentity = characterFeatures
+          .where((tag) => comesFromGroup(tag, elswordJobIdentityGroup));
+      final classOfficialDesign = characterFeatures
+          .where((tag) => comesFromGroup(tag, elswordJobOfficialDesignGroup));
+      final classHeadProfile = characterFeatures
+          .where((tag) => comesFromGroup(tag, elswordJobHeadFeatureGroup));
+      final regularCharacterFeatures = characterFeatures.where((tag) =>
+          !comesFromGroup(tag, elswordJobIdentityGroup) &&
+          !comesFromGroup(tag, elswordJobOfficialDesignGroup) &&
+          !comesFromGroup(tag, elswordJobHeadFeatureGroup));
       final clothing = personal.where(_isClothingWeightOutputTag).toList();
       final individualActions = personal
           .where((tag) =>
@@ -14296,20 +14334,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               !_isClothingWeightOutputTag(tag))
           .toList();
       final segments = <String>[
-        _promptTagBlock(characterFeatures),
+        _promptTagBlock(regularCharacterFeatures, multiline: true),
+        _promptTagBlock(classIdentity, multiline: true),
+        _promptTagBlock(classOfficialDesign, multiline: true),
+        _promptTagBlock(classHeadProfile, multiline: true),
         if (emphasizeHair.isNotEmpty)
           _promptTagBlock(
             emphasizeHair,
             weight: slot.hairPromptWeightEnabled ? slot.hairPromptWeight : null,
+            multiline: true,
           ),
         _groupedClothingPromptBlock(clothing, weightSlot: slot),
-        _promptTagBlock(individualActions),
+        _promptTagBlock(individualActions, multiline: true),
       ].where((block) => block.isNotEmpty).toList();
       if (segments.isNotEmpty) {
         final suffix = slot.promptWeightEnabled
             ? ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}'
             : '';
-        output.add('(${segments.join(', ')}$suffix)');
+        output.add('(\n  ${segments.join(',\n  ')}$suffix)');
       }
       usedShared.addAll(
         personal
@@ -14317,15 +14359,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .where((value) => value.isNotEmpty),
       );
     }
-    addSharedTokens(_sharedPositiveTokens);
+    final sharedTokens = <String>[];
+    addSharedTokens(_sharedPositiveTokens, sharedTokens);
     // Interaction / shared-pose tags must come after every person's own
     // identity, clothing, and pose block.
     for (var index = 0; index < _personSlots.length; index++) {
-      addSharedTokens(_personFinalPromptTags(index).map((tag) => tag.en));
+      addSharedTokens(
+          _personFinalPromptTags(index).map((tag) => tag.en), sharedTokens);
     }
-    addSharedTokens(_sharedActionTokens);
-    addSharedTokens(_sharedPoseExtraOutputTags().map((tag) => tag.en));
-    return output.join(', ');
+    addSharedTokens(_sharedActionTokens, sharedTokens);
+    addSharedTokens(
+        _sharedPoseExtraOutputTags().map((tag) => tag.en), sharedTokens);
+    if (sharedTokens.isNotEmpty) output.add(sharedTokens.join(', '));
+    return output.join(',\n\n');
   }
 
   String get _positiveText {
@@ -28494,7 +28540,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               'English prompt · 可直接貼上',
               _positiveText,
               onCopy: () => _copy(_positiveText, '英文正向標籤', showFeedback: true),
-              maxLines: 6,
+              maxLines: 14,
             ),
             const SizedBox(height: 12),
             Wrap(

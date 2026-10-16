@@ -86,13 +86,11 @@ class _ElswordJobLook {
     required this.palette,
     this.hairTags = const <String>[],
     this.details = const <_ElswordStyleDetail>[],
-    this.optionalDetails = const <_ElswordStyleDetail>[],
   });
 
   final String palette;
   final List<String> hairTags;
   final List<_ElswordStyleDetail> details;
-  final List<_ElswordStyleDetail> optionalDetails;
 }
 
 class _ElswordJobOutfit {
@@ -147,9 +145,13 @@ class _ElswordJobOutfit {
   }
 
   List<_ElswordStyleDetail> get visualDetails => [
-        _ElswordStyleDetail('$jobZh職業套裝', '${jobEn.toLowerCase()} outfit'),
+        _ElswordStyleDetail(
+          '$jobZh職業套裝',
+          usesElementalMasterProfile
+              ? '(elemental master outfit:1.25)'
+              : '${jobEn.toLowerCase()} outfit',
+        ),
         ...look.details,
-        ...look.optionalDetails,
       ];
 
   /// The reference-card action uses one concise, canonical description. Extra
@@ -326,37 +328,32 @@ const _aishaLooks = <String, _ElswordJobLook>{
     palette: '白色 × 紫色 × 粉紅色',
     hairTags: ['low twintails', 'ahoge', 'x-shaped hairclip'],
     details: [
-      _ElswordStyleDetail('白色連帽長外套', 'white hooded coat'),
+      _ElswordStyleDetail('元素大師服裝強調', '(white hooded coat:1.2)'),
+      _ElswordStyleDetail('白色外套', 'white coat'),
       _ElswordStyleDetail('放下的帽兜', 'hood down'),
+      _ElswordStyleDetail('白色長外套', 'long white coat'),
       _ElswordStyleDetail('白色短斗篷', 'white capelet'),
+      _ElswordStyleDetail('連帽短斗篷', 'hooded capelet'),
       _ElswordStyleDetail('紫色滾邊', 'purple trim'),
       _ElswordStyleDetail('粉紅色滾邊', 'pink trim'),
-      _ElswordStyleDetail('大型粉紅胸前蝴蝶結', 'large pink chest bow'),
+      _ElswordStyleDetail('大型粉紅蝴蝶結', 'large pink bow'),
       _ElswordStyleDetail('粉紅領結', 'pink bowtie'),
       _ElswordStyleDetail('胸前緞帶', 'chest ribbon'),
-      _ElswordStyleDetail('大型寶石胸針', 'large gemstone brooch'),
+      _ElswordStyleDetail('寶石胸針', 'gemstone brooch'),
+      _ElswordStyleDetail('胸前大型寶石', 'large jewel on chest'),
       _ElswordStyleDetail('深紫高領毛衣', 'dark purple turtleneck sweater'),
-      _ElswordStyleDetail('黑紫色貼身馬甲', 'black and purple fitted bodice'),
+      _ElswordStyleDetail('黑紫色馬甲', 'black and purple bodice'),
+      _ElswordStyleDetail('貼身馬甲', 'fitted bodice'),
       _ElswordStyleDetail('黑色背心層', 'black vest'),
-      _ElswordStyleDetail('白色寬大袖子', 'white oversized sleeves'),
-      _ElswordStyleDetail('棕色皮革手套', 'brown leather gloves'),
+      _ElswordStyleDetail('白色寬袖', 'white wide sleeves'),
+      _ElswordStyleDetail('寬大袖子', 'oversized sleeves'),
+      _ElswordStyleDetail('棕色手套', 'brown gloves'),
+      _ElswordStyleDetail('皮革手套', 'leather gloves'),
       _ElswordStyleDetail('紫色百褶迷你裙', 'purple pleated miniskirt'),
-      _ElswordStyleDetail('粉紅色裙裝點綴', 'pink skirt accents'),
+      _ElswordStyleDetail('粉紅點綴', 'pink accents'),
       _ElswordStyleDetail('黑色大腿襪', 'black thighhighs'),
       _ElswordStyleDetail('粉紅大腿襪圖樣', 'pink markings on thighhighs'),
       _ElswordStyleDetail('白色大腿環帶', 'white thigh strap'),
-      _ElswordStyleDetail('白粉寶石踝靴', 'white and pink jeweled ankle boots'),
-      _ElswordStyleDetail(
-          '水晶流蘇飾件', 'hanging crystal ornaments and crystal tassels'),
-    ],
-    optionalDetails: [
-      _ElswordStyleDetail('白色長外套', 'long white coat'),
-      _ElswordStyleDetail('連帽短斗篷', 'hooded capelet'),
-      _ElswordStyleDetail('大型粉紅蝴蝶結', 'large pink bow'),
-      _ElswordStyleDetail('胸前大型寶石', 'large jewel on chest'),
-      _ElswordStyleDetail('白色寬袖', 'white wide sleeves'),
-      _ElswordStyleDetail('棕色手套', 'brown gloves'),
-      _ElswordStyleDetail('粉紅點綴', 'pink accents'),
       _ElswordStyleDetail('白色踝靴', 'white ankle boots'),
       _ElswordStyleDetail('白粉長靴', 'white and pink boots'),
       _ElswordStyleDetail('寶石靴', 'jeweled boots'),
