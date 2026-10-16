@@ -8388,6 +8388,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ...clothingOverallTags,
   ].map(_catalogTag).toList();
   late final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
+  // The corresponding picker entries were removed because BetterWaifu rejects
+  // urination prompts. Keep this migration list so older local selections,
+  // saved combinations, and exported snapshots stop emitting them as well.
+  static const _retiredUrinationTagIds = <String>{
+    'body_fluids_pee',
+    'body_fluids_peeing',
+    'body_fluids_peeing_self',
+  };
+  static const _retiredUrinationEnglishKeys = <String>{
+    'pee',
+    'peeing',
+    'peeing self',
+    'urine',
+    'urination',
+    'piss',
+    'golden shower',
+  };
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
   // Legacy session bookkeeping. Animal features no longer add a furry/anthro
@@ -12718,6 +12735,68 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
   }
 
+  bool _removeRetiredUrinationTagIds(Set<String> ids) {
+    final before = ids.length;
+    ids.removeWhere(_retiredUrinationTagIds.contains);
+    return ids.length != before;
+  }
+
+  bool _pruneRetiredUrinationTagIdsFromPayload(dynamic value) {
+    var changed = false;
+    if (value is List) {
+      final before = value.length;
+      value.removeWhere(
+        (item) => item is String && _retiredUrinationTagIds.contains(item),
+      );
+      changed = value.length != before;
+      for (final item in value) {
+        changed = _pruneRetiredUrinationTagIdsFromPayload(item) || changed;
+      }
+    } else if (value is Map) {
+      for (final item in value.values) {
+        changed = _pruneRetiredUrinationTagIdsFromPayload(item) || changed;
+      }
+    }
+    return changed;
+  }
+
+  /// Removes the retired urination picker IDs from every persisted selection
+  /// container. Free-form text deliberately remains user-controlled.
+  bool _removeRetiredUrinationSelections() {
+    var changed = _removeRetiredUrinationTagIds(_selectedIds);
+    for (final ids in _personSelectedIds.values) {
+      changed = _removeRetiredUrinationTagIds(ids) || changed;
+    }
+    for (final original in _originalCharacterPresets) {
+      final ids = original.featureTagIds.toSet();
+      if (_removeRetiredUrinationTagIds(ids)) {
+        original.featureTagIds
+          ..clear()
+          ..addAll(ids);
+        changed = true;
+      }
+    }
+    for (final combination in _combinations) {
+      final ids = combination.tagIds.toSet();
+      if (_removeRetiredUrinationTagIds(ids)) {
+        combination.tagIds
+          ..clear()
+          ..addAll(ids);
+        changed = true;
+      }
+    }
+    for (final preset in _presets) {
+      changed =
+          _pruneRetiredUrinationTagIdsFromPayload(preset.payload) || changed;
+    }
+    final customBefore = _customTags.length;
+    _customTags.removeWhere(
+        (tag) => _retiredUrinationEnglishKeys.contains(_englishTagKey(tag.en)));
+    final customChanged = _customTags.length != customBefore;
+    if (customChanged) _invalidateTagCaches();
+    return changed || customChanged;
+  }
+
   /// Replaces the Elemental Master traits that older builds stored as ordinary
   /// Aisha feature chips with the class-scoped phrase blocks introduced later.
   /// This only runs when that exact canonical outfit is already selected.
@@ -12927,6 +13006,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ..clear()
           ..addAll(migrated);
       }
+      restoredDuplicatesMigrated =
+          _removeRetiredUrinationSelections() || restoredDuplicatesMigrated;
       final personCombinations = data['personCombinationIds'] as Map?;
       if (personCombinations != null) {
         for (final entry in personCombinations.entries) {
