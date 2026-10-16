@@ -13236,16 +13236,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return '$_peopleCount 人$type';
   }
 
-  List<String> _peopleTokensNew() {
-    final female = _personSlots.where((slot) => slot.gender == '女性').length;
-    final male = _personSlots.where((slot) => slot.gender == '男性').length;
-    final other = _personSlots.length - female - male;
+  List<String> _peopleTokensForSlots(
+    Iterable<PersonSlot> slots, {
+    bool fallbackToOnePerson = true,
+  }) {
+    final people = slots.toList(growable: false);
+    final female = people.where((slot) => slot.gender == '女性').length;
+    final male = people.where((slot) => slot.gender == '男性').length;
+    final other = people.length - female - male;
     final result = <String>[];
     if (female > 0) result.add(female == 1 ? '1girl' : '${female}girls');
     if (male > 0) result.add(male == 1 ? '1boy' : '${male}boys');
     if (other > 0) result.add(other == 1 ? '1other' : '${other}others');
-    return result.isEmpty ? ['1person'] : result;
+    return result.isEmpty && fallbackToOnePerson ? ['1person'] : result;
   }
+
+  List<String> _peopleTokensNew() => _peopleTokensForSlots(_personSlots);
+
+  String _singlePersonToken(PersonSlot slot) =>
+      _peopleTokensForSlots([slot]).first;
 
   String _peopleTagNew() => _peopleTokensNew().join(', ');
 
@@ -14574,8 +14583,37 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         sceneTokens);
     if (sceneTokens.isNotEmpty) output.add(sceneTokens.join(', '));
 
+    // A person with selected identity / trait / clothing detail receives its
+    // own `1girl` / `1boy` token inside that character's outer group. Persons
+    // without a core detail block stay in the shared count prefix instead.
+    final personalBySlot = <List<_GeneratedOutputTag>>[];
+    final detailedCorePersonIndexes = <int>{};
+    for (var index = 0; index < _personSlots.length; index++) {
+      final slot = _personSlots[index];
+      final personal = _deduplicatePromptOutputTags([
+        ..._characterOutputTagsForSlot(slot, index),
+        ..._personScopedPromptTags(index),
+      ]);
+      personalBySlot.add(personal);
+      if (slot.detailed &&
+          personal.any((tag) =>
+              _isCharacterWeightOutputTag(tag) ||
+              _isClothingWeightOutputTag(tag))) {
+        detailedCorePersonIndexes.add(index);
+      }
+    }
+
     final peopleTokens = <String>[];
-    addSharedTokens(_peopleTokensNew(), peopleTokens);
+    addSharedTokens(
+      _peopleTokensForSlots(
+        [
+          for (var index = 0; index < _personSlots.length; index++)
+            if (!detailedCorePersonIndexes.contains(index)) _personSlots[index],
+        ],
+        fallbackToOnePerson: false,
+      ),
+      peopleTokens,
+    );
     final peoplePrefix = peopleTokens.join(', ');
     var peoplePrefixAttached = false;
     void addPersonBlock(String value) {
@@ -14591,15 +14629,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     for (var index = 0; index < _personSlots.length; index++) {
       final slot = _personSlots[index];
-      final personal = _deduplicatePromptOutputTags([
-        ..._characterOutputTagsForSlot(slot, index),
-        ..._personScopedPromptTags(index),
-      ]);
+      final personal = personalBySlot[index];
       if (personal.isEmpty) continue;
+      final personToken = detailedCorePersonIndexes.contains(index)
+          ? _singlePersonToken(slot)
+          : '';
 
-      // With no whole-person weight, keep stable identity tags flat and leave
-      // only garments/actions parenthesized. When a whole-person weight is
-      // enabled below, retain the single outer block it needs to take effect.
+      // The character's own gender token belongs inside its core block whenever
+      // that person has detail, so multi-person prompts preserve attribution.
       final emphasizeHair =
           personal.where((tag) => _isHairPromptOutputTag(index, tag));
       final characterFeatures = personal.where((tag) =>
@@ -14627,10 +14664,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         // weight. The inner identity tags stay plain, preserving
         // `aisha_(elsword), elsword, elemental_master, ...`; individual
         // actions deliberately remain outside the character-core group.
-        final identityLine = _inlinePromptTags([
+        final identityTagsLine = _inlinePromptTags([
           ...regularCharacterFeatures.where((tag) => tag.characterTag),
           ...classIdentity,
         ]);
+        final identityLine = [personToken, identityTagsLine]
+            .where((value) => value.isNotEmpty)
+            .join(', ');
         final officialDesignLine = _inlinePromptTags(classOfficialDesign);
         final appearanceLine = _inlinePromptTags([
           ...regularCharacterFeatures.where((tag) => !tag.characterTag),
@@ -14701,7 +14741,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (segments.isNotEmpty) {
           final suffix =
               ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}';
-          addPersonBlock('(${segments.join(',\n  ')}$suffix)');
+          final prefix = personToken.isEmpty ? '' : '$personToken, ';
+          addPersonBlock('($prefix${segments.join(',\n  ')}$suffix)');
         }
       }
       usedShared.addAll(
