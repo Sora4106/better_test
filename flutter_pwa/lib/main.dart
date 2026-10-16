@@ -7858,6 +7858,14 @@ List<TagItem> _seedTags() => [
       _tag('act_sex', '性行為', '性行為（成年角色）', 'sex', 7, adult: true),
       _tag('act_vaginal', '性行為', '陰道性交（成年角色）', 'vaginal', 7, adult: true),
       _tag(
+        'act_twitching_penis',
+        '性行為',
+        '陰莖顫動（成年角色）',
+        'twitching penis',
+        7,
+        adult: true,
+      ),
+      _tag(
         'act_full_penetration',
         '性行為',
         '完全插入（成年角色）',
@@ -9933,7 +9941,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           combination.id == combinationId &&
           _isClothingCombination(combination));
 
-  void _markClothingTemplateCustomized(int personIndex) {
+  bool _isSupplementaryInnerLayerTag(TagItem tag) {
+    final scope = _clothingScopeForTag(tag);
+    return scope == 'bra' || scope == 'panties' || scope == 'socks';
+  }
+
+  void _markClothingTemplateCustomized(
+    int personIndex, {
+    TagItem? changedTag,
+  }) {
+    // A full outfit or job package supplies the outer silhouette. Bra,
+    // panties, and socks are independent inner layers, so adding/removing
+    // them must not detach the selected package or hide its state.
+    if (changedTag != null && _isSupplementaryInnerLayerTag(changedTag)) {
+      return;
+    }
     _personCombinationIds[personIndex]?.removeWhere(_isClothingCombinationId);
   }
 
@@ -15207,7 +15229,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         if (personIndex != null) {
           _removeOrphanedClothingConfiguration(targetIds, tag);
           if (_isClothingOrEquipmentTag(tag)) {
-            _markClothingTemplateCustomized(personIndex);
+            _markClothingTemplateCustomized(personIndex, changedTag: tag);
           }
         }
         if (personIndex != null && _isCurrentCharacterTrait(personIndex, tag)) {
@@ -15296,7 +15318,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _syncAutoFurryIdentity(personIndex, targetIds);
         _removeOrphanedPhysicalTraitColors(targetIds, personIndex: personIndex);
         if (_isClothingOrEquipmentTag(tag)) {
-          _markClothingTemplateCustomized(personIndex);
+          _markClothingTemplateCustomized(personIndex, changedTag: tag);
         }
         final character = _characterForNew(_personSlots[personIndex]);
         for (final trait in character?.traits ?? const <CatalogTagData>[]) {
@@ -23991,17 +24013,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           final characterNames = _characterChineseForSlot(slot, index);
           final title =
               characterNames.isEmpty ? '人物 ${index + 1}' : characterNames.first;
-          if (!slot.detailed) {
-            return Card(
-              margin: const EdgeInsets.only(bottom: 10),
-              child: ListTile(
-                leading: CircleAvatar(child: Text('${index + 1}')),
-                title: Text('人物 ${index + 1}'),
-                subtitle: const Text('此人物設定為不需細節，不加入此類標籤。'),
-              ),
-            );
-          }
-
           final sectionKey = 'expanded-section:$index';
           final storedSection = _personActiveGroups[sectionKey];
           final currentSection =
@@ -24053,6 +24064,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                     ],
                   ),
+                  if (!slot.detailed)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 4),
+                      child: Text(
+                        '此人物不使用角色外觀與服裝細節；仍可設定個人姿勢、動作與自然敘述。',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
                   Align(
                     alignment: Alignment.centerRight,
                     child: FilledButton.icon(
@@ -24996,7 +25015,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     icon: Icons.checkroom_outlined,
                     tone: const Color(0xffffb454),
                     title: '1. 選擇服裝部位與款式',
-                    description: '依頭到腳切換部位；切換只隱藏其他部位，已選標籤仍會保留。',
+                    description:
+                        '依頭到腳切換部位；切換只隱藏其他部位，已選標籤仍會保留。套用整套／轉職服裝後，胸罩、內褲與襪子仍可作為內搭直接加選。',
                     child: _stepTagPicker(
                       garmentGroups,
                       nextLabel: '下一步',
