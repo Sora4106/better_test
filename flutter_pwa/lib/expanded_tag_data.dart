@@ -19,7 +19,10 @@ List<CatalogTagData> _expandedTags({
     rows
         .map((row) => CatalogTagData(
               id: '${prefix}_${_expandedTagSlug(row[1])}',
-              group: group,
+              // A row may opt into a more precise child group while retaining
+              // its original prefix/id. This keeps saved selections and
+              // imports stable when the picker taxonomy is improved.
+              group: row.length > 3 && row[3].isNotEmpty ? row[3] : group,
               zh: row[0],
               en: row[1],
               order: order,
@@ -45,6 +48,12 @@ const _footToeGroup = '腳掌・腳趾動態';
 const _legTowardCameraGroup = '腿部・朝鏡頭構圖';
 const _breastAdultActionGroup = '性行為・胸部／乳頭';
 const _clothedIntimateHandGroup = '性行為・衣物內手部互動';
+
+const _footjobGroup = '性行為・足交';
+const _handjobGroup = '性行為・手交';
+const _oralSexGroup = '性行為・口交';
+const _analSexGroup = '性行為・肛交';
+const _vaginalSexGroup = '性行為・陰道性交';
 
 const _sensoryObjectAdultGroup = '性行為・感官／物件互動';
 
@@ -94,13 +103,15 @@ const expandedSexualActGroups = <String>{
   _breastAdultActionGroup,
   _clothedIntimateHandGroup,
   _sensoryObjectAdultGroup,
-  '性行為・足部',
+  _footjobGroup,
   '性行為・摩擦',
-  '性行為・手部',
+  _handjobGroup,
   '性行為・自慰',
   '性行為・動態',
   '性行為・親吻',
-  '性行為・口部',
+  _oralSexGroup,
+  _vaginalSexGroup,
+  _analSexGroup,
   '性行為・插入',
   '性行為・多人',
   '性行為・前後',
@@ -228,13 +239,15 @@ const expandedTagPickerSections = <String, List<String>>{
   ],
   '⑨ 成人・性行為與體液': [
     '性行為',
-    '性行為・足部',
+    _footjobGroup,
     '性行為・摩擦',
-    '性行為・手部',
+    _handjobGroup,
     '性行為・自慰',
     '性行為・動態',
     '性行為・親吻',
-    '性行為・口部',
+    _oralSexGroup,
+    _vaginalSexGroup,
+    _analSexGroup,
     '性行為・插入',
     '性行為・多人',
     '性行為・前後',
@@ -1376,7 +1389,7 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
   ),
   ..._expandedTags(
     prefix: 'foot_sex',
-    group: '性行為・足部',
+    group: _footjobGroup,
     order: 7,
     adult: true,
     rows: const [
@@ -1433,7 +1446,7 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
   ),
   ..._expandedTags(
     prefix: 'hand_sex',
-    group: '性行為・手部',
+    group: _handjobGroup,
     order: 7,
     adult: true,
     rows: const [
@@ -1548,7 +1561,7 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
   ),
   ..._expandedTags(
     prefix: 'oral_sex',
-    group: '性行為・口部',
+    group: _oralSexGroup,
     order: 7,
     adult: true,
     rows: const [
@@ -1560,6 +1573,7 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['自體舔陰', 'autocunnilingus'],
       ['暗示舔陰', 'implied cunnilingus'],
       ['陰莖口交', 'fellatio'],
+      ['輔助口交', 'assisted fellatio'],
       ['自體口交', 'autofellatio'],
       ['交換精液', 'cum swap'],
       ['深喉', 'deepthroat'],
@@ -1582,9 +1596,12 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     adult: true,
     rows: const [
       ['性交', 'sex'],
-      ['陰道性交', 'vaginal'],
-      ['肛交', 'anal'],
-      ['女用假陽具肛交', 'pegging'],
+      ['陰道性交', 'vaginal', '', _vaginalSexGroup],
+      ['即將陰道性交', 'imminent vaginal', '', _vaginalSexGroup],
+      ['肛交', 'anal', '', _analSexGroup],
+      ['即將肛交', 'imminent anal', '', _analSexGroup],
+      ['多重肛交', 'multiple anal', '', _analSexGroup],
+      ['女用假陽具肛交', 'pegging', '', _analSexGroup],
       ['隔衣性交', 'clothed sex'],
       ['引導插入', 'guided penetration'],
       ['暗示性交', 'implied sex'],
@@ -1638,10 +1655,11 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['口交夾擊', 'oral sandwich'],
       ['連環口交', 'daisy chain'],
       ['雙重插入', 'double penetration'],
-      ['雙重陰道插入', 'double vaginal'],
-      ['雙重肛門插入', 'double anal'],
+      ['雙重陰道插入', 'double vaginal', '', _vaginalSexGroup],
+      ['雙重肛門插入', 'double anal', '', _analSexGroup],
       ['三重插入', 'triple penetration'],
-      ['三重陰道插入', 'triple vaginal'],
+      ['三重陰道插入', 'triple vaginal', '', _vaginalSexGroup],
+      ['三重肛門插入', 'triple anal', '', _analSexGroup],
       ['多人協作', 'teamwork'],
       ['性愛列車', 'love train'],
     ],
@@ -1657,13 +1675,14 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['任君挑選', 'take your pick'],
       ['性刺激', 'stimulation'],
       ['性交後', 'after sex'],
-      ['肛交後', 'after anal'],
-      ['口交後', 'after fellatio'],
-      ['足交後', 'after footjob'],
-      ['手交後', 'after handjob'],
+      ['肛交後', 'after anal', '', _analSexGroup],
+      ['口交後', 'after fellatio', '', _oralSexGroup],
+      ['口部互動後', 'after oral', '', _oralSexGroup],
+      ['足交後', 'after footjob', '', _footjobGroup],
+      ['手交後', 'after handjob', '', _handjobGroup],
       ['自慰後', 'after masturbation'],
       ['乳交後', 'after paizuri'],
-      ['陰道性交後', 'after vaginal'],
+      ['陰道性交後', 'after vaginal', '', _vaginalSexGroup],
       ['高潮餘韻', 'afterglow'],
       ['穿衣性交後', 'clothed after sex'],
     ],

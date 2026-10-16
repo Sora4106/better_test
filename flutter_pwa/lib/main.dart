@@ -46,6 +46,11 @@ const _breastShapeGroup = '胸部・形狀／位置';
 const _breastNippleGroup = '胸部・乳頭／乳暈';
 const _breastVisibilityGroup = '胸部・可見／裸露';
 const _breastAdultActionGroup = '性行為・胸部／乳頭';
+const _footjobAdultActionGroup = '性行為・足交';
+const _handjobAdultActionGroup = '性行為・手交';
+const _oralAdultActionGroup = '性行為・口交';
+const _analAdultActionGroup = '性行為・肛交';
+const _vaginalAdultActionGroup = '性行為・陰道性交';
 const _upperBodyChestActionGroup = '軀幹・胸部動作';
 const _breastTraitGroups = <String>{
   _breastSizeGroup,
@@ -321,13 +326,15 @@ const _organizedPosePickerSections = <String, List<String>>{
     _breastAdultActionGroup,
     '性行為・衣物內手部互動',
     '性行為',
-    '性行為・足部',
+    _footjobAdultActionGroup,
     '性行為・摩擦',
-    '性行為・手部',
+    _handjobAdultActionGroup,
     '性行為・自慰',
     '性行為・動態',
     '性行為・親吻',
-    '性行為・口部',
+    _oralAdultActionGroup,
+    _vaginalAdultActionGroup,
+    _analAdultActionGroup,
     '性行為・插入',
     '性行為・多人',
     '性行為・前後',
