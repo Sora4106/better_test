@@ -35,10 +35,20 @@ const elswordJobDetailGroups = <String>[
   elswordJobDetailAccessoryGroup,
 ];
 
+/// Normalises a weighted prompt fragment only for classification.  The source
+/// text is never changed, so a class outfit can still preserve its original
+/// weights in the final prompt.
+String _elswordComparableDetail(String english) => english
+    .trim()
+    .toLowerCase()
+    .replaceFirst(RegExp(r'^\s*\('), '')
+    .replaceFirst(RegExp(r':\s*\d+(?:\.\d+)?\s*\)\s*$'), '')
+    .trim();
+
 /// Keep class-specific visual descriptions as complete phrases whenever a
 /// regular one-word tag would lose the intended design detail.
 String elswordJobDetailGroupFor(String english) {
-  final value = english.toLowerCase();
+  final value = _elswordComparableDetail(english);
   if (value.endsWith(' outfit') ||
       const {
         'elemental mage',
@@ -62,12 +72,37 @@ String elswordJobDetailGroupFor(String english) {
     return elswordJobDetailLowerGroup;
   }
   if (RegExp(
-          r'\b(?:coat|cape|capelet|mantle|sleeves?|bodice|vest|turtleneck|top|robe|dress|armor|jacket)\b')
+          r'\b(?:coat|cape|capelet|mantle|hood|sleeves?|bodice|vest|turtleneck|top|robe|dress|armor|jacket)\b')
       .hasMatch(value)) {
     return elswordJobDetailUpperGroup;
   }
   return elswordJobDetailAccessoryGroup;
 }
+
+/// Each class outfit remains a single canonical prompt phrase by default, but
+/// these logical keys allow its visual parts to be hidden independently after
+/// applying it.  The ordered fragments themselves are kept intact below.
+String _elswordOutfitSectionIdFor(String english) {
+  return switch (elswordJobDetailGroupFor(english)) {
+    elswordJobDetailOutfitGroup => 'silhouette',
+    elswordJobDetailUpperGroup => 'upper',
+    elswordJobDetailLowerGroup => 'lower',
+    elswordJobDetailFootwearGroup => 'footwear',
+    elswordJobDetailHeadGroup => 'head',
+    elswordJobDetailTrimGroup => 'trim',
+    _ => 'accessory',
+  };
+}
+
+String _elswordOutfitSectionLabel(String id) => switch (id) {
+      'silhouette' => '職業套裝輪廓',
+      'upper' => '上身／外套',
+      'lower' => '下身／裙褲',
+      'footwear' => '鞋襪／腿部',
+      'head' => '頭部飾品',
+      'trim' => '配色／飾邊',
+      _ => '飾品／裝置',
+    };
 
 /// A bilingual visual phrase that belongs inside a single class-outfit block.
 /// They are deliberately editable description helpers, not claims that every
@@ -162,6 +197,36 @@ class _ElswordJobOutfit {
         ...look.details,
       ];
 
+  /// The exact ordered components used by [unifiedOutfitPhrase].  Keeping
+  /// these as individual fragments makes it possible to remove a coat, skirt,
+  /// shoes, or accessory from a selected class set without reordering the
+  /// remaining canonical description.
+  List<_ElswordStyleDetail> get unifiedOutfitDetails {
+    if (usesElementalMasterProfile) return visualDetails;
+    return <_ElswordStyleDetail>[
+      _ElswordStyleDetail('$jobZh職業套裝輪廓', en),
+      _ElswordStyleDetail(
+        '$jobZh原作服裝設定',
+        'official outfit, canon outfit, official character design, character accurate, official game style, original class outfit',
+      ),
+      ...visualDetails,
+    ];
+  }
+
+  /// Fragments share an ID when they belong to the same removable outfit
+  /// region.  The UI shows one switch per ID, while prompt output preserves
+  /// the source order of every still-enabled fragment.
+  List<OutfitUnifiedPhraseSectionData> get unifiedPhraseSections => [
+        for (final detail in unifiedOutfitDetails)
+          OutfitUnifiedPhraseSectionData(
+            id: _elswordOutfitSectionIdFor(detail.en),
+            zh: _elswordOutfitSectionLabel(
+              _elswordOutfitSectionIdFor(detail.en),
+            ),
+            en: detail.en,
+          ),
+      ];
+
   bool get usesElementalMasterProfile =>
       characterEn == 'Aisha' && jobEn == 'Elemental Master';
 
@@ -208,35 +273,13 @@ class _ElswordJobOutfit {
         ]
       : const <String>[];
 
-  /// The Elemental Master card keeps its class identity, official-design cues,
-  /// and head profile in separate context blocks. Its clothing block therefore
-  /// contains clothing only, preventing the same information from being
-  /// rendered twice or resolved as an ordinary character feature.
-  String get outfitOnlyPhrase {
-    final seen = <String>{};
-    return visualDetails
-        .map((detail) => detail.en)
-        .where((value) => value.trim().isNotEmpty)
-        .where((value) => seen.add(value.trim().toLowerCase()))
-        .join(', ');
-  }
-
   /// A canonical job outfit needs to survive as one visual unit.  Retain the
   /// detailed phrases inside one tag instead of exposing every component as a
   /// separately editable garment after it is applied.
   String get unifiedOutfitPhrase {
-    if (usesElementalMasterProfile) return outfitOnlyPhrase;
     final seen = <String>{};
-    return <String>[
-      en,
-      'official outfit',
-      'canon outfit',
-      'official character design',
-      'character accurate',
-      'official game style',
-      'original class outfit',
-      ...visualDetails.map((detail) => detail.en),
-    ]
+    return unifiedOutfitDetails
+        .map((detail) => detail.en)
         .where((value) => value.trim().isNotEmpty)
         .where((value) => seen.add(value.trim().toLowerCase()))
         .join(', ');
@@ -1046,13 +1089,14 @@ final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
             name: job.zh,
             palette: job.look.palette,
             description:
-                '套用 ${job.characterZh}・${job.jobZh} 的完整原作轉職服裝片語；保留整體造型，只開放全身穿脫／暴露狀態調整。專屬武器可在此套裝卡中另行選擇。',
+                '套用 ${job.characterZh}・${job.jobZh} 的完整原作轉職服裝片語；可在套用後單獨保留或移除套裝輪廓、上身、下身、鞋襪、飾邊與配件。全身穿脫／暴露狀態與專屬武器仍可另外調整。',
             pieces: const <OutfitPiecePresetData>[],
             featureTags: job.featureTags,
             contextPhrases: job.contextPhrases,
             legacyFeatureTagsForMigration: job.legacyFeatureTagsForMigration,
             unifiedPhraseZh: job.zh,
             unifiedPhraseEn: job.unifiedOutfitPhrase,
+            unifiedPhraseSections: job.unifiedPhraseSections,
             equipmentTagIds: <String>[job.weaponTagId],
             ownerCharacterTags: job.ownerCharacterTag.isEmpty
                 ? const <String>[]

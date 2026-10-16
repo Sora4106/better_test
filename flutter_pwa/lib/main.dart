@@ -8425,6 +8425,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _AnimationBeat(),
   ];
   final Map<int, Set<String>> _personCombinationIds = <int, Set<String>>{};
+  // A selected canonical class outfit stays selected as one tag, while this
+  // map records any visual regions the user has temporarily hidden from its
+  // emitted phrase.  The selection itself is intentionally preserved so a
+  // hidden coat/skirt/shoe group can be restored with one click.
+  final Map<int, Map<String, Set<String>>>
+      _outfitReferenceHiddenSectionsByPerson =
+      <int, Map<String, Set<String>>>{};
   final Map<String, _OutfitReferenceResolution> _outfitReferenceCache =
       <String, _OutfitReferenceResolution>{};
   final Map<String, TextEditingController> _personSearchControllers =
@@ -8613,6 +8620,98 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String _unifiedOutfitPhraseTagId(OutfitReferencePresetData preset) =>
       '$_unifiedOutfitPhraseTagIdPrefix${preset.id}';
+
+  OutfitReferencePresetData? _unifiedOutfitReferenceForTag(TagItem tag) {
+    if (!_isUnifiedOutfitPhraseTag(tag)) return null;
+    final id = tag.id.substring(_unifiedOutfitPhraseTagIdPrefix.length);
+    for (final preset in outfitReferencePresets) {
+      if (preset.id == id) return preset;
+    }
+    return null;
+  }
+
+  Set<String> _hiddenOutfitReferenceSections(
+    OutfitReferencePresetData preset,
+    int personIndex,
+  ) =>
+      _outfitReferenceHiddenSectionsByPerson[personIndex]?[preset.id] ??
+      const <String>{};
+
+  List<OutfitUnifiedPhraseSectionData> _visibleOutfitReferenceSections(
+    OutfitReferencePresetData preset,
+    int? personIndex,
+  ) {
+    if (personIndex == null || preset.unifiedPhraseSections.isEmpty) {
+      return preset.unifiedPhraseSections;
+    }
+    final hidden = _hiddenOutfitReferenceSections(preset, personIndex);
+    return preset.unifiedPhraseSections
+        .where((section) => !hidden.contains(section.id))
+        .toList(growable: false);
+  }
+
+  List<OutfitUnifiedPhraseSectionData> _outfitReferenceSectionControls(
+      OutfitReferencePresetData preset) {
+    final seen = <String>{};
+    return preset.unifiedPhraseSections
+        .where((section) => seen.add(section.id))
+        .toList(growable: false);
+  }
+
+  void _setOutfitReferenceSectionEnabled(
+    OutfitReferencePresetData preset,
+    int personIndex,
+    String sectionId,
+    bool enabled,
+  ) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    if (!_outfitReferenceSectionControls(preset)
+        .any((section) => section.id == sectionId)) {
+      return;
+    }
+    setState(() {
+      final byPreset = _outfitReferenceHiddenSectionsByPerson.putIfAbsent(
+        personIndex,
+        () => <String, Set<String>>{},
+      );
+      final hidden = byPreset.putIfAbsent(preset.id, () => <String>{});
+      if (enabled) {
+        hidden.remove(sectionId);
+      } else {
+        hidden.add(sectionId);
+      }
+      if (hidden.isEmpty) byPreset.remove(preset.id);
+      if (byPreset.isEmpty) {
+        _outfitReferenceHiddenSectionsByPerson.remove(personIndex);
+      }
+      _persist();
+    });
+  }
+
+  void _restoreOutfitReferenceSections(
+    OutfitReferencePresetData preset,
+    int personIndex,
+  ) {
+    setState(() {
+      final byPreset = _outfitReferenceHiddenSectionsByPerson[personIndex];
+      byPreset?.remove(preset.id);
+      if (byPreset != null && byPreset.isEmpty) {
+        _outfitReferenceHiddenSectionsByPerson.remove(personIndex);
+      }
+      _persist();
+    });
+  }
+
+  void _clearOutfitReferenceSectionOverrides(
+    OutfitReferencePresetData preset,
+    int personIndex,
+  ) {
+    final byPreset = _outfitReferenceHiddenSectionsByPerson[personIndex];
+    byPreset?.remove(preset.id);
+    if (byPreset != null && byPreset.isEmpty) {
+      _outfitReferenceHiddenSectionsByPerson.remove(personIndex);
+    }
+  }
 
   String _outfitReferenceContextPhraseTagId(
     OutfitReferencePresetData preset,
@@ -10902,18 +11001,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final scope = _clothingScopeForBase(base);
       if (scope == null) continue;
       if (_isUnifiedOutfitPhraseTag(base)) {
-        // Keep canonical class outfits intact.  The long phrase is one
-        // clothing component by design; only separately selected full-body
-        // wear / exposure states may be appended to its block below.
+        // Canonical class outfits are selected as one clothing component, but
+        // some of them expose ordered hideable regions (coat, skirt, shoes,
+        // accessories, etc.).  Keep the selected base intact and only filter
+        // its rendered phrase; this lets a removed region be restored without
+        // losing the canonical outfit, job, or weapon selection.
         consumed.add(base.id);
-        result.add(_GeneratedOutputTag(
-          zh: base.zh,
-          en: base.en,
-          tagId: base.id,
-          tagIds: [base.id],
-          personIndex: personIndex,
-          clothingBlockKey: 'costume',
-        ));
+        final preset = _unifiedOutfitReferenceForTag(base);
+        final visibleSections = preset == null
+            ? const <OutfitUnifiedPhraseSectionData>[]
+            : _visibleOutfitReferenceSections(preset, personIndex);
+        if (preset == null || preset.unifiedPhraseSections.isEmpty) {
+          result.add(_GeneratedOutputTag(
+            zh: base.zh,
+            en: base.en,
+            tagId: base.id,
+            tagIds: [base.id],
+            personIndex: personIndex,
+            clothingBlockKey: 'costume',
+          ));
+        } else if (visibleSections.isNotEmpty) {
+          final sectionLabels = <String>[];
+          final seenSections = <String>{};
+          for (final section in visibleSections) {
+            if (seenSections.add(section.id)) sectionLabels.add(section.zh);
+          }
+          result.add(_GeneratedOutputTag(
+            zh: '${base.zh}（${sectionLabels.join('、')}）',
+            en: visibleSections.map((section) => section.en).join(', '),
+            tagId: base.id,
+            tagIds: [base.id],
+            personIndex: personIndex,
+            clothingBlockKey: 'costume',
+          ));
+        }
         continue;
       }
       final related = <TagItem>[base];
@@ -12611,6 +12732,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return changed;
   }
 
+  Map<int, Map<String, Set<String>>> _decodeOutfitReferenceHiddenSections(
+      dynamic raw) {
+    if (raw is! Map) return <int, Map<String, Set<String>>>{};
+    final result = <int, Map<String, Set<String>>>{};
+    for (final personEntry in raw.entries) {
+      final personIndex = int.tryParse('${personEntry.key}');
+      if (personIndex == null || personEntry.value is! Map) continue;
+      final byPreset = <String, Set<String>>{};
+      for (final presetEntry in (personEntry.value as Map).entries) {
+        final presetId = '${presetEntry.key}'.trim();
+        if (presetId.isEmpty) continue;
+        final sections = (presetEntry.value as List? ?? const <dynamic>[])
+            .map((value) => '$value'.trim())
+            .where((value) => value.isNotEmpty)
+            .toSet();
+        if (sections.isNotEmpty) byPreset[presetId] = sections;
+      }
+      if (byPreset.isNotEmpty) result[personIndex] = byPreset;
+    }
+    return result;
+  }
+
   void _restore() {
     final raw = html.window.localStorage[_storageKey];
     if (raw == null) return;
@@ -12786,6 +12929,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               (entry.value as List? ?? []).map((id) => '$id').toSet();
         }
       }
+      _outfitReferenceHiddenSectionsByPerson
+        ..clear()
+        ..addAll(_decodeOutfitReferenceHiddenSections(
+          data['outfitReferenceHiddenSectionsByPerson'],
+        ));
       final removedCharacterTags = data['removedCharacterTags'] as Map?;
       if (removedCharacterTags != null) {
         for (final entry in removedCharacterTags.entries) {
@@ -12874,6 +13022,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'personCombinationIds': _personCombinationIds.map(
           (index, ids) => MapEntry('$index', ids.toList()),
         ),
+        'outfitReferenceHiddenSectionsByPerson':
+            _outfitReferenceHiddenSectionsByPerson.map(
+          (personIndex, presets) => MapEntry(
+            '$personIndex',
+            presets.map(
+              (presetId, sectionIds) => MapEntry(presetId, sectionIds.toList()),
+            ),
+          ),
+        ),
         'peopleCount': _peopleCount,
         'stepIndex': _stepIndex,
         'stepLayoutVersion': _stepLayoutVersion,
@@ -12927,6 +13084,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _selectedIds.clear();
     _personSelectedIds.clear();
     _personCombinationIds.clear();
+    _outfitReferenceHiddenSectionsByPerson.clear();
     _removedCharacterTags.clear();
     _autoFurryIdentityForPerson.clear();
     _customTags.clear();
@@ -13792,6 +13950,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .add(_cleanTag(outputTag.en).toLowerCase());
         }
       } else if (outputTag.personIndex != null && outputTag.tagIds.isNotEmpty) {
+        for (final id in outputTag.tagIds) {
+          final tag = _tagsById[id];
+          final preset =
+              tag == null ? null : _unifiedOutfitReferenceForTag(tag);
+          if (preset != null) {
+            _clearOutfitReferenceSectionOverrides(
+              preset,
+              outputTag.personIndex!,
+            );
+          }
+        }
         final character =
             _characterForNew(_personSlots[outputTag.personIndex!]);
         for (final trait in character?.traits ?? const <CatalogTagData>[]) {
@@ -16776,6 +16945,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _personSelectedIds.clear();
       _autoFurryIdentityForPerson.clear();
       _personCombinationIds.clear();
+      _outfitReferenceHiddenSectionsByPerson.clear();
       _removedCharacterTags.clear();
       _personTagQueries.clear();
       _personActiveGroups.clear();
@@ -16931,6 +17101,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           break;
         case 4:
           removePersonTagsWhere(_isClothingOrEquipmentTag);
+          _outfitReferenceHiddenSectionsByPerson.clear();
           for (var personIndex = 0;
               personIndex < _personSlots.length;
               personIndex++) {
@@ -17102,6 +17273,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (confirmed != true) return;
     setState(() {
       final ids = _personTagIds(personIndex);
+      for (final tag in tags) {
+        final preset = _unifiedOutfitReferenceForTag(tag);
+        if (preset != null) {
+          _clearOutfitReferenceSectionOverrides(preset, personIndex);
+        }
+      }
       ids.removeAll(tags.map((tag) => tag.id));
       if (group == '髮型') {
         ids.removeWhere((id) => _tagsById[id]?.group == '髮色');
@@ -17230,6 +17407,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               int.parse('${entry.key}'):
                   (entry.value as List? ?? []).map((id) => '$id').toSet(),
         });
+      _outfitReferenceHiddenSectionsByPerson
+        ..clear()
+        ..addAll(_decodeOutfitReferenceHiddenSections(
+          data['outfitReferenceHiddenSectionsByPerson'],
+        ));
       _animationBeats
         ..clear()
         ..addAll((data['animationBeats'] as List? ?? []).map((item) =>
@@ -17269,6 +17451,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       while (_personSlots.length > count) _personSlots.removeLast();
       _personSelectedIds.removeWhere((index, _) => index >= count);
       _personCombinationIds.removeWhere((index, _) => index >= count);
+      _outfitReferenceHiddenSectionsByPerson
+          .removeWhere((index, _) => index >= count);
       _removedCharacterTags.removeWhere((index, _) => index >= count);
       _personTagQueries.removeWhere((index, _) => index >= count);
       _personActiveGroups.removeWhere((key, _) =>
@@ -17345,6 +17529,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       shiftMap(_personSelectedIds);
       shiftIndexSet(_autoFurryIdentityForPerson);
       shiftMap(_personCombinationIds);
+      shiftMap(_outfitReferenceHiddenSectionsByPerson);
       shiftMap(_removedCharacterTags);
       shiftMap(_personTagQueries);
       shiftMap(_openCharacterPickers);
@@ -19191,6 +19376,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _removeOrphanedClothingConfiguration(selectedIds, base);
     }
     _personCombinationIds[personIndex]?.remove(preset.combinationId);
+    _clearOutfitReferenceSectionOverrides(preset, personIndex);
     _removeOrphanedPhysicalTraitColors(selectedIds, personIndex: personIndex);
     _syncHairGradientColorIds(personIndex, selectedIds);
     _syncAutoFurryIdentity(personIndex, selectedIds);
@@ -19201,7 +19387,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       OutfitReferencePresetData preset, int personIndex) async {
     if (!_isOutfitReferenceAvailableForPerson(preset, personIndex)) return;
     final resolution = _resolveOutfitReference(preset);
-    final preview = _combinationPreviewTags(resolution.tags);
+    final preview =
+        _combinationPreviewTags(resolution.tags, personIndex: personIndex);
     final apply = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -19260,9 +19447,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
   }
 
-  List<_GeneratedOutputTag> _combinationPreviewTags(Iterable<TagItem> source) {
+  List<_GeneratedOutputTag> _combinationPreviewTags(
+    Iterable<TagItem> source, {
+    int? personIndex,
+  }) {
     final tags = source.toList()..sort(_compareOutputTags);
-    final clothing = _clothingOutputTagsFromSelection(tags);
+    final clothing =
+        _clothingOutputTagsFromSelection(tags, personIndex: personIndex);
     final covered = clothing.expand((tag) => tag.tagIds).toSet();
     final other = tags
         .where((tag) => !covered.contains(tag.id))
@@ -19778,6 +19969,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (replacesClothing) {
       _removeCurrentClothingForCombination(target);
+      _outfitReferenceHiddenSectionsByPerson.remove(personIndex);
       final clothingCombinationIds = _combinations
           .where(_isClothingCombination)
           .map((item) => item.id)
@@ -24772,6 +24964,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   final equipmentSelected =
                       _outfitReferenceEquipmentSelected(preset, personIndex);
                   final contextTags = _outfitReferenceContextTags(preset);
+                  final sectionControls =
+                      _outfitReferenceSectionControls(preset);
+                  final hiddenSections = outfitSelected
+                      ? _hiddenOutfitReferenceSections(preset, personIndex)
+                      : const <String>{};
                   return SizedBox(
                     width: cardWidth,
                     child: Container(
@@ -24849,6 +25046,58 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                               selected,
                                             )
                                         : null,
+                                  ),
+                              ],
+                            ),
+                          ],
+                          if (outfitSelected && sectionControls.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            const Text(
+                              '套裝部位（可單獨移除）',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              '取消勾選只會從此套裝的輸出移除該部位；職業設定、其他部位與武器不會受影響。',
+                              style: TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                for (final section in sectionControls)
+                                  FilterChip(
+                                    avatar: Icon(
+                                      hiddenSections.contains(section.id)
+                                          ? Icons.remove_circle_outline
+                                          : Icons.check_circle_outline,
+                                      size: 16,
+                                    ),
+                                    label: Text(
+                                      hiddenSections.contains(section.id)
+                                          ? '${section.zh}・已移除'
+                                          : '${section.zh}・使用中',
+                                    ),
+                                    selected:
+                                        !hiddenSections.contains(section.id),
+                                    onSelected: (selected) =>
+                                        _setOutfitReferenceSectionEnabled(
+                                      preset,
+                                      personIndex,
+                                      section.id,
+                                      selected,
+                                    ),
+                                  ),
+                                if (hiddenSections.isNotEmpty)
+                                  OutlinedButton.icon(
+                                    onPressed: () =>
+                                        _restoreOutfitReferenceSections(
+                                      preset,
+                                      personIndex,
+                                    ),
+                                    icon: const Icon(Icons.restore, size: 17),
+                                    label: const Text('恢復全部部位'),
                                   ),
                               ],
                             ),

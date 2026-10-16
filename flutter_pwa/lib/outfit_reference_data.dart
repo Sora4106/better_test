@@ -54,6 +54,30 @@ class OutfitReferenceContextPhraseData {
   final String en;
 }
 
+/// One ordered fragment of a unified outfit phrase.  Multiple fragments can
+/// share the same [id]; they are then controlled by the same visible toggle
+/// while still retaining their original prompt order when rendered.
+///
+/// This is used by class outfits whose canonical look is best applied as one
+/// phrase, but whose coat, lower body, footwear, or accessories may still need
+/// to be temporarily omitted by the user.
+class OutfitUnifiedPhraseSectionData {
+  const OutfitUnifiedPhraseSectionData({
+    required this.id,
+    required this.zh,
+    required this.en,
+  });
+
+  /// Stable logical section key, such as `upper` or `footwear`.
+  final String id;
+
+  /// Short label shown on the outfit card.
+  final String zh;
+
+  /// Ordered prompt fragment emitted when this section is enabled.
+  final String en;
+}
+
 class OutfitReferencePresetData {
   const OutfitReferencePresetData({
     required this.id,
@@ -73,6 +97,7 @@ class OutfitReferencePresetData {
     this.detailTagIds = const <String>[],
     this.unifiedPhraseZh,
     this.unifiedPhraseEn,
+    this.unifiedPhraseSections = const <OutfitUnifiedPhraseSectionData>[],
     this.equipmentTagIds = const <String>[],
     this.ownerCharacterTags = const <String>[],
     this.ownerCharacterLabel = '',
@@ -124,6 +149,11 @@ class OutfitReferencePresetData {
   /// full-body wear / exposure controls for the selected outfit.
   final String? unifiedPhraseZh;
   final String? unifiedPhraseEn;
+
+  /// Optional ordered, independently hideable portions of [unifiedPhraseEn].
+  /// If omitted, the canonical phrase keeps its original all-or-nothing
+  /// behaviour.  Repeated section IDs intentionally form one UI control.
+  final List<OutfitUnifiedPhraseSectionData> unifiedPhraseSections;
 
   /// Optional equipment shown beside this outfit reference.  These store raw
   /// [CatalogTagData.id] values and are deliberately not applied by default,
