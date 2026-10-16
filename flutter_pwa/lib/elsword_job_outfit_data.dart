@@ -143,7 +143,7 @@ class _ElswordJobOutfit {
   String get en => 'Elsword $characterEn $jobEn official class outfit';
 
   String get ownerCharacterTag => switch (characterEn) {
-        'Aisha' => 'aisha landar',
+        'Aisha' => 'aisha_(elsword)',
         'Rena' => 'rena erindel',
         'Eve' => 'eve (elsword)',
         'Ara' => 'ara haan',

@@ -3730,7 +3730,7 @@ final saaAnimeExpansionCharacters = <CatalogCharacter>[
 final saaModelNameVerifiedCharacters = <CatalogCharacter>[
   // Elsword — every female-character entry available in the SAA list.
   _saaReferenceCharacter('saa_elsword_aisha', '艾爾之光', 'Elsword', 'elsword',
-      '愛莎・蘭德爾', 'Aisha Landar', 'aisha landar'),
+      '愛莎・蘭德爾', 'Aisha Landar', 'aisha_(elsword)'),
   _saaReferenceCharacter('saa_elsword_ara', '艾爾之光', 'Elsword', 'elsword', '韓艾拉',
       'Ara Haan', 'ara haan'),
   _saaReferenceCharacter('saa_elsword_elesis', '艾爾之光', 'Elsword', 'elsword',

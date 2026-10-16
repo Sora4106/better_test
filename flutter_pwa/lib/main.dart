@@ -12309,25 +12309,29 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _normalizeInlinePromptValue(String value) =>
       value.replaceAll(RegExp(r'\s+'), ' ').trim();
 
-  String _promptTagBlock(
-    Iterable<_GeneratedOutputTag> tags, {
-    double? weight,
-  }) {
+  String _inlinePromptTags(Iterable<_GeneratedOutputTag> tags) {
     final values = <String>[];
     final seen = <String>{};
-    void addValue(String raw) {
-      final value = _moderationSafePromptTag(raw);
+    void addValue(_GeneratedOutputTag output) {
+      final value = _outputTagEnglish(output);
       if (value.isNotEmpty && seen.add(value.toLowerCase())) values.add(value);
     }
 
     for (final tag in tags) {
-      addValue(tag.en);
+      addValue(tag);
     }
-    if (values.isEmpty) return '';
+    return values.map(_normalizeInlinePromptValue).join(', ');
+  }
+
+  String _promptTagBlock(
+    Iterable<_GeneratedOutputTag> tags, {
+    double? weight,
+  }) {
+    final rendered = _inlinePromptTags(tags);
+    if (rendered.isEmpty) return '';
     final suffix = weight == null
         ? ''
         : ':${_boundedPromptWeight(weight).toStringAsFixed(2)}';
-    final rendered = values.map(_normalizeInlinePromptValue).join(', ');
     return '($rendered$suffix)';
   }
 
@@ -13951,7 +13955,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final seen = used ?? <String>{};
     final result = <_GeneratedOutputTag>[];
     for (final tag in tags) {
-      final key = _moderationSafePromptTag(tag.en).toLowerCase();
+      final key = _outputTagEnglish(tag).toLowerCase();
       if (key.isEmpty || !seen.add(key)) continue;
       result.add(tag);
     }
@@ -14077,11 +14081,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   ///
   /// The catalogue stores stable database-style IDs (underscores and unescaped
   /// parentheses) so selections, reverse import, and old saved data stay
-  /// compatible. Prompt output, however, follows BetterWaifu's recommended
-  /// human-readable form: spaces instead of underscores and escaped
-  /// parentheses. A handful of Project Sekai entries used old convenience
-  /// labels; map them to their actual character / unit trigger tags here.
-  String _canonicalModelTag(String value, {bool escapeParentheses = true}) {
+  /// compatible. Most freeform prompt text remains human-readable, while
+  /// character and model-identity labels can retain their official underscore
+  /// syntax through [preserveUnderscores]. A handful of Project Sekai entries
+  /// used old convenience labels; map them to their actual trigger tags here.
+  String _canonicalModelTag(
+    String value, {
+    bool escapeParentheses = true,
+    bool preserveUnderscores = false,
+  }) {
     var normalized =
         _cleanTag(value).replaceAll(r'\(', '(').replaceAll(r'\)', ')');
     const aliases = <String, String>{
@@ -14101,26 +14109,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'virtual_singer': 'virtual_singer_(project_sekai)',
     };
     normalized = aliases[normalized.toLowerCase()] ?? normalized;
-    normalized = normalized.replaceAll('_', ' ');
+    if (!preserveUnderscores) normalized = normalized.replaceAll('_', ' ');
     if (!escapeParentheses) return normalized;
     return normalized.replaceAll('(', r'\(').replaceAll(')', r'\)');
   }
 
-  /// Some catalogue sources store a name in the form `name_(series)`. The
-  /// prompt already emits the series as the following identity token, so trim
-  /// that embedded duplicate and keep the human-readable character name only.
+  /// Keeps the model-facing character tag exactly as catalogued. In particular,
+  /// tags such as `aisha_(elsword)` must retain both the underscore and source
+  /// suffix even when the separate series tag follows it.
   String _characterPromptTagWithoutEmbeddedSource(CatalogCharacter character) {
-    final characterTag =
-        _canonicalModelTag(character.characterTag, escapeParentheses: false);
-    final animeTag =
-        _canonicalModelTag(character.animeTag, escapeParentheses: false);
-    if (animeTag.isEmpty) return characterTag;
-    final suffix = RegExp(
-      r'\s*\(\s*' + RegExp.escape(animeTag) + r'\s*\)\s*$',
-      caseSensitive: false,
+    return _canonicalModelTag(
+      character.characterTag,
+      escapeParentheses: false,
+      preserveUnderscores: true,
     );
-    final withoutSource = characterTag.replaceFirst(suffix, '').trim();
-    return withoutSource.isEmpty ? characterTag : withoutSource;
   }
 
   String _catalogCharacterPromptLabel(CatalogCharacter character) =>
@@ -14414,7 +14416,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return result.where((tag) => seen.add(tag)).toList();
   }
 
-  String _moderationSafePromptTag(String value) {
+  String _moderationSafePromptTag(
+    String value, {
+    bool preserveModelSyntax = false,
+  }) {
     var result = _cleanTag(value);
     const phraseReplacements = <String, String>{
       'baby blue': 'pastel blue',
@@ -14466,8 +14471,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     // weight, which is especially harmful for canonical class-head profiles.
     final hasExplicitWeight =
         RegExp(r'\([^()]+:\s*\d+(?:\.\d+)?\)').hasMatch(result);
-    return _canonicalModelTag(result, escapeParentheses: !hasExplicitWeight);
+    return _canonicalModelTag(
+      result,
+      // Character Select / model labels such as `aisha_(elsword)` are prompt
+      // tags rather than structural grouping. Preserve their exact syntax;
+      // ordinary freeform labels still escape literal parentheses safely.
+      escapeParentheses: preserveModelSyntax ? false : !hasExplicitWeight,
+      preserveUnderscores: preserveModelSyntax,
+    );
   }
+
+  bool _preservesModelSyntax(_GeneratedOutputTag output) {
+    if (output.characterTag) return true;
+    return output.tagIds
+        .any((id) => _tagsById[id]?.group == elswordJobIdentityGroup);
+  }
+
+  String _outputTagEnglish(_GeneratedOutputTag output) =>
+      _moderationSafePromptTag(
+        output.en,
+        preserveModelSyntax: _preservesModelSyntax(output),
+      );
 
   List<String> get _negativeTokens {
     final seen = <String>{};
@@ -14552,7 +14576,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     final peopleTokens = <String>[];
     addSharedTokens(_peopleTokensNew(), peopleTokens);
-    if (peopleTokens.isNotEmpty) output.add(peopleTokens.join(', '));
+    final peoplePrefix = peopleTokens.join(', ');
+    var peoplePrefixAttached = false;
+    void addPersonBlock(String value) {
+      final block = value.trim();
+      if (block.isEmpty) return;
+      if (!peoplePrefixAttached && peoplePrefix.isNotEmpty) {
+        output.add('$peoplePrefix, $block');
+        peoplePrefixAttached = true;
+      } else {
+        output.add(block);
+      }
+    }
 
     for (var index = 0; index < _personSlots.length; index++) {
       final slot = _personSlots[index];
@@ -14562,9 +14597,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ]);
       if (personal.isEmpty) continue;
 
-      // Keep every person's stable identity, outfit, and individual actions
-      // inside one outer block with one common weight. Garments keep their
-      // own inner parentheses so their colours and details remain local.
+      // With no whole-person weight, keep stable identity tags flat and leave
+      // only garments/actions parenthesized. When a whole-person weight is
+      // enabled below, retain the single outer block it needs to take effect.
       final emphasizeHair =
           personal.where((tag) => _isHairPromptOutputTag(index, tag));
       final characterFeatures = personal.where((tag) =>
@@ -14586,34 +14621,86 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               !_isCharacterWeightOutputTag(tag) &&
               !_isClothingWeightOutputTag(tag))
           .toList();
-      final segments = <String>[
-        _promptTagBlock(regularCharacterFeatures),
-        _promptTagBlock(classIdentity),
-        _promptTagBlock(classOfficialDesign),
-        _promptTagBlock(classHeadProfile),
-        if (emphasizeHair.isNotEmpty)
-          _promptTagBlock(
-            emphasizeHair,
-            weight: slot.hairPromptWeightEnabled ? slot.hairPromptWeight : null,
-          ),
-        _groupedClothingPromptBlock(clothing, weightSlot: slot),
-        _promptTagBlock(individualActions),
-      ].where((block) => block.isNotEmpty).toList();
-      if (segments.isNotEmpty) {
-        final suffix = slot.promptWeightEnabled
-            ? ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}'
-            : '';
-        // Every segment remains intact: e.g. one line for a top (including
-        // cut/material/trim) and the next line for a skirt. This results in
-        // `((character block),\n  (top block),\n  (skirt block))` rather than
-        // one line per individual tag.
-        output.add('(${segments.join(',\n  ')}$suffix)');
+      if (!slot.promptWeightEnabled) {
+        // Default, unweighted layout: model character tags and their fixed
+        // appearance stay as plain tags. Only garments and individual actions
+        // need parentheses. This preserves `aisha_(elsword), elsword,
+        // elemental_master, ...` exactly as a model-facing identity sequence.
+        final identityLine = _inlinePromptTags([
+          ...regularCharacterFeatures.where((tag) => tag.characterTag),
+          ...classIdentity,
+        ]);
+        final officialDesignLine = _inlinePromptTags(classOfficialDesign);
+        final appearanceLine = _inlinePromptTags([
+          ...regularCharacterFeatures.where((tag) => !tag.characterTag),
+          ...classHeadProfile,
+        ]);
+        final hairLine = emphasizeHair.isEmpty
+            ? ''
+            : slot.hairPromptWeightEnabled
+                ? _promptTagBlock(
+                    emphasizeHair,
+                    weight: slot.hairPromptWeight,
+                  )
+                : _inlinePromptTags(emphasizeHair);
+        final fullAppearanceLine = [appearanceLine, hairLine]
+            .where((value) => value.isNotEmpty)
+            .join(', ');
+        final clothingLine =
+            _groupedClothingPromptBlock(clothing, weightSlot: slot);
+        final actionLine = _promptTagBlock(individualActions);
+        final sections = <String>[];
+
+        if (officialDesignLine.isEmpty) {
+          // Without a class-design phrase, hair and fixed appearance follow
+          // the character name directly as requested.
+          final characterLine = [identityLine, fullAppearanceLine]
+              .where((value) => value.isNotEmpty)
+              .join(', ');
+          if (characterLine.isNotEmpty) sections.add(characterLine);
+        } else {
+          // A selected job keeps identity and official design adjacent, then
+          // leaves one blank line before the job-specific hair/head profile.
+          final identitySection = [identityLine, officialDesignLine]
+              .where((value) => value.isNotEmpty)
+              .join(',\n');
+          if (identitySection.isNotEmpty) sections.add(identitySection);
+          if (fullAppearanceLine.isNotEmpty) sections.add(fullAppearanceLine);
+        }
+        if (clothingLine.isNotEmpty) sections.add(clothingLine);
+        if (actionLine.isNotEmpty) sections.add(actionLine);
+        addPersonBlock(sections.join(',\n\n'));
+      } else {
+        // Explicit whole-person weighting still needs one outer block so the
+        // selected weight applies to every character, garment, and action tag.
+        final segments = <String>[
+          _promptTagBlock(regularCharacterFeatures),
+          _promptTagBlock(classIdentity),
+          _promptTagBlock(classOfficialDesign),
+          _promptTagBlock(classHeadProfile),
+          if (emphasizeHair.isNotEmpty)
+            _promptTagBlock(
+              emphasizeHair,
+              weight:
+                  slot.hairPromptWeightEnabled ? slot.hairPromptWeight : null,
+            ),
+          _groupedClothingPromptBlock(clothing, weightSlot: slot),
+          _promptTagBlock(individualActions),
+        ].where((block) => block.isNotEmpty).toList();
+        if (segments.isNotEmpty) {
+          final suffix =
+              ':${_boundedPromptWeight(slot.personPromptWeight).toStringAsFixed(2)}';
+          addPersonBlock('(${segments.join(',\n  ')}$suffix)');
+        }
       }
       usedShared.addAll(
         personal
-            .map((tag) => _moderationSafePromptTag(tag.en).toLowerCase())
+            .map((tag) => _outputTagEnglish(tag).toLowerCase())
             .where((value) => value.isNotEmpty),
       );
+    }
+    if (!peoplePrefixAttached && peoplePrefix.isNotEmpty) {
+      output.add(peoplePrefix);
     }
     final sharedTokens = <String>[];
     addSharedTokens(_sharedPositiveTokens, sharedTokens);
@@ -15941,9 +16028,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'risa momioka': 'momioka_risa',
       'mikado ryouko': 'mikado_ryouko',
       'ryouko mikado': 'mikado_ryouko',
-      // URL/database notation accepted by reverse import only. The emitted
-      // character prompt remains the model label `aisha landar`.
-      'aisha elsword': 'aisha landar',
+      // Accept the older readable spelling during reverse import, while the
+      // emitted model label stays `aisha_(elsword)`.
+      'aisha elsword': 'aisha_(elsword)',
+      'aisha landar': 'aisha_(elsword)',
     };
     final canonicalTag = characterTagAliases[_englishTagKey(token)];
     if (canonicalTag != null) {
@@ -16385,10 +16473,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _reversePromptSource(String value) {
     const colonThreeMarker = '__bw_symbol_colon_three__';
     return value
-        // These are database/URL-style aliases, not the prompt labels emitted
-        // by this builder. Normalise them before parentheses are parsed so
-        // `aisha_(elsword)` never becomes a broken structural group or an
-        // unmatched underscore token after reverse import.
+        // Preserve the model-facing prompt spelling at output time, but use a
+        // temporary readable alias while reverse parsing so
+        // `aisha_(elsword)` is not interpreted as a structural bracket group.
         .replaceAllMapped(
             RegExp(r'\baisha_\s*\(\s*elsword\s*\)', caseSensitive: false),
             (_) => 'aisha landar')
@@ -26021,7 +26108,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ];
     final seenShared = <String>{};
     for (final tag in shared) {
-      final value = _moderationSafePromptTag(tag.en);
+      final value = _outputTagEnglish(tag);
       if (value.isNotEmpty && seenShared.add(value.toLowerCase())) {
         output.add(value);
       }
