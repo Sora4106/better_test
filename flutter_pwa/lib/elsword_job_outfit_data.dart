@@ -208,13 +208,13 @@ class _ElswordJobOutfit {
 
   List<_ElswordStyleDetail> get visualDetails {
     // Every canonical Aisha class is emitted only from its documented phrase
-    // list.  All eight use the same weighted class-outfit anchor, matching the
-    // Elemental Master output format requested for the complete class series.
+    // list. Each class keeps its documented outfit-anchor weight while using
+    // the same Elemental Master-style output structure.
     if (usesCanonicalAishaJobProfile) {
       return <_ElswordStyleDetail>[
         _ElswordStyleDetail(
           '$jobZh職業套裝',
-          '(${_aishaJobOutfitAnchor!}:1.25)',
+          '(${_aishaJobOutfitAnchor!}:$_aishaJobOutfitWeight)',
         ),
         ...look.details,
       ];
@@ -291,6 +291,11 @@ class _ElswordJobOutfit {
         'Mystic Alchemist' => 'mystic alchemist outfit',
         'Lord Azoth' => 'lord azoth outfit',
         _ => null,
+      };
+
+  String get _aishaJobOutfitWeight => switch (jobEn) {
+        'Void Princess' => '1.3',
+        _ => '1.25',
       };
 
   /// Complete non-clothing blocks that are emitted in front of the canonical
@@ -427,7 +432,7 @@ class _ElswordJobOutfit {
   String get weaponZh => switch (characterEn) {
         'Aisha' => switch (jobEn) {
             'Aether Sage' => '乙太魔導・法杖與浮游魔導書',
-            'Void Princess' => '虛無公主・惡魔頭法杖',
+            'Void Princess' => '虛無公主・暗黑斧形法杖',
             'Oz Sorcerer' => '奧茲魔導・斧頭法杖',
             'Dimension Witch' => '次元魔女・時空法杖',
             'Metamorphy' => '星光魔女・魔法法杖',
@@ -448,7 +453,7 @@ class _ElswordJobOutfit {
       'Aisha' => switch (jobEn) {
           'Aether Sage' => 'magic staff, floating magic book',
           'Void Princess' =>
-            'dark magic staff, axe-shaped magic staff, black and white demon-shaped staff head, purple magical core',
+            'dark magic axe staff, compact axe staff, black weapon, white demon-face ornament, purple magical core, pink crystal ornaments, black and purple axe head',
           'Oz Sorcerer' =>
             'large dark magic staff, axe-headed staff, battle-axe-shaped staff head, purple magical core',
           'Dimension Witch' => 'staff',
@@ -611,41 +616,57 @@ const _aishaLooks = <String, _ElswordJobLook>{
   'Void Princess': _ElswordJobLook(
     palette: '紫色 × 洋紅色 × 白色 × 黑色',
     hairTags: [
-      'purple hair',
+      'purple eyes',
+      '((purple hair:1.25))',
       'high twintails',
       'compact twintails',
+      'flared twintails',
       'outward-curving twintails',
-      'black hair ribbons',
-      'purple eyes',
+      'tied twin tails',
+      'black hair bows',
     ],
     details: [
-      _ElswordStyleDetail('洋紅短版上衣', 'magenta cropped top'),
-      _ElswordStyleDetail('黑紫色上衣', 'black and purple top'),
-      _ElswordStyleDetail('十字圖樣', 'cross motif'),
-      _ElswordStyleDetail('白色披肩', 'white shrug'),
-      _ElswordStyleDetail('紫色朱麗葉袖', 'purple juliet sleeves'),
+      _ElswordStyleDetail('黑紫法師服裝', 'black and purple mage outfit'),
+      _ElswordStyleDetail('洋紅色點綴', 'magenta accents'),
+      _ElswordStyleDetail('短版法師上衣', 'cropped mage top'),
+      _ElswordStyleDetail('露出腰腹', 'exposed midriff'),
+      _ElswordStyleDetail('合身上衣', 'fitted top'),
+      _ElswordStyleDetail('中央寶石裝飾', 'central gem ornament'),
+      _ElswordStyleDetail('胸前十字圖樣', 'chest cross motif'),
+      _ElswordStyleDetail('黑色頸圈', 'black choker'),
       _ElswordStyleDetail('分離式袖套', 'detached sleeves'),
       _ElswordStyleDetail('超寬袖', 'very wide sleeves'),
-      _ElswordStyleDetail('荷葉袖', 'frilled sleeves'),
-      _ElswordStyleDetail('紫色臂環', 'purple armband'),
-      _ElswordStyleDetail('洋紅臂環', 'magenta armband'),
-      _ElswordStyleDetail('露出腰腹', 'exposed midriff'),
-      _ElswordStyleDetail('紫色迷你裙', 'purple miniskirt'),
-      _ElswordStyleDetail('拉鍊裙', 'zipper skirt'),
-      _ElswordStyleDetail('洋紅腰帶', 'magenta belt'),
-      _ElswordStyleDetail('黑色緞帶', 'black ribbon'),
-      _ElswordStyleDetail('腰部斗篷', 'waist cape'),
-      _ElswordStyleDetail('腰側長開衩布片', 'long split waist panels'),
-      _ElswordStyleDetail('紫色吊襪帶', 'purple garter straps'),
-      _ElswordStyleDetail('紫色大腿靴', 'purple thigh boots'),
-      _ElswordStyleDetail('拉鍊靴', 'zipper boots'),
-      _ElswordStyleDetail('白色尖頭鞋飾', 'white pointed shoe ornaments'),
-      _ElswordStyleDetail('暗黑法杖', 'dark magic staff'),
-      _ElswordStyleDetail('斧形魔法法杖', 'axe-shaped magic staff'),
-      _ElswordStyleDetail(
-          '黑白惡魔形法杖頭', 'black and white demon-shaped staff head'),
+      _ElswordStyleDetail('長喇叭袖', 'long flared sleeves'),
+      _ElswordStyleDetail('黑紫袖套', 'black and purple sleeves'),
+      _ElswordStyleDetail('袖上洋紅圓形圖樣', 'magenta circular sleeve patterns'),
+      _ElswordStyleDetail('袖口白色內層荷葉邊', 'white inner frill at sleeve cuffs'),
+      _ElswordStyleDetail('大型圓形腰部裝飾', 'large circular waist ornament'),
+      _ElswordStyleDetail('腰帶', 'waist belt'),
+      _ElswordStyleDetail('及膝上層次裙', 'above-knee layered skirt'),
+      _ElswordStyleDetail('開衩裙片', 'split skirt panels'),
+      _ElswordStyleDetail('側邊長垂布', 'long trailing side panels'),
+      _ElswordStyleDetail('黑紫下身服裝', 'black and purple lower outfit'),
+      _ElswordStyleDetail('洋紅色滾邊', 'magenta trim'),
+      _ElswordStyleDetail('腰部緞帶', 'waist ribbons'),
+      _ElswordStyleDetail('垂掛飾件', 'hanging ornaments'),
+      _ElswordStyleDetail('黑色大腿襪', 'black thighhighs'),
+      _ElswordStyleDetail('對稱腿部服飾', 'symmetrical legwear'),
+      _ElswordStyleDetail('大腿襪洋紅直條紋', 'magenta vertical stripe on thighhighs'),
+      _ElswordStyleDetail('黑紫奇幻鞋履', 'black and purple fantasy shoes'),
+      _ElswordStyleDetail('白色獸臉鞋飾', 'white beast-face shoe ornaments'),
+      _ElswordStyleDetail('白色尖頭鞋飾', 'white pointed shoe decorations'),
+      _ElswordStyleDetail('洋紅寶石點綴', 'magenta gem accents'),
+      _ElswordStyleDetail('尖頭鞋履', 'pointed footwear'),
+      _ElswordStyleDetail('暗黑斧形法杖', 'dark magic axe staff'),
+      _ElswordStyleDetail('短柄斧杖', 'compact axe staff'),
+      _ElswordStyleDetail('黑色武器', 'black weapon'),
+      _ElswordStyleDetail('白色惡魔臉飾件', 'white demon-face ornament'),
       _ElswordStyleDetail('紫色魔法核心', 'purple magical core'),
+      _ElswordStyleDetail('粉紅水晶飾件', 'pink crystal ornaments'),
+      _ElswordStyleDetail('黑紫斧頭杖首', 'black and purple axe head'),
       _ElswordStyleDetail('暗黑魔法', 'dark magic'),
+      _ElswordStyleDetail('紫色魔法光環', 'purple magic aura'),
+      _ElswordStyleDetail('黑色魔法粒子', 'black magic particles'),
       _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),

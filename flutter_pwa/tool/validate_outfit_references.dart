@@ -370,7 +370,7 @@ void main() {
     'taxonomy_costume_elsword_aisha_aether_sage':
         'purple hair, very long purple hair, long hair, hair worn down, sidelocks, ahoge, purple eyes, ornate hair ornament, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_void_princess':
-        'purple hair, high twintails, compact twintails, outward-curving twintails, black hair ribbons, purple eyes, $aishaFaceProfile',
+        'purple eyes, ((purple hair:1.25)), high twintails, compact twintails, flared twintails, outward-curving twintails, tied twin tails, black hair bows, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_oz_sorcerer':
         'purple eyes, very long purple hair, very long straight hair, loose hair, hair worn down, smooth straight hair, naturally flowing hair, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_dimension_witch':
@@ -388,7 +388,7 @@ void main() {
     'taxonomy_costume_elsword_aisha_aether_sage':
         '(aether sage outfit:1.25), white and purple dress, dark purple dress, layered dress, sleeveless dress, collared dress, cross-laced clothing, white collar, pink necktie, collar pendant, red gemstone, off-shoulder white coat, open coat, puffy sleeves, wide sleeves, white gloves, white thigh boots, amulet, earrings, gold trim, purple crystal ornaments, floating magic book, magic staff, elemental magic, aether magic, fantasy mage outfit, official Elsword style',
     'taxonomy_costume_elsword_aisha_void_princess':
-        '(void princess outfit:1.25), magenta cropped top, black and purple top, cross motif, white shrug, purple juliet sleeves, detached sleeves, very wide sleeves, frilled sleeves, purple armband, magenta armband, exposed midriff, purple miniskirt, zipper skirt, magenta belt, black ribbon, waist cape, long split waist panels, purple garter straps, purple thigh boots, zipper boots, white pointed shoe ornaments, dark magic staff, axe-shaped magic staff, black and white demon-shaped staff head, purple magical core, dark magic, official Elsword style',
+        '(void princess outfit:1.3), black and purple mage outfit, magenta accents, cropped mage top, exposed midriff, fitted top, central gem ornament, chest cross motif, black choker, detached sleeves, very wide sleeves, long flared sleeves, black and purple sleeves, magenta circular sleeve patterns, white inner frill at sleeve cuffs, large circular waist ornament, waist belt, above-knee layered skirt, split skirt panels, long trailing side panels, black and purple lower outfit, magenta trim, waist ribbons, hanging ornaments, black thighhighs, symmetrical legwear, magenta vertical stripe on thighhighs, black and purple fantasy shoes, white beast-face shoe ornaments, white pointed shoe decorations, magenta gem accents, pointed footwear, dark magic axe staff, compact axe staff, black weapon, white demon-face ornament, purple magical core, pink crystal ornaments, black and purple axe head, dark magic, purple magic aura, black magic particles, official Elsword style',
     'taxonomy_costume_elsword_aisha_oz_sorcerer':
         '(oz sorcerer outfit:1.25), large witch hat, oversized witch hat, wide-brim witch hat, crooked pointed witch hat, dark purple witch hat, magenta accents, zipper on witch hat, zipper-mouth hat, zipper-like mouth opening, visible zipper teeth, black and purple mage outfit, dark purple halter top, zipper shirt, bare shoulders, exposed midriff, cross-laced straps, detached purple sleeves, wide sleeves, zipper sleeves, frilled open skirt, long split skirt, asymmetrical legwear, dark purple thighhighs, zipper legwear, angular opening on one thighhigh, dark purple shorts, dark purple high heel footwear, zipper footwear, large dark magic staff, axe-headed staff, battle-axe-shaped staff head, purple magical core, dark magic, official Elsword style',
     'taxonomy_costume_elsword_aisha_dimension_witch':
@@ -404,7 +404,7 @@ void main() {
     'obj_fantasy_elsword_aisha_aether_sage_weapon':
         'magic staff, floating magic book',
     'obj_fantasy_elsword_aisha_void_princess_weapon':
-        'dark magic staff, axe-shaped magic staff, black and white demon-shaped staff head, purple magical core',
+        'dark magic axe staff, compact axe staff, black weapon, white demon-face ornament, purple magical core, pink crystal ornaments, black and purple axe head',
     'obj_fantasy_elsword_aisha_oz_sorcerer_weapon':
         'large dark magic staff, axe-headed staff, battle-axe-shaped staff head, purple magical core',
     'obj_fantasy_elsword_aisha_dimension_witch_weapon': 'staff',
