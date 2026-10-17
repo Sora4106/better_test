@@ -289,6 +289,61 @@ void main() {
     }
   }
 
+  // Every canonical Aisha second / third-job reference follows the same
+  // class-scoped output contract as Elemental Master: job name and official
+  // design stay ahead of the head profile, while the outfit phrase contains
+  // only clothing. This keeps a previous job's hairstyle from leaking into a
+  // newly selected Aisha class.
+  const expectedAishaClassIdentities = <String, String>{
+    'taxonomy_costume_elsword_aisha_elemental_master':
+        'elemental_master, elemental master aisha',
+    'taxonomy_costume_elsword_aisha_aether_sage':
+        'aether_sage, aether sage aisha',
+    'taxonomy_costume_elsword_aisha_void_princess':
+        'void_princess, void princess aisha',
+    'taxonomy_costume_elsword_aisha_oz_sorcerer':
+        'oz_sorcerer, oz sorcerer aisha',
+    'taxonomy_costume_elsword_aisha_dimension_witch':
+        'dimension_witch, dimension witch aisha',
+    'taxonomy_costume_elsword_aisha_metamorphy': 'metamorphy, metamorphy aisha',
+    'taxonomy_costume_elsword_aisha_mystic_alchemist':
+        'mystic_alchemist, mystic alchemist aisha',
+    'taxonomy_costume_elsword_aisha_lord_azoth': 'lord_azoth, lord azoth aisha',
+  };
+  for (final entry in expectedAishaClassIdentities.entries) {
+    final matching = outfitReferencePresets
+        .where((preset) => preset.id == entry.key)
+        .toList(growable: false);
+    if (matching.length != 1) {
+      problems.add('Missing canonical Aisha class reference "${entry.key}".');
+      continue;
+    }
+    final preset = matching.single;
+    final phrasesById = {
+      for (final phrase in preset.contextPhrases) phrase.id: phrase,
+    };
+    const expectedContextIds = {'identity', 'official_design', 'head_profile'};
+    if (!phrasesById.keys.toSet().containsAll(expectedContextIds) ||
+        phrasesById.length != expectedContextIds.length) {
+      problems.add('${preset.id}: incomplete canonical Aisha class context.');
+    }
+    if (phrasesById['identity']?.en != entry.value) {
+      problems.add('${preset.id}: unexpected canonical job identity phrase.');
+    }
+    if ((phrasesById['head_profile']?.en.trim().isEmpty ?? true)) {
+      problems.add('${preset.id}: missing canonical Aisha head profile.');
+    }
+    if (preset.featureTags.isNotEmpty) {
+      problems.add(
+          '${preset.id}: class profile must not use generic feature tags.');
+    }
+    final clothingPhrase = preset.unifiedPhraseEn?.toLowerCase() ?? '';
+    if (clothingPhrase.contains('official outfit') ||
+        clothingPhrase.contains('elsword aisha')) {
+      problems.add('${preset.id}: class context leaked into clothing phrase.');
+    }
+  }
+
   if (problems.isNotEmpty) {
     throw StateError(problems.join('\n'));
   }

@@ -16643,6 +16643,46 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .replaceAllMapped(
             RegExp(r'\belemental\s+master\s+aisha\b', caseSensitive: false),
             (_) => 'Elsword Aisha Elemental Master official class outfit')
+        // The remaining canonical Aisha job identifiers use the same compact
+        // model spelling as Elemental Master.  Convert both the underscored
+        // and readable variants back to their selectable outfit reference
+        // before token matching, so reverse import restores the exact class.
+        .replaceAllMapped(RegExp(r'\baether_sage\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Aether Sage official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\baether\s+sage\s+aisha\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Aether Sage official class outfit')
+        .replaceAllMapped(RegExp(r'\bvoid_princess\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Void Princess official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\bvoid\s+princess\s+aisha\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Void Princess official class outfit')
+        .replaceAllMapped(RegExp(r'\boz_sorcerer\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Oz Sorcerer official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\boz\s+sorcerer\s+aisha\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Oz Sorcerer official class outfit')
+        .replaceAllMapped(RegExp(r'\bdimension_witch\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Dimension Witch official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\bdimension\s+witch\s+aisha\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Dimension Witch official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\bmetamorphy\b(?!\s+aisha\b)', caseSensitive: false),
+            (_) => 'Elsword Aisha Metamorphy official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\bmetamorphy\s+aisha\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Metamorphy official class outfit')
+        .replaceAllMapped(RegExp(r'\bmystic_alchemist\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Mystic Alchemist official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\bmystic\s+alchemist\s+aisha\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Mystic Alchemist official class outfit')
+        .replaceAllMapped(RegExp(r'\blord_azoth\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Lord Azoth official class outfit')
+        .replaceAllMapped(
+            RegExp(r'\blord\s+azoth\s+aisha\b', caseSensitive: false),
+            (_) => 'Elsword Aisha Lord Azoth official class outfit')
         .replaceAll(':3', colonThreeMarker)
         .replaceAllMapped(RegExp(r':\s*-?(?:\d+(?:\.\d+)?|\.\d+)'), (_) => '')
         .replaceAll(RegExp(r'[\[\]{}]'), ' ');
