@@ -29,6 +29,14 @@ const _requiredByGroup = <String, List<String>>{
     'bouncing ass',
     'bouncing thighs',
   ],
+  '性行為・動態輔助': [
+    'up and down thrusting',
+    'back and forth thrusting',
+    'side-to-side thrusting',
+    'irregular breast jiggle',
+    'irregular ass jiggle',
+    'breasts and ass jiggling',
+  ],
   '性行為・足交': [
     'footjob',
     'double footjob',
@@ -172,5 +180,5 @@ void main() {
     _requiredPositionTags.length,
     (sum, entries) => sum + entries.length,
   );
-  print('Adult act catalog OK: $count official act/position tags checked.');
+  print('Adult act catalog OK: $count act/position tags checked.');
 }

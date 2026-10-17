@@ -112,6 +112,7 @@ const expandedSexualActGroups = <String>{
   _handjobGroup,
   '性行為・自慰',
   '性行為・動態',
+  '性行為・動態輔助',
   '性行為・男性主動擺動',
   '性行為・女性主動擺動',
   '性行為・親吻',
@@ -250,6 +251,7 @@ const expandedTagPickerSections = <String, List<String>>{
     _handjobGroup,
     '性行為・自慰',
     '性行為・動態',
+    '性行為・動態輔助',
     '性行為・男性主動擺動',
     '性行為・女性主動擺動',
     '性行為・親吻',
@@ -1372,6 +1374,24 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['陰莖反覆抽插', 'penis thrusting in and out'],
       ['女性呻吟', 'moaning'],
       ['女性全身顫抖', 'trembling'],
+    ],
+  ),
+  // These are deliberately short natural-language helper phrases rather than
+  // replacement sex positions. They can be layered over any existing adult
+  // pose package to add movement without changing its basic body layout.
+  ..._expandedTags(
+    prefix: 'adult_motion_assist',
+    group: '性行為・動態輔助',
+    order: 7,
+    adult: true,
+    support: 'description',
+    rows: const [
+      ['上下抽插', 'up and down thrusting'],
+      ['前後抽插', 'back and forth thrusting'],
+      ['左右抽插', 'side-to-side thrusting'],
+      ['胸部不規則晃動', 'irregular breast jiggle'],
+      ['臀部不規則晃動', 'irregular ass jiggle'],
+      ['胸臀連續晃動', 'breasts and ass jiggling'],
     ],
   ),
   // Danbooru/BetterWaifu-compatible sexual motion tags.  Keep male and female

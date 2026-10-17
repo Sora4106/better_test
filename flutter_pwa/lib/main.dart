@@ -55,6 +55,7 @@ const _maleActiveSexPoseGroup = '性姿勢・男性主動';
 const _femaleActiveSexPoseGroup = '性姿勢・女性主動';
 const _maleSexMotionGroup = '性行為・男性主動擺動';
 const _femaleSexMotionGroup = '性行為・女性主動擺動';
+const _adultMotionAssistGroup = '性行為・動態輔助';
 const _maleActiveSexPositionEnglish = <String>{
   'missionary',
   'mating press',
@@ -133,6 +134,66 @@ const _femaleSexMotionEnglish = <String>{
   'bouncing thighs',
   'moaning',
   'trembling',
+};
+const _adultPackageCameraAngleEnglish = <String>[
+  'front view',
+  'side view',
+  'rear view',
+  'three-quarter view',
+  'from above',
+  'from below',
+  'high-angle view',
+  'low-angle view',
+  'eye-level shot',
+];
+const _adultPackageCameraFramingEnglish = <String>[
+  'close-up',
+  'upper body',
+  'cowboy shot',
+  'lower body',
+  'full body',
+  'wide shot',
+];
+const _adultInProgressMotionEnglish = <String>{
+  'pelvic thrust',
+  'girl on top, riding, pelvic thrust',
+  'reverse cowgirl, riding, pelvic thrust',
+  'humping',
+  'male hips swaying from side to side',
+  'penis thrusting in and out',
+  'thrusting',
+  'thrusting hard',
+  'thrusting into pussy',
+  'thrusting into ass',
+  'thrusting into mouth',
+  'hip thrust',
+  'hip thrusts',
+  'reverse pelvic thrust',
+  'continue thrust after cum',
+  'swaying penis',
+  'bouncing penis',
+  'bouncing testicles',
+  'riding',
+  'dildo riding',
+  'riding dildo',
+  'riding strap-on',
+  'grinding (sexual)',
+  'pussy grinding',
+  'ass grinding',
+  'grinding on penis',
+  'cooperative grinding (sexual)',
+  'swaying hips',
+  'hip sway',
+  'swaying breasts',
+  'bouncing breasts',
+  'bouncing ass',
+  'bouncing thighs',
+  'up and down thrusting',
+  'back and forth thrusting',
+  'side-to-side thrusting',
+  'irregular breast jiggle',
+  'irregular ass jiggle',
+  'breasts and ass jiggling',
 };
 const _upperBodyChestActionGroup = '軀幹・胸部動作';
 const _breastTraitGroups = <String>{
@@ -414,6 +475,7 @@ const _organizedPosePickerSections = <String, List<String>>{
     _handjobAdultActionGroup,
     '性行為・自慰',
     '性行為・動態',
+    _adultMotionAssistGroup,
     _maleSexMotionGroup,
     _femaleSexMotionGroup,
     '性行為・親吻',
@@ -960,6 +1022,14 @@ class _OutfitReferenceResolution {
   final List<String> missing;
 }
 
+List<String> _uniqueEnglishTags(Iterable<String> values) {
+  final seen = <String>{};
+  return values.where((value) {
+    final key = value.trim().toLowerCase();
+    return key.isNotEmpty && seen.add(key);
+  }).toList(growable: false);
+}
+
 class _AdultPosePackage {
   const _AdultPosePackage({
     required this.id,
@@ -980,6 +1050,126 @@ class _AdultPosePackage {
   final List<String> personTags;
   final List<String> frameTags;
   final String category;
+
+  bool get _hasPenetrativeAction => personTags.any(
+        (tag) => const {
+          'vaginal',
+          'double vaginal',
+          'triple vaginal',
+          'anal',
+          'double anal',
+          'triple anal',
+          'mutual anal penetration',
+          'pegging',
+          'strap-on',
+          'dildo riding',
+          'riding dildo',
+          'riding strap-on',
+        }.contains(tag),
+      );
+
+  bool get _isFemaleLedRiding => personTags.any(
+        (tag) => const {
+          'girl on top',
+          'cowgirl position',
+          'squatting cowgirl position',
+          'reverse cowgirl position',
+          'reverse squatting cowgirl position',
+          'upright straddle',
+          'reverse upright straddle',
+          'amazon position',
+          'riding',
+          'dildo riding',
+          'riding dildo',
+          'riding strap-on',
+        }.contains(tag),
+      );
+
+  bool get _isSideBySide => personTags.any(
+        (tag) => const {
+          'on side',
+          'lying on side',
+          'spooning',
+        }.contains(tag),
+      );
+
+  bool get _isRearEntry => personTags.any(
+        (tag) => const {
+          'doggystyle',
+          'sex from behind',
+          'bent over',
+          'top-down bottom-up',
+          'prone bone',
+        }.contains(tag),
+      );
+
+  /// These tags are applied with the package by default. They add movement to
+  /// the base position without replacing its pose, orientation, or camera.
+  List<String> defaultMotionTagsFor({required bool endPose}) {
+    final result = <String>['motion lines'];
+    if (endPose) {
+      result.add('motion blur');
+      return _uniqueEnglishTags(result);
+    }
+
+    if (_hasPenetrativeAction) {
+      if (_isFemaleLedRiding) {
+        result.addAll([
+          'girl on top, riding, pelvic thrust',
+          'up and down thrusting',
+        ]);
+      } else {
+        result.addAll([
+          'pelvic thrust',
+          'penis thrusting in and out',
+          _isSideBySide ? 'side-to-side thrusting' : 'back and forth thrusting',
+        ]);
+      }
+      if (femaleCount > 0) {
+        result.add('bouncing breasts');
+        if (_isFemaleLedRiding || _isRearEntry) result.add('bouncing ass');
+      }
+      return _uniqueEnglishTags(result);
+    }
+
+    result.add('shaking');
+    if (femaleCount > 0) result.add('swaying hips');
+    return _uniqueEnglishTags(result);
+  }
+
+  /// Optional motion choices remain editable after a kit is applied. The
+  /// relevant defaults appear first, followed by suitable alternates.
+  List<String> motionOptionsFor({required bool endPose}) {
+    final result = <String>[
+      ...defaultMotionTagsFor(endPose: endPose),
+      'motion lines',
+      'motion blur',
+      'shaking',
+      'trembling',
+    ];
+    if (!endPose && _hasPenetrativeAction) {
+      result.addAll([
+        'pelvic thrust',
+        'penis thrusting in and out',
+        'up and down thrusting',
+        'back and forth thrusting',
+        'side-to-side thrusting',
+      ]);
+    }
+    if (femaleCount > 0) {
+      result.addAll([
+        'bouncing breasts',
+        'swaying breasts',
+        'irregular breast jiggle',
+        'bouncing ass',
+        'irregular ass jiggle',
+        'breasts and ass jiggling',
+        'swaying hips',
+        'hip sway',
+      ]);
+    }
+    return _uniqueEnglishTags(result);
+  }
 
   /// A withdrawal/end state is only meaningful for penetrative adult poses.
   /// It retains the pose and framing, removes the in-progress act labels, and
@@ -1042,7 +1232,11 @@ class _AdultPosePackage {
       'mutual anal penetration',
     };
     return [
-      ...personTags.where((tag) => !inProgressActs.contains(tag)),
+      ...personTags.where(
+        (tag) =>
+            !inProgressActs.contains(tag) &&
+            !_adultInProgressMotionEnglish.contains(tag),
+      ),
       'pulling out',
       if (endMovementTag != 'pulling out') endMovementTag,
     ];
@@ -1050,7 +1244,9 @@ class _AdultPosePackage {
 
   Iterable<String> get allPersonTags => [
         ...personTags,
+        ...motionOptionsFor(endPose: false),
         if (supportsEndPose) ...personTagsFor(endPose: true),
+        if (supportsEndPose) ...motionOptionsFor(endPose: true),
       ];
 }
 
@@ -23570,7 +23766,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ).map((tag) => tag.id).toSet();
 
   Set<String> get _adultPosePackageFrameTagIds => _adultPosePackageTags(
-        _adultPosePackages.expand((package) => package.frameTags),
+        [
+          ..._adultPosePackages.expand((package) => package.frameTags),
+          ..._adultPackageCameraAngleEnglish,
+          ..._adultPackageCameraFramingEnglish,
+        ],
       ).map((tag) => tag.id).toSet();
 
   List<TagItem> _selectedAdultPosePackageTags() {
@@ -23595,11 +23795,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final personIds = _adultPosePackageTags(
       package.personTagsFor(endPose: endPose),
     ).map((tag) => tag.id).toSet();
-    final frameIds =
-        _adultPosePackageTags(package.frameTags).map((tag) => tag.id).toSet();
-    return personIds.isNotEmpty &&
-        _personTagIds(anchor).containsAll(personIds) &&
-        _selectedIds.containsAll(frameIds);
+    // Camera choices stay independently editable after a kit is applied.
+    // Keep the package active while its pose remains selected, even when the
+    // user replaces or removes the original framing tags.
+    return personIds.isNotEmpty && _personTagIds(anchor).containsAll(personIds);
   }
 
   void _removeAdultPosePackageTags() {
@@ -23651,9 +23850,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (anchor == null || !_matchingAdultPosePackages().contains(package)) {
       return;
     }
-    final personTags = _adultPosePackageTags(
-      package.personTagsFor(endPose: endPose),
-    );
+    final personTags = _adultPosePackageTags([
+      ...package.personTagsFor(endPose: endPose),
+      ...package.defaultMotionTagsFor(endPose: endPose),
+    ]);
     final frameTags = _adultPosePackageTags(package.frameTags);
     final phaseLabel = endPose ? '性愛結束姿勢・${package.endMovementZh}' : '性愛中姿勢';
     final resolvedEnglish = {
@@ -23662,6 +23862,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     };
     final missing = [
       ...package.personTagsFor(endPose: endPose),
+      ...package.defaultMotionTagsFor(endPose: endPose),
       ...package.frameTags,
     ].where((tag) => !resolvedEnglish.contains(_englishTagKey(tag))).toList();
     if (missing.isNotEmpty) {
@@ -23734,9 +23935,128 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  _AdultPosePackage? _activeAdultPosePackage(
+    List<_AdultPosePackage> packages,
+  ) {
+    for (final package in packages) {
+      if (_adultPosePackageIsSelected(package, endPose: false) ||
+          _adultPosePackageIsSelected(package, endPose: true)) {
+        return package;
+      }
+    }
+    return null;
+  }
+
+  Widget _adultPosePackageOptionChips(
+    Iterable<TagItem> tags, {
+    required int personIndex,
+    required bool personScoped,
+  }) {
+    final selectedIds =
+        personScoped ? _personTagIds(personIndex) : _selectedIds;
+    return Wrap(
+      spacing: 6,
+      runSpacing: 6,
+      children: tags.map((tag) {
+        return FilterChip(
+          selected: selectedIds.contains(tag.id),
+          label: Text('${tag.zh} · ${tag.en}'),
+          tooltip: tag.en,
+          onSelected: (_) => unawaited(
+            _toggle(tag, personIndex: personScoped ? personIndex : null),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _adultPosePackageEnhancementControls(
+    _AdultPosePackage package, {
+    required bool endPose,
+  }) {
+    final anchor = _adultPosePackageAnchor(package);
+    if (anchor == null) return const SizedBox.shrink();
+    final motionTags =
+        _adultPosePackageTags(package.motionOptionsFor(endPose: endPose));
+    final angleTags = _adultPosePackageTags(_adultPackageCameraAngleEnglish);
+    final framingTags =
+        _adultPosePackageTags(_adultPackageCameraFramingEnglish);
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Theme.of(context)
+            .colorScheme
+            .surfaceContainerHighest
+            .withValues(alpha: .46),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: .72),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '${package.name}・動態與鏡頭微調',
+            style: const TextStyle(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            endPose
+                ? '結束動作已保留原本姿勢；可在此調整抽離時的動態與鏡頭。'
+                : '套件已先加入建議動態；可直接取消或加選，不會改變基本性愛姿勢。',
+            style: TextStyle(
+              fontSize: 12,
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (motionTags.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            const Text('動態輔助（可複選）',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            _adultPosePackageOptionChips(
+              motionTags,
+              personIndex: anchor,
+              personScoped: true,
+            ),
+          ],
+          if (angleTags.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Text('鏡頭角度（可複選）',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            _adultPosePackageOptionChips(
+              angleTags,
+              personIndex: anchor,
+              personScoped: false,
+            ),
+          ],
+          if (framingTags.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Text('取景範圍（可複選）',
+                style: TextStyle(fontWeight: FontWeight.w700)),
+            const SizedBox(height: 6),
+            _adultPosePackageOptionChips(
+              framingTags,
+              personIndex: anchor,
+              personScoped: false,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _adultPosePackagePanel() {
     final packages = _matchingAdultPosePackages();
     final selected = _selectedAdultPosePackageTags();
+    final activePackage = _activeAdultPosePackage(packages);
+    final activeEndPose = activePackage != null &&
+        activePackage.supportsEndPose &&
+        _adultPosePackageIsSelected(activePackage, endPose: true);
     const tone = Color(0xffe8792e);
     return Container(
       width: double.infinity,
@@ -23809,11 +24129,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   final english = [
                     '性愛中：${[
                       ...package.personTags,
+                      ...package.defaultMotionTagsFor(endPose: false),
                       ...package.frameTags
                     ].join(', ')}',
                     if (package.supportsEndPose)
                       '性愛結束（${package.endMovementZh}）：${[
                         ...package.personTagsFor(endPose: true),
+                        ...package.defaultMotionTagsFor(endPose: true),
                         ...package.frameTags
                       ].join(', ')}',
                   ].join('\n');
@@ -23996,6 +24318,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   }).toList(),
                 );
               },
+            ),
+          if (activePackage != null)
+            _adultPosePackageEnhancementControls(
+              activePackage,
+              endPose: activeEndPose,
             ),
         ],
       ),
