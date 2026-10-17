@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.267';
-const appBuildNumber = 269;
-const appVersionLabel = '1.1.267+269';
+﻿const appVersion = '1.1.268';
+const appBuildNumber = 270;
+const appVersionLabel = '1.1.268+270';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.268', 'build': '270', 'label': '1.1.268+270', 'date': '2026-10-17', 'notes': '統一愛莎八套轉職輸出為元素魔導完整格式，補齊職業識別、頭部特徵、加權服裝與驗證。'},
   {'version': '1.1.267', 'build': '269', 'label': '1.1.267+269', 'date': '2026-10-17', 'notes': '依附件完整重建愛莎七套二、三轉職標籤，元素魔導僅更新中文名稱；移除舊詞並加入逐項驗證。'},
   {'version': '1.1.266', 'build': '268', 'label': '1.1.266+268', 'date': '2026-10-17', 'notes': '成人姿勢套件加入動態輔助與可選鏡頭角度'},
   {'version': '1.1.265', 'build': '267', 'label': '1.1.265+267', 'date': '2026-10-17', 'notes': '修正愛莎轉職套裝共用原作設定片語遭去重而顯示缺少的問題；各職業完整保留套裝設定。'},
   {'version': '1.1.264', 'build': '266', 'label': '1.1.264+266', 'date': '2026-10-17', 'notes': '重建愛莎其餘七套二、三轉職服裝、頭部特徵與專屬武器片語；補強職業反推還原。'},
-  {'version': '1.1.263', 'build': '265', 'label': '1.1.263+265', 'date': '2026-10-17', 'notes': '新增男性／女性主動性愛體位與官方擺動標籤分類，保留既有標籤且避免重複輸出'},
 ];

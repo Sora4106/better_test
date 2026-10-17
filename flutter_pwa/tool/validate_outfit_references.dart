@@ -297,15 +297,18 @@ void main() {
   const expectedAishaClassIdentities = <String, String>{
     'taxonomy_costume_elsword_aisha_elemental_master':
         'elemental_master, elemental master aisha',
-    'taxonomy_costume_elsword_aisha_aether_sage': 'elsword, aether_sage',
-    'taxonomy_costume_elsword_aisha_void_princess': 'elsword, void_princess',
-    'taxonomy_costume_elsword_aisha_oz_sorcerer': 'elsword, oz_sorcerer',
+    'taxonomy_costume_elsword_aisha_aether_sage':
+        'aether_sage, aether sage aisha',
+    'taxonomy_costume_elsword_aisha_void_princess':
+        'void_princess, void princess aisha',
+    'taxonomy_costume_elsword_aisha_oz_sorcerer':
+        'oz_sorcerer, oz sorcerer aisha',
     'taxonomy_costume_elsword_aisha_dimension_witch':
-        'elsword, dimension_witch',
-    'taxonomy_costume_elsword_aisha_metamorphy': 'elsword, metamorphy',
+        'dimension_witch, dimension witch aisha',
+    'taxonomy_costume_elsword_aisha_metamorphy': 'metamorphy, metamorphy aisha',
     'taxonomy_costume_elsword_aisha_mystic_alchemist':
-        'elsword, mystic_alchemist',
-    'taxonomy_costume_elsword_aisha_lord_azoth': 'elsword, lord_azoth',
+        'mystic_alchemist, mystic alchemist aisha',
+    'taxonomy_costume_elsword_aisha_lord_azoth': 'lord_azoth, lord azoth aisha',
   };
   for (final entry in expectedAishaClassIdentities.entries) {
     final matching = outfitReferencePresets
@@ -354,37 +357,48 @@ void main() {
     'taxonomy_costume_elsword_aisha_mystic_alchemist': '愛莎・真理術士轉職服裝',
     'taxonomy_costume_elsword_aisha_lord_azoth': '愛莎・萬靈賢者轉職服裝',
   };
-  const expectedAishaHeadProfiles = <String, String>{
+  const aishaFaceProfile =
+      '(oval face:1.15), (slightly elongated facial proportions:1.15), '
+      '(tapered jawline:1.12), (defined nose bridge:1.12), '
+      '(defined lower eyelids:1.1), (refined lips:1.1), '
+      '(subtle cheekbone definition:1.08), '
+      '(refined facial features:1.1), detailed face, highly detailed face, '
+      'detailed eyes, consistent facial proportions, facial detail emphasis';
+  final expectedAishaHeadProfiles = <String, String>{
+    'taxonomy_costume_elsword_aisha_elemental_master':
+        'purple hair, long hair, low twintails, ahoge, purple eyes, x-shaped hairclip, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_aether_sage':
-        'purple hair, very long purple hair, long hair, sidelocks, ahoge, purple eyes',
+        'purple hair, very long purple hair, long hair, hair worn down, sidelocks, ahoge, purple eyes, ornate hair ornament, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_void_princess':
-        'purple hair, purple eyes, high twintails, compact twintails, outward-curving twintails, black hair ribbons',
+        'purple hair, high twintails, compact twintails, outward-curving twintails, black hair ribbons, purple eyes, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_oz_sorcerer':
-        'purple eyes, very long purple hair, very long straight hair, loose hair, hair worn down, smooth straight hair, naturally flowing hair',
+        'purple eyes, very long purple hair, very long straight hair, loose hair, hair worn down, smooth straight hair, naturally flowing hair, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_dimension_witch':
-        'purple hair, purple eyes, twintails, curled twintails, ringlets, pink hair ribbon, two-tone hair bow',
+        'purple hair, purple eyes, twintails, curled twintails, ringlets, pink hair ribbon, two-tone hair bow, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_metamorphy':
-        'pink-purple hair, purple hair, gradient hair, very long hair, long twintails, drill hair, curled twintails, drill sidelocks, pink eyes, purple eyes, star-shaped eye highlights, star hair ornament',
+        'pink-purple hair, purple hair, gradient hair, very long hair, long twintails, drill hair, curled twintails, drill sidelocks, pink eyes, purple eyes, star-shaped eye highlights, star hair ornament, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_mystic_alchemist':
-        'purple hair, gradient purple hair, purple eyes, low twintails, long hair, ahoge, hair bow',
+        'purple hair, gradient purple hair, low twintails, long hair, ahoge, purple eyes, hair bow, $aishaFaceProfile',
     'taxonomy_costume_elsword_aisha_lord_azoth':
-        'light purple hair, very long light purple hair, high ponytail, sidelocks, ahoge, light purple eyes, pale violet eyes, white pupils, monocle',
+        'light purple hair, very long light purple hair, high ponytail, sidelocks, ahoge, light purple eyes, pale violet eyes, white pupils, monocle, $aishaFaceProfile',
   };
   const expectedAishaOutfitProfiles = <String, String>{
+    'taxonomy_costume_elsword_aisha_elemental_master':
+        '(elemental master outfit:1.25), (white hooded coat:1.2), white coat, hood down, long white coat, white capelet, hooded capelet, purple trim, pink trim, large pink bow, pink bowtie, chest ribbon, gemstone brooch, large jewel on chest, dark purple turtleneck sweater, black and purple bodice, fitted bodice, black vest, white wide sleeves, oversized sleeves, brown gloves, leather gloves, purple pleated miniskirt, pink accents, black thighhighs, pink markings on thighhighs, white thigh strap, white ankle boots, white and pink boots, jeweled boots, hanging crystal ornaments, crystal tassels, magical accessories, emblem, fantasy mage outfit, elemental mage, magic user, official Elsword style',
     'taxonomy_costume_elsword_aisha_aether_sage':
-        'white and purple dress, dark purple dress, layered dress, sleeveless dress, collared dress, cross-laced clothing, white collar, pink necktie, collar pendant, red gemstone, off-shoulder white coat, open coat, puffy sleeves, white gloves, white thigh boots, amulet, earrings, elemental magic, aether magic',
+        '(aether sage outfit:1.25), white and purple dress, dark purple dress, layered dress, sleeveless dress, collared dress, cross-laced clothing, white collar, pink necktie, collar pendant, red gemstone, off-shoulder white coat, open coat, puffy sleeves, wide sleeves, white gloves, white thigh boots, amulet, earrings, gold trim, purple crystal ornaments, floating magic book, magic staff, elemental magic, aether magic, fantasy mage outfit, official Elsword style',
     'taxonomy_costume_elsword_aisha_void_princess':
-        'magenta cropped top, cross motif, white shrug, purple juliet sleeves, detached sleeves, very wide sleeves, frilled sleeves, purple armband, magenta armband, exposed midriff, purple miniskirt, zipper skirt, magenta belt, black ribbon, waist cape, long split waist panels, purple garter straps, purple thigh boots, zipper boots, dark magic',
+        '(void princess outfit:1.25), magenta cropped top, black and purple top, cross motif, white shrug, purple juliet sleeves, detached sleeves, very wide sleeves, frilled sleeves, purple armband, magenta armband, exposed midriff, purple miniskirt, zipper skirt, magenta belt, black ribbon, waist cape, long split waist panels, purple garter straps, purple thigh boots, zipper boots, white pointed shoe ornaments, dark magic staff, axe-shaped magic staff, black and white demon-shaped staff head, purple magical core, dark magic, official Elsword style',
     'taxonomy_costume_elsword_aisha_oz_sorcerer':
-        'large witch hat, oversized witch hat, wide-brim witch hat, crooked pointed witch hat, dark purple witch hat, magenta accents, zipper on witch hat, zipper-mouth hat, zipper-like mouth opening, visible zipper teeth, black and purple mage outfit, dark purple halter top, zipper shirt, bare shoulders, exposed midriff, cross-laced straps, detached purple sleeves, wide sleeves, zipper sleeves, frilled open skirt, long split skirt, asymmetrical legwear, dark purple thighhighs, zipper legwear, angular opening on one thighhigh, dark purple shorts, dark purple high heel footwear, zipper footwear, dark magic',
+        '(oz sorcerer outfit:1.25), large witch hat, oversized witch hat, wide-brim witch hat, crooked pointed witch hat, dark purple witch hat, magenta accents, zipper on witch hat, zipper-mouth hat, zipper-like mouth opening, visible zipper teeth, black and purple mage outfit, dark purple halter top, zipper shirt, bare shoulders, exposed midriff, cross-laced straps, detached purple sleeves, wide sleeves, zipper sleeves, frilled open skirt, long split skirt, asymmetrical legwear, dark purple thighhighs, zipper legwear, angular opening on one thighhigh, dark purple shorts, dark purple high heel footwear, zipper footwear, large dark magic staff, axe-headed staff, battle-axe-shaped staff head, purple magical core, dark magic, official Elsword style',
     'taxonomy_costume_elsword_aisha_dimension_witch':
-        'white halter dress, criss-cross halter, open dress, purple collar, large back bow, maroon back bow, bare shoulders, detached sleeves, white sleeves, sleeve garters, pink trim, white gloves, purple miniskirt, layered clothing, magenta belt, loose belt, talisman, white socks, ankle cuffs, white cross-laced boots, black ankle straps, energy magic, space-time magic, dimension magic',
+        '(dimension witch outfit:1.25), white halter dress, criss-cross halter, open dress, purple collar, large back bow, maroon back bow, bare shoulders, detached sleeves, white sleeves, sleeve garters, pink trim, white gloves, purple miniskirt, layered clothing, magenta belt, loose belt, talisman, white socks, ankle cuffs, white cross-laced boots, black ankle straps, staff, energy magic, space-time magic, dimension magic, magical girl outfit, official Elsword style',
     'taxonomy_costume_elsword_aisha_metamorphy':
-        'magical girl, white dress, pink and purple dress, two-tone dress, frilled dress, pleated skirt, pink gradient skirt, purple gemstone, purple bowtie, large bow, detached collar, pink frilled collar, bare shoulders, white elbow gloves, coattails, gold trim, thigh boots, bow legwear, white bows, high heels, winged footwear, energy magic, space-time magic, star magic',
+        '(metamorphy outfit:1.25), magical girl, white dress, pink and purple dress, two-tone dress, frilled dress, pleated skirt, pink gradient skirt, purple gemstone, purple bowtie, large bow, detached collar, pink frilled collar, bare shoulders, white elbow gloves, coattails, gold trim, thigh boots, bow legwear, white bows, high heels, winged footwear, magical staff, energy magic, space-time magic, star magic, official Elsword style',
     'taxonomy_costume_elsword_aisha_mystic_alchemist':
-        'white dress shirt, white shirt, dark purple bow, black bowtie, red gemstone, black corset, large black belt, red ribbon, purple stole, purple long sleeves, folded cuffs, black gloves, frills, layered purple skirt, multicolored skirt, alchemy vials, potion bottles, flask accessories, belt pouches, purple fold-over boots, frilled footwear, block heels, gold trim, gold soles, homunculus motif, alchemy',
+        '(mystic alchemist outfit:1.25), white dress shirt, white shirt, dark purple bow, black bowtie, red gemstone, black corset, large black belt, red ribbon, purple stole, purple long sleeves, folded cuffs, black gloves, frills, layered purple skirt, multicolored skirt, alchemy vials, potion bottles, flask accessories, belt pouches, purple fold-over boots, frilled footwear, block heels, gold trim, gold soles, alchemy staff, alchemy book, homunculus motif, alchemy, official Elsword style',
     'taxonomy_costume_elsword_aisha_lord_azoth':
-        "black choker, necklace, jewelry, white sleeveless shirt, partially open shirt, bare shoulders, gold chain, gold stole, large loose belt, alchemy vials, potion bottles, high-waisted black pants, double-breasted waist design, gold trim, black coat on shoulders, floating coat, two-sided coat, detached gradient sleeves, black and white gloves, bracelets, thigh pouch, black fold-over boots, high heels, gold soles, footwear cutouts, alchemy, philosopher's stone",
+        "(lord azoth outfit:1.25), black choker, necklace, jewelry, white sleeveless shirt, partially open shirt, bare shoulders, gold chain, gold stole, large loose belt, alchemy vials, potion bottles, high-waisted black pants, double-breasted waist design, gold trim, black coat on shoulders, floating coat, two-sided coat, detached gradient sleeves, black and white gloves, bracelets, thigh pouch, black fold-over boots, high heels, gold soles, footwear cutouts, alchemy staff, philosopher's stone motif, floating alchemy book, alchemy, philosopher's stone, official Elsword style",
   };
   const expectedAishaWeaponProfiles = <String, String>{
     'obj_fantasy_elsword_aisha_aether_sage_weapon':

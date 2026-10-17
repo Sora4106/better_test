@@ -147,6 +147,18 @@ class _ElswordJobOutfit {
     'Lord Azoth',
   };
 
+  /// The supplied Aisha class profiles deliberately share the same facial
+  /// refinement anchor.  Keeping the block here prevents one class from
+  /// silently drifting to an abbreviated face description while another keeps
+  /// the complete Elemental Master form.
+  static const String _aishaFaceProfile =
+      '(oval face:1.15), (slightly elongated facial proportions:1.15), '
+      '(tapered jawline:1.12), (defined nose bridge:1.12), '
+      '(defined lower eyelids:1.1), (refined lips:1.1), '
+      '(subtle cheekbone definition:1.08), '
+      '(refined facial features:1.1), detailed face, highly detailed face, '
+      'detailed eyes, consistent facial proportions, facial detail emphasis';
+
   final String characterZh;
   final String characterEn;
   final String jobZh;
@@ -196,13 +208,14 @@ class _ElswordJobOutfit {
 
   List<_ElswordStyleDetail> get visualDetails {
     // Every canonical Aisha class is emitted only from its documented phrase
-    // list. Elemental Master retains its existing weighted anchor exactly as
-    // authored; the other seven must not inherit a synthetic "<job> outfit"
-    // description that is absent from their verified class data.
+    // list.  All eight use the same weighted class-outfit anchor, matching the
+    // Elemental Master output format requested for the complete class series.
     if (usesCanonicalAishaJobProfile) {
       return <_ElswordStyleDetail>[
-        if (usesElementalMasterProfile)
-          _ElswordStyleDetail('$jobZh職業套裝', '(elemental master outfit:1.25)'),
+        _ElswordStyleDetail(
+          '$jobZh職業套裝',
+          '(${_aishaJobOutfitAnchor!}:1.25)',
+        ),
         ...look.details,
       ];
     }
@@ -258,13 +271,25 @@ class _ElswordJobOutfit {
 
   String? get _aishaJobIdentity => switch (jobEn) {
         'Elemental Master' => 'elemental_master, elemental master aisha',
-        'Aether Sage' => 'elsword, aether_sage',
-        'Void Princess' => 'elsword, void_princess',
-        'Oz Sorcerer' => 'elsword, oz_sorcerer',
-        'Dimension Witch' => 'elsword, dimension_witch',
-        'Metamorphy' => 'elsword, metamorphy',
-        'Mystic Alchemist' => 'elsword, mystic_alchemist',
-        'Lord Azoth' => 'elsword, lord_azoth',
+        'Aether Sage' => 'aether_sage, aether sage aisha',
+        'Void Princess' => 'void_princess, void princess aisha',
+        'Oz Sorcerer' => 'oz_sorcerer, oz sorcerer aisha',
+        'Dimension Witch' => 'dimension_witch, dimension witch aisha',
+        'Metamorphy' => 'metamorphy, metamorphy aisha',
+        'Mystic Alchemist' => 'mystic_alchemist, mystic alchemist aisha',
+        'Lord Azoth' => 'lord_azoth, lord azoth aisha',
+        _ => null,
+      };
+
+  String? get _aishaJobOutfitAnchor => switch (jobEn) {
+        'Elemental Master' => 'elemental master outfit',
+        'Aether Sage' => 'aether sage outfit',
+        'Void Princess' => 'void princess outfit',
+        'Oz Sorcerer' => 'oz sorcerer outfit',
+        'Dimension Witch' => 'dimension witch outfit',
+        'Metamorphy' => 'metamorphy outfit',
+        'Mystic Alchemist' => 'mystic alchemist outfit',
+        'Lord Azoth' => 'lord azoth outfit',
         _ => null,
       };
 
@@ -278,9 +303,10 @@ class _ElswordJobOutfit {
     }
     final identity = _aishaJobIdentity;
     if (identity == null) return const <OutfitReferenceContextPhraseData>[];
-    final headProfile = usesElementalMasterProfile
-        ? 'purple hair, long hair, low twintails, ahoge, purple eyes, x-shaped hairclip, (oval face:1.15), (slightly elongated facial proportions:1.15), (tapered jawline:1.12), (defined nose bridge:1.12), (defined lower eyelids:1.1), (refined lips:1.1), (subtle cheekbone definition:1.08), (refined facial features:1.1), detailed face, highly detailed face, detailed eyes, consistent facial proportions, facial detail emphasis'
-        : look.hairTags.join(', ');
+    final headProfile = <String>[
+      ...look.hairTags,
+      _aishaFaceProfile,
+    ].join(', ');
     return <OutfitReferenceContextPhraseData>[
       OutfitReferenceContextPhraseData(
         id: 'identity',
@@ -483,7 +509,14 @@ const _aishaLooks = <String, _ElswordJobLook>{
   ),
   'Elemental Master': _ElswordJobLook(
     palette: '白色 × 紫色 × 粉紅色',
-    hairTags: ['low twintails', 'ahoge', 'x-shaped hairclip'],
+    hairTags: [
+      'purple hair',
+      'long hair',
+      'low twintails',
+      'ahoge',
+      'purple eyes',
+      'x-shaped hairclip',
+    ],
     details: [
       _ElswordStyleDetail('元素魔導服裝強調', '(white hooded coat:1.2)'),
       _ElswordStyleDetail('白色外套', 'white coat'),
@@ -530,9 +563,11 @@ const _aishaLooks = <String, _ElswordJobLook>{
       'purple hair',
       'very long purple hair',
       'long hair',
+      'hair worn down',
       'sidelocks',
       'ahoge',
       'purple eyes',
+      'ornate hair ornament',
     ],
     details: [
       _ElswordStyleDetail('白紫色洋裝', 'white and purple dress'),
@@ -548,12 +583,19 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('露肩白色外套', 'off-shoulder white coat'),
       _ElswordStyleDetail('敞開外套', 'open coat'),
       _ElswordStyleDetail('泡泡袖', 'puffy sleeves'),
+      _ElswordStyleDetail('寬大袖子', 'wide sleeves'),
       _ElswordStyleDetail('白色手套', 'white gloves'),
       _ElswordStyleDetail('白色大腿靴', 'white thigh boots'),
       _ElswordStyleDetail('護身符', 'amulet'),
       _ElswordStyleDetail('耳環', 'earrings'),
+      _ElswordStyleDetail('金色滾邊', 'gold trim'),
+      _ElswordStyleDetail('紫色水晶飾品', 'purple crystal ornaments'),
+      _ElswordStyleDetail('浮游魔導書', 'floating magic book'),
+      _ElswordStyleDetail('法杖', 'magic staff'),
       _ElswordStyleDetail('元素魔法', 'elemental magic'),
       _ElswordStyleDetail('乙太魔法', 'aether magic'),
+      _ElswordStyleDetail('奇幻法師服裝', 'fantasy mage outfit'),
+      _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
   'Dark Magician': _ElswordJobLook(
@@ -570,14 +612,15 @@ const _aishaLooks = <String, _ElswordJobLook>{
     palette: '紫色 × 洋紅色 × 白色 × 黑色',
     hairTags: [
       'purple hair',
-      'purple eyes',
       'high twintails',
       'compact twintails',
       'outward-curving twintails',
       'black hair ribbons',
+      'purple eyes',
     ],
     details: [
       _ElswordStyleDetail('洋紅短版上衣', 'magenta cropped top'),
+      _ElswordStyleDetail('黑紫色上衣', 'black and purple top'),
       _ElswordStyleDetail('十字圖樣', 'cross motif'),
       _ElswordStyleDetail('白色披肩', 'white shrug'),
       _ElswordStyleDetail('紫色朱麗葉袖', 'purple juliet sleeves'),
@@ -596,7 +639,14 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('紫色吊襪帶', 'purple garter straps'),
       _ElswordStyleDetail('紫色大腿靴', 'purple thigh boots'),
       _ElswordStyleDetail('拉鍊靴', 'zipper boots'),
+      _ElswordStyleDetail('白色尖頭鞋飾', 'white pointed shoe ornaments'),
+      _ElswordStyleDetail('暗黑法杖', 'dark magic staff'),
+      _ElswordStyleDetail('斧形魔法法杖', 'axe-shaped magic staff'),
+      _ElswordStyleDetail(
+          '黑白惡魔形法杖頭', 'black and white demon-shaped staff head'),
+      _ElswordStyleDetail('紫色魔法核心', 'purple magical core'),
       _ElswordStyleDetail('暗黑魔法', 'dark magic'),
+      _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
   'Oz Sorcerer': _ElswordJobLook(
@@ -639,7 +689,12 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('深紫色短褲', 'dark purple shorts'),
       _ElswordStyleDetail('深紫色高跟鞋履', 'dark purple high heel footwear'),
       _ElswordStyleDetail('拉鍊鞋履', 'zipper footwear'),
+      _ElswordStyleDetail('大型暗黑法杖', 'large dark magic staff'),
+      _ElswordStyleDetail('斧頭法杖', 'axe-headed staff'),
+      _ElswordStyleDetail('戰斧形法杖頭', 'battle-axe-shaped staff head'),
+      _ElswordStyleDetail('紫色魔法核心', 'purple magical core'),
       _ElswordStyleDetail('暗黑魔法', 'dark magic'),
+      _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
   'Battle Magician': _ElswordJobLook(
@@ -685,9 +740,12 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('踝部袖口', 'ankle cuffs'),
       _ElswordStyleDetail('白色交叉繫帶靴', 'white cross-laced boots'),
       _ElswordStyleDetail('黑色踝帶', 'black ankle straps'),
+      _ElswordStyleDetail('法杖', 'staff'),
       _ElswordStyleDetail('能量魔法', 'energy magic'),
       _ElswordStyleDetail('時空魔法', 'space-time magic'),
       _ElswordStyleDetail('次元魔法', 'dimension magic'),
+      _ElswordStyleDetail('魔法少女服裝', 'magical girl outfit'),
+      _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
   'Metamorphy': _ElswordJobLook(
@@ -728,9 +786,11 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('白色蝴蝶結', 'white bows'),
       _ElswordStyleDetail('高跟鞋', 'high heels'),
       _ElswordStyleDetail('翼狀鞋履', 'winged footwear'),
+      _ElswordStyleDetail('魔法法杖', 'magical staff'),
       _ElswordStyleDetail('能量魔法', 'energy magic'),
       _ElswordStyleDetail('時空魔法', 'space-time magic'),
       _ElswordStyleDetail('星光魔法', 'star magic'),
+      _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
   'Wiz Magician': _ElswordJobLook(
@@ -748,10 +808,10 @@ const _aishaLooks = <String, _ElswordJobLook>{
     hairTags: [
       'purple hair',
       'gradient purple hair',
-      'purple eyes',
       'low twintails',
       'long hair',
       'ahoge',
+      'purple eyes',
       'hair bow',
     ],
     details: [
@@ -779,8 +839,11 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('粗跟鞋', 'block heels'),
       _ElswordStyleDetail('金色滾邊', 'gold trim'),
       _ElswordStyleDetail('金色鞋底', 'gold soles'),
+      _ElswordStyleDetail('鍊金法杖', 'alchemy staff'),
+      _ElswordStyleDetail('鍊金書', 'alchemy book'),
       _ElswordStyleDetail('人造人圖樣', 'homunculus motif'),
       _ElswordStyleDetail('鍊金術', 'alchemy'),
+      _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
   'Lord Azoth': _ElswordJobLook(
@@ -822,8 +885,12 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('高跟鞋', 'high heels'),
       _ElswordStyleDetail('金色鞋底', 'gold soles'),
       _ElswordStyleDetail('鞋履鏤空', 'footwear cutouts'),
+      _ElswordStyleDetail('鍊金法杖', 'alchemy staff'),
+      _ElswordStyleDetail('賢者之石圖樣', 'philosopher\'s stone motif'),
+      _ElswordStyleDetail('浮游鍊金書', 'floating alchemy book'),
       _ElswordStyleDetail('鍊金術', 'alchemy'),
       _ElswordStyleDetail('賢者之石', 'philosopher\'s stone'),
+      _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
 };
