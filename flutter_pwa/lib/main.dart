@@ -8641,13 +8641,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ? 'expression-symbol:${tag.en.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ')}'
           : englishKey.isEmpty
               ? 'id:${tag.id}'
-              : (_isScopedClothingGroup(tag.group) ||
-                      preserveClothingColorGroup ||
-                      preserveTaxonomyGarment ||
-                      preserveElswordJobPhrase ||
-                      preserveOutfitReferenceContextPhrase)
-                  ? 'en:$englishKey:${tag.group}'
-                  : 'en:$englishKey';
+              : preserveOutfitReferenceContextPhrase
+                  // Multiple class references intentionally share wording such
+                  // as "official outfit". They still need distinct runtime
+                  // IDs, otherwise only the first reference survives the
+                  // catalog de-duplication and every later class reports its
+                  // official-design phrase as missing.
+                  ? 'id:${tag.id}'
+                  : (_isScopedClothingGroup(tag.group) ||
+                          preserveClothingColorGroup ||
+                          preserveTaxonomyGarment ||
+                          preserveElswordJobPhrase)
+                      ? 'en:$englishKey:${tag.group}'
+                      : 'en:$englishKey';
       unique.putIfAbsent(key, () => tag);
     }
     final tags = List<TagItem>.unmodifiable(unique.values);
