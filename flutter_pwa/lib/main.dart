@@ -51,6 +51,89 @@ const _handjobAdultActionGroup = '性行為・手交';
 const _oralAdultActionGroup = '性行為・口交';
 const _analAdultActionGroup = '性行為・肛交';
 const _vaginalAdultActionGroup = '性行為・陰道性交';
+const _maleActiveSexPoseGroup = '性姿勢・男性主動';
+const _femaleActiveSexPoseGroup = '性姿勢・女性主動';
+const _maleSexMotionGroup = '性行為・男性主動擺動';
+const _femaleSexMotionGroup = '性行為・女性主動擺動';
+const _maleActiveSexPositionEnglish = <String>{
+  'missionary',
+  'mating press',
+  'boy on top',
+  'sex from behind',
+  'doggystyle',
+  'prone bone',
+  'standing sex',
+  'top-down bottom-up',
+  'standing missionary',
+  'anvil position',
+  'folded',
+  'knees to chest',
+  'legs over head',
+  'legs up',
+  'suspended congress',
+  'reverse suspended congress',
+  'full nelson',
+  'piledriver',
+  'mounting',
+  'spooning',
+  'on side',
+  'bent over',
+};
+const _femaleActiveSexPositionEnglish = <String>{
+  'girl on top',
+  'amazon position',
+  'cowgirl position',
+  'squatting cowgirl position',
+  'reverse cowgirl position',
+  'reverse squatting cowgirl position',
+  'upright straddle',
+  'reverse upright straddle',
+  'riding',
+  'dildo riding',
+  'riding dildo',
+  'riding strap-on',
+  'riding machine',
+};
+const _maleSexMotionEnglish = <String>{
+  'pelvic thrust',
+  'male hips swaying from side to side',
+  'penis thrusting in and out',
+  'thrusting',
+  'thrusting hard',
+  'thrusting into pussy',
+  'thrusting into ass',
+  'thrusting into mouth',
+  'hip thrust',
+  'hip thrusts',
+  'reverse pelvic thrust',
+  'continue thrust after cum',
+  'swaying penis',
+  'bouncing penis',
+  'bouncing testicles',
+};
+const _femaleSexMotionEnglish = <String>{
+  'girl on top, riding, pelvic thrust',
+  'reverse cowgirl, riding, pelvic thrust',
+  'riding',
+  'dildo riding',
+  'riding dildo',
+  'riding strap-on',
+  'grinding',
+  'grinding (sexual)',
+  'pussy grinding',
+  'ass grinding',
+  'grinding on penis',
+  'cooperative grinding (sexual)',
+  'humping',
+  'swaying hips',
+  'hip sway',
+  'swaying breasts',
+  'bouncing breasts',
+  'bouncing ass',
+  'bouncing thighs',
+  'moaning',
+  'trembling',
+};
 const _upperBodyChestActionGroup = '軀幹・胸部動作';
 const _breastTraitGroups = <String>{
   _breastSizeGroup,
@@ -318,8 +401,8 @@ const _organizedPosePickerSections = <String, List<String>>{
     '性姿勢',
     '性姿勢・一般',
     '性姿勢・後入',
-    '性姿勢・女上位',
-    '性姿勢・男上位',
+    _femaleActiveSexPoseGroup,
+    _maleActiveSexPoseGroup,
     '性姿勢・多人',
   ],
   '⑩ 成人・胸部／性行為': [
@@ -331,6 +414,8 @@ const _organizedPosePickerSections = <String, List<String>>{
     _handjobAdultActionGroup,
     '性行為・自慰',
     '性行為・動態',
+    _maleSexMotionGroup,
+    _femaleSexMotionGroup,
     '性行為・親吻',
     _oralAdultActionGroup,
     _vaginalAdultActionGroup,
@@ -8036,7 +8121,7 @@ List<TagItem> _seedTags() => [
         'position_reverse_cowgirl',
         '性姿勢',
         '背向女上位（成年角色）',
-        'reverse cowgirl',
+        'reverse cowgirl position',
         8,
         adult: true,
       ),
@@ -8896,8 +8981,30 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  /// Role-oriented adult pickers are aliases over the canonical tag catalogue.
+  /// This makes every official position available from a useful starting point
+  /// without creating a second prompt tag for the same meaning.
+  List<TagItem> _tagsForEnglishValues(Set<String> englishValues) =>
+      _uniquePickerTags(
+        _allTags.where(
+          (tag) => englishValues.contains(_cleanTag(tag.en).toLowerCase()),
+        ),
+      );
+
   List<TagItem> _tagsForPickerGroup(String group) {
     _allTags;
+    if (group == _maleActiveSexPoseGroup) {
+      return _tagsForEnglishValues(_maleActiveSexPositionEnglish);
+    }
+    if (group == _femaleActiveSexPoseGroup) {
+      return _tagsForEnglishValues(_femaleActiveSexPositionEnglish);
+    }
+    if (group == _maleSexMotionGroup) {
+      return _tagsForEnglishValues(_maleSexMotionEnglish);
+    }
+    if (group == _femaleSexMotionGroup) {
+      return _tagsForEnglishValues(_femaleSexMotionEnglish);
+    }
     if (group == _staticFaceAppearanceGroup) {
       return (_tagsByGroupCache!['臉部特徵'] ?? const <TagItem>[])
           .where(_isStaticFaceAppearanceTag)
@@ -20994,10 +21101,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '性姿勢・後入': Color(0xfff43f5e),
       '性姿勢・女上位': Color(0xffec4899),
       '性姿勢・男上位': Color(0xffef4444),
+      _femaleActiveSexPoseGroup: Color(0xffec4899),
+      _maleActiveSexPoseGroup: Color(0xffef4444),
       '性姿勢・多人': Color(0xffe11d48),
       '束縛姿勢': Color(0xffdc2626),
       '性行為': Color(0xfff97316),
       '性行為・動態': Color(0xfffb6a3d),
+      _maleSexMotionGroup: Color(0xfff97316),
+      _femaleSexMotionGroup: Color(0xffec4899),
       '性行為・親吻': Color(0xfff43f8c),
       'BDSM行為': Color(0xffb91c1c),
       '成人道具': Color(0xffe879f9),

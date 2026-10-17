@@ -1,6 +1,34 @@
 import '../lib/expanded_tag_data.dart';
 
 const _requiredByGroup = <String, List<String>>{
+  '性行為・男性主動擺動': [
+    'thrusting',
+    'thrusting hard',
+    'thrusting into pussy',
+    'thrusting into ass',
+    'thrusting into mouth',
+    'hip thrust',
+    'hip thrusts',
+    'reverse pelvic thrust',
+    'continue thrust after cum',
+    'swaying penis',
+    'bouncing penis',
+    'bouncing testicles',
+  ],
+  '性行為・女性主動擺動': [
+    'riding dildo',
+    'riding strap-on',
+    'grinding (sexual)',
+    'pussy grinding',
+    'ass grinding',
+    'grinding on penis',
+    'cooperative grinding (sexual)',
+    'swaying hips',
+    'hip sway',
+    'swaying breasts',
+    'bouncing ass',
+    'bouncing thighs',
+  ],
   '性行為・足交': [
     'footjob',
     'double footjob',
