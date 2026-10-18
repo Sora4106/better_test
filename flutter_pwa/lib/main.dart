@@ -154,6 +154,24 @@ const _adultPackageCameraFramingEnglish = <String>[
   'full body',
   'wide shot',
 ];
+const _adultPackageCameraOnlyEnglish = <String>{
+  'front view',
+  'side view',
+  'rear view',
+  'three-quarter view',
+  'from above',
+  'from below',
+  'high-angle view',
+  'low-angle view',
+  'eye-level shot',
+  'close-up',
+  'upper body',
+  'cowboy shot',
+  'lower body',
+  'full body',
+  'wide shot',
+  'pov',
+};
 const _adultInProgressMotionEnglish = <String>{
   'pelvic thrust',
   'girl on top, riding, pelvic thrust',
@@ -1051,6 +1069,123 @@ class _AdultPosePackage {
   final List<String> frameTags;
   final String category;
 
+  /// Adult packages are grouped by the actual body configuration rather than
+  /// their historical source list (for example, the 48-hand collection).
+  /// This makes the picker easier to scan without changing the stored
+  /// package IDs or their model-facing tags.
+  String get displayCategory {
+    final tags = personTags.toSet();
+    if (femaleCount == 2 && maleCount == 0) return '女女互動';
+    if (femaleCount == 0 && maleCount == 2) return '男男互動';
+    if (femaleCount + maleCount > 2) return '多人互動';
+    if (femaleCount + maleCount == 1) return '單人姿勢';
+
+    if (tags.any(const {
+      'oral',
+      'fellatio',
+      'cunnilingus',
+      'handjob',
+      'footjob',
+      'breastjob',
+      'fingering',
+      'vaginal fingering',
+    }.contains)) {
+      return '口部／手部／足部';
+    }
+    if (tags.any(const {
+      'standing',
+      'standing sex',
+      'standing missionary',
+      'suspended congress',
+      'reverse suspended congress',
+    }.contains)) {
+      return '站立式';
+    }
+    if (tags.any(const {
+      'squatting',
+      'squatting cowgirl position',
+      'reverse squatting cowgirl position',
+    }.contains)) {
+      return '蹲式';
+    }
+    if (tags.any(const {
+      'doggystyle',
+      'sex from behind',
+      'prone bone',
+      'top-down bottom-up',
+      'all fours',
+      'kneeling',
+      'bent over',
+    }.contains)) {
+      return '跪式／後入';
+    }
+    if (_isFemaleLedRiding) return '女上位';
+    if (tags.any(const {
+      'boy on top',
+      'missionary',
+      'mating press',
+      'anvil position',
+      'piledriver',
+      'full nelson',
+    }.contains)) {
+      return '男上位';
+    }
+    if (_isSideBySide) return '側躺式';
+    if (tags.any(const {
+      'sitting',
+      'sitting on lap',
+      'straddling',
+      'upright straddle',
+      'reverse upright straddle',
+    }.contains)) {
+      return '座位／跨坐';
+    }
+    if (tags
+        .any(const {'lying', 'lying on back', 'lying on stomach'}.contains)) {
+      return '躺式';
+    }
+    return '其他成人姿勢';
+  }
+
+  /// Removes historical numbering and hard-coded camera wording from package
+  /// cards. Camera and framing are now configured independently below.
+  String get displayName {
+    var label = name.trim().replaceFirst(RegExp(r'^\d+\s*'), '');
+    if (label.contains('｜')) label = label.split('｜').last.trim();
+    label = label.replaceFirst(
+      RegExp(r'^(?:正面|側面|背面|俯視|仰視)[・、]?\s*'),
+      '',
+    );
+    return label
+        .replaceFirst(
+          RegExp(
+            r'(?:[・｜]\s*)?(?:正面|側面|背面|俯視|仰視|低角度|高角度)(?:全身|半身|膝上)?$',
+          ),
+          '',
+        )
+        .replaceAll(RegExp(r'[・｜\s]+$'), '')
+        .trim();
+  }
+
+  String get displayDescription {
+    var value = description;
+    value = value.replaceAll(
+      RegExp(
+        r'[，、]?(?:以|由|從|採)?(?:正面|側面|背面|俯視|仰視|低角度|高角度)(?:全身|上半身|半身|膝上)?(?:構圖|取景|呈現)?',
+      ),
+      '',
+    );
+    value = value.replaceAll(
+      RegExp(r'[，、]?(?:由上方|從上方)(?:拍攝|呈現)?(?:全身|動作|身體配置)?'),
+      '',
+    );
+    value = value
+        .replaceAll(RegExp(r'[，、]{2,}'), '，')
+        .replaceAll(RegExp(r'[，、\s]+$'), '')
+        .trim();
+    return value.isEmpty ? '成人姿勢套件' : value;
+  }
+
   bool get _hasPenetrativeAction => personTags.any(
         (tag) => const {
           'vaginal',
@@ -1103,8 +1238,8 @@ class _AdultPosePackage {
         }.contains(tag),
       );
 
-  /// These tags are applied with the package by default. They add movement to
-  /// the base position without replacing its pose, orientation, or camera.
+  /// Suggested movement tags for the independent shared-motion controls.
+  /// They are not automatically applied by a pose package.
   List<String> defaultMotionTagsFor({required bool endPose}) {
     final result = <String>['motion lines'];
     if (endPose) {
@@ -1946,6 +2081,22 @@ final _adultPosePackages = <_AdultPosePackage>[
       'hug from behind',
     ],
     frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_face_to_face_hug',
+    name: '面對面互抱位',
+    description: '兩人面對面躺臥並相擁的姿勢',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'vaginal',
+      'missionary',
+      'face-to-face',
+      'hugging',
+      'lying on back',
+    ],
+    frameTags: [],
   ),
   _AdultPosePackage(
     id: 'couple_spooning_side',
@@ -8688,6 +8839,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   };
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
+  // Only the IDs that an adult pose package itself added are tracked here.
+  // Manual pose, motion, camera, and framing choices must never be deleted
+  // when a package is replaced or cancelled.
+  String? _activeAdultPosePackageKey;
+  final Set<String> _activeAdultPosePackageTagIds = <String>{};
   // Legacy session bookkeeping. Animal features no longer add a furry/anthro
   // identity cue automatically; the user selects that identity explicitly.
   final Set<int> _autoFurryIdentityForPerson = <int>{};
@@ -13229,6 +13385,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _selectedIds.addAll(
         (data['selectedIds'] as List? ?? []).map((id) => '$id'),
       );
+      _activeAdultPosePackageKey =
+          '${data['activeAdultPosePackageKey'] ?? ''}'.trim();
+      if (_activeAdultPosePackageKey!.isEmpty) {
+        _activeAdultPosePackageKey = null;
+      }
+      _activeAdultPosePackageTagIds
+        ..clear()
+        ..addAll(
+          (data['activeAdultPosePackageTagIds'] as List? ?? [])
+              .map((id) => '$id')
+              .where(_selectedIds.contains),
+        );
+      if (_activeAdultPosePackageTagIds.isEmpty) {
+        _activeAdultPosePackageKey = null;
+      }
       if (!data.containsKey('personSelectedIds')) {
         final legacyPersonal = _allTags
             .where((tag) =>
@@ -13399,6 +13570,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   Map<String, dynamic> _snapshot() => {
         'selectedIds': _selectedIds.toList(),
+        'activeAdultPosePackageKey': _activeAdultPosePackageKey,
+        'activeAdultPosePackageTagIds': _activeAdultPosePackageTagIds.toList(),
         'personSelectedIds': _personSelectedIds.map(
           (index, ids) => MapEntry('$index', ids.toList()),
         ),
@@ -13480,6 +13653,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   void _clearInMemoryStateForFullRestore() {
     _selectedIds.clear();
     _personSelectedIds.clear();
+    _activeAdultPosePackageKey = null;
+    _activeAdultPosePackageTagIds.clear();
     _personCombinationIds.clear();
     _outfitReferenceHiddenSectionsByPerson.clear();
     _removedCharacterTags.clear();
@@ -14382,6 +14557,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       } else if (outputTag.tagId != null) {
         if (outputTag.personIndex == null) {
           _selectedIds.remove(outputTag.tagId);
+          _untrackAdultPosePackageTag(outputTag.tagId!);
         } else {
           _personTagIds(outputTag.personIndex!).remove(outputTag.tagId);
         }
@@ -14834,14 +15010,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _selectedTags
           .where((tag) =>
               !_isSceneVisualPromptGroup(tag.group) &&
-              !_isSharedActionGroup(tag.group))
+              !_isSharedActionGroup(tag.group) &&
+              !_activeAdultPosePackageTagIds.contains(tag.id))
           .map((tag) => tag.en),
     );
     tokens.addAll(_extraTags(_extraPositive.text).map(_positiveEnglishTag));
     tokens.addAll(_extraTags(_preprompt.text));
     tokens.addAll(
       _selectedTags
-          .where((tag) => _isSharedActionGroup(tag.group))
+          .where((tag) =>
+              _isSharedActionGroup(tag.group) ||
+              _activeAdultPosePackageTagIds.contains(tag.id))
           .map((tag) => tag.en),
     );
     tokens.addAll(_sharedPoseExtraOutputTags().map((tag) => tag.en));
@@ -14854,14 +15033,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> get _sharedPositiveTokens => <String>[
         ..._selectedTags
-            .where((tag) => !_isSharedActionGroup(tag.group))
+            .where((tag) =>
+                !_isSharedActionGroup(tag.group) &&
+                !_activeAdultPosePackageTagIds.contains(tag.id))
             .map((tag) => tag.en),
         ..._extraTags(_extraPositive.text).map(_positiveEnglishTag),
         ..._extraTags(_preprompt.text),
       ].map(_moderationSafePromptTag).where((tag) => tag.isNotEmpty).toList();
 
   List<String> get _sharedActionTokens => _selectedTags
-      .where((tag) => _isSharedActionGroup(tag.group))
+      .where((tag) =>
+          _isSharedActionGroup(tag.group) ||
+          _activeAdultPosePackageTagIds.contains(tag.id))
       .map((tag) => tag.en)
       .map(_moderationSafePromptTag)
       .where((tag) => tag.isNotEmpty)
@@ -15978,6 +16161,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (targetIds.contains(tag.id)) {
       setState(() {
         targetIds.remove(tag.id);
+        if (personIndex == null) {
+          _untrackAdultPosePackageTag(tag.id);
+        }
         if (personIndex != null) {
           _removeOrphanedClothingConfiguration(targetIds, tag);
           if (_isClothingOrEquipmentTag(tag)) {
@@ -16051,6 +16237,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       for (final conflict in conflicts) {
         targetIds.remove(conflict.id);
+        if (personIndex == null) {
+          _untrackAdultPosePackageTag(conflict.id);
+        }
       }
       for (final replacement in clothingReplacements) {
         targetIds.remove(replacement.id);
@@ -17520,6 +17709,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     setState(() {
       _selectedIds.clear();
       _personSelectedIds.clear();
+      _activeAdultPosePackageKey = null;
+      _activeAdultPosePackageTagIds.clear();
       _autoFurryIdentityForPerson.clear();
       _personCombinationIds.clear();
       _outfitReferenceHiddenSectionsByPerson.clear();
@@ -17963,6 +18154,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _selectedIds
         ..clear()
         ..addAll((data['selectedIds'] as List? ?? []).map((id) => '$id'));
+      _activeAdultPosePackageKey =
+          '${data['activeAdultPosePackageKey'] ?? ''}'.trim();
+      if (_activeAdultPosePackageKey!.isEmpty) {
+        _activeAdultPosePackageKey = null;
+      }
+      _activeAdultPosePackageTagIds
+        ..clear()
+        ..addAll(
+          (data['activeAdultPosePackageTagIds'] as List? ?? [])
+              .map((id) => '$id')
+              .where(_selectedIds.contains),
+        );
+      if (_activeAdultPosePackageTagIds.isEmpty) {
+        _activeAdultPosePackageKey = null;
+      }
       _personSelectedIds
         ..clear()
         ..addAll({
@@ -23740,18 +23946,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
-  int? _adultPosePackageAnchor(_AdultPosePackage package) {
-    if (package.femaleCount > 0) {
-      final index = _personSlots.indexWhere((slot) => slot.gender == '女性');
-      if (index >= 0) return index;
-    }
-    if (package.maleCount > 0) {
-      final index = _personSlots.indexWhere((slot) => slot.gender == '男性');
-      if (index >= 0) return index;
-    }
-    return _personSlots.isEmpty ? null : 0;
-  }
-
   List<TagItem> _adultPosePackageTags(Iterable<String> englishTags) {
     final seen = <String>{};
     return englishTags
@@ -23761,28 +23955,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
-  Set<String> get _adultPosePackagePersonTagIds => _adultPosePackageTags(
-        _adultPosePackages.expand((package) => package.allPersonTags),
-      ).map((tag) => tag.id).toSet();
-
-  Set<String> get _adultPosePackageFrameTagIds => _adultPosePackageTags(
-        [
-          ..._adultPosePackages.expand((package) => package.frameTags),
-          ..._adultPackageCameraAngleEnglish,
-          ..._adultPackageCameraFramingEnglish,
-        ],
-      ).map((tag) => tag.id).toSet();
+  String _adultPosePackageSelectionKey(
+    _AdultPosePackage package, {
+    required bool endPose,
+  }) =>
+      '${package.id}:${endPose ? 'end' : 'in-progress'}';
 
   List<TagItem> _selectedAdultPosePackageTags() {
-    final personIds = _adultPosePackagePersonTagIds;
-    final frameIds = _adultPosePackageFrameTagIds;
-    final ids = <String>{
-      ..._personSelectedIds.values
-          .expand((selected) => selected)
-          .where(personIds.contains),
-      ..._selectedIds.where(frameIds.contains),
-    };
-    return ids.map((id) => _tagsById[id]).whereType<TagItem>().toList()
+    return _activeAdultPosePackageTagIds
+        .where(_selectedIds.contains)
+        .map((id) => _tagsById[id])
+        .whereType<TagItem>()
+        .toList()
       ..sort(_compareOutputTags);
   }
 
@@ -23790,25 +23974,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _AdultPosePackage package, {
     required bool endPose,
   }) {
-    final anchor = _adultPosePackageAnchor(package);
-    if (anchor == null) return false;
-    final personIds = _adultPosePackageTags(
-      package.personTagsFor(endPose: endPose),
-    ).map((tag) => tag.id).toSet();
-    // Camera choices stay independently editable after a kit is applied.
-    // Keep the package active while its pose remains selected, even when the
-    // user replaces or removes the original framing tags.
-    return personIds.isNotEmpty && _personTagIds(anchor).containsAll(personIds);
+    return _activeAdultPosePackageKey ==
+            _adultPosePackageSelectionKey(package, endPose: endPose) &&
+        _activeAdultPosePackageTagIds.isNotEmpty &&
+        _selectedIds.containsAll(_activeAdultPosePackageTagIds);
   }
 
   void _removeAdultPosePackageTags() {
-    final personIds = _adultPosePackagePersonTagIds;
-    final frameIds = _adultPosePackageFrameTagIds;
-    for (final selected in _personSelectedIds.values) {
-      selected.removeWhere(personIds.contains);
+    _selectedIds.removeAll(_activeAdultPosePackageTagIds);
+    _activeAdultPosePackageTagIds.clear();
+    _activeAdultPosePackageKey = null;
+  }
+
+  void _untrackAdultPosePackageTag(String tagId) {
+    if (!_activeAdultPosePackageTagIds.remove(tagId)) return;
+    if (_activeAdultPosePackageTagIds.isEmpty) {
+      _activeAdultPosePackageKey = null;
     }
-    _personSelectedIds.removeWhere((_, ids) => ids.isEmpty);
-    _selectedIds.removeWhere(frameIds.contains);
   }
 
   Future<void> _clearAdultPosePackageTags() async {
@@ -23819,7 +24001,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       builder: (dialogContext) => AlertDialog(
         title: const Text('清除成人姿勢套件？'),
         content: Text(
-          '會移除套件使用的 ${selected.length} 個姿勢、行為與鏡頭標籤；你另外加入且不屬於套件的標籤會保留。',
+          '會移除目前套件自動加入的 ${selected.length} 個共用姿勢／行為標籤；你手動加入的姿勢、動態、鏡頭與取景範圍都會保留。',
         ),
         actions: [
           TextButton(
@@ -23846,25 +24028,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }) async {
     if (!_showAdult) return;
     if (endPose && !package.supportsEndPose) return;
-    final anchor = _adultPosePackageAnchor(package);
-    if (anchor == null || !_matchingAdultPosePackages().contains(package)) {
+    if (!_matchingAdultPosePackages().contains(package)) {
       return;
     }
-    final personTags = _adultPosePackageTags([
+    final sharedEnglishTags = <String>[
       ...package.personTagsFor(endPose: endPose),
-      ...package.defaultMotionTagsFor(endPose: endPose),
-    ]);
-    final frameTags = _adultPosePackageTags(package.frameTags);
+      ...package.frameTags
+          .where((tag) => !_adultPackageCameraOnlyEnglish.contains(tag)),
+    ];
+    final sharedTags = _adultPosePackageTags(sharedEnglishTags);
     final phaseLabel = endPose ? '性愛結束姿勢・${package.endMovementZh}' : '性愛中姿勢';
-    final resolvedEnglish = {
-      ...personTags.map((tag) => _englishTagKey(tag.en)),
-      ...frameTags.map((tag) => _englishTagKey(tag.en)),
-    };
-    final missing = [
-      ...package.personTagsFor(endPose: endPose),
-      ...package.defaultMotionTagsFor(endPose: endPose),
-      ...package.frameTags,
-    ].where((tag) => !resolvedEnglish.contains(_englishTagKey(tag))).toList();
+    final resolvedEnglish =
+        sharedTags.map((tag) => _englishTagKey(tag.en)).toSet();
+    final missing = sharedEnglishTags
+        .where((tag) => !resolvedEnglish.contains(_englishTagKey(tag)))
+        .toList();
     if (missing.isNotEmpty) {
       return;
     }
@@ -23873,7 +24051,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: Text('套用「${package.name}・$phaseLabel」？'),
+        title: Text('套用「${package.displayName}・$phaseLabel」？'),
         content: SizedBox(
           width: 620,
           child: SingleChildScrollView(
@@ -23888,7 +24066,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 const SizedBox(height: 10),
                 Text('目前人物組成：${_peopleZhNew()}'),
                 const SizedBox(height: 8),
-                Text('${package.description}\n階段：$phaseLabel'),
+                Text('${package.displayDescription}\n階段：$phaseLabel'),
                 const SizedBox(height: 10),
                 const Text('將套用：',
                     style: TextStyle(fontWeight: FontWeight.w700)),
@@ -23896,14 +24074,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 Wrap(
                   spacing: 6,
                   runSpacing: 6,
-                  children: [...personTags, ...frameTags]
+                  children: sharedTags
                       .map((tag) => Chip(label: Text('${tag.zh} · ${tag.en}')))
                       .toList(),
                 ),
                 if (existing.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(
-                    '目前其他套件使用的 ${existing.length} 個標籤會先移除；手動加入且不屬於套件的標籤會保留。',
+                    '切換時只會移除目前套件自動加入的 ${existing.length} 個共用標籤；手動姿勢、動態、鏡頭與取景範圍會保留。',
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
@@ -23929,22 +24107,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     setState(() {
       _removeAdultPosePackageTags();
-      _personTagIds(anchor).addAll(personTags.map((tag) => tag.id));
-      _selectedIds.addAll(frameTags.map((tag) => tag.id));
+      final newlyAdded = sharedTags
+          .map((tag) => tag.id)
+          .where((id) => !_selectedIds.contains(id))
+          .toSet();
+      _selectedIds.addAll(sharedTags.map((tag) => tag.id));
+      if (newlyAdded.isNotEmpty) {
+        _activeAdultPosePackageKey =
+            _adultPosePackageSelectionKey(package, endPose: endPose);
+        _activeAdultPosePackageTagIds.addAll(newlyAdded);
+      }
       _persist();
     });
-  }
-
-  _AdultPosePackage? _activeAdultPosePackage(
-    List<_AdultPosePackage> packages,
-  ) {
-    for (final package in packages) {
-      if (_adultPosePackageIsSelected(package, endPose: false) ||
-          _adultPosePackageIsSelected(package, endPose: true)) {
-        return package;
-      }
-    }
-    return null;
   }
 
   Widget _adultPosePackageOptionChips(
@@ -23971,13 +24145,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _adultPosePackageEnhancementControls(
-    _AdultPosePackage package, {
-    required bool endPose,
-  }) {
-    final anchor = _adultPosePackageAnchor(package);
-    if (anchor == null) return const SizedBox.shrink();
-    final motionTags =
-        _adultPosePackageTags(package.motionOptionsFor(endPose: endPose));
+    List<_AdultPosePackage> packages,
+  ) {
+    final motionTags = _adultPosePackageTags(
+      packages.expand(
+        (package) => <String>[
+          ...package.motionOptionsFor(endPose: false),
+          if (package.supportsEndPose)
+            ...package.motionOptionsFor(endPose: true),
+        ],
+      ),
+    );
     final angleTags = _adultPosePackageTags(_adultPackageCameraAngleEnglish);
     final framingTags =
         _adultPosePackageTags(_adultPackageCameraFramingEnglish);
@@ -23998,15 +24176,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            '${package.name}・動態與鏡頭微調',
+          const Text(
+            '共用動態與鏡頭設定',
             style: const TextStyle(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 4),
           Text(
-            endPose
-                ? '結束動作已保留原本姿勢；可在此調整抽離時的動態與鏡頭。'
-                : '套件已先加入建議動態；可直接取消或加選，不會改變基本性愛姿勢。',
+            '這些內容屬於共用姿勢設定；可隨時調整，取消或更換成人姿勢套件不會改變它們。',
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -24019,8 +24195,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             const SizedBox(height: 6),
             _adultPosePackageOptionChips(
               motionTags,
-              personIndex: anchor,
-              personScoped: true,
+              personIndex: 0,
+              personScoped: false,
             ),
           ],
           if (angleTags.isNotEmpty) ...[
@@ -24030,7 +24206,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             const SizedBox(height: 6),
             _adultPosePackageOptionChips(
               angleTags,
-              personIndex: anchor,
+              personIndex: 0,
               personScoped: false,
             ),
           ],
@@ -24041,7 +24217,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             const SizedBox(height: 6),
             _adultPosePackageOptionChips(
               framingTags,
-              personIndex: anchor,
+              personIndex: 0,
               personScoped: false,
             ),
           ],
@@ -24053,10 +24229,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _adultPosePackagePanel() {
     final packages = _matchingAdultPosePackages();
     final selected = _selectedAdultPosePackageTags();
-    final activePackage = _activeAdultPosePackage(packages);
-    final activeEndPose = activePackage != null &&
-        activePackage.supportsEndPose &&
-        _adultPosePackageIsSelected(activePackage, endPose: true);
     const tone = Color(0xffe8792e);
     return Container(
       width: double.infinity,
@@ -24093,7 +24265,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ),
           const SizedBox(height: 4),
           Text(
-            '目前：${_peopleZhNew()}。選擇套件會一次加入行為、體位、基本姿勢與鏡頭；更換套件時會替換其他套件標籤。',
+            '目前：${_peopleZhNew()}。套件只會加入共用的行為與體位；個人姿勢、動態、鏡頭與取景範圍可在下方獨立設定並保留。',
             style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -24116,7 +24288,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 for (final package in packages) {
                   grouped
                       .putIfAbsent(
-                          package.category, () => <_AdultPosePackage>[])
+                          package.displayCategory, () => <_AdultPosePackage>[])
                       .add(package);
                 }
                 Widget packageCard(_AdultPosePackage package) {
@@ -24127,16 +24299,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   final endPoseActive = package.supportsEndPose &&
                       _adultPosePackageIsSelected(package, endPose: true);
                   final english = [
-                    '性愛中：${[
-                      ...package.personTags,
-                      ...package.defaultMotionTagsFor(endPose: false),
-                      ...package.frameTags
-                    ].join(', ')}',
+                    '性愛中：${package.personTags.join(', ')}',
                     if (package.supportsEndPose)
                       '性愛結束（${package.endMovementZh}）：${[
                         ...package.personTagsFor(endPose: true),
-                        ...package.defaultMotionTagsFor(endPose: true),
-                        ...package.frameTags
                       ].join(', ')}',
                   ].join('\n');
 
@@ -24229,7 +24395,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 const SizedBox(width: 6),
                                 Expanded(
                                   child: Text(
-                                    package.name,
+                                    package.displayName,
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -24239,7 +24405,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              package.description,
+                              package.displayDescription,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(fontSize: 11),
@@ -24319,11 +24485,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 );
               },
             ),
-          if (activePackage != null)
-            _adultPosePackageEnhancementControls(
-              activePackage,
-              endPose: activeEndPose,
-            ),
+          if (packages.isNotEmpty)
+            _adultPosePackageEnhancementControls(packages),
         ],
       ),
     );
@@ -26537,7 +26700,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     if (stepIndex == 5) {
       result.addAll(_selectedTags
-          .where((tag) => _isSharedActionGroup(tag.group))
+          .where((tag) =>
+              _isSharedActionGroup(tag.group) ||
+              _activeAdultPosePackageTagIds.contains(tag.id))
           .map((tag) => _GeneratedOutputTag(
                 zh: tag.zh,
                 en: tag.en,
@@ -26550,7 +26715,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       result.addAll(_selectedTags
           .where((tag) =>
               !_isSceneVisualPromptGroup(tag.group) &&
-              !_isSharedActionGroup(tag.group))
+              !_isSharedActionGroup(tag.group) &&
+              !_activeAdultPosePackageTagIds.contains(tag.id))
           .map((tag) => _GeneratedOutputTag(
                 zh: tag.zh,
                 en: tag.en,
@@ -29004,7 +29170,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .where(_isPoseWorkflowTag)
               .map((tag) => tag.zh)
               .followedBy(_selectedTags
-                  .where((tag) => _isSharedActionGroup(tag.group))
+                  .where((tag) =>
+                      _isSharedActionGroup(tag.group) ||
+                      _activeAdultPosePackageTagIds.contains(tag.id))
                   .map((tag) => tag.zh))
               .join('、')
               .ifEmpty('每位人物分別設定'),
@@ -29259,6 +29427,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isSummarySharedPoseOutputTag(_GeneratedOutputTag output) =>
       output.sharedPoseExtraValue != null ||
+      (output.tagId != null &&
+          _activeAdultPosePackageTagIds.contains(output.tagId)) ||
+      output.tagIds.any(_activeAdultPosePackageTagIds.contains) ||
       _generatedOutputSourceTags(output)
           .any((tag) => _isSharedActionGroup(tag.group));
 
@@ -29305,6 +29476,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return '$personLabel・角色與固定外觀';
     }
     if (output.sharedPoseExtraValue != null ||
+        (output.tagId != null &&
+            _activeAdultPosePackageTagIds.contains(output.tagId)) ||
+        output.tagIds.any(_activeAdultPosePackageTagIds.contains) ||
         sourceTags.any((tag) => _isSharedActionGroup(tag.group))) {
       return '共享互動／姿勢';
     }
