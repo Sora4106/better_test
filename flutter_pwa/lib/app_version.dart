@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.270';
-const appBuildNumber = 272;
-const appVersionLabel = '1.1.270+272';
+﻿const appVersion = '1.1.271';
+const appBuildNumber = 273;
+const appVersionLabel = '1.1.271+273';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.271', 'build': '273', 'label': '1.1.271+273', 'date': '2026-10-18', 'notes': '調整多人角色輸出：總人數固定置前，具細節或個人姿勢者以個別角色區塊輸出。'},
   {'version': '1.1.270', 'build': '272', 'label': '1.1.270+272', 'date': '2026-10-18', 'notes': '修正成人姿勢套件的共用標籤管理、分類與獨立鏡頭設定，並拆分愛紗轉職套裝中的武器詞彙。'},
   {'version': '1.1.269', 'build': '271', 'label': '1.1.269+271', 'date': '2026-10-17', 'notes': '更新愛莎虛無公主轉職套件，套用新版髮型、服裝、鞋履與暗黑斧形法杖片語。'},
   {'version': '1.1.268', 'build': '270', 'label': '1.1.268+270', 'date': '2026-10-17', 'notes': '統一愛莎八套轉職輸出為元素魔導完整格式，補齊職業識別、頭部特徵、加權服裝與驗證。'},
   {'version': '1.1.267', 'build': '269', 'label': '1.1.267+269', 'date': '2026-10-17', 'notes': '依附件完整重建愛莎七套二、三轉職標籤，元素魔導僅更新中文名稱；移除舊詞並加入逐項驗證。'},
-  {'version': '1.1.266', 'build': '268', 'label': '1.1.266+268', 'date': '2026-10-17', 'notes': '成人姿勢套件加入動態輔助與可選鏡頭角度'},
 ];

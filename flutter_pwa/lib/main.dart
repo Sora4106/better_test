@@ -15075,11 +15075,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         sceneTokens);
     if (sceneTokens.isNotEmpty) output.add(sceneTokens.join(', '));
 
-    // A person with selected identity / trait / clothing detail receives its
-    // own `1girl` / `1boy` token inside that character's outer group. Persons
-    // without a core detail block stay in the shared count prefix instead.
+    // Keep an aggregate gender count at the beginning of every grouped prompt.
+    // A person with their own character detail or person-scoped pose also gets
+    // their individual `1girl` / `1boy` token inside that person's block.
+    // This gives the model both the total cast and a clear owner for every
+    // personal detail without removing the shared count declaration.
     final personalBySlot = <List<_GeneratedOutputTag>>[];
-    final detailedCorePersonIndexes = <int>{};
     for (var index = 0; index < _personSlots.length; index++) {
       final slot = _personSlots[index];
       final personal = _deduplicatePromptOutputTags([
@@ -15087,45 +15088,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..._personScopedPromptTags(index),
       ]);
       personalBySlot.add(personal);
-      if (slot.detailed &&
-          personal.any((tag) =>
-              _isCharacterWeightOutputTag(tag) ||
-              _isClothingWeightOutputTag(tag))) {
-        detailedCorePersonIndexes.add(index);
-      }
     }
 
-    final peopleTokens = <String>[];
-    addSharedTokens(
-      _peopleTokensForSlots(
-        [
-          for (var index = 0; index < _personSlots.length; index++)
-            if (!detailedCorePersonIndexes.contains(index)) _personSlots[index],
-        ],
-        fallbackToOnePerson: false,
-      ),
-      peopleTokens,
-    );
-    final peoplePrefix = peopleTokens.join(', ');
-    var peoplePrefixAttached = false;
+    final peoplePrefix = _peopleTokensNew().join(', ');
+    if (peoplePrefix.isNotEmpty) output.add(peoplePrefix);
+
     void addPersonBlock(String value) {
       final block = value.trim();
       if (block.isEmpty) return;
-      if (!peoplePrefixAttached && peoplePrefix.isNotEmpty) {
-        output.add('$peoplePrefix, $block');
-        peoplePrefixAttached = true;
-      } else {
-        output.add(block);
-      }
+      output.add(block);
     }
 
     for (var index = 0; index < _personSlots.length; index++) {
       final slot = _personSlots[index];
       final personal = personalBySlot[index];
       if (personal.isEmpty) continue;
-      final personToken = detailedCorePersonIndexes.contains(index)
-          ? _singlePersonToken(slot)
-          : '';
+      final personToken = _singlePersonToken(slot);
 
       // The character's own gender token belongs inside its core block whenever
       // that person has detail, so multi-person prompts preserve attribution.
@@ -15160,9 +15138,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ...regularCharacterFeatures.where((tag) => tag.characterTag),
           ...classIdentity,
         ]);
-        final identityLine = [personToken, identityTagsLine]
-            .where((value) => value.isNotEmpty)
-            .join(', ');
         final officialDesignLine = _inlinePromptTags(classOfficialDesign);
         final appearanceLine = _inlinePromptTags([
           ...regularCharacterFeatures.where((tag) => !tag.characterTag),
@@ -15181,7 +15156,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .join(', ');
         final clothingLine =
             _groupedClothingPromptBlock(clothing, weightSlot: slot);
-        final actionLine = _promptTagBlock(individualActions);
+        final actionTagsLine = _inlinePromptTags(individualActions);
+        final hasCoreContent = identityTagsLine.isNotEmpty ||
+            officialDesignLine.isNotEmpty ||
+            appearanceLine.isNotEmpty ||
+            hairLine.isNotEmpty ||
+            clothingLine.isNotEmpty;
+        final identityLine = !hasCoreContent
+            ? ''
+            : [personToken, identityTagsLine]
+                .where((value) => value.isNotEmpty)
+                .join(', ');
         final coreSections = <String>[];
 
         if (officialDesignLine.isEmpty) {
@@ -15203,6 +15188,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           }
         }
         if (clothingLine.isNotEmpty) coreSections.add(clothingLine);
+
+        // If this person has only an individual pose/action, retain the owner
+        // token inside that action block: `(1boy, standing, ...)`. A person
+        // with character/clothing content already has the token in the core
+        // block, while their action remains a separately readable block.
+        final actionLine = actionTagsLine.isEmpty
+            ? ''
+            : coreSections.isEmpty
+                ? '($personToken, $actionTagsLine)'
+                : '($actionTagsLine)';
 
         // Keep the overall person delimiter even without a numeric weight.
         // It closes immediately after clothing, so a separately selected
@@ -15243,9 +15238,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .where((value) => value.isNotEmpty),
       );
     }
-    if (!peoplePrefixAttached && peoplePrefix.isNotEmpty) {
-      output.add(peoplePrefix);
-    }
     final sharedTokens = <String>[];
     addSharedTokens(_sharedPositiveTokens, sharedTokens);
     // Interaction / shared-pose tags must come after every person's own
@@ -15264,8 +15256,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   String get _positiveText {
-    final hasDetailedPerson = _personSlots.any((slot) => slot.detailed);
-    return hasDetailedPerson
+    final hasGroupedPersonContent = _personSlots.asMap().entries.any((entry) {
+      final index = entry.key;
+      final slot = entry.value;
+      return slot.detailed ||
+          _characterOutputTagsForSlot(slot, index).isNotEmpty ||
+          _personScopedPromptTags(index).isNotEmpty;
+    });
+    return hasGroupedPersonContent
         ? _groupedPositiveText()
         : _positiveTokens.join(', ');
   }
