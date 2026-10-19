@@ -361,7 +361,7 @@ void main() {
   // complete ordered phrases. This prevents old hand-written alternatives
   // from silently returning to a class after future catalog edits.
   const expectedAishaNames = <String, String>{
-    'taxonomy_costume_elsword_aisha_elemental_master': '愛莎・元素魔導轉職服裝',
+    'taxonomy_costume_elsword_aisha_elemental_master': '愛莎・元素師轉職服裝',
     'taxonomy_costume_elsword_aisha_aether_sage': '愛莎・乙太魔導轉職服裝',
     'taxonomy_costume_elsword_aisha_void_princess': '愛莎・虛無公主轉職服裝',
     'taxonomy_costume_elsword_aisha_oz_sorcerer': '愛莎・奧茲魔導轉職服裝',

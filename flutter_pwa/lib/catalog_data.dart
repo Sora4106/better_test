@@ -3730,15 +3730,15 @@ final saaAnimeExpansionCharacters = <CatalogCharacter>[
 final saaModelNameVerifiedCharacters = <CatalogCharacter>[
   // Elsword — every female-character entry available in the SAA list.
   _saaReferenceCharacter('saa_elsword_aisha', '艾爾之光', 'Elsword', 'elsword',
-      '愛莎・蘭德爾', 'Aisha Landar', 'aisha_(elsword)'),
-  _saaReferenceCharacter('saa_elsword_ara', '艾爾之光', 'Elsword', 'elsword', '韓艾拉',
+      '愛莎', 'Aisha Landar', 'aisha_(elsword)'),
+  _saaReferenceCharacter('saa_elsword_ara', '艾爾之光', 'Elsword', 'elsword', '艾拉',
       'Ara Haan', 'ara haan'),
   _saaReferenceCharacter('saa_elsword_elesis', '艾爾之光', 'Elsword', 'elsword',
-      '艾麗希斯', 'Elesis', 'elesis (elsword)'),
+      '愛利西斯', 'Elesis', 'elesis (elsword)'),
   _saaReferenceCharacter('saa_elsword_eve', '艾爾之光', 'Elsword', 'elsword', '伊芙',
       'Eve', 'eve (elsword)'),
   _saaReferenceCharacter('saa_elsword_luciela', '艾爾之光', 'Elsword', 'elsword',
-      '露・希爾', 'Luciela R. Sourcream', 'luciela r. sourcream'),
+      '露希爾', 'Luciela R. Sourcream', 'luciela r. sourcream'),
   _saaReferenceCharacter('saa_elsword_rena', '艾爾之光', 'Elsword', 'elsword',
       '蕾娜・艾琳黛爾', 'Rena Erindel', 'rena erindel'),
 
@@ -5846,7 +5846,7 @@ final catalogCharacters = <CatalogCharacter>[
     animeZh: '艾爾之光',
     animeEn: 'Elsword',
     animeTag: 'elsword',
-    characterZh: '蘿潔',
+    characterZh: '羅潔',
     characterEn: 'Rose',
     characterTag: 'rose_(elsword)',
     traits: const <CatalogTagData>[],
