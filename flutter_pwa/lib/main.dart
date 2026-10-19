@@ -290,9 +290,32 @@ const _buttonBorder = Color(0xff77779b);
 const _buttonSelectedSurface = Color(0xffc4b5fd);
 const _buttonSelectedText = Color(0xff171326);
 const _defaultNegativeText =
-    'lowres, worst quality, bad quality, bad anatomy, bad hands, extra digits, '
-    'multiple views, fewer digits, extra limbs, missing fingers, deformed, text, '
-    'error, jpeg artifacts, watermark, unfinished, displeasing, signature, username, scan artifacts';
+    'lowres, worst quality, bad quality, bad anatomy, bad proportions, bad hands, bad feet, '
+    'malformed hands, malformed feet, extra digits, fewer digits, missing fingers, fused fingers, '
+    'malformed fingers, extra limbs, extra arms, extra legs, missing limbs, malformed limbs, '
+    'poorly drawn face, malformed face, asymmetrical eyes, cross-eyed, deformed, multiple views, '
+    'text, error, jpeg artifacts, watermark, unfinished, displeasing, signature, username, scan artifacts';
+
+/// Generic person-rendering faults that should be suppressed for every
+/// character.  They are intentionally independent of hairstyle, species,
+/// clothing, pose, scene, and character count, so no selected prompt detail is
+/// replaced or removed when these guards are appended to the negative output.
+const _sharedCharacterNegativeCatalog = <Map<String, String>>[
+  {'en': 'bad proportions', 'zh': '錯誤身體比例'},
+  {'en': 'bad feet', 'zh': '錯誤的腳部'},
+  {'en': 'malformed hands', 'zh': '手部畸形'},
+  {'en': 'malformed feet', 'zh': '腳部畸形'},
+  {'en': 'extra arms', 'zh': '多餘手臂'},
+  {'en': 'extra legs', 'zh': '多餘腿部'},
+  {'en': 'missing limbs', 'zh': '缺少肢體'},
+  {'en': 'malformed limbs', 'zh': '肢體畸形'},
+  {'en': 'fused fingers', 'zh': '手指黏連'},
+  {'en': 'malformed fingers', 'zh': '手指畸形'},
+  {'en': 'poorly drawn face', 'zh': '臉部繪製不佳'},
+  {'en': 'malformed face', 'zh': '臉部畸形'},
+  {'en': 'asymmetrical eyes', 'zh': '雙眼不對稱'},
+  {'en': 'cross-eyed', 'zh': '鬥雞眼'},
+];
 
 const _indoorSceneIds = <String>{
   'scene_indoor_pool',
@@ -555,14 +578,12 @@ const _negativeCatalog = <Map<String, String>>[
   {'en': 'bad quality', 'zh': '低品質'},
   {'en': 'bad anatomy', 'zh': '錯誤的人體結構'},
   {'en': 'bad hands', 'zh': '錯誤的手部'},
-  {'en': 'bad feet', 'zh': '錯誤的腳部'},
   {'en': 'extra digits', 'zh': '多餘手指'},
   {'en': 'fewer digits', 'zh': '手指數量不足'},
   {'en': 'extra limbs', 'zh': '多餘肢體'},
   {'en': 'missing fingers', 'zh': '缺少手指'},
   {'en': 'multiple views', 'zh': '多重視角'},
   {'en': 'deformed', 'zh': '變形'},
-  {'en': 'poorly drawn face', 'zh': '臉部繪製不佳'},
   {'en': 'duplicate', 'zh': '重複內容'},
   {'en': 'text', 'zh': '文字'},
   {'en': 'error', 'zh': '錯誤'},
@@ -14989,7 +15010,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> get _negativeTokens {
     final seen = <String>{};
-    return [..._extraTags(_negative.text), ..._hairGuardNegativeTags]
+    return [
+      ..._extraTags(_negative.text),
+      ..._sharedCharacterNegativeCatalog.map((item) => item['en']!),
+      ..._hairGuardNegativeTags,
+    ]
         .map(_moderationSafePromptTag)
         .where((tag) => tag.isNotEmpty && seen.add(tag.toLowerCase()))
         .toList();
@@ -15418,13 +15443,42 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _negativeTagPicker() {
     final selected =
         _extraTags(_negative.text).map((item) => item.toLowerCase()).toSet();
+    final sharedNegativeEnglish = _sharedCharacterNegativeCatalog
+        .map((item) => item['en']!.toLowerCase())
+        .toSet();
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Text(
+          '人物共用防呆（自動加入）',
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 6),
         Wrap(
           spacing: 6,
           runSpacing: 4,
-          children: _negativeCatalog.map((item) {
+          children: _sharedCharacterNegativeCatalog.map((item) {
+            return Chip(
+              avatar: const Icon(Icons.person_outline, size: 16),
+              label: Text('${item['zh']} / ${item['en']}'),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '可自行調整的負面標籤',
+          style: Theme.of(context).textTheme.labelLarge,
+        ),
+        const SizedBox(height: 6),
+        Wrap(
+          spacing: 6,
+          runSpacing: 4,
+          children: _negativeCatalog
+              .where(
+            (item) =>
+                !sharedNegativeEnglish.contains(item['en']!.toLowerCase()),
+          )
+              .map((item) {
             final english = item['en']!;
             final chinese = item['zh']!;
             return FilterChip(
