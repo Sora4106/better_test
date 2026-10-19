@@ -310,6 +310,19 @@ void main() {
         'mystic_alchemist, mystic alchemist aisha',
     'taxonomy_costume_elsword_aisha_lord_azoth': 'lord_azoth, lord azoth aisha',
   };
+  final actualAishaClassIds = outfitReferencePresets
+      .where(
+          (preset) => preset.id.startsWith('taxonomy_costume_elsword_aisha_'))
+      .map((preset) => preset.id)
+      .toSet();
+  final expectedAishaClassIds = expectedAishaClassIdentities.keys.toSet();
+  if (actualAishaClassIds.length != 8 ||
+      !actualAishaClassIds.containsAll(expectedAishaClassIds) ||
+      !expectedAishaClassIds.containsAll(actualAishaClassIds)) {
+    problems.add(
+      'Aisha must expose exactly the eight verified second/third-job references.',
+    );
+  }
   for (final entry in expectedAishaClassIdentities.entries) {
     final matching = outfitReferencePresets
         .where((preset) => preset.id == entry.key)

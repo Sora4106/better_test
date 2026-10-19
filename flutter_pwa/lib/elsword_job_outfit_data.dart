@@ -502,16 +502,6 @@ const _fallbackLook = _ElswordJobLook(
 );
 
 const _aishaLooks = <String, _ElswordJobLook>{
-  'High Magician': _ElswordJobLook(
-    palette: '白色 × 紫色 × 粉紅色',
-    hairTags: ['low twintails', 'ahoge', 'x-shaped hairclip'],
-    details: [
-      _ElswordStyleDetail('白紫法師長外套', 'white and purple mage coat'),
-      _ElswordStyleDetail('粉紅胸前蝴蝶結', 'large pink chest bow'),
-      _ElswordStyleDetail('寶石胸針', 'gemstone brooch'),
-      _ElswordStyleDetail('寬大袖口', 'wide sleeves'),
-    ],
-  ),
   'Elemental Master': _ElswordJobLook(
     palette: '白色 × 紫色 × 粉紅色',
     hairTags: [
@@ -599,16 +589,6 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('乙太魔法', 'aether magic'),
       _ElswordStyleDetail('奇幻法師服裝', 'fantasy mage outfit'),
       _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
-    ],
-  ),
-  'Dark Magician': _ElswordJobLook(
-    palette: '黑色 × 深紫色 × 酒紅色',
-    hairTags: ['long straight hair', 'hair over one eye'],
-    details: [
-      _ElswordStyleDetail('黑紫暗黑法師洋裝', 'black and dark purple mage dress'),
-      _ElswordStyleDetail('酒紅色蝴蝶結', 'burgundy bow'),
-      _ElswordStyleDetail('黑色短斗篷', 'black capelet'),
-      _ElswordStyleDetail('暗色寶石飾品', 'dark gemstone ornaments'),
     ],
   ),
   'Void Princess': _ElswordJobLook(
@@ -705,16 +685,6 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
     ],
   ),
-  'Battle Magician': _ElswordJobLook(
-    palette: '黑色 × 紫色 × 金色',
-    hairTags: ['high ponytail', 'ahoge'],
-    details: [
-      _ElswordStyleDetail('黑紫戰鬥法師上衣', 'black and purple battle mage top'),
-      _ElswordStyleDetail('金色護腕與護甲飾邊', 'gold bracers and armor trim'),
-      _ElswordStyleDetail('貼身馬甲', 'fitted bodice'),
-      _ElswordStyleDetail('披肩斗篷', 'shoulder capelet'),
-    ],
-  ),
   'Dimension Witch': _ElswordJobLook(
     palette: '白色 × 紫色 × 粉紅色 × 洋紅色',
     hairTags: [
@@ -797,16 +767,6 @@ const _aishaLooks = <String, _ElswordJobLook>{
       _ElswordStyleDetail('時空魔法', 'space-time magic'),
       _ElswordStyleDetail('星光魔法', 'star magic'),
       _ElswordStyleDetail('艾爾之光原作風格', 'official Elsword style'),
-    ],
-  ),
-  'Wiz Magician': _ElswordJobLook(
-    palette: '紫色 × 金色 × 白色',
-    hairTags: ['long hair', 'side braid'],
-    details: [
-      _ElswordStyleDetail('紫金鍊金術師外套', 'purple and gold alchemist coat'),
-      _ElswordStyleDetail('魔法瓶腰飾', 'alchemy flask belt ornaments'),
-      _ElswordStyleDetail('白色袖口', 'white sleeve cuffs'),
-      _ElswordStyleDetail('鍊金術徽章', 'alchemist emblem'),
     ],
   ),
   'Mystic Alchemist': _ElswordJobLook(
@@ -1349,16 +1309,12 @@ const _elesisLooks = <String, _ElswordJobLook>{
 };
 
 const _elswordJobs = <_ElswordJobOutfit>[
-  _ElswordJobOutfit('愛莎', 'Aisha', '高階魔術師', 'High Magician'),
   _ElswordJobOutfit('愛莎', 'Aisha', '元素魔導', 'Elemental Master'),
   _ElswordJobOutfit('愛莎', 'Aisha', '乙太魔導', 'Aether Sage'),
-  _ElswordJobOutfit('愛莎', 'Aisha', '闇黑魔術師', 'Dark Magician'),
   _ElswordJobOutfit('愛莎', 'Aisha', '虛無公主', 'Void Princess'),
   _ElswordJobOutfit('愛莎', 'Aisha', '奧茲魔導', 'Oz Sorcerer'),
-  _ElswordJobOutfit('愛莎', 'Aisha', '戰鬥魔術師', 'Battle Magician'),
   _ElswordJobOutfit('愛莎', 'Aisha', '次元魔女', 'Dimension Witch'),
   _ElswordJobOutfit('愛莎', 'Aisha', '星光魔女', 'Metamorphy'),
-  _ElswordJobOutfit('愛莎', 'Aisha', '巫師魔術師', 'Wiz Magician'),
   _ElswordJobOutfit('愛莎', 'Aisha', '真理術士', 'Mystic Alchemist'),
   _ElswordJobOutfit('愛莎', 'Aisha', '萬靈賢者', 'Lord Azoth'),
   _ElswordJobOutfit('蕾娜', 'Rena', '戰鬥遊俠', 'Combat Ranger'),
