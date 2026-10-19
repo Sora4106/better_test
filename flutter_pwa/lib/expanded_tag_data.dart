@@ -1,4 +1,5 @@
 import 'catalog_data.dart';
+import 'curated_pose_extension_data.dart';
 import 'finger_gesture_data.dart';
 import 'single_person_pose_data.dart';
 
@@ -52,6 +53,9 @@ const _clothedIntimateHandGroup = '性行為・衣物內手部互動';
 const _footjobGroup = '性行為・足交';
 const _handjobGroup = '性行為・手交';
 const _oralSexGroup = '性行為・口交';
+const _oralSexMotionGroup = '性行為・口交動態';
+const _handjobMotionGroup = '性行為・手交動態';
+const _lickingAdultGroup = '性行為・舔舐動態';
 const _analSexGroup = '性行為・肛交';
 const _vaginalSexGroup = '性行為・陰道性交';
 
@@ -81,6 +85,7 @@ const expandedGeneralPoseGroups = <String>{
   _lowerLegAnkleGroup,
   _footToeGroup,
   _legTowardCameraGroup,
+  ...curatedPoseExtensionGroups,
   '動態姿勢',
   '身體動作',
   '貓系・單人動作',
@@ -117,8 +122,11 @@ const expandedSexualActGroups = <String>{
   '性行為・女性主動擺動',
   '性行為・親吻',
   _oralSexGroup,
+  _oralSexMotionGroup,
   _vaginalSexGroup,
   _analSexGroup,
+  _handjobMotionGroup,
+  _lickingAdultGroup,
   '性行為・插入',
   '性行為・多人',
   '性行為・前後',
@@ -202,6 +210,13 @@ const expandedTagPickerSections = <String, List<String>>{
     '單人・側躺姿勢',
     '單人・俯臥姿勢',
     '單人・跪蹲姿勢',
+    '姿勢擴充・站姿與視線',
+    '姿勢擴充・偶像互動',
+    '姿勢擴充・成熟站姿',
+    '姿勢擴充・椅子坐姿',
+    '姿勢擴充・床上坐姿',
+    '姿勢擴充・床上躺姿',
+    '姿勢擴充・動態輔助',
     '全身姿勢',
     '動態姿勢',
     '動作',
@@ -249,6 +264,7 @@ const expandedTagPickerSections = <String, List<String>>{
     _footjobGroup,
     '性行為・摩擦',
     _handjobGroup,
+    _handjobMotionGroup,
     '性行為・自慰',
     '性行為・動態',
     '性行為・動態輔助',
@@ -256,6 +272,8 @@ const expandedTagPickerSections = <String, List<String>>{
     '性行為・女性主動擺動',
     '性行為・親吻',
     _oralSexGroup,
+    _oralSexMotionGroup,
+    _lickingAdultGroup,
     _vaginalSexGroup,
     _analSexGroup,
     '性行為・插入',
@@ -271,6 +289,7 @@ const expandedTagPickerSections = <String, List<String>>{
 
 final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
   ...singlePersonPoseTags,
+  ...curatedPoseExtensionTags,
   ...fingerGestureTags,
   ..._expandedTags(
     prefix: 'male_action_pose',
@@ -1660,6 +1679,71 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['顏面騎乘', 'facesitting'],
       ['吸吮睪丸', 'testicle sucking'],
       ['舔腋下', 'licking armpit'],
+    ],
+  ),
+  // Natural-language motion layers for oral scenes. These complement the
+  // established official act tags above without replacing the selected act.
+  ..._expandedTags(
+    prefix: 'oral_sex_motion',
+    group: _oralSexMotionGroup,
+    order: 7,
+    adult: true,
+    support: 'description',
+    rows: const [
+      ['跪姿陰莖口交', 'kneeling fellatio'],
+      ['站姿陰莖口交', 'standing fellatio'],
+      ['躺姿陰莖口交', 'lying down fellatio'],
+      ['從上方口交', 'oral sex from above'],
+      ['從下方口交', 'oral sex from below'],
+      ['口交時注視對方', 'oral sex with eye contact'],
+      ['口交時手扶陰莖', 'oral sex, hand on penis'],
+      ['口交時手扶頭部', 'oral sex, hands on head'],
+      ['口交時舌頭動作', 'oral sex, tongue movement'],
+      ['口交時頭部往復動作', 'oral sex, head movement'],
+      ['口交時唾液拉絲', 'oral sex, saliva string'],
+      ['口交時臉頰鼓起', 'oral sex, cheek bulge'],
+      ['口交動態線', 'oral sex, motion lines'],
+      ['口交後舔唇', 'after oral, licking lips'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'handjob_motion',
+    group: _handjobMotionGroup,
+    order: 7,
+    adult: true,
+    support: 'description',
+    rows: const [
+      ['站姿手交', 'standing handjob'],
+      ['跪姿手交', 'kneeling handjob'],
+      ['坐姿手交', 'sitting handjob'],
+      ['背後手交動作', 'handjob from behind'],
+      ['手交時注視對方', 'handjob with eye contact'],
+      ['手交時前傾', 'handjob, leaning forward'],
+      ['手交時親吻', 'handjob while kissing'],
+      ['手交時唾液潤滑', 'handjob with saliva'],
+      ['手交時雙手交替動作', 'handjob, alternating hand motion'],
+      ['手交時手部往復動作', 'handjob, hand movement'],
+      ['手交動態線', 'handjob, motion lines'],
+      ['手交時陰莖顫動', 'handjob, penis twitching'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'adult_licking_motion',
+    group: _lickingAdultGroup,
+    order: 7,
+    adult: true,
+    support: 'description',
+    rows: const [
+      ['舔陰莖', 'licking penis'],
+      ['舔龜頭', 'licking glans'],
+      ['舔陰莖軸', 'licking shaft'],
+      ['舔陰蒂', 'licking clitoris'],
+      ['舔陰唇', 'licking labia'],
+      ['舔乳房', 'licking breast'],
+      ['舔脖子', 'licking neck'],
+      ['舔耳朵', 'licking ear'],
+      ['舌尖輕碰', 'tongue touching'],
+      ['舔舐動態線', 'licking, motion lines'],
     ],
   ),
   ..._expandedTags(

@@ -1,3 +1,4 @@
+import '../lib/curated_pose_extension_data.dart';
 import '../lib/expanded_tag_data.dart';
 import '../lib/single_person_pose_data.dart';
 
@@ -13,7 +14,22 @@ void main() {
     );
   }
 
-  for (final tag in singlePersonPoseTags) {
+  if (curatedPoseExtensionTags.length != 217) {
+    problems.add(
+      'Expected 217 curated pose and motion tags, found '
+      '${curatedPoseExtensionTags.length}.',
+    );
+  }
+
+  final poseTags = [
+    ...singlePersonPoseTags,
+    ...curatedPoseExtensionTags,
+  ];
+  final poseGroups = <String>{
+    ...singlePersonPoseGroups,
+    ...curatedPoseExtensionGroups,
+  };
+  for (final tag in poseTags) {
     if (!ids.add(tag.id)) problems.add('Duplicate pose id: ${tag.id}.');
     if (!english.add(tag.en.toLowerCase())) {
       problems.add('Duplicate pose English label: ${tag.en}.');
@@ -21,7 +37,7 @@ void main() {
     if (tag.zh.trim().isEmpty || tag.en.trim().isEmpty) {
       problems.add('Missing Chinese or English label: ${tag.id}.');
     }
-    if (!singlePersonPoseGroups.contains(tag.group)) {
+    if (!poseGroups.contains(tag.group)) {
       problems.add('Unknown pose group: ${tag.group}.');
     }
     if (tag.adult) problems.add('General pose marked adult: ${tag.id}.');
@@ -37,7 +53,7 @@ void main() {
     counts.update(tag.group, (value) => value + 1, ifAbsent: () => 1);
   }
 
-  for (final group in singlePersonPoseGroups) {
+  for (final group in poseGroups) {
     if ((counts[group] ?? 0) == 0) problems.add('Empty pose group: $group.');
     final sectionExists = expandedTagPickerSections.values.any(
       (groups) => groups.contains(group),
@@ -53,7 +69,7 @@ void main() {
       ifAbsent: () => 1,
     );
   }
-  for (final tag in singlePersonPoseTags) {
+  for (final tag in poseTags) {
     if ((allEnglishCounts[tag.en.toLowerCase()] ?? 0) > 1) {
       problems.add('Pose duplicates another expanded tag: ${tag.en}.');
     }
@@ -61,7 +77,7 @@ void main() {
 
   if (problems.isNotEmpty) throw StateError(problems.join('\n'));
   print(
-    'Single-person poses OK: ${singlePersonPoseTags.length} tags '
+    'Single-person poses OK: ${poseTags.length} tags '
     'in ${counts.length} groups.',
   );
 }

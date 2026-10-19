@@ -1,4 +1,5 @@
 import 'catalog_data.dart';
+import 'elsword_female_job_prompt_data.dart';
 import 'outfit_reference_data.dart';
 
 /// Display-name corrections verified against the Taiwan official Elsword role
@@ -173,7 +174,8 @@ String _elswordOutfitSectionLabel(String id) => switch (id) {
       'silhouette' => '職業套裝輪廓',
       'upper' => '上身／外套',
       'lower' => '下身／裙褲',
-      'footwear' => '鞋襪／腿部',
+      'legwear' => '襪類／腿部',
+      'footwear' => '鞋履',
       'head' => '頭部飾品',
       'trim' => '配色／飾邊',
       _ => '飾品／裝置',
@@ -183,10 +185,11 @@ String _elswordOutfitSectionLabel(String id) => switch (id) {
 /// They are deliberately editable description helpers, not claims that every
 /// phrase is an exact model trigger tag.
 class _ElswordStyleDetail {
-  const _ElswordStyleDetail(this.zh, this.en);
+  const _ElswordStyleDetail(this.zh, this.en, {this.sectionId});
 
   final String zh;
   final String en;
+  final String? sectionId;
 }
 
 /// A visual starting point for one Elsword job path. Hair traits use existing
@@ -239,6 +242,9 @@ class _ElswordJobOutfit {
   final String jobZh;
   final String jobEn;
 
+  ElswordFemaleJobPromptProfile? get promptProfile =>
+      elswordFemaleJobPromptProfileFor(characterEn, jobEn);
+
   String get id =>
       'taxonomy_costume_elsword_${characterEn.toLowerCase()}_${jobEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '_').replaceAll(RegExp(r'_+$'), '')}';
   String get zh => '$characterZh・$jobZh轉職服裝';
@@ -273,6 +279,8 @@ class _ElswordJobOutfit {
     return looks[jobEn] ?? _fallbackLook;
   }
 
+  String get palette => promptProfile?.palette ?? look.palette;
+
   List<String> get featureTags {
     // Aisha's job-specific hair/head profile belongs to the canonical class
     // phrase below. Do not select it as generic Aisha traits, otherwise a
@@ -290,6 +298,22 @@ class _ElswordJobOutfit {
   }
 
   List<_ElswordStyleDetail> get visualDetails {
+    final profile = promptProfile;
+    if (profile != null) {
+      return <_ElswordStyleDetail>[
+        _ElswordStyleDetail(
+          '$jobZh・原作職業套裝',
+          profile.outfitAnchor,
+          sectionId: 'silhouette',
+        ),
+        for (final segment in profile.outfitSegments)
+          _ElswordStyleDetail(
+            segment.zh,
+            segment.en,
+            sectionId: segment.id,
+          ),
+      ];
+    }
     // Every canonical Aisha class is emitted only from its documented phrase
     // list. Each class keeps its documented outfit-anchor weight while using
     // the same Elemental Master-style output structure.
@@ -346,13 +370,15 @@ class _ElswordJobOutfit {
   /// the source order of every still-enabled fragment.
   List<OutfitUnifiedPhraseSectionData> get unifiedPhraseSections => [
         for (final detail in unifiedOutfitDetails)
-          OutfitUnifiedPhraseSectionData(
-            id: _elswordOutfitSectionIdFor(detail.en),
-            zh: _elswordOutfitSectionLabel(
-              _elswordOutfitSectionIdFor(detail.en),
-            ),
-            en: detail.en,
-          ),
+          () {
+            final sectionId =
+                detail.sectionId ?? _elswordOutfitSectionIdFor(detail.en);
+            return OutfitUnifiedPhraseSectionData(
+              id: sectionId,
+              zh: _elswordOutfitSectionLabel(sectionId),
+              en: detail.en,
+            );
+          }(),
       ];
 
   bool get usesElementalMasterProfile =>
@@ -367,8 +393,7 @@ class _ElswordJobOutfit {
   /// This prevents a different class's hair or outfit pieces from leaking into
   /// a selected job.
   bool get usesCanonicalJobProfile =>
-      usesCanonicalAishaJobProfile ||
-      const <String>{'Rose', 'Laby', 'Lithia', 'Luciela'}.contains(characterEn);
+      usesCanonicalAishaJobProfile || promptProfile != null;
 
   String? get _aishaJobIdentity => switch (jobEn) {
         'Elemental Master' => 'elemental_master, elemental master aisha',
@@ -384,6 +409,10 @@ class _ElswordJobOutfit {
 
   String? get _canonicalJobIdentity {
     if (usesCanonicalAishaJobProfile) return _aishaJobIdentity;
+    final profile = promptProfile;
+    if (profile != null) {
+      return '${profile.classTag}, ${profile.classNameTag}';
+    }
     if (!usesCanonicalJobProfile) return null;
     final jobToken = jobEn
         .toLowerCase()
@@ -419,10 +448,13 @@ class _ElswordJobOutfit {
     }
     final identity = _canonicalJobIdentity;
     if (identity == null) return const <OutfitReferenceContextPhraseData>[];
-    final headProfile = <String>[
-      ...look.hairTags,
-      if (usesCanonicalAishaJobProfile) _aishaFaceProfile,
-    ].join(', ');
+    final profile = promptProfile;
+    final headProfile = profile != null
+        ? profile.characterAndHeadTags.join(', ')
+        : <String>[
+            ...look.hairTags,
+            if (usesCanonicalAishaJobProfile) _aishaFaceProfile,
+          ].join(', ');
     return <OutfitReferenceContextPhraseData>[
       OutfitReferenceContextPhraseData(
         id: 'identity',
@@ -541,7 +573,9 @@ class _ElswordJobOutfit {
   }
 
   String get weaponZh => elswordOfficialTaiwanName(
-        switch (characterEn) {
+        promptProfile != null
+            ? '$jobZh・專屬武器'
+            : switch (characterEn) {
           'Aisha' => switch (jobEn) {
               'Aether Sage' => '乙太魔導・法杖與浮游魔導書',
               'Void Princess' => '虛無公主・暗黑斧形法杖',
@@ -605,6 +639,8 @@ class _ElswordJobOutfit {
       );
 
   String get weaponEn {
+    final profile = promptProfile;
+    if (profile != null) return profile.weaponTags.join(', ');
     final descriptor = _elswordWeaponDescriptor(jobEn);
     return switch (characterEn) {
       'Aisha' => switch (jobEn) {
@@ -2167,7 +2203,7 @@ final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
             id: job.id,
             category: '艾爾之光・轉職服裝',
             name: job.zh,
-            palette: job.look.palette,
+            palette: job.palette,
             description:
                 '套用 ${job.characterZh}・${job.jobZh} 的完整原作轉職服裝片語；可在套用後單獨保留或移除套裝輪廓、上身、下身、鞋襪、飾邊與配件。全身穿脫／暴露狀態與專屬武器仍可另外調整。',
             pieces: const <OutfitPiecePresetData>[],
@@ -2182,6 +2218,9 @@ final List<OutfitReferencePresetData> elswordJobOutfitReferencePresets =
                 ? const <String>[]
                 : <String>[job.ownerCharacterTag],
             ownerCharacterLabel: job.characterZh,
+            recommendedPrompt: job.promptProfile?.recommendedPrompt,
+            optionalNegativeTags:
+                job.promptProfile?.optionalNegativePromptTags ?? const <String>[],
           ))
       .toList(),
 );

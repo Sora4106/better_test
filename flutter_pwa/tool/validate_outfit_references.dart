@@ -1,6 +1,7 @@
 import '../lib/clothing_taxonomy.dart';
 import '../lib/blue_outfit_reference_data.dart';
 import '../lib/catalog_data.dart';
+import '../lib/elsword_female_job_prompt_data.dart';
 import '../lib/elsword_job_outfit_data.dart';
 import '../lib/object_catalog_data.dart';
 import '../lib/outfit_reference_catalog.dart';
@@ -604,6 +605,197 @@ void main() {
         problems
             .add('${preset.id}: class context leaked into clothing phrase.');
       }
+    }
+  }
+
+  // Eight Elsword women now share one source-of-truth profile schema for their
+  // documented second/third jobs. Aisha intentionally stays in her existing
+  // hand-authored data and must never be duplicated here.
+  const expectedFemaleProfileJobs = <String, Set<String>>{
+    'Rena': {
+      'Wind Sneaker',
+      'Anemos',
+      'Grand Archer',
+      'Daybreaker',
+      'Night Watcher',
+      'Twilight',
+      'Tale Spinner',
+      'Prophetess',
+    },
+    'Eve': {
+      'Code: Nemesis',
+      'Code: Ultimate',
+      'Code: Empress',
+      'Code: Esencia',
+      'Code: Battle Seraph',
+      'Code: Sariel',
+      'Code: Failess',
+      'Code: Antithese',
+    },
+    'Ara': {
+      'Sakra Devanam',
+      'Apsara',
+      'Yama Raja',
+      'Devi',
+      'Asura',
+      'Shakti',
+      'Marici',
+      'Surya',
+    },
+    'Elesis': {
+      'Grand Master',
+      'Empire Sword',
+      'Blazing Heart',
+      'Flame Lord',
+      'Crimson Avenger',
+      'Bloody Queen',
+      'Patrona',
+      'Adrestia',
+    },
+    'Luciela': {
+      'Dreadlord',
+      'Catastrophe',
+      'Noblesse',
+      'Innocent',
+      'Demonio',
+      'Diangelion',
+      'Turbids',
+      'Demersio',
+    },
+    'Rose': {
+      'Storm Trooper',
+      'Tempest Burster',
+      'Crimson Rose',
+      'Black Massacre',
+      'Freyja',
+      'Minerva',
+      'Optimus',
+      'Prime Operator',
+    },
+    'Laby': {
+      'Rumble Pumn',
+      'Eternity Winner',
+      'Shining Romantica',
+      'Radiant Soul',
+      'Daydreamer',
+      'Nisha Labyrinth',
+      'Punky Poppet',
+      'Twins Picaro',
+    },
+    'Lithia': {
+      'Mighty Miner',
+      'Gembliss',
+      'Greedy Wonder',
+      'Avarice',
+      'Rima Clavis',
+      'Achlys',
+      'Cynical Sneer',
+      'Mischief',
+    },
+  };
+  final expectedProfileKeys = <String>{
+    for (final entry in expectedFemaleProfileJobs.entries)
+      for (final classEn in entry.value)
+        elswordFemaleJobProfileKey(entry.key, classEn),
+  };
+  final actualProfileKeys = elswordFemaleJobPromptProfiles.keys.toSet();
+  if (actualProfileKeys.length != 64 ||
+      !actualProfileKeys.containsAll(expectedProfileKeys) ||
+      !expectedProfileKeys.containsAll(actualProfileKeys)) {
+    problems.add('Elsword female prompt profiles must contain exactly the 64 '
+        'verified second/third-job records.');
+  }
+
+  final profileForbiddenTerms = RegExp(
+    r'\b(cute|young|youthful|tiny|short|small)\b',
+    caseSensitive: false,
+  );
+  for (final profile in elswordFemaleJobPromptProfiles.values) {
+    final key = profile.key;
+    if (profile.base.characterEn == 'Aisha') {
+      problems.add('$key: Aisha must remain in her hand-authored profile.');
+    }
+    final requiredFields = <String, Iterable<String>>{
+      'base character': profile.base.baseCharacterTags,
+      'hair': profile.hairTags,
+      'eyes': profile.resolvedEyeTags,
+      'face': profile.base.faceTags,
+      'head accessory': profile.headAccessoryTags,
+      'outfit': profile.outfitTags,
+      'upper body': profile.upperBodyTags,
+      'lower body': profile.lowerBodyTags,
+      'legwear': profile.legwearTags,
+      'footwear': profile.footwearTags,
+      'accessory': profile.accessoryTags,
+      'weapon': profile.weaponTags,
+      'magic effect': profile.magicEffectTags,
+      'class theme': profile.classThemeTags,
+    };
+    for (final field in requiredFields.entries) {
+      if (field.value.where((tag) => tag.trim().isNotEmpty).isEmpty) {
+        problems.add('$key: missing ${field.key} prompt data.');
+      }
+      for (final tag in field.value) {
+        if (profileForbiddenTerms.hasMatch(tag)) {
+          problems.add('$key: forbidden age-modifying term in ${field.key}: '
+              '"$tag".');
+        }
+      }
+    }
+    for (final tag in [
+      ...profile.companionTags,
+      ...profile.optionalNegativePromptTags,
+    ]) {
+      if (profileForbiddenTerms.hasMatch(tag)) {
+        problems.add('$key: forbidden age-modifying term "$tag".');
+      }
+    }
+    final recommended = profile.recommendedPrompt;
+    if (!recommended.startsWith('(1girl, ') ||
+        !recommended.contains(profile.base.characterTag) ||
+        !recommended.contains(profile.classTag) ||
+        !recommended.contains(profile.outfitAnchor)) {
+      problems.add('$key: malformed recommended prompt.');
+    }
+    if (profile.outfitSegments.length != 6) {
+      problems.add('$key: expected six removable outfit segments.');
+    }
+
+    final suffix = profile.classEn
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'_+$'), '');
+    final presetId =
+        'taxonomy_costume_elsword_${profile.base.characterEn.toLowerCase()}_$suffix';
+    final preset = presetsById[presetId];
+    if (preset == null) {
+      problems.add('$key: missing outfit reference card.');
+      continue;
+    }
+    final phrasesById = {
+      for (final phrase in preset.contextPhrases) phrase.id: phrase,
+    };
+    if (phrasesById['identity']?.en !=
+            '${profile.classTag}, ${profile.classNameTag}' ||
+        phrasesById['official_design']?.en !=
+            'official outfit, canon outfit, official character design, '
+                'character accurate, official game style, original class outfit' ||
+        phrasesById['head_profile']?.en !=
+            profile.characterAndHeadTags.join(', ')) {
+      problems.add('$key: reference card does not use the profile context.');
+    }
+    if (preset.recommendedPrompt != recommended ||
+        !preset.optionalNegativeTags
+            .toSet()
+            .containsAll(profile.optionalNegativePromptTags)) {
+      problems.add('$key: reference metadata is not connected to the profile.');
+    }
+    final outfitPhrase = preset.unifiedPhraseEn ?? '';
+    final completeWeaponPhrase = profile.weaponTags.join(', ');
+    if (!outfitPhrase.contains(profile.outfitAnchor) ||
+        (completeWeaponPhrase.isNotEmpty &&
+            outfitPhrase.contains(completeWeaponPhrase))) {
+      problems.add('$key: weapon must remain outside the clothing phrase.');
     }
   }
 

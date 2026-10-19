@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.276';
-const appBuildNumber = 278;
-const appVersionLabel = '1.1.276+278';
+﻿const appVersion = '1.1.277';
+const appBuildNumber = 279;
+const appVersionLabel = '1.1.277+279';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.277', 'build': '279', 'label': '1.1.277+279', 'date': '2026-10-20', 'notes': '補齊艾爾之光女性二、三轉職業資料，新增單人姿勢、動態輔助與成人口交／手交／舔舐動態標籤。'},
   {'version': '1.1.276', 'build': '278', 'label': '1.1.276+278', 'date': '2026-10-19', 'notes': '依台版艾爾之光官方職業資料，統一校正既有轉職、角色、武器與服裝細節的中文名稱。'},
   {'version': '1.1.275', 'build': '277', 'label': '1.1.275+277', 'date': '2026-10-19', 'notes': '新增共用角色負面防呆詞，補強手腳、肢體、臉部與雙眼常見生成瑕疵。'},
   {'version': '1.1.274', 'build': '276', 'label': '1.1.274+276', 'date': '2026-10-19', 'notes': '新增露・希爾八套二、三轉職業服裝、頭部特徵與可選專屬武器。'},
   {'version': '1.1.273', 'build': '275', 'label': '1.1.273+275', 'date': '2026-10-19', 'notes': '新增蘿潔、菈比、莉緹亞角色與二、三轉職業套裝、職業髮型和可選武器。'},
-  {'version': '1.1.272', 'build': '274', 'label': '1.1.272+274', 'date': '2026-10-19', 'notes': '愛莎轉職清單移除四種一轉職業，只保留八種二、三轉職業樣貌與套件。'},
 ];

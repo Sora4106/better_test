@@ -101,6 +101,8 @@ class OutfitReferencePresetData {
     this.equipmentTagIds = const <String>[],
     this.ownerCharacterTags = const <String>[],
     this.ownerCharacterLabel = '',
+    this.recommendedPrompt,
+    this.optionalNegativeTags = const <String>[],
   });
 
   final String id;
@@ -167,6 +169,15 @@ class OutfitReferencePresetData {
 
   /// A short Chinese name used when explaining a character-specific preset.
   final String ownerCharacterLabel;
+
+  /// A complete copy-ready prompt reference supplied by a canonical source
+  /// profile. The normal builder still emits only selected tags; this remains
+  /// available for validation and preview without flattening the selection.
+  final String? recommendedPrompt;
+
+  /// Non-forced guardrails for visual problems common to this specific
+  /// reference. They are stored with the profile and never auto-added.
+  final List<String> optionalNegativeTags;
 
   /// Existing 25ji Kanade references were grouped before character ownership
   /// metadata existed. Keep that category compatible while treating it as the
