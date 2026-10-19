@@ -501,10 +501,11 @@ void main() {
         'Canonical Aisha classes still expose retired direct outfit tags.');
   }
 
-  // Rose, Laby, and Lithia have one selectable character entry plus exactly
-  // eight second/third-job cards each. Keep the class identity / official
-  // design / head profile blocks together, just like the canonical Aisha
-  // records, so class hair and outfit information cannot leak between paths.
+  // Canonical Elsword characters have one selectable character entry plus
+  // exactly eight second/third-job cards each. Keep the class identity /
+  // official design / head profile blocks together, just like the canonical
+  // Aisha records, so class hair and outfit information cannot leak between
+  // paths.
   const expectedElswordClassJobs = <String, Set<String>>{
     'Rose': {
       'storm_trooper',
@@ -536,11 +537,22 @@ void main() {
       'cynical_sneer',
       'mischief',
     },
+    'Luciela': {
+      'dreadlord',
+      'catastrophe',
+      'noblesse',
+      'innocent',
+      'demonio',
+      'diangelion',
+      'turbids',
+      'demersio',
+    },
   };
   const expectedElswordCharacterTags = <String, String>{
     'Rose': 'rose_(elsword)',
     'Laby': 'laby_(elsword)',
     'Lithia': 'lithia_beryl_(elsword)',
+    'Luciela': 'luciela r. sourcream',
   };
   for (final entry in expectedElswordClassJobs.entries) {
     final character = entry.key;
@@ -555,6 +567,14 @@ void main() {
         !expectedIds.containsAll(actualIds)) {
       problems.add('$character must expose exactly its eight second/third-job '
           'outfit references.');
+    }
+    final directCanonicalIds = elswordJobOutfitTags
+        .map((tag) => tag.id)
+        .where(expectedIds.contains)
+        .toList(growable: false);
+    if (directCanonicalIds.isNotEmpty) {
+      problems.add('$character canonical classes still expose retired direct '
+          'outfit tags.');
     }
     final ownerTag = expectedElswordCharacterTags[character]!;
     if (!catalogCharacters.any((item) => item.characterTag == ownerTag)) {

@@ -178,6 +178,7 @@ class _ElswordJobOutfit {
         'Rose' => 'rose_(elsword)',
         'Laby' => 'laby_(elsword)',
         'Lithia' => 'lithia_beryl_(elsword)',
+        'Luciela' => 'luciela r. sourcream',
         _ => '',
       };
 
@@ -191,6 +192,7 @@ class _ElswordJobOutfit {
       'Rose' => _roseLooks,
       'Laby' => _labyLooks,
       'Lithia' => _lithiaLooks,
+      'Luciela' => _lucielaLooks,
       _ => const <String, _ElswordJobLook>{},
     };
     return looks[jobEn] ?? _fallbackLook;
@@ -284,13 +286,14 @@ class _ElswordJobOutfit {
   bool get usesCanonicalAishaJobProfile =>
       characterEn == 'Aisha' && _canonicalAishaJobs.contains(jobEn);
 
-  /// Rose, Laby, and Lithia follow the same bundled class-reference contract
-  /// as Aisha: their job name, official-design phrase, and class-specific head
-  /// profile are emitted ahead of one complete outfit block.  This prevents a
-  /// different class's hair or outfit pieces from leaking into a selected job.
+  /// Rose, Laby, Lithia, and Luciela follow the same bundled class-reference
+  /// contract as Aisha: their job name, official-design phrase, and
+  /// class-specific head profile are emitted ahead of one complete outfit block.
+  /// This prevents a different class's hair or outfit pieces from leaking into
+  /// a selected job.
   bool get usesCanonicalJobProfile =>
       usesCanonicalAishaJobProfile ||
-      const <String>{'Rose', 'Laby', 'Lithia'}.contains(characterEn);
+      const <String>{'Rose', 'Laby', 'Lithia', 'Luciela'}.contains(characterEn);
 
   String? get _aishaJobIdentity => switch (jobEn) {
         'Elemental Master' => 'elemental_master, elemental master aisha',
@@ -510,6 +513,17 @@ class _ElswordJobOutfit {
             'Mischief' => '惡戲奇術師・惡作劇法器',
             _ => '$jobZh專屬魔法礦鎬',
           },
+        'Luciela' => switch (jobEn) {
+            'Dreadlord' => '邪恐夜皇・魔爪與槍刃',
+            'Catastrophe' => '災禍魔王・災厄魔刃',
+            'Noblesse' => '闇夜女爵・深淵靈槍',
+            'Innocent' => '釋罪女皇・賽菲洛特幻影兵器',
+            'Demonio' => '冷焰邪魔・惡魔爪刃',
+            'Diangelion' => '滅盡魔皇・深淵巨鐮',
+            'Turbids' => '混濁影靈・深淵魔槍',
+            'Demersio' => '深淵魔君・深淵雙生兵器',
+            _ => '$jobZh專屬惡魔武器',
+          },
         _ => '$jobZh專屬武器',
       };
 
@@ -596,6 +610,25 @@ class _ElswordJobOutfit {
             'trickster magic pickaxe, demonic crystal device, official Elsword relic weapon',
           _ =>
             'ornate $descriptor magic pickaxe, official Elsword relic weapon',
+        },
+      'Luciela' => switch (jobEn) {
+          'Dreadlord' =>
+            'demonic gauntlets, dark gunblades, cyan energy blade, official Elsword demon weapon',
+          'Catastrophe' =>
+            'catastrophe scythe, black and cyan gunblade, chained demon weapon, official Elsword demon weapon',
+          'Noblesse' =>
+            'royal spirit spear, cyan spear, dark gunblades, official Elsword abyss weapon',
+          'Innocent' =>
+            'sephirot phantasma, twin spectral weapons, cyan energy lances, official Elsword abyss weapon',
+          'Demonio' =>
+            'demonic gauntlets, black gunblade, blue demon claws, official Elsword demon weapon',
+          'Diangelion' =>
+            'abyssal scythe, demon claws, cyan demon weapon, official Elsword demon weapon',
+          'Turbids' =>
+            'abyssal spear, blue crystal staff, dark gunblade, official Elsword abyss weapon',
+          'Demersio' =>
+            'abyssal spear, black and white gunblade, dark energy weapon, official Elsword abyss weapon',
+          _ => 'ornate $descriptor demon weapon, official Elsword class weapon',
         },
       _ => 'ornate $descriptor fantasy weapon, official Elsword class weapon',
     };
@@ -1784,6 +1817,124 @@ const _lithiaLooks = <String, _ElswordJobLook>{
   ),
 };
 
+/// Lu/Ciel's second and third jobs are designed as complete paired silhouettes.
+/// The class card keeps Lu's visible head profile with the one-piece costume
+/// description, while the paired class weapon remains an optional object tag.
+const _lucielaLooks = <String, _ElswordJobLook>{
+  'Dreadlord': _ElswordJobLook(
+    palette: '深藍色 × 黑色 × 青藍色 × 白色',
+    hairTags: ['white hair', 'long hair', 'blue eyes', 'demon horns'],
+    details: [
+      _ElswordStyleDetail('邪恐夜皇・惡魔戰衣',
+          'black and navy demon regalia, fitted military coat, cyan trim'),
+      _ElswordStyleDetail('邪恐夜皇・肩甲與袖套',
+          'black armored pauldrons, detached sleeves, dark leather gloves'),
+      _ElswordStyleDetail('邪恐夜皇・下身與靴履',
+          'layered navy skirt, black thighhighs, black armored boots'),
+      _ElswordStyleDetail('邪恐夜皇・王權飾件',
+          'cyan gemstone ornaments, silver buckles, chain accessories, demon crest'),
+    ],
+  ),
+  'Catastrophe': _ElswordJobLook(
+    palette: '黑色 × 深藍色 × 洋紅色 × 青藍色',
+    hairTags: ['white hair', 'long hair', 'blue eyes', 'demon horns'],
+    details: [
+      _ElswordStyleDetail('災禍魔王・惡魔王裝',
+          'black and dark navy demon royal outfit, magenta accents, fitted bodice'),
+      _ElswordStyleDetail('災禍魔王・披風與袖套',
+          'long asymmetric coat panels, black detached sleeves, dark gloves'),
+      _ElswordStyleDetail('災禍魔王・裙襬與靴履',
+          'layered black skirt, magenta cape panels, black high boots'),
+      _ElswordStyleDetail('災禍魔王・魔王飾件',
+          'demon crown, bat wing motif, cyan crystal ornaments, dark chains'),
+    ],
+  ),
+  'Noblesse': _ElswordJobLook(
+    palette: '白色 × 深藍色 × 青藍色 × 黑色',
+    hairTags: ['white hair', 'very long hair', 'blue eyes', 'pointed ears'],
+    details: [
+      _ElswordStyleDetail('闇夜女爵・王族禮裝',
+          'white and navy royal dress, dark fitted bodice, cyan trim'),
+      _ElswordStyleDetail('闇夜女爵・披肩與袖套',
+          'navy shoulder cape, black detached sleeves, white gloves'),
+      _ElswordStyleDetail('闇夜女爵・裙襬與靴履',
+          'layered navy skirt, black thighhighs, dark blue armored boots'),
+      _ElswordStyleDetail('闇夜女爵・王室飾件',
+          'royal crest, floating white ribbons, cyan crystal ornaments, silver chains'),
+    ],
+  ),
+  'Innocent': _ElswordJobLook(
+    palette: '白色 × 深藍色 × 青藍色 × 黑色',
+    hairTags: ['white hair', 'very long hair', 'blue eyes', 'demon horns'],
+    details: [
+      _ElswordStyleDetail('釋罪女皇・雙生王裝',
+          'white black and navy royal outfit, star motif, cyan trim'),
+      _ElswordStyleDetail('釋罪女皇・披風與手套',
+          'white cape panels, navy detached sleeves, black gloves'),
+      _ElswordStyleDetail('釋罪女皇・下身與靴履',
+          'layered navy skirt, white legwear, dark blue high boots'),
+      _ElswordStyleDetail('釋罪女皇・幻影飾件',
+          'floating ribbon ornaments, cyan star crystals, silver chains, abyss crest'),
+    ],
+  ),
+  'Demonio': _ElswordJobLook(
+    palette: '黑色 × 深藍色 × 青藍色 × 白色',
+    hairTags: ['white hair', 'long hair', 'blue eyes', 'large demon horns'],
+    details: [
+      _ElswordStyleDetail('冷焰邪魔・惡魔裝甲',
+          'black and dark navy demon armor, cyan glowing accents, fitted bodice'),
+      _ElswordStyleDetail('冷焰邪魔・外套與袖套',
+          'long split black coat, armored detached sleeves, dark gloves'),
+      _ElswordStyleDetail('冷焰邪魔・下身與靴履',
+          'black layered skirt, blue thighhighs, black armored high boots'),
+      _ElswordStyleDetail('冷焰邪魔・冷焰飾件',
+          'blue flame ornaments, demon crest, black chains, cyan crystal details'),
+    ],
+  ),
+  'Diangelion': _ElswordJobLook(
+    palette: '黑色 × 深藍色 × 青藍色 × 白色',
+    hairTags: ['white hair', 'long hair', 'blue eyes', 'large demon horns'],
+    details: [
+      _ElswordStyleDetail('滅盡魔皇・毀滅戰衣',
+          'black torn demon armor, cyan glowing edges, fitted bodice'),
+      _ElswordStyleDetail('滅盡魔皇・披風與護臂',
+          'ragged black cape, armored detached sleeves, clawed gloves'),
+      _ElswordStyleDetail('滅盡魔皇・下身與靴履',
+          'black layered skirt, dark legwear, black armored boots'),
+      _ElswordStyleDetail('滅盡魔皇・深淵飾件',
+          'abyssal chains, dark feather ornaments, cyan crystal details, demon crest'),
+    ],
+  ),
+  'Turbids': _ElswordJobLook(
+    palette: '白色 × 深藍色 × 青藍色 × 銀色',
+    hairTags: ['white hair', 'long hair', 'blue eyes', 'pointed ears'],
+    details: [
+      _ElswordStyleDetail('混濁影靈・深淵禮裝',
+          'white and navy abyss regalia, dark blue fitted bodice, silver trim'),
+      _ElswordStyleDetail('混濁影靈・披肩與袖套',
+          'white shoulder cape, navy detached sleeves, dark gloves'),
+      _ElswordStyleDetail('混濁影靈・裙襬與靴履',
+          'layered navy skirt, white legwear, dark blue high boots'),
+      _ElswordStyleDetail('混濁影靈・靈魂飾件',
+          'blue crystal ornaments, silver chains, abyss crest, floating ribbons'),
+    ],
+  ),
+  'Demersio': _ElswordJobLook(
+    palette: '白色 × 黑色 × 深藍色 × 銀色',
+    hairTags: ['white hair', 'long hair', 'blue eyes', 'demon horns'],
+    details: [
+      _ElswordStyleDetail('深淵魔君・深淵王裝',
+          'white black and navy abyss outfit, fitted armored bodice, silver trim'),
+      _ElswordStyleDetail('深淵魔君・披風與袖套',
+          'black asymmetric cape, white ruffled sleeves, dark gloves'),
+      _ElswordStyleDetail('深淵魔君・下身與靴履',
+          'layered navy skirt, white legwear, dark armored boots'),
+      _ElswordStyleDetail('深淵魔君・魔君飾件',
+          'abyssal wing motif, dark chains, silver crystal ornaments, demon crest'),
+    ],
+  ),
+};
+
 const _elswordJobs = <_ElswordJobOutfit>[
   _ElswordJobOutfit('愛莎', 'Aisha', '元素魔導', 'Elemental Master'),
   _ElswordJobOutfit('愛莎', 'Aisha', '乙太魔導', 'Aether Sage'),
@@ -1817,6 +1968,14 @@ const _elswordJobs = <_ElswordJobOutfit>[
   _ElswordJobOutfit('莉緹亞', 'Lithia', '阿克莉絲', 'Achlys'),
   _ElswordJobOutfit('莉緹亞', 'Lithia', '諷世愚者', 'Cynical Sneer'),
   _ElswordJobOutfit('莉緹亞', 'Lithia', '惡戲奇術師', 'Mischief'),
+  _ElswordJobOutfit('露・希爾', 'Luciela', '邪恐夜皇', 'Dreadlord'),
+  _ElswordJobOutfit('露・希爾', 'Luciela', '災禍魔王', 'Catastrophe'),
+  _ElswordJobOutfit('露・希爾', 'Luciela', '闇夜女爵', 'Noblesse'),
+  _ElswordJobOutfit('露・希爾', 'Luciela', '釋罪女皇', 'Innocent'),
+  _ElswordJobOutfit('露・希爾', 'Luciela', '冷焰邪魔', 'Demonio'),
+  _ElswordJobOutfit('露・希爾', 'Luciela', '滅盡魔皇', 'Diangelion'),
+  _ElswordJobOutfit('露・希爾', 'Luciela', '混濁影靈', 'Turbids'),
+  _ElswordJobOutfit('露・希爾', 'Luciela', '深淵魔君', 'Demersio'),
   _ElswordJobOutfit('蕾娜', 'Rena', '戰鬥遊俠', 'Combat Ranger'),
   _ElswordJobOutfit('蕾娜', 'Rena', '疾風之靴', 'Wind Sneaker'),
   _ElswordJobOutfit('蕾娜', 'Rena', '安涅莫斯', 'Anemos'),
@@ -1867,14 +2026,14 @@ const _elswordJobs = <_ElswordJobOutfit>[
   _ElswordJobOutfit('艾麗希斯', 'Elesis', '阿德雷斯緹亞', 'Adrestia'),
 ];
 
-/// Main selectable garment for non-canonical jobs. The eight verified Aisha
-/// second/third-job sets are intentionally available only through their
-/// reference cards, so an obsolete generic "Elsword ... official class outfit"
-/// phrase can never be selected beside their documented class block.
+/// Main selectable garment for non-canonical jobs. Canonical second/third-job
+/// sets are intentionally available only through their reference cards, so an
+/// obsolete generic "Elsword ... official class outfit" phrase can never be
+/// selected beside their documented class block.
 final List<CatalogTagData> elswordJobOutfitTags =
     List<CatalogTagData>.unmodifiable(
   _elswordJobs
-      .where((job) => !job.usesCanonicalAishaJobProfile)
+      .where((job) => !job.usesCanonicalJobProfile)
       .map((job) => CatalogTagData(
             id: job.id,
             group: '特殊服裝',
