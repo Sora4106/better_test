@@ -501,6 +501,92 @@ void main() {
         'Canonical Aisha classes still expose retired direct outfit tags.');
   }
 
+  // Rose, Laby, and Lithia have one selectable character entry plus exactly
+  // eight second/third-job cards each. Keep the class identity / official
+  // design / head profile blocks together, just like the canonical Aisha
+  // records, so class hair and outfit information cannot leak between paths.
+  const expectedElswordClassJobs = <String, Set<String>>{
+    'Rose': {
+      'storm_trooper',
+      'tempest_burster',
+      'crimson_rose',
+      'black_massacre',
+      'freyja',
+      'minerva',
+      'optimus',
+      'prime_operator',
+    },
+    'Laby': {
+      'rumble_pumn',
+      'eternity_winner',
+      'shining_romantica',
+      'radiant_soul',
+      'daydreamer',
+      'nisha_labyrinth',
+      'punky_poppet',
+      'twins_picaro',
+    },
+    'Lithia': {
+      'mighty_miner',
+      'gembliss',
+      'greedy_wonder',
+      'avarice',
+      'rima_clavis',
+      'achlys',
+      'cynical_sneer',
+      'mischief',
+    },
+  };
+  const expectedElswordCharacterTags = <String, String>{
+    'Rose': 'rose_(elsword)',
+    'Laby': 'laby_(elsword)',
+    'Lithia': 'lithia_beryl_(elsword)',
+  };
+  for (final entry in expectedElswordClassJobs.entries) {
+    final character = entry.key;
+    final prefix = 'taxonomy_costume_elsword_${character.toLowerCase()}_';
+    final expectedIds = entry.value.map((job) => '$prefix$job').toSet();
+    final actual = outfitReferencePresets
+        .where((preset) => preset.id.startsWith(prefix))
+        .toList(growable: false);
+    final actualIds = actual.map((preset) => preset.id).toSet();
+    if (actual.length != 8 ||
+        !actualIds.containsAll(expectedIds) ||
+        !expectedIds.containsAll(actualIds)) {
+      problems.add('$character must expose exactly its eight second/third-job '
+          'outfit references.');
+    }
+    final ownerTag = expectedElswordCharacterTags[character]!;
+    if (!catalogCharacters.any((item) => item.characterTag == ownerTag)) {
+      problems.add('$character: missing selectable character tag "$ownerTag".');
+    }
+    for (final preset in actual) {
+      const requiredContextIds = {
+        'identity',
+        'official_design',
+        'head_profile'
+      };
+      final contextIds =
+          preset.contextPhrases.map((phrase) => phrase.id).toSet();
+      if (!contextIds.containsAll(requiredContextIds) ||
+          contextIds.length != requiredContextIds.length) {
+        problems.add('${preset.id}: incomplete canonical class context.');
+      }
+      if (preset.featureTags.isNotEmpty) {
+        problems.add('${preset.id}: class head profile must stay contextual.');
+      }
+      if (!preset.requiredCharacterTags.contains(ownerTag)) {
+        problems.add('${preset.id}: missing owner character tag "$ownerTag".');
+      }
+      final clothingPhrase = preset.unifiedPhraseEn?.toLowerCase() ?? '';
+      if (clothingPhrase.contains('official outfit') ||
+          clothingPhrase.contains('elsword ${character.toLowerCase()}')) {
+        problems
+            .add('${preset.id}: class context leaked into clothing phrase.');
+      }
+    }
+  }
+
   if (problems.isNotEmpty) {
     throw StateError(problems.join('\n'));
   }

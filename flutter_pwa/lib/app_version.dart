@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.272';
-const appBuildNumber = 274;
-const appVersionLabel = '1.1.272+274';
+﻿const appVersion = '1.1.273';
+const appBuildNumber = 275;
+const appVersionLabel = '1.1.273+275';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.273', 'build': '275', 'label': '1.1.273+275', 'date': '2026-10-19', 'notes': '新增蘿潔、菈比、莉緹亞角色與二、三轉職業套裝、職業髮型和可選武器。'},
   {'version': '1.1.272', 'build': '274', 'label': '1.1.272+274', 'date': '2026-10-19', 'notes': '愛莎轉職清單移除四種一轉職業，只保留八種二、三轉職業樣貌與套件。'},
   {'version': '1.1.271', 'build': '273', 'label': '1.1.271+273', 'date': '2026-10-18', 'notes': '調整多人角色輸出：總人數固定置前，具細節或個人姿勢者以個別角色區塊輸出。'},
   {'version': '1.1.270', 'build': '272', 'label': '1.1.270+272', 'date': '2026-10-18', 'notes': '修正成人姿勢套件的共用標籤管理、分類與獨立鏡頭設定，並拆分愛紗轉職套裝中的武器詞彙。'},
   {'version': '1.1.269', 'build': '271', 'label': '1.1.269+271', 'date': '2026-10-17', 'notes': '更新愛莎虛無公主轉職套件，套用新版髮型、服裝、鞋履與暗黑斧形法杖片語。'},
-  {'version': '1.1.268', 'build': '270', 'label': '1.1.268+270', 'date': '2026-10-17', 'notes': '統一愛莎八套轉職輸出為元素魔導完整格式，補齊職業識別、頭部特徵、加權服裝與驗證。'},
 ];

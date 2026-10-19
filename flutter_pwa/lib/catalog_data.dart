@@ -5837,6 +5837,40 @@ final catalogCharacters = <CatalogCharacter>[
       _trait('pokemon_juliana_brown_eyes', '棕色眼睛', 'brown eyes'),
     ],
   ),
+  // Elsword supplemental protagonists. These use the established model-facing
+  // Danbooru-style names; class-specific hair and official outfit information
+  // is deliberately supplied by the selected job outfit instead of becoming
+  // permanent base traits.
+  _animeCharacter(
+    id: 'elsword_rose',
+    animeZh: '艾爾之光',
+    animeEn: 'Elsword',
+    animeTag: 'elsword',
+    characterZh: '蘿潔',
+    characterEn: 'Rose',
+    characterTag: 'rose_(elsword)',
+    traits: const <CatalogTagData>[],
+  ),
+  _animeCharacter(
+    id: 'elsword_laby',
+    animeZh: '艾爾之光',
+    animeEn: 'Elsword',
+    animeTag: 'elsword',
+    characterZh: '菈比',
+    characterEn: 'Laby',
+    characterTag: 'laby_(elsword)',
+    traits: const <CatalogTagData>[],
+  ),
+  _animeCharacter(
+    id: 'elsword_lithia',
+    animeZh: '艾爾之光',
+    animeEn: 'Elsword',
+    animeTag: 'elsword',
+    characterZh: '莉緹亞',
+    characterEn: 'Lithia Beryl',
+    characterTag: 'lithia_beryl_(elsword)',
+    traits: const <CatalogTagData>[],
+  ),
   ...saaReferenceCharacters,
   ...saaAnimeExpansionCharacters,
   ...saaModelNameVerifiedCharacters,

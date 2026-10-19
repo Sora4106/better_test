@@ -175,6 +175,9 @@ class _ElswordJobOutfit {
         'Eve' => 'eve (elsword)',
         'Ara' => 'ara haan',
         'Elesis' => 'elesis (elsword)',
+        'Rose' => 'rose_(elsword)',
+        'Laby' => 'laby_(elsword)',
+        'Lithia' => 'lithia_beryl_(elsword)',
         _ => '',
       };
 
@@ -185,6 +188,9 @@ class _ElswordJobOutfit {
       'Eve' => _eveLooks,
       'Ara' => _araLooks,
       'Elesis' => _elesisLooks,
+      'Rose' => _roseLooks,
+      'Laby' => _labyLooks,
+      'Lithia' => _lithiaLooks,
       _ => const <String, _ElswordJobLook>{},
     };
     return looks[jobEn] ?? _fallbackLook;
@@ -194,7 +200,7 @@ class _ElswordJobOutfit {
     // Aisha's job-specific hair/head profile belongs to the canonical class
     // phrase below. Do not select it as generic Aisha traits, otherwise a
     // prior class can leave hair or accessories behind after a class switch.
-    if (usesCanonicalAishaJobProfile) return const <String>[];
+    if (usesCanonicalJobProfile) return const <String>[];
     final base = switch (characterEn) {
       'Aisha' => const ['purple hair', 'long hair', 'purple eyes'],
       'Rena' => const ['green hair', 'long hair'],
@@ -219,6 +225,15 @@ class _ElswordJobOutfit {
         ...look.details,
       ];
     }
+    if (usesCanonicalJobProfile) {
+      return <_ElswordStyleDetail>[
+        _ElswordStyleDetail(
+          '$jobZh・原作職業套裝',
+          '(${jobEn.toLowerCase()} outfit:1.25)',
+        ),
+        ...look.details,
+      ];
+    }
     return <_ElswordStyleDetail>[
       _ElswordStyleDetail('$jobZh職業套裝', '${jobEn.toLowerCase()} outfit'),
       ...look.details,
@@ -238,7 +253,7 @@ class _ElswordJobOutfit {
     // The canonical Aisha jobs provide their identity, official-design, and
     // hair/head blocks through [contextPhrases].  Do not duplicate that
     // material inside the clothing group.
-    if (usesCanonicalAishaJobProfile) return visualDetails;
+    if (usesCanonicalJobProfile) return visualDetails;
     return <_ElswordStyleDetail>[
       _ElswordStyleDetail('$jobZh職業套裝輪廓', en),
       _ElswordStyleDetail(
@@ -269,6 +284,14 @@ class _ElswordJobOutfit {
   bool get usesCanonicalAishaJobProfile =>
       characterEn == 'Aisha' && _canonicalAishaJobs.contains(jobEn);
 
+  /// Rose, Laby, and Lithia follow the same bundled class-reference contract
+  /// as Aisha: their job name, official-design phrase, and class-specific head
+  /// profile are emitted ahead of one complete outfit block.  This prevents a
+  /// different class's hair or outfit pieces from leaking into a selected job.
+  bool get usesCanonicalJobProfile =>
+      usesCanonicalAishaJobProfile ||
+      const <String>{'Rose', 'Laby', 'Lithia'}.contains(characterEn);
+
   String? get _aishaJobIdentity => switch (jobEn) {
         'Elemental Master' => 'elemental_master, elemental master aisha',
         'Aether Sage' => 'aether_sage, aether sage aisha',
@@ -280,6 +303,16 @@ class _ElswordJobOutfit {
         'Lord Azoth' => 'lord_azoth, lord azoth aisha',
         _ => null,
       };
+
+  String? get _canonicalJobIdentity {
+    if (usesCanonicalAishaJobProfile) return _aishaJobIdentity;
+    if (!usesCanonicalJobProfile) return null;
+    final jobToken = jobEn
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
+        .replaceAll(RegExp(r'^_|_$'), '');
+    return '$jobToken, ${jobEn.toLowerCase()} ${characterEn.toLowerCase()}';
+  }
 
   String? get _aishaJobOutfitAnchor => switch (jobEn) {
         'Elemental Master' => 'elemental master outfit',
@@ -303,14 +336,14 @@ class _ElswordJobOutfit {
   /// the user turn the job's head profile off without changing global Aisha
   /// traits.
   List<OutfitReferenceContextPhraseData> get contextPhrases {
-    if (!usesCanonicalAishaJobProfile) {
+    if (!usesCanonicalJobProfile) {
       return const <OutfitReferenceContextPhraseData>[];
     }
-    final identity = _aishaJobIdentity;
+    final identity = _canonicalJobIdentity;
     if (identity == null) return const <OutfitReferenceContextPhraseData>[];
     final headProfile = <String>[
       ...look.hairTags,
-      _aishaFaceProfile,
+      if (usesCanonicalAishaJobProfile) _aishaFaceProfile,
     ].join(', ');
     return <OutfitReferenceContextPhraseData>[
       OutfitReferenceContextPhraseData(
@@ -444,6 +477,39 @@ class _ElswordJobOutfit {
         'Eve' => '$jobZh專屬納斯德武裝',
         'Ara' => '$jobZh專屬靈槍',
         'Elesis' => '$jobZh專屬騎士劍',
+        'Rose' => switch (jobEn) {
+            'Storm Trooper' => '風暴神兵・重砲武裝',
+            'Tempest Burster' => '暴風破壞者・超音速磁軌砲',
+            'Crimson Rose' => '血色玫瑰・雙槍',
+            'Black Massacre' => '黑色屠殺者・暗黑雙槍',
+            'Freyja' => '芙蕾雅・榴彈與爆破武裝',
+            'Minerva' => '密涅瓦・空戰槍械',
+            'Optimus' => '終極武器・召喚機器人',
+            'Prime Operator' => '第一原質・機械軍團控制器',
+            _ => '$jobZh專屬槍械',
+          },
+        'Laby' => switch (jobEn) {
+            'Rumble Pumn' => '喧嘩拳擊者・拳套與鏡子',
+            'Eternity Winner' => '永恆勝利者・能量拳套與鏡子',
+            'Shining Romantica' => '光耀浪漫者・華麗魔鏡',
+            'Radiant Soul' => '星耀魂靈者・光輝魔鏡',
+            'Daydreamer' => '空想幻夢者・夢境魔鏡',
+            'Nisha Labyrinth' => '夜暝魂夢者・暗影魔鏡',
+            'Punky Poppet' => '甜心劫掠者・龐克魔鏡',
+            'Twins Picaro' => '雙珠邪魅者・雙子魔鏡',
+            _ => '$jobZh專屬魔鏡',
+          },
+        'Lithia' => switch (jobEn) {
+            'Mighty Miner' => '強力礦工・魔法礦鎬',
+            'Gembliss' => '寶石極樂・寶石礦鎬',
+            'Greedy Wonder' => '貪心神醫・寶石法器',
+            'Avarice' => '極欲饕餮・華麗寶石法器',
+            'Rima Clavis' => '律法之鑰・裂隙法器',
+            'Achlys' => '阿克莉絲・混沌裂隙法器',
+            'Cynical Sneer' => '諷世愚者・惡魔法器',
+            'Mischief' => '惡戲奇術師・惡作劇法器',
+            _ => '$jobZh專屬魔法礦鎬',
+          },
         _ => '$jobZh專屬武器',
       };
 
@@ -472,6 +538,65 @@ class _ElswordJobOutfit {
         'ornate $descriptor spirit spear with glowing talismans, official Elsword martial weapon',
       'Elesis' =>
         'ornate $descriptor knight sword with an engraved guard and a glowing crest, official Elsword knight weapon',
+      'Rose' => switch (jobEn) {
+          'Storm Trooper' =>
+            'heavy artillery cannon, grenade launcher, gravity cannon, official Elsword gunner weapon',
+          'Tempest Burster' =>
+            'supersonic buster railgun, hybrid railgun, heavy artillery cannon, official Elsword gunner weapon',
+          'Crimson Rose' =>
+            'dual revolvers, crimson energy bullets, official Elsword assassin gunner weapon',
+          'Black Massacre' =>
+            'dual black pistols, dark energy firearm, official Elsword assassin gunner weapon',
+          'Freyja' =>
+            'explosive grenade launcher, attribute bullets, official Elsword gunner weapon',
+          'Minerva' =>
+            'aerial firearm, electric launcher, official Elsword gunner weapon',
+          'Optimus' =>
+            'summoned combat robot, mechanical drone, remote controller, official Elsword mech weapon',
+          'Prime Operator' =>
+            'mechanical drone army, command controller, giant mech cannon, official Elsword mech weapon',
+          _ =>
+            'ornate $descriptor gunner weapon, official Elsword class weapon',
+        },
+      'Laby' => switch (jobEn) {
+          'Rumble Pumn' =>
+            'oversized boxing gloves, magical mirror, official Elsword fighter weapon',
+          'Eternity Winner' =>
+            'energy gauntlets, magical mirror, official Elsword fighter weapon',
+          'Shining Romantica' =>
+            'ornate mirror, magical reflector, official Elsword mirror weapon',
+          'Radiant Soul' =>
+            'glowing mirror, radiant light orb, official Elsword mirror weapon',
+          'Daydreamer' =>
+            'dream mirror, shadow familiar, official Elsword mirror weapon',
+          'Nisha Labyrinth' =>
+            'black mirror, shadow familiar, official Elsword mirror weapon',
+          'Punky Poppet' =>
+            'punk mirror, shadow puppet, official Elsword mirror weapon',
+          'Twins Picaro' =>
+            'twin magical mirrors, playing-card magic, official Elsword mirror weapon',
+          _ => 'ornate $descriptor magic mirror, official Elsword class weapon',
+        },
+      'Lithia' => switch (jobEn) {
+          'Mighty Miner' =>
+            'enchanted mining pickaxe, gemstone drill, official Elsword relic weapon',
+          'Gembliss' =>
+            'gemstone pickaxe, floating crystal ore, official Elsword relic weapon',
+          'Greedy Wonder' =>
+            'gemstone magic pickaxe, healing crystal, official Elsword relic weapon',
+          'Avarice' =>
+            'ornate gemstone pickaxe, gold crystal charm, official Elsword relic weapon',
+          'Rima Clavis' =>
+            'rift magic pickaxe, dimensional key device, official Elsword relic weapon',
+          'Achlys' =>
+            'chaos rift pickaxe, fractured crystal device, official Elsword relic weapon',
+          'Cynical Sneer' =>
+            'demonic magic pickaxe, cursed crystal device, official Elsword relic weapon',
+          'Mischief' =>
+            'trickster magic pickaxe, demonic crystal device, official Elsword relic weapon',
+          _ =>
+            'ornate $descriptor magic pickaxe, official Elsword relic weapon',
+        },
       _ => 'ornate $descriptor fantasy weapon, official Elsword class weapon',
     };
   }
@@ -1308,6 +1433,357 @@ const _elesisLooks = <String, _ElswordJobLook>{
   ),
 };
 
+/// Rose's eight second / third-job references.  Weapons intentionally stay in
+/// the optional equipment catalog, not in these clothing phrases.
+const _roseLooks = <String, _ElswordJobLook>{
+  'Storm Trooper': _ElswordJobLook(
+    palette: '海軍藍 × 黑色 × 銀色',
+    hairTags: ['blonde hair', 'blue eyes', 'blue hair ribbon'],
+    details: [
+      _ElswordStyleDetail('風暴神兵・重砲軍裝',
+          'navy and black heavy artillery uniform, fitted military bodysuit, armored chest plate'),
+      _ElswordStyleDetail('風暴神兵・外套與護臂',
+          'navy military coat, black armored gloves, mechanical arm guards'),
+      _ElswordStyleDetail('風暴神兵・下身與靴子',
+          'black tactical legwear, navy thigh boots, silver buckles'),
+      _ElswordStyleDetail(
+          '風暴神兵・機械裝置', 'utility belt, artillery harness, metallic insignia'),
+    ],
+  ),
+  'Tempest Burster': _ElswordJobLook(
+    palette: '深藍色 × 黑色 × 銀色',
+    hairTags: ['blonde hair', 'blue eyes', 'blue hair ribbon'],
+    details: [
+      _ElswordStyleDetail('暴風破壞者・重砲戰衣',
+          'dark navy and black railgunner outfit, fitted armored bodysuit, silver chest armor'),
+      _ElswordStyleDetail('暴風破壞者・軍裝外套',
+          'long navy military coat, reinforced shoulder armor, black gloves'),
+      _ElswordStyleDetail('暴風破壞者・腿部與靴子',
+          'black armored legwear, navy high boots, silver boot guards'),
+      _ElswordStyleDetail('暴風破壞者・火力裝置',
+          'artillery harness, ammo belt, glowing blue mechanical accents'),
+    ],
+  ),
+  'Crimson Rose': _ElswordJobLook(
+    palette: '黑色 × 深紅色 × 金色',
+    hairTags: ['blonde hair', 'blue eyes', 'red hair ribbon'],
+    details: [
+      _ElswordStyleDetail('血色玫瑰・暗殺戰衣',
+          'black and crimson assassin bodysuit, fitted corset, dark red chest armor'),
+      _ElswordStyleDetail(
+          '血色玫瑰・外套與手套', 'crimson long coat, black gloves, chain accessories'),
+      _ElswordStyleDetail('血色玫瑰・腿部與鞋履',
+          'black thighhighs, crimson garter straps, black high heel boots'),
+      _ElswordStyleDetail('血色玫瑰・血色飾件',
+          'rose emblem, crimson gemstone ornaments, dark red ribbons'),
+    ],
+  ),
+  'Black Massacre': _ElswordJobLook(
+    palette: '黑色 × 深紅色 × 銀色',
+    hairTags: ['blonde hair', 'blue eyes', 'black hat', 'hair over one eye'],
+    details: [
+      _ElswordStyleDetail('黑色屠殺者・暗黑戰衣',
+          'black assassin bodysuit, dark crimson corset, fitted black vest'),
+      _ElswordStyleDetail(
+          '黑色屠殺者・大衣與手套', 'black long coat, black gloves, chain decorations'),
+      _ElswordStyleDetail('黑色屠殺者・腿部與鞋履',
+          'black thighhighs, black thigh boots, silver ankle straps'),
+      _ElswordStyleDetail('黑色屠殺者・暗紅飾件',
+          'dark red ribbons, silver tassels, black rose ornaments'),
+    ],
+  ),
+  'Freyja': _ElswordJobLook(
+    palette: '白色 × 藍色 × 金色',
+    hairTags: ['blonde hair', 'blue eyes', 'blue hair ribbon'],
+    details: [
+      _ElswordStyleDetail('芙蕾雅・爆破軍裝',
+          'white and blue valkyrie gunner outfit, fitted armored bodice, gold chest emblem'),
+      _ElswordStyleDetail('芙蕾雅・外套與護臂',
+          'white military coat, blue armored sleeves, black gloves'),
+      _ElswordStyleDetail(
+          '芙蕾雅・腿部與靴子', 'blue leg guards, white thigh boots, gold boot armor'),
+      _ElswordStyleDetail(
+          '芙蕾雅・戰場飾件', 'wing motif, gold belt, blue energy accents'),
+    ],
+  ),
+  'Minerva': _ElswordJobLook(
+    palette: '白色 × 天藍色 × 金色',
+    hairTags: ['blonde hair', 'blue eyes', 'blue hair ribbon'],
+    details: [
+      _ElswordStyleDetail('密涅瓦・空戰軍裝',
+          'white and sky blue aerial gunner suit, fitted armored bodice, gold chest emblem'),
+      _ElswordStyleDetail(
+          '密涅瓦・披風與護臂', 'blue capelet, white armored sleeves, black gloves'),
+      _ElswordStyleDetail(
+          '密涅瓦・腿部與靴子', 'sky blue leg guards, white high boots, gold buckles'),
+      _ElswordStyleDetail('密涅瓦・機械翼飾件',
+          'mechanical wing pack, blue energy accents, metallic insignia'),
+    ],
+  ),
+  'Optimus': _ElswordJobLook(
+    palette: '白色 × 青綠色 × 黑色',
+    hairTags: ['blonde hair', 'blue eyes', 'goggles'],
+    details: [
+      _ElswordStyleDetail('終極武器・機械工戰衣',
+          'white and teal mechanic outfit, fitted black bodysuit, teal chest armor'),
+      _ElswordStyleDetail('終極武器・外套與手套',
+          'white cropped jacket, mechanical gauntlets, black gloves'),
+      _ElswordStyleDetail('終極武器・腿部與靴子',
+          'black mechanical legwear, white armored boots, teal boot lights'),
+      _ElswordStyleDetail(
+          '終極武器・機械飾件', 'tool belt, mechanical backpack, teal circuit accents'),
+    ],
+  ),
+  'Prime Operator': _ElswordJobLook(
+    palette: '白色 × 黑色 × 青綠色',
+    hairTags: ['blonde hair', 'blue eyes', 'goggles'],
+    details: [
+      _ElswordStyleDetail('第一原質・指揮官戰衣',
+          'white and black mech commander outfit, fitted armored bodice, teal chest lights'),
+      _ElswordStyleDetail('第一原質・外套與護臂',
+          'black command coat, white mechanical sleeves, control gloves'),
+      _ElswordStyleDetail('第一原質・腿部與靴子',
+          'black armored legwear, white mechanical boots, teal boot lights'),
+      _ElswordStyleDetail('第一原質・機械軍團飾件',
+          'command headset, mechanical backpack, teal circuit ornaments'),
+    ],
+  ),
+};
+
+/// Laby's job outfits keep all class appearance phrases bundled with the
+/// selected class.  No age-related wording is emitted into prompts.
+const _labyLooks = <String, _ElswordJobLook>{
+  'Rumble Pumn': _ElswordJobLook(
+    palette: '粉紅色 × 海軍藍 × 白色',
+    hairTags: ['pink hair', 'pink eyes', 'ahoge', 'hair ornament'],
+    details: [
+      _ElswordStyleDetail('喧嘩拳擊者・拳擊戰衣',
+          'pink and navy fighter outfit, fitted top, white chest bow'),
+      _ElswordStyleDetail('喧嘩拳擊者・護臂與袖套',
+          'navy detached sleeves, pink wrist wraps, padded arm guards'),
+      _ElswordStyleDetail('喧嘩拳擊者・下身與靴子',
+          'pink pleated skirt, navy legwear, white lace-up boots'),
+      _ElswordStyleDetail('喧嘩拳擊者・活力飾件',
+          'heart motif, striped ribbons, blue gemstone ornaments'),
+    ],
+  ),
+  'Eternity Winner': _ElswordJobLook(
+    palette: '深藍色 × 粉紅色 × 白色',
+    hairTags: ['pink hair', 'pink eyes', 'ahoge', 'hair ornament'],
+    details: [
+      _ElswordStyleDetail('永恆勝利者・冠軍戰衣',
+          'dark blue and pink champion outfit, fitted bodice, white chest bow'),
+      _ElswordStyleDetail('永恆勝利者・護臂與袖套',
+          'white detached sleeves, dark blue arm guards, pink wrist ribbons'),
+      _ElswordStyleDetail('永恆勝利者・下身與靴子',
+          'layered pink skirt, dark blue legwear, white high boots'),
+      _ElswordStyleDetail(
+          '永恆勝利者・冠軍飾件', 'star motif, blue energy accents, ornate ribbons'),
+    ],
+  ),
+  'Shining Romantica': _ElswordJobLook(
+    palette: '白色 × 粉紅色 × 金色',
+    hairTags: ['pink hair', 'pink eyes', 'ahoge', 'hair ornament'],
+    details: [
+      _ElswordStyleDetail('光耀浪漫者・華麗洋裝',
+          'white and pink magical dress, fitted bodice, gold chest ornament'),
+      _ElswordStyleDetail('光耀浪漫者・袖套與披肩',
+          'pink detached sleeves, white shoulder shawl, long ribbon sleeves'),
+      _ElswordStyleDetail(
+          '光耀浪漫者・裙襬與鞋履', 'layered white skirt, pink frills, white ankle boots'),
+      _ElswordStyleDetail('光耀浪漫者・浪漫飾件',
+          'heart motif, gold gemstone ornaments, large pink bows'),
+    ],
+  ),
+  'Radiant Soul': _ElswordJobLook(
+    palette: '白色 × 淺藍色 × 金色',
+    hairTags: ['pink hair', 'pink eyes', 'ahoge', 'hair ornament'],
+    details: [
+      _ElswordStyleDetail('星耀魂靈者・光輝洋裝',
+          'white and light blue radiant dress, fitted bodice, gold chest ornament'),
+      _ElswordStyleDetail('星耀魂靈者・袖套與披肩',
+          'light blue detached sleeves, white shoulder shawl, flowing ribbon sleeves'),
+      _ElswordStyleDetail('星耀魂靈者・裙襬與鞋履',
+          'layered white skirt, light blue frills, white high boots'),
+      _ElswordStyleDetail(
+          '星耀魂靈者・星光飾件', 'star motif, radiant crystal ornaments, gold ribbons'),
+    ],
+  ),
+  'Daydreamer': _ElswordJobLook(
+    palette: '黑色 × 紫色 × 粉紅色',
+    hairTags: ['pink hair', 'pink eyes', 'ahoge', 'hair ornament'],
+    details: [
+      _ElswordStyleDetail('空想幻夢者・夢境洋裝',
+          'black and purple dream dress, fitted bodice, pink chest ribbons'),
+      _ElswordStyleDetail('空想幻夢者・袖套與披肩',
+          'purple detached sleeves, black shoulder shawl, flowing ribbons'),
+      _ElswordStyleDetail('空想幻夢者・裙襬與鞋履',
+          'layered black skirt, purple frills, black lace-up boots'),
+      _ElswordStyleDetail('空想幻夢者・夢境飾件',
+          'dream cloud motif, purple crystal ornaments, dark ribbons'),
+    ],
+  ),
+  'Nisha Labyrinth': _ElswordJobLook(
+    palette: '黑色 × 深紫色 × 灰色',
+    hairTags: ['pink hair', 'pink eyes', 'ahoge', 'hair ornament'],
+    details: [
+      _ElswordStyleDetail('夜暝魂夢者・迷宮洋裝',
+          'black and dark purple gothic dress, fitted bodice, gray chest ribbons'),
+      _ElswordStyleDetail('夜暝魂夢者・袖套與披風',
+          'dark detached sleeves, black hooded cape, layered ribbon sleeves'),
+      _ElswordStyleDetail('夜暝魂夢者・裙襬與鞋履',
+          'layered black skirt, dark purple frills, black high boots'),
+      _ElswordStyleDetail(
+          '夜暝魂夢者・暗影飾件', 'shadow motif, dark crystal ornaments, black ribbons'),
+    ],
+  ),
+  'Punky Poppet': _ElswordJobLook(
+    palette: '黑色 × 熱粉紅色 × 白色',
+    hairTags: ['pink hair', 'pink eyes', 'ahoge', 'hair ornament'],
+    details: [
+      _ElswordStyleDetail('甜心劫掠者・龐克洋裝',
+          'black and hot pink punk dress, fitted bodice, white chest bow'),
+      _ElswordStyleDetail('甜心劫掠者・袖套與手套',
+          'striped detached sleeves, black fingerless gloves, pink wrist ribbons'),
+      _ElswordStyleDetail('甜心劫掠者・裙襬與鞋履',
+          'layered punk skirt, striped legwear, black lace-up boots'),
+      _ElswordStyleDetail(
+          '甜心劫掠者・龐克飾件', 'chain accessories, heart motif, hot pink ribbons'),
+    ],
+  ),
+  'Twins Picaro': _ElswordJobLook(
+    palette: '黑色 × 紅色 × 白色',
+    hairTags: ['pink hair', 'pink eyes', 'ahoge', 'hair ornament'],
+    details: [
+      _ElswordStyleDetail('雙珠邪魅者・小丑洋裝',
+          'black red and white harlequin dress, asymmetrical bodice, striped chest bow'),
+      _ElswordStyleDetail('雙珠邪魅者・袖套與手套',
+          'mismatched detached sleeves, black gloves, red wrist ribbons'),
+      _ElswordStyleDetail('雙珠邪魅者・裙襬與鞋履',
+          'asymmetrical layered skirt, striped legwear, black buckle boots'),
+      _ElswordStyleDetail('雙珠邪魅者・戲法飾件',
+          'playing-card motif, jester ornaments, red and white ribbons'),
+    ],
+  ),
+};
+
+/// Lithia's official paths use gemstone, relic, and rift motifs.  Each block
+/// provides the class silhouette, while her pickaxe-like weapons stay optional.
+const _lithiaLooks = <String, _ElswordJobLook>{
+  'Mighty Miner': _ElswordJobLook(
+    palette: '綠色 × 黑色 × 金色',
+    hairTags: ['grey hair', 'green eyes', 'long hair', 'ponytail', 'ahoge'],
+    details: [
+      _ElswordStyleDetail('強力礦工・礦工戰衣',
+          'green and black relic miner outfit, fitted top, gold chest ornament'),
+      _ElswordStyleDetail('強力礦工・護臂與外套',
+          'black mechanical sleeves, green arm guards, utility belt'),
+      _ElswordStyleDetail('強力礦工・下身與靴子',
+          'black fitted pants, green knee guards, black armored boots'),
+      _ElswordStyleDetail('強力礦工・礦石飾件',
+          'goggles, gemstone ornaments, metallic mining accessories'),
+    ],
+  ),
+  'Gembliss': _ElswordJobLook(
+    palette: '綠色 × 黑色 × 青綠色',
+    hairTags: ['grey hair', 'green eyes', 'long hair', 'ponytail', 'ahoge'],
+    details: [
+      _ElswordStyleDetail('寶石極樂・高科技戰衣',
+          'green and black high-tech miner outfit, fitted cropped top, teal chest lights'),
+      _ElswordStyleDetail('寶石極樂・機械護臂',
+          'oversized mechanical sleeves, black arm guards, green circuit accents'),
+      _ElswordStyleDetail('寶石極樂・下身與靴子',
+          'black fitted pants, green thigh guards, high-tech armored boots'),
+      _ElswordStyleDetail('寶石極樂・寶石飾件',
+          'goggles, floating gemstone ornaments, metallic ribbons'),
+    ],
+  ),
+  'Greedy Wonder': _ElswordJobLook(
+    palette: '白色 × 綠色 × 金色',
+    hairTags: ['grey hair', 'green eyes', 'long hair', 'ponytail', 'ahoge'],
+    details: [
+      _ElswordStyleDetail('貪心神醫・療癒術士裝',
+          'white and green healer outfit, fitted bodice, gold chest ornament'),
+      _ElswordStyleDetail('貪心神醫・披肩與袖套',
+          'white capelet, green detached sleeves, gold arm bands'),
+      _ElswordStyleDetail(
+          '貪心神醫・裙襬與鞋履', 'white layered skirt, green legwear, white high boots'),
+      _ElswordStyleDetail(
+          '貪心神醫・寶石飾件', 'gemstone brooch, gold belt, healing crystal ornaments'),
+    ],
+  ),
+  'Avarice': _ElswordJobLook(
+    palette: '白色 × 祖母綠色 × 金色',
+    hairTags: ['grey hair', 'green eyes', 'long hair', 'ponytail', 'ahoge'],
+    details: [
+      _ElswordStyleDetail('極欲饕餮・華麗術士裝',
+          'white and emerald green ornate healer dress, fitted bodice, gold chest ornament'),
+      _ElswordStyleDetail('極欲饕餮・披肩與袖套',
+          'white shoulder cape, emerald detached sleeves, gold arm bands'),
+      _ElswordStyleDetail('極欲饕餮・裙襬與鞋履',
+          'layered white skirt, emerald legwear, white high boots'),
+      _ElswordStyleDetail('極欲饕餮・財寶飾件',
+          'gold gemstone ornaments, ornate belt, floating crystal charms'),
+    ],
+  ),
+  'Rima Clavis': _ElswordJobLook(
+    palette: '黑色 × 青綠色 × 銀色',
+    hairTags: ['grey hair', 'green eyes', 'long hair', 'ponytail', 'ahoge'],
+    details: [
+      _ElswordStyleDetail('律法之鑰・裂隙探索裝',
+          'black and teal rift explorer outfit, fitted armored top, silver chest ornament'),
+      _ElswordStyleDetail('律法之鑰・外套與護臂',
+          'black asymmetrical coat, teal arm guards, silver gloves'),
+      _ElswordStyleDetail('律法之鑰・下身與靴子',
+          'black fitted pants, teal thigh straps, black armored boots'),
+      _ElswordStyleDetail('律法之鑰・裂隙飾件',
+          'dimensional key motif, teal crystal ornaments, rift energy accents'),
+    ],
+  ),
+  'Achlys': _ElswordJobLook(
+    palette: '黑色 × 酸橙綠色 × 紫色',
+    hairTags: ['grey hair', 'green eyes', 'long hair', 'ponytail', 'ahoge'],
+    details: [
+      _ElswordStyleDetail('阿克莉絲・混沌裂隙裝',
+          'black and lime green chaos rift outfit, fitted armored top, purple chest gem'),
+      _ElswordStyleDetail(
+          '阿克莉絲・外套與護臂', 'black split coat, lime green arm guards, dark gloves'),
+      _ElswordStyleDetail('阿克莉絲・下身與靴子',
+          'black fitted pants, lime green leg guards, black high boots'),
+      _ElswordStyleDetail('阿克莉絲・混沌飾件',
+          'fractured crystal ornaments, rift ribbons, purple energy accents'),
+    ],
+  ),
+  'Cynical Sneer': _ElswordJobLook(
+    palette: '黑色 × 紫色 × 酒紅色',
+    hairTags: ['grey hair', 'green eyes', 'long hair', 'ponytail', 'ahoge'],
+    details: [
+      _ElswordStyleDetail('諷世愚者・惡魔術士裝',
+          'black and purple trickster outfit, fitted bodice, burgundy chest ribbon'),
+      _ElswordStyleDetail('諷世愚者・披肩與袖套',
+          'black asymmetrical cape, purple detached sleeves, dark gloves'),
+      _ElswordStyleDetail('諷世愚者・下身與靴子',
+          'black layered skirt, purple legwear, black buckle boots'),
+      _ElswordStyleDetail('諷世愚者・惡魔飾件',
+          'demonic crystal ornaments, crescent motif, burgundy ribbons'),
+    ],
+  ),
+  'Mischief': _ElswordJobLook(
+    palette: '黑色 × 紫色 × 紅色',
+    hairTags: ['grey hair', 'green eyes', 'long hair', 'ponytail', 'ahoge'],
+    details: [
+      _ElswordStyleDetail('惡戲奇術師・詭術洋裝',
+          'black purple and red trickster dress, asymmetrical bodice, dark chest ribbons'),
+      _ElswordStyleDetail('惡戲奇術師・披肩與袖套',
+          'black hooded cape, purple detached sleeves, red gloves'),
+      _ElswordStyleDetail('惡戲奇術師・裙襬與鞋履',
+          'asymmetrical layered skirt, black legwear, black buckle boots'),
+      _ElswordStyleDetail('惡戲奇術師・惡作劇飾件',
+          'demonic gemstone ornaments, playing-card motif, red ribbons'),
+    ],
+  ),
+};
+
 const _elswordJobs = <_ElswordJobOutfit>[
   _ElswordJobOutfit('愛莎', 'Aisha', '元素魔導', 'Elemental Master'),
   _ElswordJobOutfit('愛莎', 'Aisha', '乙太魔導', 'Aether Sage'),
@@ -1317,6 +1793,30 @@ const _elswordJobs = <_ElswordJobOutfit>[
   _ElswordJobOutfit('愛莎', 'Aisha', '星光魔女', 'Metamorphy'),
   _ElswordJobOutfit('愛莎', 'Aisha', '真理術士', 'Mystic Alchemist'),
   _ElswordJobOutfit('愛莎', 'Aisha', '萬靈賢者', 'Lord Azoth'),
+  _ElswordJobOutfit('蘿潔', 'Rose', '風暴神兵', 'Storm Trooper'),
+  _ElswordJobOutfit('蘿潔', 'Rose', '暴風破壞者', 'Tempest Burster'),
+  _ElswordJobOutfit('蘿潔', 'Rose', '血色玫瑰', 'Crimson Rose'),
+  _ElswordJobOutfit('蘿潔', 'Rose', '黑色屠殺者', 'Black Massacre'),
+  _ElswordJobOutfit('蘿潔', 'Rose', '芙蕾雅', 'Freyja'),
+  _ElswordJobOutfit('蘿潔', 'Rose', '密涅瓦', 'Minerva'),
+  _ElswordJobOutfit('蘿潔', 'Rose', '終極武器', 'Optimus'),
+  _ElswordJobOutfit('蘿潔', 'Rose', '第一原質', 'Prime Operator'),
+  _ElswordJobOutfit('菈比', 'Laby', '喧嘩拳擊者', 'Rumble Pumn'),
+  _ElswordJobOutfit('菈比', 'Laby', '永恆勝利者', 'Eternity Winner'),
+  _ElswordJobOutfit('菈比', 'Laby', '光耀浪漫者', 'Shining Romantica'),
+  _ElswordJobOutfit('菈比', 'Laby', '星耀魂靈者', 'Radiant Soul'),
+  _ElswordJobOutfit('菈比', 'Laby', '空想幻夢者', 'Daydreamer'),
+  _ElswordJobOutfit('菈比', 'Laby', '夜暝魂夢者', 'Nisha Labyrinth'),
+  _ElswordJobOutfit('菈比', 'Laby', '甜心劫掠者', 'Punky Poppet'),
+  _ElswordJobOutfit('菈比', 'Laby', '雙珠邪魅者', 'Twins Picaro'),
+  _ElswordJobOutfit('莉緹亞', 'Lithia', '強力礦工', 'Mighty Miner'),
+  _ElswordJobOutfit('莉緹亞', 'Lithia', '寶石極樂', 'Gembliss'),
+  _ElswordJobOutfit('莉緹亞', 'Lithia', '貪心神醫', 'Greedy Wonder'),
+  _ElswordJobOutfit('莉緹亞', 'Lithia', '極欲饕餮', 'Avarice'),
+  _ElswordJobOutfit('莉緹亞', 'Lithia', '律法之鑰', 'Rima Clavis'),
+  _ElswordJobOutfit('莉緹亞', 'Lithia', '阿克莉絲', 'Achlys'),
+  _ElswordJobOutfit('莉緹亞', 'Lithia', '諷世愚者', 'Cynical Sneer'),
+  _ElswordJobOutfit('莉緹亞', 'Lithia', '惡戲奇術師', 'Mischief'),
   _ElswordJobOutfit('蕾娜', 'Rena', '戰鬥遊俠', 'Combat Ranger'),
   _ElswordJobOutfit('蕾娜', 'Rena', '疾風之靴', 'Wind Sneaker'),
   _ElswordJobOutfit('蕾娜', 'Rena', '安涅莫斯', 'Anemos'),
