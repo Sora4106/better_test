@@ -27,7 +27,10 @@ const _characterNameListUrl =
     'https://huggingface.co/spaces/flagrantia/character_select_saa';
 const _unregisteredPositiveTagInboxEnabled = false;
 const _showPersonFeatureGuidance = false;
-const _stepLayoutVersion = 5;
+// Version 6 removes the standalone "組合" step.  Saved progress is migrated
+// below, while the underlying reusable outfit/pose data remains available in
+// its integrated pickers.
+const _stepLayoutVersion = 6;
 const _wingTypeGroup = '翅膀類型';
 const _wingColorGroup = '翅膀顏色';
 const _animalEarColorGroup = '獸耳顏色';
@@ -8820,7 +8823,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   static const _imageStepTitles = <String>[
     '場景與畫面',
     '角色資料',
-    '組合標籤',
     '固定角色外觀',
     '服裝與穿脫',
     '姿勢與互動',
@@ -8829,7 +8831,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   static const _imageStepShortTitles = <String>[
     '場景',
     '角色',
-    '組合',
     '特徵',
     '服裝',
     '姿勢',
@@ -8838,7 +8839,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   static const _imageStepIcons = <IconData>[
     Icons.landscape_outlined,
     Icons.badge_outlined,
-    Icons.auto_awesome_motion_outlined,
     Icons.face_retouching_natural,
     Icons.checkroom_outlined,
     Icons.accessibility_new,
@@ -13569,7 +13569,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         // Version 3 inserted the reusable-combinations step after characters.
         savedStep += 1;
       }
-      _stepIndex = savedStep.clamp(0, 6).toInt();
+      if (savedLayoutVersion < 6 && savedStep >= 2) {
+        // Version 6 removed the redundant standalone combinations step. Its
+        // tags remain in the relevant feature, clothing, and pose sections.
+        savedStep -= 1;
+      }
+      _stepIndex = savedStep.clamp(0, _imageStepTitles.length - 1).toInt();
       _workspaceMode = data['workspaceMode'] == 'video' ? 'video' : 'image';
       _sideNavigationOnRight = data['sideNavigationOnRight'] == true;
       _gender = '${data['gender'] ?? '女性'}';
@@ -17820,11 +17825,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     const titles = <int, String>{
       0: '場景與畫面',
       1: '角色資料',
-      2: '組合標籤',
-      3: '固定角色外觀',
-      4: '服裝與穿脫狀態',
-      5: '姿勢、互動與成人分類',
-      6: '品質、額外與負面',
+      2: '固定角色外觀',
+      3: '服裝與穿脫狀態',
+      4: '姿勢、互動與成人分類',
+      5: '品質、額外與負面',
       7: '動畫分鏡與動態語句',
     };
     final title = titles[index] ?? '本大項';
@@ -17903,16 +17907,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _personActiveGroups.clear();
           break;
         case 2:
-          for (final entry in _personCombinationIds.entries) {
-            final appliedTagIds = _combinations
-                .where((combination) => entry.value.contains(combination.id))
-                .expand((combination) => combination.tagIds)
-                .toSet();
-            _personTagIds(entry.key).removeWhere(appliedTagIds.contains);
-          }
-          _personCombinationIds.clear();
-          break;
-        case 3:
           removePersonTagsWhere(_isFixedCharacterFeatureTag);
           for (var personIndex = 0;
               personIndex < _personSlots.length;
@@ -17939,7 +17933,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             );
           }
           break;
-        case 4:
+        case 3:
           removePersonTagsWhere(_isClothingOrEquipmentTag);
           _outfitReferenceHiddenSectionsByPerson.clear();
           for (var personIndex = 0;
@@ -17952,7 +17946,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             );
           }
           break;
-        case 5:
+        case 4:
           _removeAdultPosePackageTags();
           final sharedActionIds =
               removableByGroup(_sharedActionPickerGroups.toSet());
@@ -17968,7 +17962,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             );
           }
           break;
-        case 6:
+        case 5:
           _extraPositive.clear();
           _reversePrompt.clear();
           _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
@@ -19812,7 +19806,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (_stepIndex == 1 && !_charactersComplete()) {
       return;
     }
-    final nextStep = _stepIndex < 6 ? _stepIndex + 1 : _stepIndex;
+    final nextStep =
+        _stepIndex < _imageStepTitles.length - 1 ? _stepIndex + 1 : _stepIndex;
     FocusManager.instance.primaryFocus?.unfocus();
     setState(() {
       _stepIndex = nextStep;
@@ -20878,6 +20873,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
+  // Retained for backward-compatible local combination data. The standalone
+  // entry point is intentionally removed; clothing and pose pickers expose
+  // the active combination workflows.
+  // ignore: unused_element
   Widget _stepCombinations() {
     final combinations = _combinations
         .where((combination) =>
@@ -26749,28 +26748,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           result.addAll(identity.where(_isMandatoryCharacterIdentityOutput));
           break;
         case 2:
-          result.addAll(personal.where((tag) => tag.combinationId != null));
-          break;
-        case 3:
           result.addAll(identity
               .where((tag) => !_isMandatoryCharacterIdentityOutput(tag)));
-          result.addAll(personal.where((tag) =>
-              tag.combinationId == null && _isCharacterWeightOutputTag(tag)));
+          result.addAll(personal.where(_isCharacterWeightOutputTag));
+          break;
+        case 3:
+          result.addAll(personal.where(_isClothingWeightOutputTag));
           break;
         case 4:
           result.addAll(personal.where((tag) =>
-              tag.combinationId == null && _isClothingWeightOutputTag(tag)));
-          break;
-        case 5:
-          result.addAll(personal.where((tag) =>
-              tag.combinationId == null &&
               !_isCharacterWeightOutputTag(tag) &&
               !_isClothingWeightOutputTag(tag)));
           break;
       }
     }
 
-    if (stepIndex == 5) {
+    if (stepIndex == 4) {
       result.addAll(_selectedTags
           .where((tag) =>
               _isSharedActionGroup(tag.group) ||
@@ -26783,7 +26776,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       result.addAll(_sharedPoseExtraOutputTags());
     }
 
-    if (stepIndex == 6) {
+    if (stepIndex == 5) {
       result.addAll(_selectedTags
           .where((tag) =>
               !_isSceneVisualPromptGroup(tag.group) &&
@@ -26837,19 +26830,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       final personal =
           tags.where((tag) => tag.personIndex == personIndex).toList();
       if (personal.isEmpty) continue;
-      final blockTags = stepIndex == 5
+      final blockTags = stepIndex == 4
           ? personal
               .where((tag) => !_isFinalPersonOutputTag(personIndex, tag))
               .toList()
           : personal;
-      if (stepIndex == 5) {
+      if (stepIndex == 4) {
         trailingPersonTags.addAll(
           personal.where((tag) => _isFinalPersonOutputTag(personIndex, tag)),
         );
       }
       if (blockTags.isEmpty) continue;
       final segments = <String>[];
-      if (stepIndex == 3) {
+      if (stepIndex == 2) {
         final hair = blockTags
             .where((tag) => _isHairPromptOutputTag(personIndex, tag))
             .toList();
@@ -26864,7 +26857,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             weight: slot.hairPromptWeightEnabled ? slot.hairPromptWeight : null,
           ));
         }
-      } else if (stepIndex == 4) {
+      } else if (stepIndex == 3) {
         segments.add(_groupedClothingPromptBlock(
           blockTags,
           weightSlot: _personSlots[personIndex],
@@ -26897,10 +26890,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       switch (stepIndex) {
         0 => _indoorSceneGroup,
         1 => '角色標籤',
-        2 => '組合標籤',
-        3 => '身體特徵',
-        4 => '上衣',
-        5 => '動作',
+        2 => '身體特徵',
+        3 => '上衣',
+        4 => '動作',
         _ => '品質',
       },
     );
@@ -26936,7 +26928,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
           if (tags.isEmpty)
             Text(
-              stepIndex == 2 ? '尚無組合額外標籤；套用後的既有標籤會顯示在各自所屬大項。' : '本大項目前沒有已選標籤。',
+              '本大項目前沒有已選標籤。',
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -29153,15 +29145,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           onClear: () => _clearStepTags(1)),
       () => _stepCard(
           2,
-          '\u7D44\u5408\u6A19\u7C64',
-          _combinations.isEmpty
-              ? '\u5EFA\u7ACB\u53EF\u91CD\u8907\u5957\u7528\u7684\u670D\u88DD\u6216\u59FF\u52E2\u7D44\u5408'
-              : '${_combinations.length} \u500B\u7D44\u5408\u53EF\u5957\u7528',
-          Icons.auto_awesome_motion_outlined,
-          _stepCombinations(),
-          onClear: () => _clearStepTags(2)),
-      () => _stepCard(
-          3,
           '固定角色外觀',
           _fixedCharacterFeatureSummaryZh()
               .join('、')
@@ -29186,9 +29169,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               nextLabel: '下一步：服裝',
               instruction:
                   '這裡只放固定外觀：髮色、髮型、眼睛類型、臉部結構、身材、獸化部位、翅膀與額外特徵。獸人角色可自行加入 anthro；需要全身毛茸茸時可再加 furry，兩者不會因耳尾而自動加入。表情、視線、嘴型與頭頸動作放在下一個「姿勢」大項。'),
-          onClear: () => _clearStepTags(3)),
+          onClear: () => _clearStepTags(2)),
       () => _stepCard(
-          4,
+          3,
           '服裝與穿脫狀態',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
@@ -29233,9 +29216,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .ifEmpty('每位人物分別設定'),
           Icons.checkroom_outlined,
           _stepClothing(),
-          onClear: () => _clearStepTags(4)),
+          onClear: () => _clearStepTags(3)),
       () => _stepCard(
-          5,
+          4,
           '姿勢、互動與成人分類',
           _personSelectedIds.values
               .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
@@ -29253,10 +29236,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               nextLabel: '下一步：品質與負面',
               instruction:
                   '依序選頭部、上半身、下半身、全身姿勢，再選物件或人物互動；成人性姿勢與道具集中在最後。每位人物會保留自己的動作與互動。'),
-          onClear: () => _clearStepTags(5)),
-      () => _stepCard(6, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示',
+          onClear: () => _clearStepTags(4)),
+      () => _stepCard(5, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示',
           Icons.tune, _stepFinal(),
-          onClear: () => _clearStepTags(6)),
+          onClear: () => _clearStepTags(5)),
     ];
     final index = _stepIndex.clamp(0, steps.length - 1).toInt();
     return steps[index]();
@@ -30135,7 +30118,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                   ),
                                 ),
                           const Divider(height: 9),
-                          ...List.generate(7, (index) {
+                          ...List.generate(_imageStepShortTitles.length,
+                              (index) {
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 3),
                               child: showSideStepNames
