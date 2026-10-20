@@ -101,14 +101,25 @@ void main() {
     caseSensitive: false,
   );
   void validatePromptTerm(String context, String? value) {
-    const moderationSafeCompounds = {
+    const moderationSafeCompounds = <String>{
       // This is an exact Danbooru clothing tag, safe despite containing
       // the word "short".
       'short sleeves',
+      // These phrases describe equipment or boot length, not a character's
+      // age or body. They keep Wind Sneaker's compact hand bow and boot
+      // height distinct from their larger variants.
+      'small single-handed bow',
+      'small bow weapon mounted on one hand',
+      'not short boots',
     };
-    if (value != null &&
-        !moderationSafeCompounds.contains(value.toLowerCase()) &&
-        ageSensitive.hasMatch(value)) {
+    final normalized = value?.toLowerCase();
+    final ageCheckedValue = normalized == null
+        ? null
+        : moderationSafeCompounds.fold(
+            normalized,
+            (result, safePhrase) => result.replaceAll(safePhrase, ''),
+          );
+    if (value != null && ageSensitive.hasMatch(ageCheckedValue!)) {
       problems.add('$context: age-sensitive prompt term "$value".');
     }
   }
@@ -710,6 +721,16 @@ void main() {
     r'\b(cute|young|youthful|tiny|short|small)\b',
     caseSensitive: false,
   );
+  bool hasForbiddenProfileAgeTerm(String tag) {
+    const safeEquipmentOrClothingTerms = <String>{
+      'small single-handed bow',
+      'small bow weapon mounted on one hand',
+      'not short boots',
+    };
+    final normalized = tag.trim().toLowerCase();
+    return !safeEquipmentOrClothingTerms.contains(normalized) &&
+        profileForbiddenTerms.hasMatch(normalized);
+  }
   for (final profile in elswordFemaleJobPromptProfiles.values) {
     final key = profile.key;
     if (profile.base.characterEn == 'Aisha') {
@@ -743,7 +764,7 @@ void main() {
         problems.add('$key: missing ${field.key} prompt data.');
       }
       for (final tag in field.value) {
-        if (profileForbiddenTerms.hasMatch(tag)) {
+        if (hasForbiddenProfileAgeTerm(tag)) {
           problems.add('$key: forbidden age-modifying term in ${field.key}: '
               '"$tag".');
         }
@@ -751,7 +772,7 @@ void main() {
     }
     for (final field in optionalFields.entries) {
       for (final tag in field.value) {
-        if (profileForbiddenTerms.hasMatch(tag)) {
+        if (hasForbiddenProfileAgeTerm(tag)) {
           problems.add('$key: forbidden age-modifying term in ${field.key}: '
               '"$tag".');
         }
@@ -761,7 +782,7 @@ void main() {
       ...profile.companionTags,
       ...profile.optionalNegativePromptTags,
     ]) {
-      if (profileForbiddenTerms.hasMatch(tag)) {
+      if (hasForbiddenProfileAgeTerm(tag)) {
         problems.add('$key: forbidden age-modifying term "$tag".');
       }
     }
