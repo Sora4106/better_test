@@ -47,8 +47,13 @@ const _breastNippleGroup = '胸部・乳頭／乳暈';
 const _breastVisibilityGroup = '胸部・可見／裸露';
 const _breastAdultActionGroup = '性行為・胸部／乳頭';
 const _footjobAdultActionGroup = '性行為・足交';
+const _legjobAdultActionGroup = '性行為・腿交／大腿摩擦';
 const _handjobAdultActionGroup = '性行為・手交';
 const _oralAdultActionGroup = '性行為・口交';
+const _oralTechniqueGroup = '性行為・口交・部位／舌法';
+const _handjobTechniqueGroup = '性行為・手交・精細動作';
+const _footLegTechniqueGroup = '性行為・足／腿交・精細動作';
+const _motionEffectGroup = '動態輔助・官方效果';
 const _analAdultActionGroup = '性行為・肛交';
 const _vaginalAdultActionGroup = '性行為・陰道性交';
 const _maleActiveSexPoseGroup = '性姿勢・男性主動';
@@ -487,6 +492,7 @@ const _organizedPosePickerSections = <String, List<String>>{
     '動作',
     '身體動作',
     '姿勢擴充・動態輔助',
+    _motionEffectGroup,
     '貓系・單人動作',
     '獸人動作',
     '角色姿勢',
@@ -519,6 +525,7 @@ const _organizedPosePickerSections = <String, List<String>>{
     '性行為・衣物內手部互動',
     '性行為',
     _footjobAdultActionGroup,
+    _legjobAdultActionGroup,
     '性行為・摩擦',
     _handjobAdultActionGroup,
     '性行為・手交動態',
@@ -531,6 +538,9 @@ const _organizedPosePickerSections = <String, List<String>>{
     _oralAdultActionGroup,
     '性行為・口交動態',
     '性行為・舔舐動態',
+    _oralTechniqueGroup,
+    _handjobTechniqueGroup,
+    _footLegTechniqueGroup,
     _vaginalAdultActionGroup,
     _analAdultActionGroup,
     '性行為・插入',

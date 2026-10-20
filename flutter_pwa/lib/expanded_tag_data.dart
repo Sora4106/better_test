@@ -51,15 +51,20 @@ const _breastAdultActionGroup = '性行為・胸部／乳頭';
 const _clothedIntimateHandGroup = '性行為・衣物內手部互動';
 
 const _footjobGroup = '性行為・足交';
+const _legjobGroup = '性行為・腿交／大腿摩擦';
 const _handjobGroup = '性行為・手交';
 const _oralSexGroup = '性行為・口交';
 const _oralSexMotionGroup = '性行為・口交動態';
 const _handjobMotionGroup = '性行為・手交動態';
 const _lickingAdultGroup = '性行為・舔舐動態';
+const _oralTechniqueGroup = '性行為・口交・部位／舌法';
+const _handjobTechniqueGroup = '性行為・手交・精細動作';
+const _footLegTechniqueGroup = '性行為・足／腿交・精細動作';
 const _analSexGroup = '性行為・肛交';
 const _vaginalSexGroup = '性行為・陰道性交';
 
 const _sensoryObjectAdultGroup = '性行為・感官／物件互動';
+const _motionEffectGroup = '動態輔助・官方效果';
 
 const expandedGeneralPoseGroups = <String>{
   _maleActionPoseGroup,
@@ -86,6 +91,7 @@ const expandedGeneralPoseGroups = <String>{
   _footToeGroup,
   _legTowardCameraGroup,
   ...curatedPoseExtensionGroups,
+  _motionEffectGroup,
   '動態姿勢',
   '身體動作',
   '貓系・單人動作',
@@ -113,6 +119,7 @@ const expandedSexualActGroups = <String>{
   _clothedIntimateHandGroup,
   _sensoryObjectAdultGroup,
   _footjobGroup,
+  _legjobGroup,
   '性行為・摩擦',
   _handjobGroup,
   '性行為・自慰',
@@ -127,6 +134,9 @@ const expandedSexualActGroups = <String>{
   _analSexGroup,
   _handjobMotionGroup,
   _lickingAdultGroup,
+  _oralTechniqueGroup,
+  _handjobTechniqueGroup,
+  _footLegTechniqueGroup,
   '性行為・插入',
   '性行為・多人',
   '性行為・前後',
@@ -217,6 +227,7 @@ const expandedTagPickerSections = <String, List<String>>{
     '姿勢擴充・床上坐姿',
     '姿勢擴充・床上躺姿',
     '姿勢擴充・動態輔助',
+    _motionEffectGroup,
     '全身姿勢',
     '動態姿勢',
     '動作',
@@ -262,6 +273,7 @@ const expandedTagPickerSections = <String, List<String>>{
   '⑨ 成人・性行為與體液': [
     '性行為',
     _footjobGroup,
+    _legjobGroup,
     '性行為・摩擦',
     _handjobGroup,
     _handjobMotionGroup,
@@ -274,6 +286,9 @@ const expandedTagPickerSections = <String, List<String>>{
     _oralSexGroup,
     _oralSexMotionGroup,
     _lickingAdultGroup,
+    _oralTechniqueGroup,
+    _handjobTechniqueGroup,
+    _footLegTechniqueGroup,
     _vaginalSexGroup,
     _analSexGroup,
     '性行為・插入',
@@ -392,6 +407,23 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['身體顫動中', 'shaking'],
       ['動作線', 'motion lines'],
       ['動態模糊', 'motion blur'],
+    ],
+  ),
+  // Exact Danbooru-style motion effects. These are deliberately separate from
+  // body actions so users can layer a visual movement cue onto any pose.
+  ..._expandedTags(
+    prefix: 'official_motion_effect',
+    group: _motionEffectGroup,
+    order: 4,
+    adult: false,
+    rows: const [
+      ['速度線（快速移動）', 'speed lines'],
+      ['強調線（衝擊／情緒）', 'emphasis lines'],
+      ['殘影（高速軌跡）', 'afterimage'],
+      ['風吹掀起衣物／頭髮', 'wind lift'],
+      ['塵土雲', 'dust cloud'],
+      ['衝擊波', 'shockwave'],
+      ['漫畫音效文字', 'sound effects'],
     ],
   ),
   // Feline mannerisms are deliberately non-explicit and can be paired with
@@ -1500,6 +1532,16 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['女性足交', 'female footjob'],
       ['桌下足交', 'footjob under table'],
       ['模擬足交', 'simulated footjob'],
+      ['引導足交', 'guided footjob'],
+      ['站立足交', 'standing footjob'],
+      ['衣物外足交', 'footjob over clothes'],
+      ['衣物內足交', 'footjob under clothes'],
+      ['隔著鞋履足交', 'footjob through footwear'],
+      ['性交同時足交', 'footjob during penetration'],
+      ['自我足交', 'autofootjob'],
+      ['隱蔽足交', 'stealth footjob'],
+      ['足交邀請', 'footjob invitation'],
+      ['互相足交', 'mutual footjob'],
       ['舔腳', 'licking foot'],
       ['足部崇拜', 'foot worship'],
       ['聞腳', 'smelling feet'],
@@ -1517,8 +1559,8 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['背部摩擦', 'backjob'],
       ['臀部摩擦', 'buttjob'],
       ['協力陰部摩擦', 'cooperative pussyjob'],
-      ['膝窩摩擦', 'kneepit sex'],
-      ['腿交', 'legjob'],
+      ['膝窩摩擦', 'kneepit sex', '', _legjobGroup],
+      ['腿交', 'legjob', '', _legjobGroup],
       ['乳交', 'paizuri'],
       ['自體乳交', 'autopaizuri'],
       ['協力乳交', 'cooperative paizuri'],
@@ -1531,7 +1573,7 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['垂直乳交', 'perpendicular paizuri'],
       ['跨坐乳交', 'straddling paizuri'],
       ['側向垂直乳交', 'sideways perpendicular paizuri'],
-      ['大腿性交', 'thigh sex'],
+      ['大腿性交', 'thigh sex', '', _legjobGroup],
       ['龜頭摩擦', 'glansjob'],
       ['隔布龜頭摩擦', 'cloth glansjob'],
     ],
@@ -1562,6 +1604,19 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['反向哺乳式手交', 'reverse nursing handjob'],
       ['從背後手交', 'reach-around'],
       ['雙手手交', 'two-handed handjob'],
+      ['手交手勢', 'handjob gesture'],
+      ['戴手套手交', 'gloved handjob'],
+      ['反握手交', 'reverse grip handjob'],
+      ['榨精手交', 'milking handjob'],
+      ['引導手交', 'guided handjob'],
+      ['衣物內手交', 'handjob under clothes'],
+      ['隔著襪類手交', 'handjob with legwear'],
+      ['雙指手交', 'two-finger handjob'],
+      ['三指手交', 'three-finger handjob'],
+      ['四指手交', 'four-finger handjob'],
+      ['模擬手交', 'simulated handjob'],
+      ['隱蔽手交', 'stealth handjob'],
+      ['自慰器手交', 'onahole handjob'],
     ],
   ),
   // These keep the currently selected outfit in the prompt. The first part
@@ -1679,6 +1734,14 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['顏面騎乘', 'facesitting'],
       ['吸吮睪丸', 'testicle sucking'],
       ['舔腋下', 'licking armpit'],
+      ['口交手勢', 'fellatio gesture'],
+      ['反向口交', 'reverse fellatio'],
+      ['清理式口交', 'cleanup fellatio'],
+      ['遮擋口交', 'covered fellatio'],
+      ['模擬口交', 'simulated fellatio'],
+      ['口罩下口交', 'fellatio under mask'],
+      ['隔衣口交', 'fellatio through clothes'],
+      ['吞劍式口交', 'sword-swallowing fellatio'],
     ],
   ),
   // Natural-language motion layers for oral scenes. These complement the
@@ -1744,6 +1807,61 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['舔耳朵', 'licking ear'],
       ['舌尖輕碰', 'tongue touching'],
       ['舔舐動態線', 'licking, motion lines'],
+    ],
+  ),
+  // These are intentional natural-language refinements. Danbooru has broad
+  // act tags such as `licking penis`, but not stable official tags for every
+  // anatomical contact point or tongue path. Keep them together so the user
+  // can combine one precise phrase with the official act tag.
+  ..._expandedTags(
+    prefix: 'oral_detail_phrase',
+    group: _oralTechniqueGroup,
+    order: 7,
+    adult: true,
+    support: 'description',
+    rows: const [
+      ['舌尖輕舔龜頭', 'oral sex, tongue lightly licking the glans'],
+      ['沿陰莖軀幹上下舔舐', 'oral sex, tongue moving up and down the penis shaft'],
+      ['舔陰莖根部', 'oral sex, licking the penis base'],
+      ['舔陰莖下側', 'oral sex, licking the underside of the penis'],
+      ['繞圈舔陰莖', 'oral sex, circling tongue around the penis'],
+      ['龜頭周圍繞圈舔舐', 'oral sex, circling tongue around the glans'],
+      ['舔睪丸與陰囊', 'oral sex, licking testicles and scrotum'],
+      ['先舔後含住', 'oral sex, licking before taking penis into mouth'],
+      ['交替舌舔與唇部吸吮', 'oral sex, alternating tongue licking and lip suction'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'handjob_detail_phrase',
+    group: _handjobTechniqueGroup,
+    order: 7,
+    adult: true,
+    support: 'description',
+    rows: const [
+      ['單手上下滑動手交', 'handjob, one hand stroking up and down'],
+      ['雙手交替上下滑動', 'handjob, two hands alternating up and down'],
+      ['旋轉手腕手交', 'handjob, rotating wrist motion'],
+      ['握住陰莖根部手交', 'handjob, gripping penis base'],
+      ['拇指刺激龜頭', 'handjob, thumb stimulation on glans'],
+      ['手指沿陰莖軀幹滑動', 'handjob, fingers sliding along penis shaft'],
+      ['邊手交邊舔陰莖', 'handjob while licking penis'],
+      ['緩慢手交', 'handjob, slow stroking motion'],
+      ['快速手交', 'handjob, rapid stroking motion'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'foot_leg_detail_phrase',
+    group: _footLegTechniqueGroup,
+    order: 7,
+    adult: true,
+    support: 'description',
+    rows: const [
+      ['雙腳夾住陰莖上下滑動', 'footjob, both feet sliding up and down penis'],
+      ['腳掌前後摩擦', 'footjob, soles rubbing back and forth'],
+      ['腳趾輕觸陰莖', 'footjob, toes touching penis'],
+      ['大腿夾住陰莖前後摩擦', 'thigh sex, thighs rubbing back and forth'],
+      ['腿交夾緊動作', 'legjob, squeezing motion'],
+      ['膝窩夾住陰莖', 'kneepit sex, squeezing motion'],
     ],
   ),
   ..._expandedTags(

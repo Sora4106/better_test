@@ -53,7 +53,22 @@ const _requiredByGroup = <String, List<String>>{
     'female footjob',
     'footjob under table',
     'simulated footjob',
+    'guided footjob',
+    'standing footjob',
+    'footjob over clothes',
+    'footjob under clothes',
+    'footjob through footwear',
+    'footjob during penetration',
+    'autofootjob',
+    'stealth footjob',
+    'footjob invitation',
+    'mutual footjob',
     'after footjob',
+  ],
+  '性行為・腿交／大腿摩擦': [
+    'legjob',
+    'thigh sex',
+    'kneepit sex',
   ],
   '性行為・手交': [
     'handjob',
@@ -65,6 +80,19 @@ const _requiredByGroup = <String, List<String>>{
     'reverse nursing handjob',
     'reach-around',
     'two-handed handjob',
+    'handjob gesture',
+    'gloved handjob',
+    'reverse grip handjob',
+    'milking handjob',
+    'guided handjob',
+    'handjob under clothes',
+    'handjob with legwear',
+    'two-finger handjob',
+    'three-finger handjob',
+    'four-finger handjob',
+    'simulated handjob',
+    'stealth handjob',
+    'onahole handjob',
     'after handjob',
   ],
   '性行為・手交動態': [
@@ -104,6 +132,14 @@ const _requiredByGroup = <String, List<String>>{
     'facesitting',
     'testicle sucking',
     'licking armpit',
+    'fellatio gesture',
+    'reverse fellatio',
+    'cleanup fellatio',
+    'covered fellatio',
+    'simulated fellatio',
+    'fellatio under mask',
+    'fellatio through clothes',
+    'sword-swallowing fellatio',
     'after fellatio',
     'after oral',
   ],
@@ -135,6 +171,36 @@ const _requiredByGroup = <String, List<String>>{
     'tongue touching',
     'licking, motion lines',
   ],
+  '性行為・口交・部位／舌法': [
+    'oral sex, tongue lightly licking the glans',
+    'oral sex, tongue moving up and down the penis shaft',
+    'oral sex, licking the penis base',
+    'oral sex, licking the underside of the penis',
+    'oral sex, circling tongue around the penis',
+    'oral sex, circling tongue around the glans',
+    'oral sex, licking testicles and scrotum',
+    'oral sex, licking before taking penis into mouth',
+    'oral sex, alternating tongue licking and lip suction',
+  ],
+  '性行為・手交・精細動作': [
+    'handjob, one hand stroking up and down',
+    'handjob, two hands alternating up and down',
+    'handjob, rotating wrist motion',
+    'handjob, gripping penis base',
+    'handjob, thumb stimulation on glans',
+    'handjob, fingers sliding along penis shaft',
+    'handjob while licking penis',
+    'handjob, slow stroking motion',
+    'handjob, rapid stroking motion',
+  ],
+  '性行為・足／腿交・精細動作': [
+    'footjob, both feet sliding up and down penis',
+    'footjob, soles rubbing back and forth',
+    'footjob, toes touching penis',
+    'thigh sex, thighs rubbing back and forth',
+    'legjob, squeezing motion',
+    'kneepit sex, squeezing motion',
+  ],
   '性行為・肛交': [
     'anal',
     'imminent anal',
@@ -151,6 +217,22 @@ const _requiredByGroup = <String, List<String>>{
     'triple vaginal',
     'after vaginal',
   ],
+};
+
+const _requiredMotionEffectTags = <String>{
+  'speed lines',
+  'emphasis lines',
+  'afterimage',
+  'wind lift',
+  'dust cloud',
+  'shockwave',
+  'sound effects',
+};
+
+const _naturalLanguageDetailGroups = <String>{
+  '性行為・口交・部位／舌法',
+  '性行為・手交・精細動作',
+  '性行為・足／腿交・精細動作',
 };
 
 const _requiredPositionTags = <String>{
@@ -201,6 +283,10 @@ void main() {
       if (!tag.adult) problems.add('"$english" must be adult-only.');
       if (tag.zh.trim().isEmpty)
         problems.add('"$english" has no Chinese label.');
+      if (_naturalLanguageDetailGroups.contains(entry.key) &&
+          tag.support != 'description') {
+        problems.add('"$english" must be marked as a natural-language helper.');
+      }
     }
   }
 
@@ -217,9 +303,28 @@ void main() {
       problems.add('Sexual position "$english" must be adult-only.');
   }
 
+  for (final english in _requiredMotionEffectTags) {
+    final matches = byEnglish[english] ?? const [];
+    if (matches.length != 1) {
+      problems.add(
+        'Expected exactly one motion-effect entry "$english", found ${matches.length}.',
+      );
+      continue;
+    }
+    final tag = matches.single;
+    if (tag.group != '動態輔助・官方效果') {
+      problems.add('"$english" must be in 動態輔助・官方效果, found ${tag.group}.');
+    }
+    if (tag.adult)
+      problems.add('"$english" must remain usable outside adult mode.');
+    if (tag.support != 'standard') {
+      problems.add('"$english" must be marked as an official-style tag.');
+    }
+  }
+
   if (problems.isNotEmpty) throw StateError(problems.join('\n'));
   final count = _requiredByGroup.values.fold<int>(
-    _requiredPositionTags.length,
+    _requiredPositionTags.length + _requiredMotionEffectTags.length,
     (sum, entries) => sum + entries.length,
   );
   print('Adult act catalog OK: $count act/position tags checked.');
