@@ -471,7 +471,9 @@ class _ElswordJobOutfit {
       OutfitReferenceContextPhraseData(
         id: 'head_profile',
         group: elswordJobHeadFeatureGroup,
-        zh: '$jobZh・頭部特徵',
+        zh: (profile?.canonicalAppearanceTags.isNotEmpty ?? false)
+            ? '$jobZh・職業外觀特徵'
+            : '$jobZh・頭部特徵',
         en: headProfile,
       ),
     ];

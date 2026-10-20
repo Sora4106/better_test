@@ -715,19 +715,26 @@ void main() {
     if (profile.base.characterEn == 'Aisha') {
       problems.add('$key: Aisha must remain in her hand-authored profile.');
     }
+    final hasCanonicalAppearance = profile.canonicalAppearanceTags.isNotEmpty;
     final requiredFields = <String, Iterable<String>>{
-      'base character': profile.base.baseCharacterTags,
-      'hair': profile.hairTags,
-      'eyes': profile.resolvedEyeTags,
-      'face': profile.base.faceTags,
-      'head accessory': profile.headAccessoryTags,
+      if (hasCanonicalAppearance)
+        'canonical appearance': profile.canonicalAppearanceTags
+      else ...<String, Iterable<String>>{
+        'base character': profile.base.baseCharacterTags,
+        'hair': profile.hairTags,
+        'eyes': profile.resolvedEyeTags,
+        'face': profile.base.faceTags,
+        'head accessory': profile.headAccessoryTags,
+      },
       'outfit': profile.outfitTags,
       'upper body': profile.upperBodyTags,
       'lower body': profile.lowerBodyTags,
-      'legwear': profile.legwearTags,
       'footwear': profile.footwearTags,
-      'accessory': profile.accessoryTags,
       'weapon': profile.weaponTags,
+    };
+    final optionalFields = <String, Iterable<String>>{
+      'legwear': profile.legwearTags,
+      'accessory': profile.accessoryTags,
       'magic effect': profile.magicEffectTags,
       'class theme': profile.classThemeTags,
     };
@@ -735,6 +742,14 @@ void main() {
       if (field.value.where((tag) => tag.trim().isNotEmpty).isEmpty) {
         problems.add('$key: missing ${field.key} prompt data.');
       }
+      for (final tag in field.value) {
+        if (profileForbiddenTerms.hasMatch(tag)) {
+          problems.add('$key: forbidden age-modifying term in ${field.key}: '
+              '"$tag".');
+        }
+      }
+    }
+    for (final field in optionalFields.entries) {
       for (final tag in field.value) {
         if (profileForbiddenTerms.hasMatch(tag)) {
           problems.add('$key: forbidden age-modifying term in ${field.key}: '
@@ -757,8 +772,17 @@ void main() {
         !recommended.contains(profile.outfitAnchor)) {
       problems.add('$key: malformed recommended prompt.');
     }
-    if (profile.outfitSegments.length != 6) {
-      problems.add('$key: expected six removable outfit segments.');
+    final outfitSegmentIds = profile.outfitSegments.map((segment) => segment.id).toSet();
+    const requiredOutfitSegmentIds = <String>{
+      'silhouette',
+      'upper',
+      'lower',
+      'footwear',
+      'accessory',
+    };
+    if (!outfitSegmentIds.containsAll(requiredOutfitSegmentIds) ||
+        outfitSegmentIds.length != profile.outfitSegments.length) {
+      problems.add('$key: missing or duplicated removable outfit sections.');
     }
 
     final suffix = profile.classEn

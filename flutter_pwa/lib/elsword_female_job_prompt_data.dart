@@ -59,6 +59,7 @@ class ElswordFemaleJobPromptProfile {
     required this.weaponTags,
     required this.magicEffectTags,
     required this.classThemeTags,
+    this.canonicalAppearanceTags = const <String>[],
     this.eyeTags = const <String>[],
     this.companionTags = const <String>[],
     this.optionalNegativeTags = const <String>[],
@@ -82,6 +83,11 @@ class ElswordFemaleJobPromptProfile {
   final List<String> magicEffectTags;
   final List<String> companionTags;
   final List<String> classThemeTags;
+
+  /// Some official class designs have an inseparable hairstyle, face, and body
+  /// silhouette. Keep those descriptions in one ordered block so a job preset
+  /// does not fall back to its character's generic appearance.
+  final List<String> canonicalAppearanceTags;
   final List<String> optionalNegativeTags;
 
   String get key => elswordFemaleJobProfileKey(base.characterEn, classEn);
@@ -91,13 +97,18 @@ class ElswordFemaleJobPromptProfile {
   List<String> get resolvedEyeTags =>
       _dedupe(eyeTags.isEmpty ? base.defaultEyeTags : eyeTags);
 
-  List<String> get characterAndHeadTags => _dedupe(<String>[
-        ...base.baseCharacterTags,
-        ...hairTags,
-        ...resolvedEyeTags,
-        ...headAccessoryTags,
-        ...base.faceTags,
-      ]);
+  List<String> get characterAndHeadTags {
+    if (canonicalAppearanceTags.isNotEmpty) {
+      return _dedupe(canonicalAppearanceTags);
+    }
+    return _dedupe(<String>[
+      ...base.baseCharacterTags,
+      ...hairTags,
+      ...resolvedEyeTags,
+      ...headAccessoryTags,
+      ...base.faceTags,
+    ]);
+  }
 
   List<ElswordJobPromptSegment> get outfitSegments => <ElswordJobPromptSegment>[
         ElswordJobPromptSegment('silhouette', '$classZh・職業服裝輪廓', outfitTags),
@@ -343,6 +354,7 @@ ElswordFemaleJobPromptProfile _profile(
   required List<String> weapon,
   required List<String> magic,
   required List<String> theme,
+  List<String> appearance = const <String>[],
   List<String> eyes = const <String>[],
   List<String> companions = const <String>[],
   List<String> negative = const <String>[],
@@ -366,6 +378,7 @@ ElswordFemaleJobPromptProfile _profile(
       magicEffectTags: magic,
       companionTags: companions,
       classThemeTags: theme,
+      canonicalAppearanceTags: appearance,
       optionalNegativeTags: negative,
     );
 
@@ -380,23 +393,72 @@ final Map<String, ElswordFemaleJobPromptProfile>
         classEn: 'Wind Sneaker',
         classZh: '風行者',
         classTag: 'wind_sneaker',
-        palette: '白色 × 綠色 × 金色',
-        hair: <String>['yellow-green high ponytail', 'wind-swept bangs'],
-        head: <String>['green leaf hair ornament', 'gold hair clasp'],
-        outfit: <String>['green and white wind fighter outfit', 'gold trim'],
+        palette: '淺葉綠色 × 黑色 × 白色 × 金色',
+        hair: const <String>[],
+        head: const <String>[],
+        appearance: <String>[
+          'elf ears',
+          'long pointed ears',
+          'green eyes',
+          'light yellow-green hair',
+          'yellow-green hair',
+          'lime-blonde hair',
+          'long hair',
+          'high ponytail',
+          'long high ponytail',
+          'side bangs',
+          'layered bangs',
+          '((white flower hair ornament:1.18))',
+          '((black satin ribbon wrapped around the ponytail base:1.25))',
+          '((black satin ribbon wrapped around the rear one-third of the ponytail:1.22))',
+          'flowing hair',
+          'athletic body',
+          'toned legs',
+          'large breasts',
+          '(oval face:1.12)',
+          '(delicate nose:1.05)',
+          '(defined eyes:1.08)',
+          'detailed face',
+          'detailed eyes',
+          'consistent facial proportions',
+        ],
+        outfit: <String>[
+          'green black fantasy fighter outfit',
+          'white collar',
+          'off-shoulder outfit',
+          'exposed shoulders',
+        ],
         upper: <String>[
-          'fitted martial top',
-          'white shoulder wrap',
-          'detached arm guards',
-          'green waist sash',
+          'black corset covering the bust and waist',
+          'black fitted waist corset',
+          'black upper torso',
+          'black underbust',
+          'black waist',
+          'black fabric continuously covering the bust and waist',
+          '((gold four-pointed star ornament at the neckline:1.2))',
+          '((gold circular ornament at the underbust center:1.2))',
+          '((light leaf-green bell sleeves:1.28))',
+          '((long flared light leaf-green sleeves:1.25))',
+          'black frilled sleeve cuffs',
+          'black fingerless gloves',
         ],
         lower: <String>[
-          'layered green skirt panels',
-          'fitted lower garment beneath skirt',
+          '((two separate black fabric ribbons attached at the waist:1.35))',
+          '((one black fabric ribbon on the left waist:1.32))',
+          '((one black fabric ribbon on the right waist:1.32))',
+          'soft flowing black ribbon tails',
+          'gold ring ornaments near the ribbon bases',
+          'gold ornaments at the ribbon ends',
+          'fabric accessories only',
+          '((slightly longer layered skirt:1.24))',
+          '((light leaf-green pleated outer skirt:1.32))',
+          '((black frilled inner underskirt:1.25))',
+          'light green outer skirt',
+          'black inner frilled layer',
         ],
-        legwear: <String>['black leg wraps', 'green knee guards'],
-        footwear: <String>['black lace-up combat boots', 'gold ankle guards'],
-        accessories: <String>['leaf emblem', 'wind rune waist ornament'],
+        legwear: const <String>[],
+        footwear: <String>['mostly black boots', 'black combat boots'],
+        accessories: const <String>[],
         weapon: <String>[
           'ornate elven bow',
           'green and white bow body',
@@ -405,8 +467,8 @@ final Map<String, ElswordFemaleJobPromptProfile>
           'visible bowstring',
           'full bow visible',
         ],
-        magic: <String>['wind magic', 'green wind trails', 'swirling leaves'],
-        theme: <String>['elven martial artist', 'kicking combat style'],
+        magic: const <String>[],
+        theme: const <String>[],
       ),
       _profile(
         _rena,
