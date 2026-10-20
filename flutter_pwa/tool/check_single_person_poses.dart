@@ -1,3 +1,4 @@
+import '../lib/catalog_data.dart';
 import '../lib/curated_pose_extension_data.dart';
 import '../lib/expanded_tag_data.dart';
 import '../lib/single_person_pose_data.dart';
@@ -6,6 +7,7 @@ void main() {
   final problems = <String>[];
   final ids = <String>{};
   final english = <String>{};
+  final chineseToEnglish = <String, String>{};
   final counts = <String, int>{};
 
   if (singlePersonPoseTags.length != 100) {
@@ -14,9 +16,9 @@ void main() {
     );
   }
 
-  if (curatedPoseExtensionTags.length != 217) {
+  if (curatedPoseExtensionTags.length != 215) {
     problems.add(
-      'Expected 217 curated pose and motion tags, found '
+      'Expected 215 curated pose and motion tags, found '
       '${curatedPoseExtensionTags.length}.',
     );
   }
@@ -33,6 +35,17 @@ void main() {
     if (!ids.add(tag.id)) problems.add('Duplicate pose id: ${tag.id}.');
     if (!english.add(tag.en.toLowerCase())) {
       problems.add('Duplicate pose English label: ${tag.en}.');
+    }
+    final chinese = tag.zh.trim();
+    final normalizedEnglish = tag.en.trim().toLowerCase();
+    final previousEnglish = chineseToEnglish[chinese];
+    if (previousEnglish != null && previousEnglish != normalizedEnglish) {
+      problems.add(
+        'Ambiguous Chinese pose label: $chinese maps to both '
+        '"$previousEnglish" and "${tag.en}".',
+      );
+    } else if (chinese.isNotEmpty) {
+      chineseToEnglish[chinese] = normalizedEnglish;
     }
     if (tag.zh.trim().isEmpty || tag.en.trim().isEmpty) {
       problems.add('Missing Chinese or English label: ${tag.id}.');
@@ -72,6 +85,27 @@ void main() {
   for (final tag in poseTags) {
     if ((allEnglishCounts[tag.en.toLowerCase()] ?? 0) > 1) {
       problems.add('Pose duplicates another expanded tag: ${tag.en}.');
+    }
+  }
+
+  final allGeneralChineseToEnglish = <String, String>{};
+  final generalPoseSources = <CatalogTagData>[
+    ...expandedPromptTags,
+    ...supplementalTags,
+  ];
+  for (final tag in generalPoseSources.where(
+    (tag) => expandedGeneralPoseGroups.contains(tag.group) && !tag.adult,
+  )) {
+    final chinese = tag.zh.trim();
+    final normalizedEnglish = tag.en.trim().toLowerCase();
+    final previousEnglish = allGeneralChineseToEnglish[chinese];
+    if (previousEnglish != null && previousEnglish != normalizedEnglish) {
+      problems.add(
+        'Ambiguous Chinese label across general pose tags: $chinese maps to '
+        'both "$previousEnglish" and "${tag.en}".',
+      );
+    } else if (chinese.isNotEmpty) {
+      allGeneralChineseToEnglish[chinese] = normalizedEnglish;
     }
   }
 

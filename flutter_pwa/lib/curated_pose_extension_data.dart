@@ -38,9 +38,7 @@ const curatedPoseExtensionGroups = <String>{
 /// interaction need to stay together in the output.
 final List<CatalogTagData> curatedPoseExtensionTags = <CatalogTagData>[
   ..._curatedPoseGroup('standing', '姿勢擴充・站姿與視線', const [
-    ('單手叉腰站立', 'standing, hand on hip'),
     ('雙手背在身後站立', 'standing, hands behind back'),
-    ('雙腳併攏站立', 'standing, legs together'),
     ('一腳微彎站立', 'standing, one leg bent'),
     ('重心放單腳站立', 'standing, weight on one leg'),
     ('踮腳站立', 'standing on tiptoes'),

@@ -571,7 +571,6 @@ bool _isSharedActionGroup(String group) =>
       '\u89aa\u543b\u52d5\u4f5c',
       '\u591a\u4eba\u4e92\u52d5',
       '\u8c93\u7cfb\u30fb\u4eba\u7269\u4e92\u52d5',
-      '\u89d2\u8272\u59ff\u52e2',
       '\u6027\u884c\u70ba',
       '\u6027\u59ff\u52e2',
     }.contains(group) ||
@@ -9535,7 +9534,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '\u89aa\u543b\u52d5\u4f5c',
         '\u591a\u4eba\u4e92\u52d5',
         '\u8c93\u7cfb\u30fb\u4eba\u7269\u4e92\u52d5',
-        '\u89d2\u8272\u59ff\u52e2',
         '\u6027\u884c\u70ba',
         '\u6027\u59ff\u52e2',
         ...expandedSexualPoseGroups,
@@ -9670,7 +9668,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '全身姿勢' => 49,
         '動態姿勢' || '動作' || '身體動作' => 50,
         '物件' => 51,
-        '親吻動作' || '多人互動' || '獸人動作' || '角色姿勢' => 52,
+        '角色姿勢' => 48,
+        '親吻動作' || '多人互動' || '獸人動作' => 52,
         _ => 53,
       };
     }
@@ -13462,9 +13461,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
       }
       var restoredDuplicatesMigrated = restoredCustomDuplicatesRemoved;
+      // Older builds stored every `角色姿勢` search result as a shared action.
+      // These are individual poses, so retain the user's choice inside the
+      // first person's block after upgrading.
+      final legacyCharacterPoseIds =
+          _selectedIds.where((id) => _tagsById[id]?.group == '角色姿勢').toList();
+      if (legacyCharacterPoseIds.isNotEmpty) {
+        _selectedIds.removeAll(legacyCharacterPoseIds);
+        _personTagIds(0).addAll(legacyCharacterPoseIds);
+        restoredDuplicatesMigrated = true;
+      }
       if (restoredTagRedirects.isNotEmpty) {
         restoredDuplicatesMigrated =
-            _migrateRestoredTagIds(_selectedIds, restoredTagRedirects);
+            _migrateRestoredTagIds(_selectedIds, restoredTagRedirects) ||
+                restoredDuplicatesMigrated;
         for (final ids in _personSelectedIds.values) {
           restoredDuplicatesMigrated =
               _migrateRestoredTagIds(ids, restoredTagRedirects) ||
@@ -21728,6 +21738,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         : Colors.white;
   }
 
+  String _poseTagSupportHint(TagItem tag) {
+    if (!_isPoseWorkflowTag(tag)) return '';
+    return switch (tag.support) {
+      'official' => '\n類型：官方標籤',
+      'description' => '\n類型：自然敘述（模型是否精確採用會依模型版本而異）',
+      _ => '\n類型：一般標籤',
+    };
+  }
+
   Widget _tagChip(
     TagItem tag, {
     int? personIndex,
@@ -21757,7 +21776,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         isHairStyle ? _isOfficialHairStyleTag(tag) : false;
     final isClothing = _isClothingOrEquipmentTag(tag);
     return Tooltip(
-      message: '${tag.zh} · ${tag.en}',
+      message: '${tag.zh} · ${tag.en}${_poseTagSupportHint(tag)}',
       child: ConstrainedBox(
         constraints: BoxConstraints(
           minWidth: _adaptiveChipLabelWidth(context) + (tag.adult ? 28 : 14),
@@ -25277,30 +25296,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       key: PageStorageKey<String>('all-pose-packages-$index'),
                       leading: const Icon(Icons.auto_awesome_motion_outlined,
                           color: Color(0xff7dd3fc)),
-                      title: const Text('姿勢套件（常用組合）',
+                      title: const Text('姿勢套件（主題）',
                           style: TextStyle(fontWeight: FontWeight.w800)),
-                      subtitle: const Text('一般、性感、貓系與狼系套件；需要時再展開',
+                      subtitle: const Text('保留貓系與狼系的主題套件；需要時再展開',
                           style: TextStyle(fontSize: 12)),
                       childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
                       children: [
-                        _promptPackagePanel(
-                          personIndex: index,
-                          panelId: 'pose',
-                          title: '一般姿勢套裝',
-                          subtitle: '非露骨單人姿勢；每一類提供 10 組可直接套用。',
-                          icon: Icons.accessibility_new,
-                          tone: const Color(0xff38bdf8),
-                          packages: generalPosePackages,
-                        ),
-                        _promptPackagePanel(
-                          personIndex: index,
-                          panelId: 'sexy-pose',
-                          title: '性感姿勢套裝',
-                          subtitle: '非露骨的姿勢、肢體線條與表情搭配；共 100 套，可套用後個別調整。',
-                          icon: Icons.auto_awesome_outlined,
-                          tone: const Color(0xfff472b6),
-                          packages: sexyPosePackages,
-                        ),
                         _promptPackagePanel(
                           personIndex: index,
                           panelId: 'feline-solo-pose',
@@ -28948,15 +28949,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return results;
   }
 
+  int? _globalSearchTargetPersonIndex(TagItem tag, int targetPersonIndex) {
+    if (_isGlobalPromptGroup(tag.group)) return null;
+    if (_personSlots.isEmpty) return null;
+    return targetPersonIndex.clamp(0, max(0, _personSlots.length - 1)).toInt();
+  }
+
+  String _globalSearchPersonLabel(int personIndex) {
+    if (_personSlots.isEmpty) return '人物 1';
+    final safeIndex =
+        personIndex.clamp(0, max(0, _personSlots.length - 1)).toInt();
+    final slot = _personSlots[safeIndex];
+    final character = _characterForNew(slot);
+    final name = character?.characterZh.trim().isNotEmpty == true
+        ? character!.characterZh.trim()
+        : slot.originalCharacterZh.trim();
+    final detail = name.isNotEmpty
+        ? name
+        : slot.detailed
+            ? '未設定角色'
+            : '不需細節';
+    return '人物 ${safeIndex + 1}・$detail';
+  }
+
   Widget _globalSearchTagChip(TagItem tag, int targetPersonIndex) {
-    final personIndex =
-        _isGlobalPromptGroup(tag.group) ? null : targetPersonIndex;
+    final personIndex = _globalSearchTargetPersonIndex(tag, targetPersonIndex);
+    final targetLabel =
+        personIndex == null ? '共用提示詞' : _globalSearchPersonLabel(personIndex);
     final selected = personIndex == null
         ? _selectedIds.contains(tag.id)
         : _personTagIds(personIndex).contains(tag.id);
     final tone = _pickerLayerTone(tag.group);
     return Tooltip(
-      message: '${_wizardGroupLabel(tag.group)}｜${tag.zh} · ${tag.en}',
+      message:
+          '${_wizardGroupLabel(tag.group)}｜${tag.zh} · ${tag.en}\n套用到：$targetLabel${_poseTagSupportHint(tag)}',
       child: FilterChip(
         selected: selected,
         avatar: tag.adult
@@ -29024,7 +29050,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       _personSlots.length,
                       (index) => DropdownMenuItem<int>(
                         value: index,
-                        child: Text('套用到人物 ${index + 1}'),
+                        child: Text(_globalSearchPersonLabel(index)),
                       ),
                     ),
                     onChanged: (value) {
@@ -29033,7 +29059,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     },
                   )
                 else
-                  const Text('套用到人物 1', style: TextStyle(fontSize: 12)),
+                  Text(
+                    _globalSearchPersonLabel(targetPersonIndex),
+                    style: const TextStyle(fontSize: 12),
+                  ),
               ],
             ),
             const SizedBox(height: 10),
@@ -29058,6 +29087,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               onChanged: _scheduleGlobalSearch,
             ),
             const SizedBox(height: 7),
+            if (_personSlots.length > 1)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 7),
+                child: Text(
+                  '目前目標：${_globalSearchPersonLabel(targetPersonIndex)}。一般姿勢、特徵與服裝會加入此人物；場景、品質與多人互動會加入共用提示詞。',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
             Text(
               _globalTagQuery.trim().isEmpty
                   ? '輸入關鍵字後會搜尋整個系統；18+ 標籤會依最上方「顯示圖片 18+ 標籤」設定顯示。'
