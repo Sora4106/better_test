@@ -22,14 +22,19 @@ void main() {
     if (tag.en.toLowerCase().contains('lolita')) {
       throw StateError('Forbidden clothing term: ${tag.en}');
     }
-    // This is an unambiguous clothing noun. `short` describes a garment's
-    // sleeve length here, rather than a person.
-    const moderationSafeSourceTerms = <String>{'short sleeves'};
-    final moderationSafeSourceTerm =
-        moderationSafeSourceTerms.contains(tag.en.toLowerCase());
-    if ((!moderationSafeSourceTerm &&
-            RegExp(r'\b(cute|short|slim)\b', caseSensitive: false)
-                .hasMatch(tag.en)) ||
+    // These are unambiguous garment phrases. `short` describes sleeve or
+    // boot length here, rather than a person.
+    const moderationSafeSourceTerms = <String>{
+      'short sleeves',
+      'not short boots',
+    };
+    final normalized = tag.en.toLowerCase();
+    final ageCheckedTerm = moderationSafeSourceTerms.fold(
+      normalized,
+      (result, safePhrase) => result.replaceAll(safePhrase, ''),
+    );
+    if (RegExp(r'\b(cute|short|slim)\b', caseSensitive: false)
+            .hasMatch(ageCheckedTerm) ||
         RegExp(r'\b(school|student) uniform\b', caseSensitive: false)
             .hasMatch(tag.en) ||
         tag.en.toLowerCase() == 'serafuku') {
