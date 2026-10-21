@@ -85,12 +85,14 @@ const felineSoloPosePackages = <PromptPackageData>[
   ),
   PromptPackageData(
     id: 'feline_lying_belly_rub',
-    name: '仰躺露肚被摸肚子',
-    description: '仰躺放鬆，露出腹部接受撫摸。',
+    name: '仰躺露肚撒嬌',
+    description: '仰躺放鬆露出腹部，呈現信任與撒嬌姿態。',
     category: '休息與撒嬌',
     tags: const <String>[],
     naturalPrompt:
-        'lying on back, belly exposed, belly being rubbed, trusting pose, relaxed limbs, soft happy expression, cat-like submissive trust',
+        'lying on back, stomach exposed, trusting pose, relaxed limbs, soft happy expression, feline-like relaxed pose',
+    naturalPromptZh:
+        '單人姿勢：仰躺露出腹部，保留放鬆四肢、信任姿態與柔和愉悅表情。',
   ),
   PromptPackageData(
     id: 'feline_crouched_grooming',
@@ -448,7 +450,9 @@ const felineInteractionPackages = <PromptPackageData>[
     category: '撒嬌互動',
     tags: const <String>[],
     naturalPrompt:
-        'head being petted, eyes half-closed, pleased smile, relaxed posture, happy feline reaction',
+        'two people, one person gently patting the other person\'s head, headpat, hand on another\'s head, the petted person has half-closed eyes and a pleased smile, relaxed affectionate interaction',
+    naturalPromptZh:
+        '雙人互動：其中一人輕拍另一人的頭頂；被摸頭的人半瞇眼並露出滿足微笑，呈現放鬆親近感。',
   ),
   PromptPackageData(
     id: 'feline_being_lifted_up',
@@ -512,6 +516,83 @@ const felineInteractionPackages = <PromptPackageData>[
     tags: const <String>[],
     naturalPrompt:
         'gently pressing forehead against the other person, affectionate feline gesture, soft smile, intimate cat-like interaction',
+  ),
+];
+
+/// Shared, role-aware interaction packages. These remain gender-neutral and
+/// are emitted after all character blocks, so they describe the relation
+/// between two people rather than incorrectly attaching the whole interaction
+/// to one character. The Chinese titles use A/B only to make each role clear.
+const twoPersonInteractionPackages = <PromptPackageData>[
+  PromptPackageData(
+    id: 'two_person_crouching_headpat',
+    name: 'A 蹲姿・B 摸頭歪頭',
+    description: 'A 蹲姿抬頭；B 靠近輕摸 A 的頭頂並微微歪頭。A 可自行搭配貓獸人特徵。',
+    category: '摸頭／安撫',
+    naturalPrompt:
+        'two people, one person crouching and looking up, another person bending close and gently patting the crouching person\'s head, headpat, hand on another\'s head, the patting person with a gentle head tilt, clear two-person interaction',
+    naturalPromptZh:
+        '雙人互動：人物 A 蹲姿抬頭；人物 B 靠近並輕拍 A 的頭頂，B 的頭部微微傾斜。若 A 選了貓獸人特徵，即為貓獸人蹲姿被摸頭。',
+  ),
+  PromptPackageData(
+    id: 'two_person_seated_headpat',
+    name: 'A 坐姿・B 摸頭安撫',
+    description: 'A 坐著；B 站在或蹲在身側，手掌輕拍 A 的頭頂。',
+    category: '摸頭／安撫',
+    naturalPrompt:
+        'two people, one person sitting, another person close beside them and gently patting the seated person\'s head, headpat, hand on another\'s head, looking at another, soft reassuring smile',
+    naturalPromptZh:
+        '雙人互動：人物 A 坐著；人物 B 靠在身側並輕拍 A 的頭頂，兩人彼此注視並帶有安撫微笑。',
+  ),
+  PromptPackageData(
+    id: 'two_person_standing_headpat',
+    name: 'A 站姿・B 摸頭安撫',
+    description: '兩人站立面對面；B 輕摸 A 的頭頂。',
+    category: '摸頭／安撫',
+    naturalPrompt:
+        'two people standing face-to-face, one person gently patting the other person\'s head, headpat, hand on another\'s head, looking at another, affectionate comforting interaction',
+    naturalPromptZh:
+        '雙人互動：人物 A 與 B 面對面站立；B 輕拍 A 的頭頂，兩人互相注視，呈現親近安撫感。',
+  ),
+  PromptPackageData(
+    id: 'two_person_lying_belly_rub',
+    name: 'A 仰躺露肚・B 摸肚子',
+    description: 'A 仰躺露出腹部；B 在身旁蹲下並輕柔撫摸腹部。',
+    category: '摸肚子／安撫',
+    naturalPrompt:
+        'two people, one person lying on back with stomach exposed, another person kneeling beside them and gently rubbing the lying person\'s stomach, belly rub, hand on another\'s stomach, relaxed limbs, gentle smile',
+    naturalPromptZh:
+        '雙人互動：人物 A 仰躺露出腹部；人物 B 在旁邊跪下，輕柔撫摸 A 的腹部。保留放鬆四肢與溫柔微笑。',
+  ),
+  PromptPackageData(
+    id: 'two_person_seated_belly_rub',
+    name: 'A 坐地・B 摸肚子關心',
+    description: 'A 坐在地面；B 蹲在旁邊，以手掌輕摸 A 的腹部。',
+    category: '摸肚子／安撫',
+    naturalPrompt:
+        'two people, one person sitting on floor, another person crouching beside them and gently rubbing their stomach, belly rub, hand on another\'s stomach, looking at another, caring expression',
+    naturalPromptZh:
+        '雙人互動：人物 A 坐在地面；人物 B 蹲在旁邊並輕柔撫摸 A 的腹部，兩人互看，呈現關心神情。',
+  ),
+  PromptPackageData(
+    id: 'two_person_two_hands_headpat',
+    name: 'A 低頭・B 雙手揉頭髮',
+    description: 'A 微微低頭；B 以雙手輕柔揉撫 A 的頭髮。',
+    category: '摸頭／安撫',
+    naturalPrompt:
+        'two people, one person slightly lowering their head while another person gently rubs their hair with both hands, headpat, hands on another\'s head, touching hair, soft affectionate interaction',
+    naturalPromptZh:
+        '雙人互動：人物 A 微微低頭；人物 B 以雙手輕柔揉撫 A 的頭髮，呈現柔和親近感。',
+  ),
+  PromptPackageData(
+    id: 'two_person_cheek_caress',
+    name: 'A 靠近・B 輕撫臉頰',
+    description: '兩人面對面靠近；B 以一手輕觸 A 的臉頰。',
+    category: '臉部／安撫',
+    naturalPrompt:
+        'two people facing each other closely, one person gently touching the other person\'s cheek, hand on another\'s cheek, looking at another, soft smile, intimate comforting interaction',
+    naturalPromptZh:
+        '雙人互動：人物 A 與 B 面對面靠近；人物 B 以一手輕撫 A 的臉頰，彼此注視並帶有柔和微笑。',
   ),
 ];
 

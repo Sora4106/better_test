@@ -57,6 +57,7 @@ const _oralTechniqueGroup = '性行為・口交・部位／舌法';
 const _handjobTechniqueGroup = '性行為・手交・精細動作';
 const _footLegTechniqueGroup = '性行為・足／腿交・精細動作';
 const _motionEffectGroup = '動態輔助・官方效果';
+const _twoPersonTouchGroup = '雙人互動・撫摸／安撫';
 const _analAdultActionGroup = '性行為・肛交';
 const _vaginalAdultActionGroup = '性行為・陰道性交';
 const _maleActiveSexPoseGroup = '性姿勢・男性主動';
@@ -514,7 +515,12 @@ const _organizedPosePickerSections = <String, List<String>>{
     _objectClothingGroup,
     '物件・日常／裝飾',
   ],
-  '⑧ 人物互動': ['親吻動作', '多人互動', '貓系・人物互動'],
+  '⑧ 人物互動': [
+    '親吻動作',
+    '多人互動',
+    _twoPersonTouchGroup,
+    '貓系・人物互動',
+  ],
   '⑨ 成人・性姿勢': [
     '性姿勢',
     '性姿勢・一般',
@@ -568,6 +574,7 @@ const _organizedPosePickerSections = <String, List<String>>{
 
 bool _isSharedActionGroup(String group) =>
     const {
+      _twoPersonTouchGroup,
       '\u89aa\u543b\u52d5\u4f5c',
       '\u591a\u4eba\u4e92\u52d5',
       '\u8c93\u7cfb\u30fb\u4eba\u7269\u4e92\u52d5',
@@ -9540,6 +9547,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> get _sharedActionPickerGroups => <String>[
         '\u89aa\u543b\u52d5\u4f5c',
+        _twoPersonTouchGroup,
         '\u591a\u4eba\u4e92\u52d5',
         '\u8c93\u7cfb\u30fb\u4eba\u7269\u4e92\u52d5',
         '\u6027\u884c\u70ba',
@@ -9677,7 +9685,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '動態姿勢' || '動作' || '身體動作' => 50,
         '物件' => 51,
         '角色姿勢' => 48,
-        '親吻動作' || '多人互動' || '獸人動作' => 52,
+        '親吻動作' || '多人互動' || _twoPersonTouchGroup || '獸人動作' => 52,
         _ => 53,
       };
     }
@@ -21618,6 +21626,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '獸人動作': Color(0xff8b5cf6),
       '親吻動作': Color(0xfff9a8d4),
       '多人互動': Color(0xfffacc15),
+      _twoPersonTouchGroup: Color(0xfff59e0b),
       '角色姿勢': Color(0xffc084fc),
       '物件': Color(0xff94a3b8),
       _objectInteractionGroup: Color(0xff14b8a6),
@@ -24610,7 +24619,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String? _knownNaturalPromptZh(String value) {
     final target = _cleanTag(value).toLowerCase();
     if (target.isEmpty) return null;
-    for (final package in lalaWolfGirlPosePackages) {
+    for (final package in [
+      ...lalaWolfGirlPosePackages,
+      ...felineSoloPosePackages,
+      ...felineInteractionPackages,
+      ...twoPersonInteractionPackages,
+    ]) {
       if (_promptPackageNaturalPromptVariants(package)
               .map((prompt) => _cleanTag(prompt).toLowerCase())
               .contains(target) &&
@@ -25004,12 +25018,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
-  Widget _sharedFelineInteractionPackagePanel() {
-    const tone = Color(0xfffbbf24);
-    final packages = felineInteractionPackages;
+  Widget _sharedInteractionPackagePanel() {
+    const tone = Color(0xfff59e0b);
+    final packages = <PromptPackageData>[
+      ...twoPersonInteractionPackages,
+      ...felineInteractionPackages,
+    ];
     final categories =
         packages.map((package) => package.category).toSet().toList();
-    const stateKey = 'shared-feline-interaction-package';
+    const stateKey = 'shared-interaction-package';
     final stored = _personActiveGroups[stateKey];
     final activeCategory = stored != null && categories.contains(stored)
         ? stored
@@ -25021,11 +25038,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       margin: const EdgeInsets.only(top: 10),
       color: tone.withValues(alpha: .08),
       child: ExpansionTile(
-        key: const PageStorageKey<String>('shared-feline-interaction-package'),
-        leading: const Icon(Icons.pets_outlined, color: tone),
-        title: Text('貓咪多人互動套件（${packages.length} 組）',
+        key: const PageStorageKey<String>('shared-interaction-package'),
+        leading: const Icon(Icons.people_alt_outlined, color: tone),
+        title: Text('雙人互動套件（${packages.length} 組）',
             style: const TextStyle(fontWeight: FontWeight.w800)),
-        subtitle: const Text('16 組抱持、依偎與撒嬌互動；套用後仍可個別調整。',
+        subtitle: const Text('以 A／B 清楚描述雙方動作；貓系互動也保留在此。',
             style: TextStyle(fontSize: 12)),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
         children: [
@@ -25189,10 +25206,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
             const SizedBox(height: 4),
             const Text(
-              '這裡設定角色一起進行的互動、親吻或成人姿勢；輸出會放在所有角色資訊之後，不使用括號與角色權重。',
+              '這裡設定角色一起進行的互動、親吻或成人姿勢。雙人套件會明確寫出 A／B 的行為關係，並輸出在所有角色資訊之後，不使用角色權重。',
               style: TextStyle(fontSize: 12),
             ),
-            _sharedFelineInteractionPackagePanel(),
+            _sharedInteractionPackagePanel(),
             const SizedBox(height: 10),
             _stepTagPicker(
               groups,

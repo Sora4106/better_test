@@ -37,6 +37,7 @@ List<CatalogTagData> _expandedTags({
 
 const _maleActionPoseGroup = '男性動作姿勢';
 const _handContactGroup = '手部・接觸位置';
+const _twoPersonTouchGroup = '雙人互動・撫摸／安撫';
 const _torsoWaistHipGroup = '軀幹・腰臀動態';
 const _torsoAngleGroup = '軀幹・角度控制';
 const _hipButtDetailGroup = '臀部・髖部細節';
@@ -98,6 +99,7 @@ const expandedGeneralPoseGroups = <String>{
   '獸人動作',
   '親吻動作',
   '多人互動',
+  _twoPersonTouchGroup,
   '角色姿勢',
 };
 
@@ -249,7 +251,12 @@ const expandedTagPickerSections = <String, List<String>>{
     '物件・交通／旅行',
     '物件・日常／裝飾',
   ],
-  '⑥ 周邊人物互動': ['親吻動作', '多人互動', '貓系・人物互動'],
+  '⑥ 周邊人物互動': [
+    '親吻動作',
+    '多人互動',
+    _twoPersonTouchGroup,
+    '貓系・人物互動',
+  ],
   '⑦ 成人・性姿勢': [
     '性姿勢',
     '性姿勢・一般',
@@ -438,7 +445,6 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     rows: const [
       ['玩球預備姿勢', 'play bow pose'],
       ['被摸下巴', 'chin being stroked'],
-      ['仰躺被摸肚子', 'belly being rubbed'],
       ['洗臉整理動作', 'grooming gesture'],
       ['低伏潛行姿勢', 'low stalking pose'],
       ['高處蹲坐觀察', 'perched observing pose'],
@@ -982,12 +988,59 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
       ['伏在對方腿上', 'resting on lap'],
       ['抱著對方手臂', 'clinging to arm'],
       ['依偎在對方肩膀', 'leaning on shoulder'],
-      ['被摸頭', 'head being petted'],
       ['被抱起舉高', 'being lifted up'],
       ['下巴被輕托', 'chin being held'],
       ['趴在對方背上', "lying across another's back"],
       ['躺在對方身邊', 'lying beside another'],
     ],
+  ),
+  // Exact two-person touch tags. The legacy IDs are intentionally retained so
+  // saved selections keep working, while their old natural-language phrases
+  // are replaced with model-recognised relationship tags.
+  const CatalogTagData(
+    id: 'feline_solo_action_belly_being_rubbed',
+    group: _twoPersonTouchGroup,
+    zh: '仰躺被摸肚子（另一人）',
+    en: "belly rub, hand on another's stomach",
+    order: 4,
+    adult: false,
+    support: 'official',
+  ),
+  const CatalogTagData(
+    id: 'feline_interaction_head_being_petted',
+    group: _twoPersonTouchGroup,
+    zh: '被摸頭（另一人）',
+    en: "headpat, hand on another's head",
+    order: 4,
+    adult: false,
+    support: 'official',
+  ),
+  const CatalogTagData(
+    id: 'two_person_touch_two_hands_headpat',
+    group: _twoPersonTouchGroup,
+    zh: '雙手揉撫對方頭頂',
+    en: "headpat, hands on another's head",
+    order: 4,
+    adult: false,
+    support: 'official',
+  ),
+  const CatalogTagData(
+    id: 'two_person_touch_belly_rub',
+    group: _twoPersonTouchGroup,
+    zh: '撫摸對方腹部',
+    en: "belly rub, hand on another's stomach",
+    order: 4,
+    adult: false,
+    support: 'official',
+  ),
+  const CatalogTagData(
+    id: 'two_person_touch_cheek_caress',
+    group: _twoPersonTouchGroup,
+    zh: '輕撫對方臉頰',
+    en: "hand on another's cheek",
+    order: 4,
+    adult: false,
+    support: 'official',
   ),
   ..._expandedTags(
     prefix: 'anthro_action',
