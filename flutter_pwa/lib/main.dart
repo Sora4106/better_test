@@ -9336,6 +9336,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final TextEditingController _reversePrompt = TextEditingController();
   _ReversePromptAnalysis _reversePromptAnalysis =
       const _ReversePromptAnalysis.empty();
+  String _reversePromptResultSource = '';
+  final Set<String> _reversePromptExcludedKeys = <String>{};
   final TextEditingController _negative = TextEditingController(
     text: _defaultNegativeText,
   );
@@ -14017,7 +14019,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       _collectUnknownExtraPositiveTags();
       _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
-      _reversePromptAnalysis = _analyzeReversePrompt(_reversePrompt.text);
+      _reversePromptResultSource = '${data['reversePromptResultSource'] ?? ''}';
+      _reversePromptExcludedKeys
+        ..clear()
+        ..addAll(
+            (data['reversePromptExcludedKeys'] as List? ?? const <dynamic>[])
+                .map((value) => '$value')
+                .where((value) => value.isNotEmpty));
+      final reverseAnalysisSource = _reversePrompt.text.trim().isNotEmpty
+          ? _reversePrompt.text
+          : _reversePromptResultSource;
+      _reversePromptAnalysis = _analyzeReversePrompt(reverseAnalysisSource);
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
         ..clear()
@@ -14090,6 +14102,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               ? const <String>[]
               : _unregisteredPositiveTags.toList(),
         'reversePrompt': _reversePrompt.text,
+        'reversePromptResultSource': _reversePromptResultSource,
+        'reversePromptExcludedKeys': _reversePromptExcludedKeys.toList(),
         'negative': _negative.text,
         'customNegativeTranslations': _customNegativeTranslations,
         'preprompt': _preprompt.text,
@@ -14151,6 +14165,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _extraPositive.clear();
     _sharedPoseExtra.clear();
     _reversePrompt.clear();
+    _reversePromptResultSource = '';
+    _reversePromptExcludedKeys.clear();
     _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
     _negative.text = _defaultNegativeText;
     _preprompt.clear();
@@ -17844,7 +17860,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _reversePromptDebounce?.cancel();
     final raw = _reversePrompt.text;
     if (raw.trim().isEmpty) {
-      if (_reversePromptAnalysis.hasInput) {
+      if (_reversePromptResultSource.trim().isEmpty &&
+          _reversePromptAnalysis.hasInput) {
         setState(() =>
             _reversePromptAnalysis = const _ReversePromptAnalysis.empty());
       }
@@ -17852,10 +17869,183 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return;
     }
     _reversePromptDebounce = Timer(const Duration(milliseconds: 220), () {
-      if (!mounted) return;
+      if (!mounted || raw != _reversePrompt.text) return;
       setState(() => _reversePromptAnalysis = _analyzeReversePrompt(raw));
       _persist();
     });
+  }
+
+  bool get _hasCommittedReversePromptAnalysis =>
+      _reversePromptResultSource.trim().isNotEmpty &&
+      _reversePrompt.text.trim().isEmpty;
+
+  _ReversePromptAnalysis _analysisForReverseActions() {
+    final raw = _reversePrompt.text;
+    return raw.trim().isEmpty
+        ? _reversePromptAnalysis
+        : _analyzeReversePrompt(raw);
+  }
+
+  String _reverseAnalysisScope(int? personIndex) =>
+      personIndex == null ? 'shared' : 'person:$personIndex';
+
+  String _reverseAnalysisEntryKey(
+    int? personIndex,
+    String kind,
+    String value,
+  ) =>
+      '${_reverseAnalysisScope(personIndex)}:$kind:$value';
+
+  String _reverseTagEntryKey(TagItem tag, {int? personIndex}) =>
+      _reverseAnalysisEntryKey(personIndex, 'tag', tag.id);
+
+  String _reverseUnmatchedEntryKey(String token, {int? personIndex}) =>
+      _reverseAnalysisEntryKey(
+          personIndex, 'unmatched', _reverseExtraKey(token));
+
+  String _reverseCharacterEntryKey(
+          CatalogCharacter character, int personIndex) =>
+      _reverseAnalysisEntryKey(personIndex, 'character', character.id);
+
+  String _reverseAnimeEntryKey(String animeTag, int personIndex) =>
+      _reverseAnalysisEntryKey(personIndex, 'anime', animeTag);
+
+  String get _reversePeopleCountEntryKey => 'meta:people-count';
+
+  bool _isReverseAnalysisEntryExcluded(String key) =>
+      _hasCommittedReversePromptAnalysis &&
+      _reversePromptExcludedKeys.contains(key);
+
+  List<TagItem> _visibleReverseMatchedTags(
+    List<TagItem> tags, {
+    int? personIndex,
+  }) =>
+      tags
+          .where((tag) => !_isReverseAnalysisEntryExcluded(
+                _reverseTagEntryKey(tag, personIndex: personIndex),
+              ))
+          .toList();
+
+  List<String> _visibleReverseUnmatchedTokens(
+    List<String> tokens, {
+    int? personIndex,
+  }) =>
+      tokens
+          .where((token) => !_isReverseAnalysisEntryExcluded(
+                _reverseUnmatchedEntryKey(token, personIndex: personIndex),
+              ))
+          .toList();
+
+  CatalogCharacter? _visibleReverseCharacter(
+    _ReversePersonAnalysis value,
+    int personIndex,
+  ) {
+    final character = value.detectedCharacter;
+    if (character == null ||
+        _isReverseAnalysisEntryExcluded(
+          _reverseCharacterEntryKey(character, personIndex),
+        )) {
+      return null;
+    }
+    return character;
+  }
+
+  String? _visibleReverseAnimeTag(
+    _ReversePersonAnalysis value,
+    int personIndex,
+  ) {
+    final animeTag = value.detectedAnimeTag;
+    if (animeTag == null ||
+        _isReverseAnalysisEntryExcluded(
+          _reverseAnimeEntryKey(animeTag, personIndex),
+        )) {
+      return null;
+    }
+    return animeTag;
+  }
+
+  int? _visibleReversePeopleCount(_ReversePromptAnalysis analysis) =>
+      _isReverseAnalysisEntryExcluded(_reversePeopleCountEntryKey)
+          ? null
+          : analysis.peopleCount;
+
+  _ReversePersonAnalysis _visibleReversePersonAnalysis(
+    _ReversePersonAnalysis value,
+    int personIndex,
+  ) =>
+      _ReversePersonAnalysis(
+        tokens: value.tokens,
+        matchedTags: _visibleReverseMatchedTags(
+          value.matchedTags,
+          personIndex: personIndex,
+        ),
+        unmatchedTokens: _visibleReverseUnmatchedTokens(
+          value.unmatchedTokens,
+          personIndex: personIndex,
+        ),
+        detectedCharacter: _visibleReverseCharacter(value, personIndex),
+        detectedAnimeTag: _visibleReverseAnimeTag(value, personIndex),
+      );
+
+  List<String> _visibleReverseAllUnmatchedTokens(
+    _ReversePromptAnalysis analysis,
+  ) {
+    final values = <String>[
+      ..._visibleReverseUnmatchedTokens(analysis.unmatchedTokens),
+    ];
+    for (var index = 0; index < analysis.people.length; index++) {
+      values.addAll(_visibleReverseUnmatchedTokens(
+        analysis.people[index].unmatchedTokens,
+        personIndex: index,
+      ));
+    }
+    return values;
+  }
+
+  int _visibleReverseMatchCount(_ReversePromptAnalysis analysis) {
+    var count = _visibleReverseMatchedTags(analysis.matchedTags).length;
+    if (_visibleReversePeopleCount(analysis) != null) count++;
+    for (var index = 0; index < analysis.people.length; index++) {
+      final person =
+          _visibleReversePersonAnalysis(analysis.people[index], index);
+      count += person.matchedTags.length;
+      if (person.detectedCharacter != null) count++;
+      if (person.detectedAnimeTag != null) count++;
+    }
+    return count;
+  }
+
+  bool _hasVisibleReverseMatches(_ReversePromptAnalysis analysis) =>
+      _visibleReverseMatchCount(analysis) > 0;
+
+  void _commitReversePromptAnalysis() {
+    _reversePromptDebounce?.cancel();
+    final source = _reversePrompt.text;
+    final analysis = _analyzeReversePrompt(source);
+    if (!analysis.hasInput) return;
+    setState(() {
+      _reversePromptResultSource = source;
+      _reversePromptExcludedKeys.clear();
+      _reversePromptAnalysis = analysis;
+      _reversePrompt.clear();
+    });
+    _persist();
+  }
+
+  void _dismissReversePromptAnalysisEntry(String key) {
+    if (!_hasCommittedReversePromptAnalysis) return;
+    setState(() => _reversePromptExcludedKeys.add(key));
+    _persist();
+  }
+
+  void _clearReversePromptAnalysisResult() {
+    _reversePromptDebounce?.cancel();
+    setState(() {
+      _reversePromptResultSource = '';
+      _reversePromptExcludedKeys.clear();
+      _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
+    });
+    _persist();
   }
 
   Set<String> get _reverseGlobalGroups => {
@@ -17948,11 +18138,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _reversePromptTags() {
-    final analysis = _analyzeReversePrompt(_reversePrompt.text);
-    if (!analysis.hasInput || !analysis.hasMatches) return;
+    final analysis = _analysisForReverseActions();
+    if (!analysis.hasInput || !_hasVisibleReverseMatches(analysis)) return;
 
     setState(() {
-      var targetPeopleCount = analysis.peopleCount ?? analysis.people.length;
+      final importedPeopleCount = _visibleReversePeopleCount(analysis);
+      var targetPeopleCount = importedPeopleCount ?? analysis.people.length;
       if (analysis.people.length > targetPeopleCount) {
         targetPeopleCount = analysis.people.length;
       }
@@ -17972,25 +18163,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         return person != null && person >= targetPeopleCount;
       });
       _peopleCount = targetPeopleCount;
-      if (analysis.gender != null) _gender = analysis.gender!;
+      if (importedPeopleCount != null && analysis.gender != null) {
+        _gender = analysis.gender!;
+      }
 
       for (var index = 0; index < analysis.people.length; index++) {
-        _applyReversePersonAnalysis(index, analysis.people[index]);
+        _applyReversePersonAnalysis(
+          index,
+          _visibleReversePersonAnalysis(analysis.people[index], index),
+        );
       }
-      for (final tag in analysis.matchedTags.toSet()) {
+      for (final tag
+          in _visibleReverseMatchedTags(analysis.matchedTags).toSet()) {
         _applyReverseTagToTarget(tag, _selectedIds);
       }
+      if (_reversePrompt.text.trim().isNotEmpty) {
+        _reversePromptAnalysis = analysis;
+      }
       _persist();
-      _reversePromptAnalysis = analysis;
     });
   }
 
   void _addReversePromptUnmatchedToExtraPositive() {
-    final analysis = _analyzeReversePrompt(_reversePrompt.text);
-    if (analysis.allUnmatchedTokens.isEmpty) return;
+    final analysis = _analysisForReverseActions();
+    final sharedUnmatched =
+        _visibleReverseUnmatchedTokens(analysis.unmatchedTokens);
+    if (_visibleReverseAllUnmatchedTokens(analysis).isEmpty) return;
     final existingExtra = _extraTags(_extraPositive.text);
     final existingKeys = existingExtra.map(_reverseExtraKey).toSet();
-    for (final token in analysis.unmatchedTokens) {
+    for (final token in sharedUnmatched) {
       if (existingKeys.add(_reverseExtraKey(token))) existingExtra.add(token);
     }
     setState(() {
@@ -18003,7 +18204,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         final slot = _personSlots[index];
         final values = _poseExtraPrompts(slot.poseExtraPositive);
         final keys = values.map(_reverseExtraKey).toSet();
-        for (final token in analysis.people[index].unmatchedTokens) {
+        for (final token in _visibleReverseUnmatchedTokens(
+          analysis.people[index].unmatchedTokens,
+          personIndex: index,
+        )) {
           if (keys.add(_reverseExtraKey(token))) values.add(token);
         }
         slot.poseExtraPositive = values.join('; ');
@@ -18018,38 +18222,85 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final analysis = _reversePromptAnalysis;
     if (!analysis.hasInput) return const SizedBox.shrink();
     final tone = Theme.of(context).colorScheme;
-    List<Widget> matchedChips(_ReversePersonAnalysis section) => [
-          if (section.detectedCharacter case final character?)
-            Chip(
-              avatar: const Icon(Icons.person_outline, size: 16),
-              label: Text(
-                  '角色：${character.characterZh} · ${character.characterEn}'),
+    final committed = _hasCommittedReversePromptAnalysis;
+
+    Widget resultChip({
+      required String entryKey,
+      required String label,
+      Widget? avatar,
+      String? tooltip,
+      Color? backgroundColor,
+      BorderSide? side,
+    }) {
+      final chip = committed
+          ? InputChip(
+              avatar: avatar,
+              label: Text(label),
               visualDensity: VisualDensity.compact,
+              backgroundColor: backgroundColor,
+              side: side,
+              onPressed: () => _dismissReversePromptAnalysisEntry(entryKey),
+              onDeleted: () => _dismissReversePromptAnalysisEntry(entryKey),
             )
-          else if (section.detectedAnimeTag case final animeTag?)
-            Chip(
-              avatar: const Icon(Icons.movie_outlined, size: 16),
-              label: Text('作品：$animeTag'),
+          : Chip(
+              avatar: avatar,
+              label: Text(label),
               visualDensity: VisualDensity.compact,
-            ),
-          ...section.matchedTags.map(
-            (tag) => Tooltip(
-              message: tag.en,
-              child: Chip(
-                label: Text('${tag.zh.isEmpty ? tag.en : tag.zh} · ${tag.en}'),
-                visualDensity: VisualDensity.compact,
-              ),
-            ),
-          ),
-        ];
+              backgroundColor: backgroundColor,
+              side: side,
+            );
+      return tooltip == null ? chip : Tooltip(message: tooltip, child: chip);
+    }
+
+    List<Widget> matchedChips(
+      _ReversePersonAnalysis section, {
+      int? personIndex,
+    }) {
+      final chips = <Widget>[];
+      if (personIndex != null) {
+        final character = _visibleReverseCharacter(section, personIndex);
+        if (character != null) {
+          chips.add(resultChip(
+            entryKey: _reverseCharacterEntryKey(character, personIndex),
+            avatar: const Icon(Icons.person_outline, size: 16),
+            label: '角色：${character.characterZh} · ${character.characterEn}',
+          ));
+        } else {
+          final animeTag = _visibleReverseAnimeTag(section, personIndex);
+          if (animeTag != null) {
+            chips.add(resultChip(
+              entryKey: _reverseAnimeEntryKey(animeTag, personIndex),
+              avatar: const Icon(Icons.movie_outlined, size: 16),
+              label: '作品：$animeTag',
+            ));
+          }
+        }
+      }
+      chips.addAll(_visibleReverseMatchedTags(
+        section.matchedTags,
+        personIndex: personIndex,
+      ).map(
+        (tag) => resultChip(
+          entryKey: _reverseTagEntryKey(tag, personIndex: personIndex),
+          label: '${tag.zh.isEmpty ? tag.en : tag.zh} · ${tag.en}',
+          tooltip: tag.en,
+        ),
+      ));
+      return chips;
+    }
 
     Widget section(
       String title,
       _ReversePersonAnalysis value, {
+      int? personIndex,
       bool shared = false,
     }) {
-      final chips = matchedChips(value);
-      if (chips.isEmpty && value.unmatchedTokens.isEmpty) {
+      final chips = matchedChips(value, personIndex: personIndex);
+      final unmatchedTokens = _visibleReverseUnmatchedTokens(
+        value.unmatchedTokens,
+        personIndex: personIndex,
+      );
+      if (chips.isEmpty && unmatchedTokens.isEmpty) {
         return const SizedBox.shrink();
       }
       return Padding(
@@ -18068,10 +18319,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               const SizedBox(height: 5),
               Wrap(spacing: 6, runSpacing: 6, children: chips),
             ],
-            if (value.unmatchedTokens.isNotEmpty) ...[
+            if (unmatchedTokens.isNotEmpty) ...[
               const SizedBox(height: 7),
               Text(
-                '未對應 ${value.unmatchedTokens.length} 詞（套用額外詞時會保留在${shared ? '共用' : '此人物'}區塊）',
+                '未對應 ${unmatchedTokens.length} 詞（套用額外詞時會保留在${shared ? '共用' : '此人物'}區塊）',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
                   fontSize: 12,
@@ -18082,11 +18333,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               Wrap(
                 spacing: 6,
                 runSpacing: 6,
-                children: value.unmatchedTokens
+                children: unmatchedTokens
                     .map(
-                      (token) => Chip(
-                        label: Text(token),
-                        visualDensity: VisualDensity.compact,
+                      (token) => resultChip(
+                        entryKey: _reverseUnmatchedEntryKey(
+                          token,
+                          personIndex: personIndex,
+                        ),
+                        label: token,
                         side: BorderSide(
                             color: tone.error.withValues(alpha: .65)),
                         backgroundColor:
@@ -18106,14 +18360,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       matchedTags: analysis.matchedTags,
       unmatchedTokens: analysis.unmatchedTokens,
     );
-    final matchCount = analysis.matchedTags.length +
-        analysis.people.fold<int>(
-          0,
-          (count, person) =>
-              count +
-              person.matchedTags.length +
-              (person.detectedCharacter == null ? 0 : 1),
-        );
+    final matchCount = _visibleReverseMatchCount(analysis);
+    final peopleCount = _visibleReversePeopleCount(analysis);
+    final hasUnmatched = _visibleReverseAllUnmatchedTokens(analysis).isNotEmpty;
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.only(top: 10),
@@ -18131,28 +18380,45 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               Icon(Icons.manage_search_outlined,
                   size: 18, color: tone.secondary),
               const SizedBox(width: 7),
-              const Expanded(
+              Expanded(
                 child: Text(
-                  '反推預覽（尚未套用）',
-                  style: TextStyle(fontWeight: FontWeight.w700),
+                  committed ? '反向分析結果（可點選移除）' : '反推預覽（尚未套用）',
+                  style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),
+              if (committed)
+                IconButton(
+                  tooltip: '清除分析結果',
+                  onPressed: _clearReversePromptAnalysisResult,
+                  icon: const Icon(Icons.close),
+                  visualDensity: VisualDensity.compact,
+                ),
               Text('${analysis.tokens.length} 詞',
                   style: TextStyle(color: tone.onSurfaceVariant, fontSize: 12)),
             ],
           ),
+          if (committed) ...[
+            const SizedBox(height: 4),
+            Text(
+              '輸入欄已清空；點選標籤或 X 可排除單一項目，再套用保留的標籤。',
+              style: TextStyle(fontSize: 12, color: tone.onSurfaceVariant),
+            ),
+          ],
           const SizedBox(height: 10),
-          if (analysis.peopleCount != null)
-            Chip(
+          if (peopleCount != null)
+            resultChip(
+              entryKey: _reversePeopleCountEntryKey,
               avatar: const Icon(Icons.groups_outlined, size: 16),
-              label: Text(
-                '人物數量：${analysis.peopleCount}${analysis.gender == null ? '' : '（${analysis.gender}）'}',
-              ),
-              visualDensity: VisualDensity.compact,
+              label:
+                  '人物數量：$peopleCount${analysis.gender == null ? '' : '（${analysis.gender}）'}',
             ),
           const SizedBox(height: 8),
           Text(
-            matchCount == 0 ? '目前沒有可對應的系統標籤。' : '可對應標籤 $matchCount 個',
+            matchCount == 0
+                ? committed
+                    ? '所有分析項目已排除。'
+                    : '目前沒有可對應的系統標籤。'
+                : '可對應標籤 $matchCount 個',
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           ConstrainedBox(
@@ -18162,8 +18428,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (var index = 0; index < analysis.people.length; index++)
-                    section('人物 ${index + 1}（括號區塊）', analysis.people[index]),
-                  section('共用／場景／鏡頭', shared, shared: true),
+                    section(
+                      '人物 ${index + 1}（括號區塊）',
+                      analysis.people[index],
+                      personIndex: index,
+                    ),
+                  section(
+                    '共用／場景／鏡頭',
+                    shared,
+                    shared: true,
+                  ),
                 ],
               ),
             ),
@@ -18174,11 +18448,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             runSpacing: 8,
             children: [
               FilledButton.icon(
-                onPressed: analysis.hasMatches ? _reversePromptTags : null,
+                onPressed: _hasVisibleReverseMatches(analysis)
+                    ? _reversePromptTags
+                    : null,
                 icon: const Icon(Icons.playlist_add_check_outlined),
                 label: const Text('套用已對應標籤'),
               ),
-              if (analysis.allUnmatchedTokens.isNotEmpty)
+              if (hasUnmatched)
                 OutlinedButton.icon(
                   onPressed: _addReversePromptUnmatchedToExtraPositive,
                   icon: const Icon(Icons.add_circle_outline),
@@ -18241,6 +18517,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..clear()
         ..add(_AnimationBeat());
       _reversePrompt.clear();
+      _reversePromptResultSource = '';
+      _reversePromptExcludedKeys.clear();
       _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
       _negative.text = _defaultNegativeText;
       _preprompt.clear();
@@ -18393,6 +18671,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         case 5:
           _extraPositive.clear();
           _reversePrompt.clear();
+          _reversePromptResultSource = '';
+          _reversePromptExcludedKeys.clear();
           _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
           _negative.text = _defaultNegativeText;
           _preprompt.clear();
@@ -18709,7 +18989,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _extraPositive.text = '${data['extraPositive'] ?? ''}';
       _collectUnknownExtraPositiveTags();
       _reversePrompt.text = '${data['reversePrompt'] ?? ''}';
-      _reversePromptAnalysis = _analyzeReversePrompt(_reversePrompt.text);
+      _reversePromptResultSource = '${data['reversePromptResultSource'] ?? ''}';
+      _reversePromptExcludedKeys
+        ..clear()
+        ..addAll(
+            (data['reversePromptExcludedKeys'] as List? ?? const <dynamic>[])
+                .map((value) => '$value')
+                .where((value) => value.isNotEmpty));
+      final reverseAnalysisSource = _reversePrompt.text.trim().isNotEmpty
+          ? _reversePrompt.text
+          : _reversePromptResultSource;
+      _reversePromptAnalysis = _analyzeReversePrompt(reverseAnalysisSource);
       _negative.text = '${data['negative'] ?? _negative.text}';
       _customNegativeTranslations
         ..clear()
@@ -29412,33 +29702,42 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         const SizedBox(height: 10),
       ],
       TextField(
-          controller: _reversePrompt,
-          maxLines: 4,
-          onChanged: (_) => _scheduleReversePromptAnalysis(),
-          decoration: const InputDecoration(
-              labelText: '標籤反推（貼上既有提示詞）',
-              hintText:
-                  '例如：1girl, pink hair, long hair, formal blazer outfit')),
+        controller: _reversePrompt,
+        maxLines: 4,
+        onChanged: (_) {
+          setState(() {});
+          _scheduleReversePromptAnalysis();
+        },
+        decoration: InputDecoration(
+          labelText: '標籤反推（貼上既有提示詞）',
+          hintText: '貼上後按「分析並建立標籤」，可再逐一排除不需要的項目',
+          suffixIcon: _reversePrompt.text.trim().isEmpty
+              ? null
+              : IconButton(
+                  tooltip: '清除輸入文字',
+                  onPressed: () {
+                    setState(_reversePrompt.clear);
+                    _scheduleReversePromptAnalysis();
+                  },
+                  icon: const Icon(Icons.clear),
+                ),
+        ),
+      ),
       const SizedBox(height: 8),
       Align(
         alignment: Alignment.centerLeft,
         child: FilledButton.icon(
-          onPressed: () {
-            _reversePromptDebounce?.cancel();
-            setState(() {
-              _reversePromptAnalysis =
-                  _analyzeReversePrompt(_reversePrompt.text);
-            });
-            _persist();
-          },
+          onPressed: _reversePrompt.text.trim().isEmpty
+              ? null
+              : _commitReversePromptAnalysis,
           icon: const Icon(Icons.manage_search_outlined),
-          label: const Text('重新分析'),
+          label: const Text('分析並建立標籤'),
         ),
       ),
       const SizedBox(height: 4),
       _reversePromptPreviewPanel(),
       const SizedBox(height: 8),
-      Text('輸入後會先顯示可對應與未對應詞；確認後才套用，未對應詞可選擇是否加入額外正向標籤。括號權重與英文句點會自動整理。',
+      Text('分析後輸入欄會自動清空，結果轉為可點選標籤；點選或按 X 可排除單一項目，再套用其餘標籤。未對應詞也可個別排除或加入額外欄位。',
           style: TextStyle(
               fontSize: 12,
               color: Theme.of(context).colorScheme.onSurfaceVariant)),
