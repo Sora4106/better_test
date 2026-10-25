@@ -1329,6 +1329,8 @@ class _AdultPosePackage {
         (tag) => const {
           'oral',
           'fellatio',
+          'cooperative fellatio',
+          'multiple penis fellatio',
           'cunnilingus',
           '69',
         }.contains(tag),
@@ -1337,6 +1339,8 @@ class _AdultPosePackage {
   bool get _hasHandAction => personTags.any(
         (tag) => const {
           'handjob',
+          'double handjob',
+          'mutual handjob',
           'mutual masturbation',
           'vaginal fingering',
           'fingering',
@@ -1350,13 +1354,49 @@ class _AdultPosePackage {
         }.contains(tag),
       );
 
-  /// A one-woman/one-man package has unambiguous participant roles. Its
-  /// individual posture and motion tags can therefore sit in the matching
-  /// character block instead of being appended as a generic shared action.
-  bool get supportsIndividualRoleSplit => femaleCount == 1 && maleCount == 1;
+  bool get _isTwoMaleOneFemale => femaleCount == 1 && maleCount == 2;
+
+  /// One-woman packages with one or two male partners have unambiguous role
+  /// counts. Their individual posture and motion tags can therefore sit in
+  /// each matching character block instead of being appended as generic shared
+  /// actions. This keeps all three people present in 2男1女 prompts.
+  bool get supportsIndividualRoleSplit =>
+      femaleCount == 1 && (maleCount == 1 || maleCount == 2);
 
   List<String> _femaleBaseTags() {
     final source = personTags.toSet();
+    if (_isTwoMaleOneFemale) {
+      final packageId = id.toLowerCase();
+      if (source.contains('all fours') ||
+          source.contains('doggystyle') ||
+          source.contains('double anal') ||
+          packageId.contains('oral_anal') ||
+          packageId.endsWith('_rear')) {
+        return const ['all fours'];
+      }
+      if (_isSideBySide || source.contains('on side')) {
+        return const ['lying on side'];
+      }
+      if (_isFemaleLedRiding || source.contains('upright straddle')) {
+        return const ['straddling'];
+      }
+      if (_hasOralAction ||
+          _hasHandAction ||
+          packageId.contains('fellatio') ||
+          packageId.contains('handjob') ||
+          packageId.contains('paizuri') ||
+          packageId.contains('spitroast')) {
+        return const ['kneeling'];
+      }
+      if (source.contains('lying on back') ||
+          source.contains('legs apart') ||
+          source.contains('double vaginal') ||
+          source.contains('double penetration') ||
+          _hasPenetrativeAction) {
+        return const ['lying on back', 'legs apart'];
+      }
+      return const ['kneeling'];
+    }
     final result = <String>[];
     if (_isFemaleLedRiding) {
       result.add('straddling');
@@ -1402,8 +1442,33 @@ class _AdultPosePackage {
     return _uniqueEnglishTags(result);
   }
 
-  List<String> _maleBaseTags() {
+  List<String> _maleBaseTags({int maleOrdinal = 0}) {
     final source = personTags.toSet();
+    if (_isTwoMaleOneFemale) {
+      final packageId = id.toLowerCase();
+      if (_isSideBySide || source.contains('on side')) {
+        return const ['lying on side'];
+      }
+      if (_isFemaleLedRiding || source.contains('upright straddle')) {
+        return maleOrdinal == 0 ? const ['sitting'] : const ['standing'];
+      }
+      if (source.contains('all fours') ||
+          source.contains('doggystyle') ||
+          source.contains('double anal') ||
+          packageId.contains('oral_anal') ||
+          packageId.endsWith('_rear')) {
+        return maleOrdinal == 0 ? const ['standing'] : const ['kneeling'];
+      }
+      if (_hasOralAction ||
+          _hasHandAction ||
+          packageId.contains('fellatio') ||
+          packageId.contains('handjob') ||
+          packageId.contains('paizuri') ||
+          packageId.contains('spitroast')) {
+        return const ['standing'];
+      }
+      return maleOrdinal == 0 ? const ['standing'] : const ['kneeling'];
+    }
     if (_isFemaleLedRiding) return const ['lying on back'];
     if (_isSideBySide) return const ['lying on side'];
     if (_isRearEntry) {
@@ -1422,11 +1487,14 @@ class _AdultPosePackage {
   List<String> individualTagsForRole(
     String role, {
     required bool endPose,
+    int roleOrdinal = 0,
   }) {
     if (!supportsIndividualRoleSplit) return const <String>[];
     final isFemale = role == 'female';
     final result = <String>[
-      ...(isFemale ? _femaleBaseTags() : _maleBaseTags()),
+      ...(isFemale
+          ? _femaleBaseTags()
+          : _maleBaseTags(maleOrdinal: roleOrdinal)),
     ];
 
     if (endPose) {
@@ -1474,6 +1542,8 @@ class _AdultPosePackage {
       ]);
     } else if (!isFemale && _hasHandAction) {
       result.add('handjob, penis twitching');
+    } else if (!isFemale && _hasOralAction) {
+      result.addAll(['penis twitching', 'motion lines']);
     } else if (_hasFootAction) {
       result.add('motion lines');
     }
@@ -1489,6 +1559,12 @@ class _AdultPosePackage {
     final individual = <String>{
       ...individualTagsForRole('female', endPose: endPose),
       ...individualTagsForRole('male', endPose: endPose),
+      if (maleCount > 1)
+        ...individualTagsForRole(
+          'male',
+          endPose: endPose,
+          roleOrdinal: 1,
+        ),
     };
     return tags.where((tag) => !individual.contains(tag)).toList();
   }
@@ -24765,6 +24841,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return const <int, List<String>>{};
     }
     final result = <int, List<String>>{};
+    final roleOrdinals = <String, int>{};
     for (var index = 0; index < _personSlots.length; index++) {
       final role = switch (_personSlots[index].gender) {
         '女性' => 'female',
@@ -24772,7 +24849,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _ => '',
       };
       if (role.isEmpty) continue;
-      final tags = package.individualTagsForRole(role, endPose: endPose);
+      final roleOrdinal = roleOrdinals[role] ?? 0;
+      roleOrdinals[role] = roleOrdinal + 1;
+      final tags = package.individualTagsForRole(
+        role,
+        endPose: endPose,
+        roleOrdinal: roleOrdinal,
+      );
       if (tags.isNotEmpty) result[index] = tags;
     }
     return result;
