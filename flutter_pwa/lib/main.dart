@@ -222,6 +222,30 @@ const _adultInProgressMotionEnglish = <String>{
   'irregular ass jiggle',
   'breasts and ass jiggling',
 };
+
+/// Shared movement emphasis for the explicit multi-person penetration packs.
+/// These remain shared tags because the individual participant roles are not
+/// inferred automatically for three or more people.
+const _intenseGroupPenetrationMotionTags = <String>[
+  'rough sex',
+  'pelvic thrust',
+  'penis thrusting in and out',
+  'swaying hips',
+  'bouncing breasts',
+  'bouncing ass',
+  'irregular breast jiggle',
+  'irregular ass jiggle',
+  'motion lines',
+  'speed lines',
+  'trembling',
+];
+
+/// Additional motion emphasis for the oral component of multi-person packs.
+const _intenseGroupOralMotionTags = <String>[
+  'oral sex, head movement',
+  'oral sex, tongue movement',
+  'oral sex, motion lines',
+];
 const _upperBodyChestActionGroup = '軀幹・胸部動作';
 const _breastTraitGroups = <String>{
   _breastSizeGroup,
@@ -3896,6 +3920,8 @@ final _groupAdultPosePackages = <_AdultPosePackage>[
       'anal',
       'lying on back',
       'legs apart',
+      ..._intenseGroupPenetrationMotionTags,
+      'back and forth thrusting',
     ],
     ['front view', 'full body'],
     femaleCount: 1,
@@ -3915,6 +3941,8 @@ final _groupAdultPosePackages = <_AdultPosePackage>[
       'anal',
       'all fours',
       'doggystyle',
+      ..._intenseGroupPenetrationMotionTags,
+      'back and forth thrusting',
     ],
     ['rear view', 'full body'],
     femaleCount: 1,
@@ -3934,6 +3962,8 @@ final _groupAdultPosePackages = <_AdultPosePackage>[
       'anal',
       'on side',
       'spooning',
+      ..._intenseGroupPenetrationMotionTags,
+      'side-to-side thrusting',
     ],
     ['side view', 'full body'],
     femaleCount: 1,
@@ -3953,6 +3983,8 @@ final _groupAdultPosePackages = <_AdultPosePackage>[
       'anal',
       'sitting',
       'upright straddle',
+      ..._intenseGroupPenetrationMotionTags,
+      'up and down thrusting',
     ],
     ['side view', 'full body'],
     femaleCount: 1,
@@ -4064,6 +4096,9 @@ final _groupAdultPosePackages = <_AdultPosePackage>[
       'fellatio',
       'lying on back',
       'legs apart',
+      ..._intenseGroupPenetrationMotionTags,
+      ..._intenseGroupOralMotionTags,
+      'back and forth thrusting',
     ],
     ['front view', 'full body'],
     femaleCount: 1,
@@ -4084,6 +4119,9 @@ final _groupAdultPosePackages = <_AdultPosePackage>[
       'fellatio',
       'all fours',
       'doggystyle',
+      ..._intenseGroupPenetrationMotionTags,
+      ..._intenseGroupOralMotionTags,
+      'back and forth thrusting',
     ],
     ['rear view', 'full body'],
     femaleCount: 1,
@@ -4104,6 +4142,9 @@ final _groupAdultPosePackages = <_AdultPosePackage>[
       'anal',
       'lying on back',
       'legs apart',
+      ..._intenseGroupPenetrationMotionTags,
+      ..._intenseGroupOralMotionTags,
+      'back and forth thrusting',
     ],
     ['front view', 'full body'],
     femaleCount: 1,
