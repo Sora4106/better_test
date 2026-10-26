@@ -15180,12 +15180,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'more_more_jump!_miku': 'hatsune miku',
       'vivid_bad_squad_miku': 'hatsune miku',
       'wonderlands_x_showtime_miku': 'hatsune miku',
-      'leo_need': 'leo/need_(project_sekai)',
-      'more_more_jump': 'more_more_jump!_(project_sekai)',
-      'vivid_bad_squad': 'vivid_bad_squad_(project_sekai)',
-      'wonderlands_x_showtime': 'wonderlands_x_showtime_(project_sekai)',
-      '25-ji_nightcord_de': '25-ji_nightcord_de._(project_sekai)',
-      'virtual_singer': 'virtual_singer_(project_sekai)',
+      'leo_need': 'leo/need (project_sekai)',
+      'more_more_jump': 'more more jump! (project_sekai)',
+      'vivid_bad_squad': 'vivid bad squad (project_sekai)',
+      'wonderlands_x_showtime': 'wonderlands x showtime (project_sekai)',
+      '25-ji_nightcord_de': '25-ji nightcord de. (project_sekai)',
+      'virtual_singer': 'virtual singer (project_sekai)',
     };
     normalized = aliases[normalized.toLowerCase()] ?? normalized;
     if (!preserveUnderscores) normalized = normalized.replaceAll('_', ' ');
@@ -15561,7 +15561,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _preservesModelSyntax(_GeneratedOutputTag output) {
-    if (output.characterTag) return true;
+    if (output.characterTag) {
+      final outputKey = _englishTagKey(output.en);
+      final isKnownCharacterTag = _allCharacters.any(
+          (character) => _englishTagKey(character.characterTag) == outputKey);
+      if (isKnownCharacterTag) return true;
+      final isProjectSekaiUnitTag = _allCharacters.any((character) =>
+          character.animeTag == 'project_sekai' &&
+          _englishTagKey(character.unitTag) == outputKey);
+      if (isProjectSekaiUnitTag) return true;
+    }
     return output.tagIds
         .any((id) => _tagsById[id]?.group == elswordJobIdentityGroup);
   }
