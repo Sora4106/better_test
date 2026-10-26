@@ -309,11 +309,13 @@ const _objectPickerGroups = <String>{
   _objectDailyGroup,
 };
 const _sceneEffectsGroup = '場景效果／渲染';
+const _sceneDecorationGroup = '畫面裝飾圖';
 const _sceneStyleGroup = '畫面風格／媒材';
 const _sceneLightingGroup = '光影效果';
 const _sceneAtmosphereGroup = '畫面氛圍';
 const _sceneEffectPickerGroups = <String>{
   _sceneEffectsGroup,
+  _sceneDecorationGroup,
   _sceneStyleGroup,
   _sceneLightingGroup,
   _sceneAtmosphereGroup,
@@ -9015,6 +9017,20 @@ List<TagItem> _seedTags() => [
           'ray tracing', 10),
       _tag('scene_effect_realtime_game', _sceneEffectsGroup, '即時遊戲畫面',
           'real-time game graphics', 10),
+      // Decorative symbols belong to the shared scene layer rather than any
+      // single character's expression block.
+      _tag('scene_decor_floating_heart', _sceneDecorationGroup, '漂浮愛心圖案',
+          'floating heart', 10),
+      _tag('scene_decor_sleep_bubble', _sceneDecorationGroup, '打瞌睡泡泡',
+          'sleep bubble', 10),
+      _tag('scene_decor_thought_bubble', _sceneDecorationGroup, '思考泡泡',
+          'thought bubble', 10),
+      _tag('scene_decor_speech_bubble', _sceneDecorationGroup, '對話泡泡',
+          'speech bubble', 10),
+      _tag('scene_decor_sparkles', _sceneDecorationGroup, '閃亮星點', 'sparkles',
+          10),
+      _tag('scene_decor_musical_note', _sceneDecorationGroup, '漂浮音符',
+          'musical note', 10),
       // Official BetterWaifu prompting examples use these media/style terms.
       _tag('scene_style_anime_coloring', _sceneStyleGroup, '動漫上色',
           'anime coloring', 10),
@@ -15573,7 +15589,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..._selectedTags
           .where((tag) => _isSceneVisualPromptGroup(tag.group))
           .map((tag) => tag.en),
-      ..._peopleTokensNew(),
+      for (final slot in _personSlots) _singlePersonToken(slot),
     ];
     for (var index = 0; index < _personSlots.length; index++) {
       tokens.addAll(_characterTokensForSlot(_personSlots[index], index));
@@ -15648,11 +15664,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         sceneTokens);
     if (sceneTokens.isNotEmpty) output.add(sceneTokens.join(', '));
 
-    // Keep an aggregate gender count at the beginning of every grouped prompt.
-    // A person with their own character detail or person-scoped pose also gets
-    // their individual `1girl` / `1boy` token inside that person's block.
-    // This gives the model both the total cast and a clear owner for every
-    // personal detail without removing the shared count declaration.
+    // Each detailed character owns its own `1girl` / `1boy` token inside that
+    // person's block. Avoid an aggregate `2girls, 1boy` prefix: it can make
+    // the model merge separate character traits into fewer people.
     final personalBySlot = <List<_GeneratedOutputTag>>[];
     for (var index = 0; index < _personSlots.length; index++) {
       final slot = _personSlots[index];
@@ -15662,9 +15676,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ]);
       personalBySlot.add(personal);
     }
-
-    final peoplePrefix = _peopleTokensNew().join(', ');
-    if (peoplePrefix.isNotEmpty) output.add(peoplePrefix);
 
     void addPersonBlock(String value) {
       final block = value.trim();
@@ -22451,6 +22462,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (group == _outdoorSceneGroup) return const Color(0xff4ade80);
     if (group == _outdoorTimeGroup) return const Color(0xfffbbf24);
     if (group == _sceneEffectsGroup) return const Color(0xffe879f9);
+    if (group == _sceneDecorationGroup) return const Color(0xfffb7185);
     if (group == _sceneStyleGroup) return const Color(0xffa78bfa);
     if (group == _sceneLightingGroup) return const Color(0xfffacc15);
     if (group == _sceneAtmosphereGroup) return const Color(0xff2dd4bf);
@@ -27753,10 +27765,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _stepEnglishOutput(int stepIndex, List<_GeneratedOutputTag> tags) {
     final output = <String>[];
     final trailingPersonTags = <_GeneratedOutputTag>[];
-    if (stepIndex == 1) {
-      output.addAll(_peopleTokensNew());
-    }
-
     for (var personIndex = 0;
         personIndex < _personSlots.length;
         personIndex++) {
@@ -27798,7 +27806,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       } else {
         segments.add(_promptTagBlock(blockTags));
       }
-      final block = _stepPersonOuterBlock(personIndex, segments);
+      final block = _stepPersonOuterBlock(
+        personIndex,
+        stepIndex == 1
+            ? [_singlePersonToken(_personSlots[personIndex]), ...segments]
+            : segments,
+      );
       if (block.isNotEmpty) output.add(block);
     }
 
