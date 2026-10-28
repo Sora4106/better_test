@@ -8,6 +8,59 @@ String _expandedTagSlug(String value) => value
     .replaceAll(RegExp(r'[^a-z0-9]+'), '_')
     .replaceAll(RegExp(r'^_+|_+$'), '');
 
+/// Visible subcategories for the body-fluid picker. The generated tag IDs
+/// remain under `body_fluids_`, so saved selections and imports stay stable.
+const bodyFluidPickerGroups = <String>[
+  '體液・通用／其他',
+  '體液・血液',
+  '體液・唾液／汗水／眼淚',
+  '體液・精液／射精',
+  '體液・前液／陰道分泌',
+  '體液・泌乳',
+];
+
+String _bodyFluidPickerGroupFor(String english) {
+  final value = english.toLowerCase();
+  if (value.contains('blood') ||
+      value.contains('bleeding') ||
+      value.contains('nosebleed') ||
+      value.contains('defloration') ||
+      value.contains('hemokinesis')) {
+    return '體液・血液';
+  }
+  if (value.contains('lactation') ||
+      value.contains('breast milk') ||
+      value.contains('milking') ||
+      value.contains('breastfeeding') ||
+      value.contains('nursing')) {
+    return '體液・泌乳';
+  }
+  if (value.contains('precum') ||
+      value.contains('pussy juice') ||
+      value.contains('female ejaculation') ||
+      value.contains('squirting')) {
+    return '體液・前液／陰道分泌';
+  }
+  if (value.contains('cum') ||
+      value.contains('semen') ||
+      value.contains('ejaculation') ||
+      value.contains('creampie') ||
+      value.contains('bukkake') ||
+      value.contains('gokkun')) {
+    return '體液・精液／射精';
+  }
+  if (value.contains('saliva') ||
+      value.contains('drool') ||
+      value.contains('spittle') ||
+      value.contains('sweat') ||
+      value.contains('tear') ||
+      value.contains('crying') ||
+      value.contains('dripping eye')) {
+    return '體液・唾液／汗水／眼淚';
+  }
+  return '體液・通用／其他';
+}
+
 List<CatalogTagData> _expandedTags({
   required String prefix,
   required String group,
@@ -23,7 +76,11 @@ List<CatalogTagData> _expandedTags({
               // A row may opt into a more precise child group while retaining
               // its original prefix/id. This keeps saved selections and
               // imports stable when the picker taxonomy is improved.
-              group: row.length > 3 && row[3].isNotEmpty ? row[3] : group,
+              group: row.length > 3 && row[3].isNotEmpty
+                  ? row[3]
+                  : prefix == 'body_fluids'
+                      ? _bodyFluidPickerGroupFor(row[1])
+                      : group,
               zh: row[0],
               en: row[1],
               order: order,
@@ -143,7 +200,7 @@ const expandedSexualActGroups = <String>{
   '性行為・多人',
   '性行為・前後',
   'BDSM行為',
-  '體液',
+  ...bodyFluidPickerGroups,
   '公開與窺視',
 };
 
@@ -301,7 +358,7 @@ const expandedTagPickerSections = <String, List<String>>{
     '性行為・插入',
     '性行為・多人',
     '性行為・前後',
-    '體液',
+    ...bodyFluidPickerGroups,
     '公開與窺視',
   ],
   '⑩ 成人・衣物內互動': [_clothedIntimateHandGroup],
@@ -1041,6 +1098,39 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     order: 4,
     adult: false,
     support: 'official',
+  ),
+  ..._expandedTags(
+    prefix: 'two_person_grasp',
+    group: _twoPersonTouchGroup,
+    order: 4,
+    adult: false,
+    support: 'official',
+    rows: const [
+      ['抓住對方手臂', "grabbing another's arm"],
+      ['握住對方手臂', "holding another's arm"],
+      ['抓住對方手掌', "grabbing another's hand"],
+      ['握住對方手腕', "holding another's wrist"],
+      ['手掌抓握', 'hand grab'],
+      ['十指交扣', 'interlocked fingers'],
+      ['手臂搭在對方肩膀', 'arm around shoulder'],
+    ],
+  ),
+  ..._expandedTags(
+    prefix: 'two_person_grasp_detail',
+    group: _twoPersonTouchGroup,
+    order: 4,
+    adult: false,
+    support: 'description',
+    rows: const [
+      ['單手抓住對方手臂', "one hand grabbing another's arm"],
+      ['雙手抓住對方手臂', "both hands grabbing another's arm"],
+      ['單手握住對方手臂', "one hand holding another's arm"],
+      ['雙手握住對方手臂', "both hands holding another's arm"],
+      ['單手抓住對方手掌', "one hand grabbing another's hand"],
+      ['雙手抓住對方手掌', "both hands grabbing another's hand"],
+      ['單手握住對方手腕', "one hand holding another's wrist"],
+      ['雙手握住對方手腕', "both hands holding another's wrist"],
+    ],
   ),
   ..._expandedTags(
     prefix: 'anthro_action',
@@ -1851,8 +1941,9 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     support: 'description',
     rows: const [
       ['舔陰莖', 'licking penis'],
+      ['舔陰莖前端（舌尖）', 'licking penis, licking tip'],
       ['舔龜頭', 'licking glans'],
-      ['舔陰莖軸', 'licking shaft'],
+      ['舔陰莖軀幹', 'licking shaft'],
       ['舔陰蒂', 'licking clitoris'],
       ['舔陰唇', 'licking labia'],
       ['舔乳房', 'licking breast'],

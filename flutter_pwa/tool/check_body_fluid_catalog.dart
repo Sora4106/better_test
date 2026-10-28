@@ -39,6 +39,15 @@ const _retiredUrinationTags = <String>{
   'golden shower',
 };
 
+const _requiredFluidGroups = <String>{
+  '體液・通用／其他',
+  '體液・血液',
+  '體液・唾液／汗水／眼淚',
+  '體液・精液／射精',
+  '體液・前液／陰道分泌',
+  '體液・泌乳',
+};
+
 void main() {
   final fluidTags = expandedPromptTags
       .where((tag) => tag.id.startsWith('body_fluids_'))
@@ -54,6 +63,9 @@ void main() {
     if (!tag.adult) problems.add('"${tag.en}" must be adult-only.');
     if (tag.zh.trim().isEmpty)
       problems.add('"${tag.en}" has no Chinese label.');
+    if (!_requiredFluidGroups.contains(tag.group)) {
+      problems.add('"${tag.en}" is in an unknown fluid group: ${tag.group}.');
+    }
     if (_retiredUrinationTags.contains(english)) {
       problems.add('Retired urination tag remains: "${tag.en}".');
     }
@@ -74,6 +86,12 @@ void main() {
       problems.add(
         'Expected exactly one body-fluid tag "$english", found ${matches.length}.',
       );
+    }
+  }
+
+  for (final group in _requiredFluidGroups) {
+    if (!fluidTags.any((tag) => tag.group == group)) {
+      problems.add('Fluid group "$group" has no tags.');
     }
   }
 

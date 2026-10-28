@@ -581,7 +581,7 @@ const _organizedPosePickerSections = <String, List<String>>{
     '性行為・插入',
     '性行為・多人',
     '性行為・前後',
-    '體液',
+    ...bodyFluidPickerGroups,
     '公開與窺視',
   ],
   '⑪ 成人・束縛／服飾／道具': [
@@ -22456,7 +22456,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '情趣內衣': Color(0xffe879f9),
       'BDSM服裝': Color(0xffbe123c),
       '暴露服裝': Color(0xfffb7185),
-      '體液': Color(0xff38bdf8),
+      '體液・通用／其他': Color(0xff38bdf8),
+      '體液・血液': Color(0xfffb7185),
+      '體液・唾液／汗水／眼淚': Color(0xff2dd4bf),
+      '體液・精液／射精': Color(0xfff9a8d4),
+      '體液・前液／陰道分泌': Color(0xffd8b4fe),
+      '體液・泌乳': Color(0xfffde68a),
       '公開與窺視': Color(0xfff59e0b),
     };
     final poseTone = poseTones[group];

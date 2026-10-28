@@ -161,6 +161,7 @@ const _requiredByGroup = <String, List<String>>{
   ],
   '性行為・舔舐動態': [
     'licking penis',
+    'licking penis, licking tip',
     'licking glans',
     'licking shaft',
     'licking clitoris',
