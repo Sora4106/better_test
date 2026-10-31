@@ -1358,12 +1358,87 @@ class _AdultPosePackage {
 
   bool get _isTwoMaleOneFemale => femaleCount == 1 && maleCount == 2;
 
-  /// One-woman packages with one or two male partners have unambiguous role
-  /// counts. Their individual posture and motion tags can therefore sit in
-  /// each matching character block instead of being appended as generic shared
-  /// actions. This keeps all three people present in 2男1女 prompts.
+  bool get _isFourPersonPackage => femaleCount + maleCount == 4;
+
+  /// Packages with unambiguous participant counts can place each participant's
+  /// body placement and motion in their own character block. This prevents a
+  /// multi-person arrangement from collapsing into generic shared actions.
   bool get supportsIndividualRoleSplit =>
-      femaleCount == 1 && (maleCount == 1 || maleCount == 2);
+      (femaleCount == 1 && (maleCount == 1 || maleCount == 2)) ||
+      _isFourPersonPackage;
+
+  /// Role-specific base poses for every existing four-person package. The
+  /// shared relationship tags remain in the shared output; these only state
+  /// where each character's own body should be placed.
+  List<String>? _fourPersonBaseTags(
+    String role, {
+    required int roleOrdinal,
+  }) {
+    if (!_isFourPersonPackage) return null;
+    final packageId = id.toLowerCase();
+
+    if (femaleCount == 1 && maleCount == 3) {
+      final oralFocused = packageId.contains('multiple_fellatio') ||
+          packageId.contains('handjob_fellatio');
+      if (role == 'female') {
+        if (oralFocused) return const ['kneeling'];
+        if (packageId.contains('all_fours')) return const ['all fours'];
+        return const ['lying on back', 'legs apart'];
+      }
+      if (oralFocused) return const ['standing'];
+      if (packageId.contains('all_fours')) {
+        return roleOrdinal == 1 ? const ['kneeling'] : const ['standing'];
+      }
+      if (packageId.contains('fellatio')) {
+        return roleOrdinal == 2 ? const ['standing'] : const ['kneeling'];
+      }
+      return roleOrdinal == 0 ? const ['kneeling'] : const ['standing'];
+    }
+
+    if (femaleCount == 2 && maleCount == 2) {
+      if (packageId.contains('paired_missionary')) {
+        return role == 'female'
+            ? const ['lying on back']
+            : const ['kneeling', 'leaning forward'];
+      }
+      if (packageId.contains('paired_doggy')) {
+        return role == 'female' ? const ['all fours'] : const ['kneeling'];
+      }
+      if (packageId.contains('paired_cowgirl')) {
+        return role == 'female'
+            ? const ['straddling']
+            : const ['lying on back'];
+      }
+      if (packageId.contains('mixed_cowgirl')) {
+        if (role == 'female') {
+          return roleOrdinal == 0
+              ? const ['straddling']
+              : const ['reverse upright straddle'];
+        }
+        return const ['lying on back'];
+      }
+      if (packageId.contains('love_train')) {
+        return role == 'female'
+            ? const ['standing', 'leaning forward']
+            : const ['standing'];
+      }
+      if (packageId.contains('oral_teamwork')) {
+        return role == 'female' ? const ['kneeling'] : const ['standing'];
+      }
+      if (packageId.contains('penetration_oral')) {
+        if (role == 'female') {
+          return roleOrdinal == 0
+              ? const ['lying on back', 'legs apart']
+              : const ['kneeling'];
+        }
+        return roleOrdinal == 0 ? const ['kneeling'] : const ['standing'];
+      }
+      if (packageId.contains('side_teamwork')) {
+        return const ['lying on side'];
+      }
+    }
+    return null;
+  }
 
   List<String> _femaleBaseTags() {
     final source = personTags.toSet();
@@ -1493,10 +1568,12 @@ class _AdultPosePackage {
   }) {
     if (!supportsIndividualRoleSplit) return const <String>[];
     final isFemale = role == 'female';
+    final fourPersonTags = _fourPersonBaseTags(role, roleOrdinal: roleOrdinal);
     final result = <String>[
-      ...(isFemale
-          ? _femaleBaseTags()
-          : _maleBaseTags(maleOrdinal: roleOrdinal)),
+      ...(fourPersonTags ??
+          (isFemale
+              ? _femaleBaseTags()
+              : _maleBaseTags(maleOrdinal: roleOrdinal))),
     ];
 
     if (endPose) {
@@ -1553,21 +1630,26 @@ class _AdultPosePackage {
   }
 
   /// The relation itself stays shared. Only the body placement and the
-  /// direction-specific motion are transferred into the relevant character
-  /// block when the two roles are unambiguous.
+  /// direction-specific motion are transferred into the matching character
+  /// blocks when roles are unambiguous.
   List<String> sharedTagsFor({required bool endPose}) {
     final tags = personTagsFor(endPose: endPose);
     if (!supportsIndividualRoleSplit) return tags;
-    final individual = <String>{
-      ...individualTagsForRole('female', endPose: endPose),
-      ...individualTagsForRole('male', endPose: endPose),
-      if (maleCount > 1)
-        ...individualTagsForRole(
-          'male',
-          endPose: endPose,
-          roleOrdinal: 1,
-        ),
-    };
+    final individual = <String>{};
+    for (var ordinal = 0; ordinal < femaleCount; ordinal++) {
+      individual.addAll(individualTagsForRole(
+        'female',
+        endPose: endPose,
+        roleOrdinal: ordinal,
+      ));
+    }
+    for (var ordinal = 0; ordinal < maleCount; ordinal++) {
+      individual.addAll(individualTagsForRole(
+        'male',
+        endPose: endPose,
+        roleOrdinal: ordinal,
+      ));
+    }
     return tags.where((tag) => !individual.contains(tag)).toList();
   }
 
