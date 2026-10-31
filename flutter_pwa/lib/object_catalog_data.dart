@@ -652,6 +652,20 @@ const objectCatalogTags = <CatalogTagData>[
       order: 4),
   CatalogTagData(
       id: 'obj_daily_kite', group: '物件', zh: '風箏', en: 'kite', order: 4),
+  CatalogTagData(
+      id: 'obj_daily_pumpkin', group: '物件', zh: '南瓜', en: 'pumpkin', order: 4),
+  CatalogTagData(
+      id: 'obj_daily_halloween_bucket',
+      group: '物件',
+      zh: '萬聖節糖果桶',
+      en: 'halloween bucket',
+      order: 4),
+  CatalogTagData(
+      id: 'obj_daily_spider_web',
+      group: '物件',
+      zh: '蜘蛛網',
+      en: 'spider web',
+      order: 4),
   // 衣物與貼身衣物以「手持」描述，避免與角色正在穿著的服裝欄位混淆。
   CatalogTagData(
       id: 'obj_clothing_held_clothes',

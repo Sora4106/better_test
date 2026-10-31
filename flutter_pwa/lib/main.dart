@@ -26702,6 +26702,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         '街頭／運動' => const Color(0xfffb923c),
         '奇幻／特色' => const Color(0xff818cf8),
         '艾爾之光・轉職服裝' => const Color(0xffffb454),
+        '拉拉・萬聖節' => const Color(0xffff6b35),
         _ => const Color(0xff94a3b8),
       };
 
