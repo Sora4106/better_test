@@ -8773,6 +8773,8 @@ List<TagItem> _seedTags() => [
         3,
       ),
       _tag('nudity_nude', '裸露', '裸體', 'nude', 6, adult: true),
+      _tag('nudity_completely_nude', '裸露', '完全裸體（成年角色）', 'completely nude', 6,
+          adult: true),
       _tag('nudity_nude_female', '裸露', '裸體女性', 'nude female', 6, adult: true),
       _tag('nudity_vagina', '裸露', '陰部（成年角色）', 'vagina', 6, adult: true),
       _tag('nudity_penis', '裸露', '陰莖（成年角色）', 'penis', 6, adult: true),
@@ -9056,6 +9058,13 @@ List<TagItem> _seedTags() => [
           'Hollywood Lighting', 10),
       _tag('scene_light_backlighting', _sceneLightingGroup, '背光',
           'Backlighting', 10),
+      _tag('scene_light_silhouette', _sceneLightingGroup, '剪影', 'silhouette',
+          10),
+      _tag('scene_light_shadow', _sceneLightingGroup, '陰影', 'shadow', 10),
+      _tag('scene_light_shadow_cast_on_wall', _sceneLightingGroup, '影子投射到牆面',
+          'shadow cast on wall', 10),
+      _tag('scene_light_backlit_wall_silhouette', _sceneLightingGroup,
+          '背光牆面投影剪影', 'backlighting, silhouette, shadow cast on wall', 10),
       _tag('scene_light_rim', _sceneLightingGroup, '輪廓光', 'Rim lighting', 10),
       _tag('scene_light_harsh', _sceneLightingGroup, '強烈光線', 'harsh lighting',
           10),
@@ -22315,6 +22324,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   List<TagItem> _sortPickerTags(List<TagItem> tags, String activeGroup) {
     tags.sort((a, b) {
       if (activeGroup == _allClothingWearGroup) {
+        // Whole-outfit removal presets are meant to be the first quick choice;
+        // keep the existing per-slot controls immediately after them.
+        final aPreset = a.id.startsWith('clothing_complete_') ? 0 : 1;
+        final bPreset = b.id.startsWith('clothing_complete_') ? 0 : 1;
+        if (aPreset != bPreset) return aPreset.compareTo(bPreset);
         const wearSlotOrder = <String>[
           'top',
           'onepiece',

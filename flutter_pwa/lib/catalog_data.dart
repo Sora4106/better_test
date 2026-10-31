@@ -2478,6 +2478,29 @@ const supplementalTags = <CatalogTagData>[
       en: 'clothes removed',
       order: 2,
       adult: true),
+  // One-tap whole-outfit removal presets. Keep the clothing bases selected so
+  // the generated image can still identify which outfit was taken off.
+  CatalogTagData(
+      id: 'clothing_complete_undressed',
+      group: '穿脫狀態',
+      zh: '全身衣物完全脫下（含襪子與鞋子，成年角色）',
+      en: 'completely nude, clothes removed, socks removed, shoes removed',
+      order: 2,
+      adult: true),
+  CatalogTagData(
+      id: 'clothing_complete_undressed_beside',
+      group: '穿脫狀態',
+      zh: '全身衣物完全脫下並放在身旁（含襪子與鞋子，成年角色）',
+      en: 'completely nude, clothes removed, socks removed, shoes removed, clothes beside character, socks beside character, shoes beside character',
+      order: 2,
+      adult: true),
+  CatalogTagData(
+      id: 'clothing_complete_undressed_floor',
+      group: '穿脫狀態',
+      zh: '全身衣物完全脫下並放在地上（含襪子與鞋子，成年角色）',
+      en: 'completely nude, clothes removed, socks removed, shoes removed, clothes on floor, socks on floor, shoes on floor',
+      order: 2,
+      adult: true),
   CatalogTagData(
       id: 'clothing_on_floor',
       group: '穿脫狀態',
