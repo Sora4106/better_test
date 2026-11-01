@@ -1329,6 +1329,9 @@ class _AdultPosePackage {
         }.contains(tag),
       );
 
+  bool get _isReverseSuspendedAnalDynamic =>
+      id == 'couple_reverse_suspended_anal_dynamic';
+
   bool get _hasOralAction => personTags.any(
         (tag) => const {
           'oral',
@@ -1444,6 +1447,17 @@ class _AdultPosePackage {
 
   List<String> _femaleBaseTags() {
     final source = personTags.toSet();
+    if (_isReverseSuspendedAnalDynamic) {
+      return const [
+        'being lifted up',
+        'midair',
+        'legs extended',
+        'legs spread',
+        'legs up',
+        'arched back',
+        'head tilt',
+      ];
+    }
     if (_isTwoMaleOneFemale) {
       final packageId = id.toLowerCase();
       if (source.contains('all fours') ||
@@ -1606,8 +1620,15 @@ class _AdultPosePackage {
         ]);
       } else if (isFemale) {
         result.add('bouncing breasts');
-        if (_isRearEntry) {
-          result.addAll(['bouncing ass', 'swaying hips']);
+        if (_isRearEntry || _isReverseSuspendedAnalDynamic) {
+          result.addAll([
+            'bouncing ass',
+            'swaying hips',
+            'trembling',
+            'motion blur',
+            'motion lines',
+            'speed lines',
+          ]);
         }
       }
       return _uniqueEnglishTags(result);
@@ -2550,6 +2571,38 @@ final _adultPosePackages = <_AdultPosePackage>[
     maleCount: 1,
     personTags: ['sex', 'vaginal', 'standing sex', 'standing'],
     frameTags: ['side view', 'full body'],
+  ),
+  _AdultPosePackage(
+    id: 'couple_reverse_suspended_anal_dynamic',
+    name: '反向懸空肛交・動態',
+    description: '男方站立抱起女方；女方懸空後仰、抬腿與分腿，並加入明顯的抽插與身體動態。',
+    femaleCount: 1,
+    maleCount: 1,
+    personTags: [
+      'sex',
+      'anal',
+      'reverse suspended congress',
+      'being lifted up',
+      'legs extended',
+      'legs spread',
+      'legs up',
+      'midair',
+      'arched back',
+      'head tilt',
+      'trembling',
+      'bouncing breasts',
+      'bouncing ass',
+      'swaying hips',
+      'motion blur',
+      'motion lines',
+      'speed lines',
+      'standing',
+      'back and forth thrusting',
+      'pelvic thrust',
+      'penis thrusting in and out',
+      'rough sex',
+    ],
+    frameTags: const [],
   ),
   _AdultPosePackage(
     id: 'couple_glass_wall_rear',
@@ -5363,6 +5416,66 @@ const _legacyClothingWearGroup = '\u7A7F\u812B\u72C0\u614B';
 const _scopedClothingPrefix = 'clothing_scope_';
 // UI-only group: all selected clothing wear-state tags are shown together.
 const _allClothingWearGroup = 'clothing_all_wear';
+// UI-only groups that keep wear, exposure and damage choices available before
+// a garment is chosen, without forcing every body part into one long list.
+const _clothingWearPickerPrefix = 'clothing_wear_picker_';
+const _clothingWearAllSlot = 'all';
+const _clothingWearPickerSlots = <String>[
+  _clothingWearAllSlot,
+  'outerwear',
+  'top',
+  'onepiece',
+  'costume',
+  'pants',
+  'shorts',
+  'skirt',
+  'underwear',
+  'bra',
+  'panties',
+  'socks',
+  'shoes',
+  'accessory',
+];
+
+String _clothingWearPickerGroup(String slot) =>
+    '$_clothingWearPickerPrefix$slot';
+
+bool _isClothingWearPickerGroup(String group) =>
+    group.startsWith(_clothingWearPickerPrefix);
+
+String? _clothingWearPickerSlot(String group) {
+  if (!_isClothingWearPickerGroup(group)) return null;
+  final slot = group.substring(_clothingWearPickerPrefix.length);
+  return _clothingWearPickerSlots.contains(slot) ? slot : null;
+}
+
+String _clothingWearPickerLabel(String slot) => switch (slot) {
+      _clothingWearAllSlot => '全套／散落狀態',
+      'outerwear' => '外套穿脫／暴露',
+      'top' => '上衣穿脫／暴露',
+      'onepiece' => '連身裝穿脫／暴露',
+      'costume' => '特殊服裝穿脫／暴露',
+      'pants' => '長褲穿脫／暴露',
+      'shorts' => '短褲穿脫／暴露',
+      'skirt' => '裙子穿脫／暴露',
+      'underwear' => '內衣穿脫／暴露',
+      'bra' => '胸罩穿脫／暴露',
+      'panties' => '內褲穿脫／暴露',
+      'socks' => '襪子／連褲襪穿脫',
+      'shoes' => '鞋子穿脫',
+      'accessory' => '配件穿脫',
+      _ => '穿脫／暴露狀態',
+    };
+
+String? _clothingWearPickerSlotForTag(TagItem tag) {
+  if (tag.id.startsWith('clothing_complete_') ||
+      tag.group == _legacyClothingWearGroup) {
+    return _clothingWearAllSlot;
+  }
+  if (_scopedClothingKind(tag.group) != 'wear') return null;
+  return _scopedClothingSlot(tag.group);
+}
+
 const _unifiedOutfitPhraseTagIdPrefix = 'outfit_phrase_';
 const _outfitReferenceContextPhraseTagIdPrefix = 'outfit_context_';
 const _unifiedOutfitWearScopes = <String>[
@@ -10079,6 +10192,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _tagsForPickerGroup(String group) {
     _allTags;
+    final wearPickerSlot = _clothingWearPickerSlot(group);
+    if (wearPickerSlot != null) {
+      return _allClothingWearTagsCache!
+          .where((tag) => _clothingWearPickerSlotForTag(tag) == wearPickerSlot)
+          .toList();
+    }
     if (group == _maleActiveSexPoseGroup) {
       return _tagsForEnglishValues(_maleActiveSexPositionEnglish);
     }
@@ -19192,6 +19311,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Future<void> _clearPersonPickerGroup(int personIndex, String group) async {
     if (personIndex < 0 || personIndex >= _personSlots.length) return;
     final selected = _selectedTagsForPerson(personIndex);
+    final wearPickerSlot = _clothingWearPickerSlot(group);
     final clothingScope = _clothingScopeForPickerGroup(group);
     final isClothingBase = const {
       '上衣',
@@ -19225,6 +19345,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       if (_isExpressionPickerGroup(group)) {
         return _expressionSubgroupForTag(tag) == group;
+      }
+      if (wearPickerSlot != null) {
+        return _clothingWearPickerSlotForTag(tag) == wearPickerSlot;
       }
       if (group == _allClothingWearGroup) {
         return _scopedClothingKind(tag.group) == 'wear' ||
@@ -22634,6 +22757,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _visibleTags(String group) {
     final query = _search.text.trim().toLowerCase();
+    final wearPickerSlot = _clothingWearPickerSlot(group);
     final effectiveGroup = group == '髮色'
         ? '髮型'
         : group == '臉部特徵'
@@ -22649,13 +22773,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _isStaticFaceAppearanceTag(tag);
       final objectInteractionMatch =
           group == _objectInteractionGroup && _isObjectInteractionTag(tag);
+      final wearPickerMatch = wearPickerSlot != null &&
+          _clothingWearPickerSlotForTag(tag) == wearPickerSlot;
       final groupMatch = group == '全部' ||
           tag.group == effectiveGroup ||
           hairColorInHairGroup ||
           faceExpressionInMergedGroup ||
           faceExpressionInSubgroup ||
           staticFaceAppearanceMatch ||
-          objectInteractionMatch;
+          objectInteractionMatch ||
+          wearPickerMatch;
       final adultMatch = _showAdult || !tag.adult;
       final queryMatch = query.isEmpty ||
           tag.zh.toLowerCase().contains(query) ||
@@ -22687,7 +22814,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _sortPickerTags(List<TagItem> tags, String activeGroup) {
     tags.sort((a, b) {
-      if (activeGroup == _allClothingWearGroup) {
+      if (activeGroup == _allClothingWearGroup ||
+          _clothingWearPickerSlot(activeGroup) == _clothingWearAllSlot) {
         // Whole-outfit removal presets are meant to be the first quick choice;
         // keep the existing per-slot controls immediately after them.
         final aPreset = a.id.startsWith('clothing_complete_') ? 0 : 1;
@@ -22902,6 +23030,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
     if (kind == 'detail_color') return const Color(0xfffb7185);
     if (kind == 'pattern') return const Color(0xfffb923c);
+    if (_isClothingWearPickerGroup(group)) {
+      return const Color(0xfff87171);
+    }
     if (kind == 'wear' ||
         group == _allClothingWearGroup ||
         group == _legacyClothingWearGroup) {
@@ -23635,6 +23766,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (clothingColorLabel != null) return clothingColorLabel;
     if (group == _equipmentWeaponGroup) return '武器／法具';
     if (group == _equipmentArmorGroup) return '防具／護具';
+    final wearPickerSlot = _clothingWearPickerSlot(group);
+    if (wearPickerSlot != null) {
+      return _clothingWearPickerLabel(wearPickerSlot);
+    }
     if (group == _allClothingWearGroup) return '\u7A7F\u812B\u72C0\u614B';
     if (group == _cosplayGroup) return 'Cosplay／角色扮演';
     if (group == _indoorSceneGroup) return '室內場景';
@@ -23762,10 +23897,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ? pickerTags.map((tag) => tag.id).toSet()
         : const <String>{};
     final hiddenTaxonomyIds = _hiddenTaxonomyDuplicateIdsCache!;
+    final activeWearPickerSlot =
+        activeGroup == null ? null : _clothingWearPickerSlot(activeGroup);
     final tags = pickerTags.where((tag) {
-      final allClothingWear = activeGroup == _allClothingWearGroup &&
-          (_scopedClothingKind(tag.group) == 'wear' ||
-              tag.group == _legacyClothingWearGroup);
+      final allClothingWear = (activeGroup == _allClothingWearGroup &&
+              (_scopedClothingKind(tag.group) == 'wear' ||
+                  tag.group == _legacyClothingWearGroup)) ||
+          (activeWearPickerSlot != null &&
+              _clothingWearPickerSlotForTag(tag) == activeWearPickerSlot);
       final hairColorInHairGroup = activeGroup == '髮型' && tag.group == '髮色';
       final faceExpressionInMergedGroup = activeGroup == '表情' &&
           tag.group == '臉部特徵' &&
@@ -26880,9 +27019,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<String> _clothingWearGroups() {
     // Wear, undressing, exposure and damage can describe a character even
-    // before a garment is selected. Keep the complete catalogue available in
-    // the clothing step instead of hiding it behind the chosen base pieces.
-    return const <String>[_allClothingWearGroup];
+    // before a garment is selected. Expose every applicable part, but divide
+    // the catalogue by garment region so the picker remains practical.
+    _allTags;
+    final wearTags = _allClothingWearTagsCache!;
+    return _clothingWearPickerSlots
+        .where((slot) =>
+            wearTags.any((tag) => _clothingWearPickerSlotForTag(tag) == slot))
+        .map(_clothingWearPickerGroup)
+        .toList(growable: false);
   }
 
   // ignore: unused_element
@@ -27787,16 +27932,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     _pickerStage(
                       icon: Icons.dry_cleaning_outlined,
                       tone: const Color(0xfff87171),
-                      title: '5. 各部位穿脫／暴露狀態',
+                      title: '5. 部位穿脫／暴露狀態',
                       description:
-                          '全部部位皆可直接選擇，不必先挑服裝；18+ 模式另提供單側露出、滑出與透視可見等選項。',
+                          '依服飾部位分類，全部皆可直接選擇，不必先挑服裝；全套散落、單側露出、滑出與透視可見也集中在對應分類。',
                       child: _stepTagPicker(
                         adaptiveWear,
                         nextLabel: '下一步',
                         personIndex: index,
                         showNext: false,
                         showGroupClear: true,
-                        pickerStateKey: 'clothing-wear:$activeClothingGroup',
+                        pickerStateKey: 'clothing-wear',
                       ),
                     ),
                   if (_hasAllOutfitScatteredKit(index)) ...[
