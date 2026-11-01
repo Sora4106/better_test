@@ -9529,6 +9529,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Map<int, Map<String, Set<String>>>
       _outfitReferenceHiddenSectionsByPerson =
       <int, Map<String, Set<String>>>{};
+  // The full-outfit-scattered kit keeps the user's clothing selection intact.
+  // This map only records the garment blocks explicitly restored to being worn.
+  // An absent/empty entry means every selected garment remains scattered.
+  final Map<int, Set<String>> _scatteredOutfitWornBlocksByPerson =
+      <int, Set<String>>{};
   final Map<String, _OutfitReferenceResolution> _outfitReferenceCache =
       <String, _OutfitReferenceResolution>{};
   final Map<String, TextEditingController> _personSearchControllers =
@@ -9816,6 +9821,62 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (byPreset != null && byPreset.isEmpty) {
       _outfitReferenceHiddenSectionsByPerson.remove(personIndex);
     }
+  }
+
+  Set<String> _scatteredOutfitWornBlocksForPerson(int personIndex) =>
+      _scatteredOutfitWornBlocksByPerson[personIndex] ?? const <String>{};
+
+  Map<String, List<_GeneratedOutputTag>> _scatteredOutfitBlocksFromOutput(
+    Iterable<_GeneratedOutputTag> output,
+  ) {
+    final blocks = <String, List<_GeneratedOutputTag>>{};
+    for (final tag in output) {
+      final key = tag.clothingBlockKey;
+      if (key == null || key.isEmpty || key == 'equipment') continue;
+      blocks.putIfAbsent(key, () => <_GeneratedOutputTag>[]).add(tag);
+    }
+    return blocks;
+  }
+
+  Map<String, List<_GeneratedOutputTag>> _scatteredOutfitBlocksForPerson(
+      int personIndex) {
+    return _scatteredOutfitBlocksFromOutput(
+        _clothingOutputTagsForPerson(personIndex));
+  }
+
+  bool _hasAllOutfitScatteredKit(int personIndex) =>
+      _selectedTagsForPerson(personIndex).any(_isAllOutfitScatteredTag);
+
+  void _setScatteredOutfitBlockWorn(
+    int personIndex,
+    String blockKey,
+    bool worn,
+  ) {
+    final available = _scatteredOutfitBlocksForPerson(personIndex).keys.toSet();
+    if (!available.contains(blockKey)) return;
+    setState(() {
+      final wornBlocks = _scatteredOutfitWornBlocksByPerson.putIfAbsent(
+        personIndex,
+        () => <String>{},
+      );
+      if (worn) {
+        wornBlocks.add(blockKey);
+      } else {
+        wornBlocks.remove(blockKey);
+      }
+      wornBlocks.retainAll(available);
+      if (wornBlocks.isEmpty) {
+        _scatteredOutfitWornBlocksByPerson.remove(personIndex);
+      }
+      _persist();
+    });
+  }
+
+  void _scatterAllOutfitBlocks(int personIndex) {
+    setState(() {
+      _scatteredOutfitWornBlocksByPerson.remove(personIndex);
+      _persist();
+    });
   }
 
   String _outfitReferenceContextPhraseTagId(
@@ -13200,27 +13261,61 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
     }
     if (kit == null) return normalClothing;
+    final kitId = kit.id;
 
-    final result = <_GeneratedOutputTag>[
-      _GeneratedOutputTag(
-        zh: '全裸，已選服裝散落在周邊',
-        en: 'completely nude, clothes removed, clothes scattered around, clothes on floor',
-        tagId: kit.id,
-        tagIds: [kit.id],
+    final kitFreeClothing = normalClothing
+        .where(
+            (output) => output.tagId != kitId && !output.tagIds.contains(kitId))
+        .toList(growable: false);
+    final blocks = _scatteredOutfitBlocksFromOutput(kitFreeClothing);
+    final wornBlocks = _scatteredOutfitWornBlocksForPerson(personIndex)
+        .intersection(blocks.keys.toSet());
+    if (blocks.isNotEmpty && wornBlocks.length == blocks.length) {
+      // Keeping every displayed part turns the kit into a no-op.  Do not emit
+      // a contradictory nude/scattered phrase in this case.
+      return kitFreeClothing;
+    }
+
+    final hasScatteredBlocks =
+        blocks.keys.any((key) => !wornBlocks.contains(key));
+    final result = <_GeneratedOutputTag>[];
+    if (hasScatteredBlocks || blocks.isEmpty) {
+      final completelyNude = wornBlocks.isEmpty;
+      result.add(_GeneratedOutputTag(
+        zh: completelyNude ? '全裸，已選服裝散落在周邊' : '部分穿著，未保留服裝散落在周邊',
+        en: completelyNude
+            ? 'completely nude, clothes removed, clothes scattered around, clothes on floor'
+            : 'partially undressed, clothes removed, clothes scattered around, clothes on floor',
+        tagId: kitId,
+        tagIds: [kitId],
         personIndex: personIndex,
         clothingBlockKey: 'scattered_outfit',
-      ),
-    ];
-    final seenBlocks = <String>{};
+      ));
+    }
+
+    final scatteredBlocks = <String>{};
     final seenEnglish = <String>{};
-    for (final output in normalClothing) {
+    for (final output in kitFreeClothing) {
       final block = output.clothingBlockKey;
+      if (block == 'equipment') {
+        // Equipment is not clothing: a held weapon or armor selection remains
+        // available and does not become an item on the floor.
+        result.add(output);
+        continue;
+      }
+      if (block == null) {
+        // Overall fashion/mood and bare wear-state fragments are not garment
+        // nouns, so omit them while the full-outfit kit is active.
+        continue;
+      }
+      if (wornBlocks.contains(block)) {
+        result.add(output);
+        continue;
+      }
       // A block's first output is the composed garment itself.  Later outputs
       // are style/detail fragments; appending "on floor" to those fragments
       // would produce wording such as "goth fashion on floor".
-      if (block == null || block == 'equipment' || !seenBlocks.add(block)) {
-        continue;
-      }
+      if (!scatteredBlocks.add(block)) continue;
       final english = _cleanTag(output.en);
       final englishKey = _englishTagKey(english);
       if (english.isEmpty || !seenEnglish.add(englishKey)) continue;
@@ -13228,8 +13323,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       result.add(_GeneratedOutputTag(
         zh: '脫下的$chinese散落在地上',
         en: '$english on floor',
-        tagId: kit.id,
-        tagIds: [kit.id],
+        tagId: kitId,
+        tagIds: [kitId],
         personIndex: personIndex,
         clothingBlockKey: 'scattered_outfit',
       ));
@@ -14046,6 +14141,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return result;
   }
 
+  Map<int, Set<String>> _decodeScatteredOutfitWornBlocks(dynamic raw) {
+    if (raw is! Map) return <int, Set<String>>{};
+    final result = <int, Set<String>>{};
+    for (final entry in raw.entries) {
+      final personIndex = int.tryParse('${entry.key}');
+      if (personIndex == null) continue;
+      final blocks = (entry.value as List? ?? const <dynamic>[])
+          .map((value) => '$value'.trim())
+          .where((value) => value.isNotEmpty)
+          .toSet();
+      if (blocks.isNotEmpty) result[personIndex] = blocks;
+    }
+    return result;
+  }
+
   void _restore() {
     final raw = html.window.localStorage[_storageKey];
     if (raw == null) return;
@@ -14257,6 +14367,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..addAll(_decodeOutfitReferenceHiddenSections(
           data['outfitReferenceHiddenSectionsByPerson'],
         ));
+      _scatteredOutfitWornBlocksByPerson
+        ..clear()
+        ..addAll(_decodeScatteredOutfitWornBlocks(
+          data['scatteredOutfitWornBlocksByPerson'],
+        ));
       final removedCharacterTags = data['removedCharacterTags'] as Map?;
       if (removedCharacterTags != null) {
         for (final entry in removedCharacterTags.entries) {
@@ -14374,6 +14489,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
           ),
         ),
+        'scatteredOutfitWornBlocksByPerson':
+            _scatteredOutfitWornBlocksByPerson.map(
+          (personIndex, blockKeys) =>
+              MapEntry('$personIndex', blockKeys.toList()),
+        ),
         'peopleCount': _peopleCount,
         'stepIndex': _stepIndex,
         'stepLayoutVersion': _stepLayoutVersion,
@@ -14433,6 +14553,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _activeAdultPosePackagePersonTagIds.clear();
     _personCombinationIds.clear();
     _outfitReferenceHiddenSectionsByPerson.clear();
+    _scatteredOutfitWornBlocksByPerson.clear();
     _removedCharacterTags.clear();
     _autoFurryIdentityForPerson.clear();
     _customTags.clear();
@@ -16982,6 +17103,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         targetIds.remove(tag.id);
         _untrackAdultPosePackageTag(tag.id, personIndex: personIndex);
         if (personIndex != null) {
+          if (_isAllOutfitScatteredTag(tag)) {
+            _scatteredOutfitWornBlocksByPerson.remove(personIndex);
+          }
           _removeOrphanedClothingConfiguration(targetIds, tag);
           if (_isClothingOrEquipmentTag(tag)) {
             _markClothingTemplateCustomized(personIndex, changedTag: tag);
@@ -17055,6 +17179,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       for (final conflict in conflicts) {
         targetIds.remove(conflict.id);
         _untrackAdultPosePackageTag(conflict.id, personIndex: personIndex);
+        if (personIndex != null && _isAllOutfitScatteredTag(conflict)) {
+          _scatteredOutfitWornBlocksByPerson.remove(personIndex);
+        }
       }
       for (final replacement in clothingReplacements) {
         targetIds.remove(replacement.id);
@@ -17068,6 +17195,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       targetIds.add(tag.id);
       if (personIndex != null) {
+        if (_isAllOutfitScatteredTag(tag)) {
+          // A newly applied kit always begins with every selectable garment on
+          // the floor.  The per-part controls can then restore only the parts
+          // the user wants to keep worn.
+          _scatteredOutfitWornBlocksByPerson.remove(personIndex);
+        }
         if (tag.id == 'catalog_trait_anthro') {
           _autoFurryIdentityForPerson.remove(personIndex);
         }
@@ -18790,6 +18923,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _autoFurryIdentityForPerson.clear();
       _personCombinationIds.clear();
       _outfitReferenceHiddenSectionsByPerson.clear();
+      _scatteredOutfitWornBlocksByPerson.clear();
       _removedCharacterTags.clear();
       _personTagQueries.clear();
       _personActiveGroups.clear();
@@ -18937,6 +19071,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         case 3:
           removePersonTagsWhere(_isClothingOrEquipmentTag);
           _outfitReferenceHiddenSectionsByPerson.clear();
+          _scatteredOutfitWornBlocksByPerson.clear();
           for (var personIndex = 0;
               personIndex < _personSlots.length;
               personIndex++) {
@@ -19267,6 +19402,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..addAll(_decodeOutfitReferenceHiddenSections(
           data['outfitReferenceHiddenSectionsByPerson'],
         ));
+      _scatteredOutfitWornBlocksByPerson
+        ..clear()
+        ..addAll(_decodeScatteredOutfitWornBlocks(
+          data['scatteredOutfitWornBlocksByPerson'],
+        ));
       _animationBeats
         ..clear()
         ..addAll((data['animationBeats'] as List? ?? []).map((item) =>
@@ -19317,6 +19457,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _personSelectedIds.removeWhere((index, _) => index >= count);
       _personCombinationIds.removeWhere((index, _) => index >= count);
       _outfitReferenceHiddenSectionsByPerson
+          .removeWhere((index, _) => index >= count);
+      _scatteredOutfitWornBlocksByPerson
           .removeWhere((index, _) => index >= count);
       _removedCharacterTags.removeWhere((index, _) => index >= count);
       _personTagQueries.removeWhere((index, _) => index >= count);
@@ -19395,6 +19537,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       shiftIndexSet(_autoFurryIdentityForPerson);
       shiftMap(_personCombinationIds);
       shiftMap(_outfitReferenceHiddenSectionsByPerson);
+      shiftMap(_scatteredOutfitWornBlocksByPerson);
       shiftMap(_removedCharacterTags);
       shiftMap(_personTagQueries);
       shiftMap(_openCharacterPickers);
@@ -27336,6 +27479,73 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _scatteredOutfitKeepWornControl(int personIndex) {
+    if (!_hasAllOutfitScatteredKit(personIndex)) {
+      return const SizedBox.shrink();
+    }
+    final blocks = _scatteredOutfitBlocksForPerson(personIndex);
+    final available = blocks.keys.toSet();
+    final worn = _scatteredOutfitWornBlocksForPerson(personIndex)
+        .intersection(available);
+    String blockLabel(String key, List<_GeneratedOutputTag> values) {
+      final scope =
+          _clothingWeightBlockLabel(key, const <_GeneratedOutputTag>[]);
+      final preview = values.isEmpty ? '' : values.first.zh.trim();
+      return preview.isEmpty || preview.length > 28 ? scope : '$scope・$preview';
+    }
+
+    return _pickerStage(
+      icon: Icons.layers_clear_outlined,
+      tone: const Color(0xfffb7185),
+      title: '全套服裝散落：保留穿著部位',
+      description: blocks.isEmpty
+          ? '目前未選擇可轉為散落的服裝；套件仍會輸出全裸與衣物散落提示。選好服裝後可回到此處逐部位設定。'
+          : '預設所有已選服裝都會散落在周邊。勾選部位即可讓它維持穿著；未勾選的部位會輸出為掉在地上。',
+      child: blocks.isEmpty
+          ? const SizedBox.shrink()
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '目前：${worn.length} 個部位穿著，${blocks.length - worn.length} 個部位散落',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final entry in blocks.entries)
+                      FilterChip(
+                        avatar: Icon(
+                          worn.contains(entry.key)
+                              ? Icons.checkroom_outlined
+                              : Icons.layers_clear_outlined,
+                          size: 16,
+                        ),
+                        label: Text(
+                          '${blockLabel(entry.key, entry.value)}・${worn.contains(entry.key) ? '穿著' : '散落'}',
+                        ),
+                        selected: worn.contains(entry.key),
+                        onSelected: (selected) => _setScatteredOutfitBlockWorn(
+                          personIndex,
+                          entry.key,
+                          selected,
+                        ),
+                      ),
+                    if (worn.isNotEmpty)
+                      OutlinedButton.icon(
+                        onPressed: () => _scatterAllOutfitBlocks(personIndex),
+                        icon: const Icon(Icons.layers_clear_outlined, size: 18),
+                        label: const Text('全部改為散落'),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+    );
+  }
+
   Widget _stepClothing() {
     const garmentGroups = _clothingGarmentPickerGroups;
     const equipmentGroups = <String>[
@@ -27557,6 +27767,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         pickerStateKey: 'clothing-wear:$activeClothingGroup',
                       ),
                     ),
+                  if (_hasAllOutfitScatteredKit(index)) ...[
+                    const SizedBox(height: 12),
+                    _scatteredOutfitKeepWornControl(index),
+                  ],
                   if (adaptiveDetails.isEmpty && adaptiveWear.isEmpty)
                     Container(
                       width: double.infinity,

@@ -2507,7 +2507,7 @@ const supplementalTags = <CatalogTagData>[
   CatalogTagData(
       id: 'clothing_complete_undressed_scattered',
       group: '穿脫狀態',
-      zh: '全套服裝散落在周邊（依已選服裝列出，成年角色）',
+      zh: '全套服裝散落在周邊（可個別保留穿著，依已選服裝列出；成年角色）',
       en: 'completely nude, clothes removed, clothes scattered around, clothes on floor',
       order: 2,
       conflictGroup: 'complete_undressed_state',
