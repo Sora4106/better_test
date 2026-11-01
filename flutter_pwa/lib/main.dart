@@ -65,6 +65,7 @@ const _femaleActiveSexPoseGroup = '性姿勢・女性主動';
 const _maleSexMotionGroup = '性行為・男性主動擺動';
 const _femaleSexMotionGroup = '性行為・女性主動擺動';
 const _adultMotionAssistGroup = '性行為・動態輔助';
+const _adultSoundAssistGroup = '性行為・聲音';
 const _maleActiveSexPositionEnglish = <String>{
   'missionary',
   'mating press',
@@ -567,6 +568,7 @@ const _organizedPosePickerSections = <String, List<String>>{
     '性行為・自慰',
     '性行為・動態',
     _adultMotionAssistGroup,
+    _adultSoundAssistGroup,
     _maleSexMotionGroup,
     _femaleSexMotionGroup,
     '性行為・親吻',
@@ -2269,9 +2271,13 @@ const _animationAdultMotionOptions = <_AnimationOption>[
 const _animationAdultSoundOptions = <_AnimationOption>[
   _AnimationOption('不加入成人聲音', ''),
   _AnimationOption('輕柔呻吟', 'soft moans'),
+  _AnimationOption('喘息呻吟', 'breathy moaning'),
   _AnimationOption('急促喘息', 'breathy gasps'),
+  _AnimationOption('短促吸氣', 'short gasps'),
   _AnimationOption('沉重呼吸', 'heavy breathing'),
   _AnimationOption('節奏性呼吸', 'rhythmic breathing'),
+  _AnimationOption('壓低聲音嗚咽', 'soft whimpering'),
+  _AnimationOption('顫抖呼吸', 'shaky breathing'),
   _AnimationOption('床墊細微聲響', 'soft bed creaking'),
   _AnimationOption('衣料摩擦聲', 'gentle fabric rustling'),
   _AnimationOption('隨律動同步的輕聲呻吟', 'soft moans synchronized with each thrust'),
@@ -8909,6 +8915,29 @@ List<TagItem> _seedTags() => [
         adult: true,
       ),
 
+      // Adult vocal cues are separate from facial expressions so they can be
+      // selected with an adult pose without replacing mouth/eye expressions.
+      _tag('act_moaning', _adultSoundAssistGroup, '呻吟', 'moaning', 7,
+          adult: true),
+      _tag(
+          'act_soft_moaning', _adultSoundAssistGroup, '輕柔呻吟', 'soft moaning', 7,
+          adult: true),
+      _tag('act_breathy_moaning', _adultSoundAssistGroup, '喘息呻吟',
+          'breathy moaning', 7,
+          adult: true),
+      _tag('act_panting', _adultSoundAssistGroup, '急促喘息', 'panting', 7,
+          adult: true),
+      _tag('act_gasping', _adultSoundAssistGroup, '短促吸氣', 'gasping', 7,
+          adult: true),
+      _tag('act_heavy_breathing', _adultSoundAssistGroup, '沉重呼吸',
+          'heavy breathing', 7,
+          adult: true),
+      _tag('act_rhythmic_breathing', _adultSoundAssistGroup, '節奏性呼吸',
+          'rhythmic breathing', 7,
+          adult: true),
+      _tag('act_whimpering', _adultSoundAssistGroup, '壓低聲音嗚咽', 'whimpering', 7,
+          adult: true),
+
       // Sex acts and sexual positions. All are adult-only and off by the adult filter.
       _tag('act_sex', '性行為', '性行為（成年角色）', 'sex', 7, adult: true),
       _tag('act_vaginal', '性行為', '陰道性交（成年角色）', 'vaginal', 7, adult: true),
@@ -13434,6 +13463,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (output.tagIds.any(packagePersonTags.contains)) return false;
     const individualAdultMotionGroups = {
       _adultMotionAssistGroup,
+      _adultSoundAssistGroup,
       _maleSexMotionGroup,
       _femaleSexMotionGroup,
       '性行為・動態',
@@ -22792,6 +22822,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '束縛姿勢': Color(0xffdc2626),
       '性行為': Color(0xfff97316),
       '性行為・動態': Color(0xfffb6a3d),
+      _adultSoundAssistGroup: Color(0xfff472b6),
       _maleSexMotionGroup: Color(0xfff97316),
       _femaleSexMotionGroup: Color(0xffec4899),
       '性行為・親吻': Color(0xfff43f8c),
