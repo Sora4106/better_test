@@ -12748,23 +12748,24 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     final color = colors.first;
     final singleColorRelated = <TagItem>[color, ...lengths, ...styles];
-    final english = <String>[_hairColorWord(color)!];
-    final chinese = <String>[_hairColorChinese(color)];
+    // Do not collapse a complete hair selection into one unbroken phrase such
+    // as "brown long hair intakes ... yellow hair bow".  Besides being harder
+    // to read, the model may associate a later accessory colour with the hair
+    // itself.  Keep the base colour as an explicit `brown hair`-style tag and
+    // preserve every length, style, and ornament as its own comma-separated
+    // prompt term.
+    final english = <String>['${_hairColorWord(color)!} hair'];
+    final chinese = <String>['${_hairColorChinese(color)}髮'];
     if (length != null) {
-      final lengthEnglish = _hairLengthTag(length.en)!;
-      english.add(styles.isEmpty
-          ? lengthEnglish
-          : lengthEnglish.replaceFirst(RegExp(r' hair$'), ''));
-      chinese.add(styles.isEmpty
-          ? length.zh
-          : length.zh.replaceFirst(RegExp(r'髮$'), ''));
+      english.add(_hairLengthTag(length.en)!);
+      chinese.add(length.zh);
     }
     english.addAll(styles.map((tag) => tag.en));
     chinese.addAll(styles.map((tag) => tag.zh));
     return [
       _GeneratedOutputTag(
-        zh: chinese.join(),
-        en: english.join(' '),
+        zh: chinese.join('、'),
+        en: english.join(', '),
         tagIds: singleColorRelated.map((tag) => tag.id).toList(),
         personIndex: personIndex,
       ),
