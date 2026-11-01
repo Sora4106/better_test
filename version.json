@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.306",
-    "build":  308,
-    "label":  "1.1.306+308",
+    "version":  "1.1.307",
+    "build":  309,
+    "label":  "1.1.307+309",
     "history":  [
+                    {
+                        "version":  "1.1.307",
+                        "build":  309,
+                        "label":  "1.1.307+309",
+                        "date":  "2026-11-01",
+                        "notes":  "補齊 The Pose、狐狸手影與 hug 姿勢互動標籤"
+                    },
                     {
                         "version":  "1.1.306",
                         "build":  308,

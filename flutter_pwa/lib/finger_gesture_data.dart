@@ -57,6 +57,7 @@ final List<CatalogTagData> fingerGestureTags = <CatalogTagData>[
     const [
       ('爪子手勢', 'claw pose', 'official'),
       ('獸掌手勢', 'paw pose', 'official'),
+      ('狐狸手影', 'fox shadow puppet', 'official'),
       ('舉起食指', 'index finger raised', 'official'),
       ('比出中指', 'middle finger', 'official'),
       ('伸出小指', 'pinky out', 'official'),
