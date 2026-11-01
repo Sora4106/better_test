@@ -2486,6 +2486,7 @@ const supplementalTags = <CatalogTagData>[
       zh: '全身衣物完全脫下（含襪子與鞋子，成年角色）',
       en: 'completely nude, clothes removed, socks removed, shoes removed',
       order: 2,
+      conflictGroup: 'complete_undressed_state',
       adult: true),
   CatalogTagData(
       id: 'clothing_complete_undressed_beside',
@@ -2493,6 +2494,7 @@ const supplementalTags = <CatalogTagData>[
       zh: '全身衣物完全脫下並放在身旁（含襪子與鞋子，成年角色）',
       en: 'completely nude, clothes removed, socks removed, shoes removed, clothes beside character, socks beside character, shoes beside character',
       order: 2,
+      conflictGroup: 'complete_undressed_state',
       adult: true),
   CatalogTagData(
       id: 'clothing_complete_undressed_floor',
@@ -2500,6 +2502,15 @@ const supplementalTags = <CatalogTagData>[
       zh: '全身衣物完全脫下並放在地上（含襪子與鞋子，成年角色）',
       en: 'completely nude, clothes removed, socks removed, shoes removed, clothes on floor, socks on floor, shoes on floor',
       order: 2,
+      conflictGroup: 'complete_undressed_state',
+      adult: true),
+  CatalogTagData(
+      id: 'clothing_complete_undressed_scattered',
+      group: '穿脫狀態',
+      zh: '全套服裝散落在周邊（依已選服裝列出，成年角色）',
+      en: 'completely nude, clothes removed, clothes scattered around, clothes on floor',
+      order: 2,
+      conflictGroup: 'complete_undressed_state',
       adult: true),
   CatalogTagData(
       id: 'clothing_on_floor',

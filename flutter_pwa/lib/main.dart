@@ -13181,9 +13181,66 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ];
   }
 
+  bool _isAllOutfitScatteredTag(TagItem tag) =>
+      _rawCatalogTagId(tag) == 'clothing_complete_undressed_scattered';
+
+  /// Keeps the selected garment design as a reusable source, but turns its
+  /// visible output into a nude scene with each selected clothing block placed
+  /// around the person.  Removing this one kit restores the original outfit
+  /// without requiring the user to select every garment again.
+  List<_GeneratedOutputTag> _scatteredOutfitOutputTagsForPerson(
+    int personIndex,
+    List<_GeneratedOutputTag> normalClothing,
+  ) {
+    TagItem? kit;
+    for (final tag in _selectedTagsForPerson(personIndex)) {
+      if (_isAllOutfitScatteredTag(tag)) {
+        kit = tag;
+        break;
+      }
+    }
+    if (kit == null) return normalClothing;
+
+    final result = <_GeneratedOutputTag>[
+      _GeneratedOutputTag(
+        zh: '全裸，已選服裝散落在周邊',
+        en: 'completely nude, clothes removed, clothes scattered around, clothes on floor',
+        tagId: kit.id,
+        tagIds: [kit.id],
+        personIndex: personIndex,
+        clothingBlockKey: 'scattered_outfit',
+      ),
+    ];
+    final seenBlocks = <String>{};
+    final seenEnglish = <String>{};
+    for (final output in normalClothing) {
+      final block = output.clothingBlockKey;
+      // A block's first output is the composed garment itself.  Later outputs
+      // are style/detail fragments; appending "on floor" to those fragments
+      // would produce wording such as "goth fashion on floor".
+      if (block == null || block == 'equipment' || !seenBlocks.add(block)) {
+        continue;
+      }
+      final english = _cleanTag(output.en);
+      final englishKey = _englishTagKey(english);
+      if (english.isEmpty || !seenEnglish.add(englishKey)) continue;
+      final chinese = output.zh.trim().ifEmpty(english);
+      result.add(_GeneratedOutputTag(
+        zh: '脫下的$chinese散落在地上',
+        en: '$english on floor',
+        tagId: kit.id,
+        tagIds: [kit.id],
+        personIndex: personIndex,
+        clothingBlockKey: 'scattered_outfit',
+      ));
+    }
+    return result;
+  }
+
   List<_GeneratedOutputTag> _personPromptTags(int index) {
     final selected = _selectedTagsForPerson(index);
-    final clothing = _clothingOutputTagsForPerson(index);
+    final normalClothing = _clothingOutputTagsForPerson(index);
+    final clothing = _scatteredOutfitOutputTagsForPerson(index, normalClothing);
     final hair = _hairOutputTagsForPerson(index);
     final animalTraits = _animalTraitOutputTagsForPerson(index);
     final wings = _wingOutputTagsForPerson(index);
