@@ -61,6 +61,94 @@ final sexyPosePackages = List<PromptPackageData>.unmodifiable([
       ),
 ]);
 
+/// Reusable visual-motion kits.  They deliberately describe camera-visible
+/// movement only, so they can be combined with a regular action or an
+/// adult-only pose package without changing the underlying pose selection.
+const dynamicMotionPackages = <PromptPackageData>[
+  PromptPackageData(
+    id: 'motion_clear_action_lines',
+    name: '清晰動作線',
+    description: '以動作線與速度線強化正在進行的肢體動作。',
+    category: '動作線',
+    tags: <String>['motion lines', 'speed lines'],
+  ),
+  PromptPackageData(
+    id: 'motion_fast_blur',
+    name: '高速動態模糊',
+    description: '保留主體輪廓，同時以速度線與輕微模糊表現快速動作。',
+    category: '高速感',
+    tags: <String>['motion lines', 'speed lines', 'motion blur'],
+  ),
+  PromptPackageData(
+    id: 'motion_strong_tremble',
+    name: '強烈震動感',
+    description: '以顫抖、搖晃與動態模糊表現強烈的連續動作。',
+    category: '震動感',
+    tags: <String>['motion lines', 'motion blur', 'shaking', 'trembling'],
+  ),
+  PromptPackageData(
+    id: 'motion_rhythm_sway',
+    name: '節奏擺動',
+    description: '加入重複節奏與身體擺動，適合舞蹈、運動或其他連續動作。',
+    category: '節奏感',
+    tags: <String>['motion lines', 'swaying hips', 'hip sway'],
+  ),
+  PromptPackageData(
+    id: 'motion_intense_scene',
+    name: '高強度動態',
+    description: '動作線、速度線、模糊與震動一次套用；可另與成人姿勢套件併用。',
+    category: '高強度',
+    tags: <String>[
+      'motion lines',
+      'speed lines',
+      'motion blur',
+      'shaking',
+      'trembling',
+    ],
+  ),
+];
+
+/// Pillow interactions are non-explicit personal-pose packages.  They use a
+/// complete natural phrase so the hand count, the pillow, and face coverage
+/// stay together in the generated prompt.
+const pillowPosePackages = <PromptPackageData>[
+  PromptPackageData(
+    id: 'pillow_one_hand_hold',
+    name: '單手抱枕頭',
+    description: '單手拿著或抱住枕頭，另一隻手可保留做其他動作。',
+    category: '單手互動',
+    naturalPrompt: 'one hand holding a pillow, relaxed pose',
+    naturalPromptZh: '單手拿著枕頭，保持自然放鬆的姿勢。',
+  ),
+  PromptPackageData(
+    id: 'pillow_both_hands_hold',
+    name: '雙手抱枕頭',
+    description: '雙手將枕頭抱在胸前或身前。',
+    category: '雙手互動',
+    naturalPrompt:
+        'holding a pillow with both hands, hugging pillow close to chest',
+    naturalPromptZh: '雙手抱著枕頭並靠近胸前。',
+  ),
+  PromptPackageData(
+    id: 'pillow_one_hand_face_cover',
+    name: '單手抱枕遮臉',
+    description: '以單手扶住枕頭，局部遮住臉部。',
+    category: '遮臉互動',
+    naturalPrompt:
+        'one hand holding a pillow, pillow partially covering face, face partly hidden behind pillow',
+    naturalPromptZh: '單手扶住枕頭，枕頭局部遮住臉部。',
+  ),
+  PromptPackageData(
+    id: 'pillow_both_hands_face_cover',
+    name: '雙手抱枕遮臉',
+    description: '雙手抱住枕頭並遮住大部分臉部。',
+    category: '遮臉互動',
+    naturalPrompt:
+        'holding a pillow with both hands, pillow covering face, face hidden behind pillow',
+    naturalPromptZh: '雙手抱住枕頭，枕頭遮住大部分臉部。',
+  ),
+];
+
 /// Fifteen feline-inspired single-person pose kits. They are intentionally
 /// built from the normal editable pose tags, so a cat tail, ears, paws, or
 /// anthro identity can be added separately only when wanted.
@@ -91,8 +179,7 @@ const felineSoloPosePackages = <PromptPackageData>[
     tags: const <String>[],
     naturalPrompt:
         'lying on back, stomach exposed, trusting pose, relaxed limbs, soft happy expression, feline-like relaxed pose',
-    naturalPromptZh:
-        '單人姿勢：仰躺露出腹部，保留放鬆四肢、信任姿態與柔和愉悅表情。',
+    naturalPromptZh: '單人姿勢：仰躺露出腹部，保留放鬆四肢、信任姿態與柔和愉悅表情。',
   ),
   PromptPackageData(
     id: 'feline_crouched_grooming',
@@ -451,8 +538,7 @@ const felineInteractionPackages = <PromptPackageData>[
     tags: const <String>[],
     naturalPrompt:
         'two people, one person gently patting the other person\'s head, headpat, hand on another\'s head, the petted person has half-closed eyes and a pleased smile, relaxed affectionate interaction',
-    naturalPromptZh:
-        '雙人互動：其中一人輕拍另一人的頭頂；被摸頭的人半瞇眼並露出滿足微笑，呈現放鬆親近感。',
+    naturalPromptZh: '雙人互動：其中一人輕拍另一人的頭頂；被摸頭的人半瞇眼並露出滿足微笑，呈現放鬆親近感。',
   ),
   PromptPackageData(
     id: 'feline_being_lifted_up',
@@ -541,8 +627,7 @@ const twoPersonInteractionPackages = <PromptPackageData>[
     category: '摸頭／安撫',
     naturalPrompt:
         'two people, one person sitting, another person close beside them and gently patting the seated person\'s head, headpat, hand on another\'s head, looking at another, soft reassuring smile',
-    naturalPromptZh:
-        '雙人互動：人物 A 坐著；人物 B 靠在身側並輕拍 A 的頭頂，兩人彼此注視並帶有安撫微笑。',
+    naturalPromptZh: '雙人互動：人物 A 坐著；人物 B 靠在身側並輕拍 A 的頭頂，兩人彼此注視並帶有安撫微笑。',
   ),
   PromptPackageData(
     id: 'two_person_standing_headpat',
@@ -551,8 +636,7 @@ const twoPersonInteractionPackages = <PromptPackageData>[
     category: '摸頭／安撫',
     naturalPrompt:
         'two people standing face-to-face, one person gently patting the other person\'s head, headpat, hand on another\'s head, looking at another, affectionate comforting interaction',
-    naturalPromptZh:
-        '雙人互動：人物 A 與 B 面對面站立；B 輕拍 A 的頭頂，兩人互相注視，呈現親近安撫感。',
+    naturalPromptZh: '雙人互動：人物 A 與 B 面對面站立；B 輕拍 A 的頭頂，兩人互相注視，呈現親近安撫感。',
   ),
   PromptPackageData(
     id: 'two_person_lying_belly_rub',
@@ -561,8 +645,7 @@ const twoPersonInteractionPackages = <PromptPackageData>[
     category: '摸肚子／安撫',
     naturalPrompt:
         'two people, one person lying on back with stomach exposed, another person kneeling beside them and gently rubbing the lying person\'s stomach, belly rub, hand on another\'s stomach, relaxed limbs, gentle smile',
-    naturalPromptZh:
-        '雙人互動：人物 A 仰躺露出腹部；人物 B 在旁邊跪下，輕柔撫摸 A 的腹部。保留放鬆四肢與溫柔微笑。',
+    naturalPromptZh: '雙人互動：人物 A 仰躺露出腹部；人物 B 在旁邊跪下，輕柔撫摸 A 的腹部。保留放鬆四肢與溫柔微笑。',
   ),
   PromptPackageData(
     id: 'two_person_seated_belly_rub',
@@ -571,8 +654,7 @@ const twoPersonInteractionPackages = <PromptPackageData>[
     category: '摸肚子／安撫',
     naturalPrompt:
         'two people, one person sitting on floor, another person crouching beside them and gently rubbing their stomach, belly rub, hand on another\'s stomach, looking at another, caring expression',
-    naturalPromptZh:
-        '雙人互動：人物 A 坐在地面；人物 B 蹲在旁邊並輕柔撫摸 A 的腹部，兩人互看，呈現關心神情。',
+    naturalPromptZh: '雙人互動：人物 A 坐在地面；人物 B 蹲在旁邊並輕柔撫摸 A 的腹部，兩人互看，呈現關心神情。',
   ),
   PromptPackageData(
     id: 'two_person_two_hands_headpat',
@@ -581,8 +663,7 @@ const twoPersonInteractionPackages = <PromptPackageData>[
     category: '摸頭／安撫',
     naturalPrompt:
         'two people, one person slightly lowering their head while another person gently rubs their hair with both hands, headpat, hands on another\'s head, touching hair, soft affectionate interaction',
-    naturalPromptZh:
-        '雙人互動：人物 A 微微低頭；人物 B 以雙手輕柔揉撫 A 的頭髮，呈現柔和親近感。',
+    naturalPromptZh: '雙人互動：人物 A 微微低頭；人物 B 以雙手輕柔揉撫 A 的頭髮，呈現柔和親近感。',
   ),
   PromptPackageData(
     id: 'two_person_cheek_caress',
@@ -591,8 +672,7 @@ const twoPersonInteractionPackages = <PromptPackageData>[
     category: '臉部／安撫',
     naturalPrompt:
         'two people facing each other closely, one person gently touching the other person\'s cheek, hand on another\'s cheek, looking at another, soft smile, intimate comforting interaction',
-    naturalPromptZh:
-        '雙人互動：人物 A 與 B 面對面靠近；人物 B 以一手輕撫 A 的臉頰，彼此注視並帶有柔和微笑。',
+    naturalPromptZh: '雙人互動：人物 A 與 B 面對面靠近；人物 B 以一手輕撫 A 的臉頰，彼此注視並帶有柔和微笑。',
   ),
 ];
 

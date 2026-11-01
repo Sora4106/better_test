@@ -8590,6 +8590,18 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'object_interaction_mode'),
       _tag('action_holding_object', '動作', '拿著物件', 'holding object', 4,
           conflictGroup: 'object_interaction_mode'),
+      _tag('action_one_hand_holding_object', '動作', '單手拿著物件',
+          'one hand holding object', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_both_hands_holding_object', '動作', '雙手抱著物件',
+          'holding object with both hands', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_one_hand_object_covering_face', '動作', '單手以物件遮臉',
+          'one hand holding object covering face', 4,
+          conflictGroup: 'object_interaction_mode'),
+      _tag('action_both_hands_object_covering_face', '動作', '雙手以物件遮臉',
+          'both hands holding object covering face', 4,
+          conflictGroup: 'object_interaction_mode'),
       _tag('action_biting_object', '動作', '嘴巴咬著物件', 'biting object', 4,
           conflictGroup: 'object_interaction_mode'),
       _tag('action_holding_object_in_mouth', '動作', '嘴叼著物件',
@@ -8699,6 +8711,19 @@ List<TagItem> _seedTags() => [
       _tag('object_gift', '物件', '禮物', 'present', 4),
       _tag('object_pillow', '物件', '枕頭', 'pillow', 4),
       _tag('object_cushion', '物件', '抱枕', 'cushion', 4),
+      _tag('object_body_pillow', '物件', '長抱枕', 'body pillow', 4),
+      _tag('object_throw_pillow', '物件', '靠枕', 'throw pillow', 4),
+      _tag(
+          'object_heart_shaped_pillow', '物件', '愛心枕頭', 'heart-shaped pillow', 4),
+      _tag('object_character_print_pillow', '物件', '角色印花枕頭',
+          'character-print pillow', 4),
+      _tag('object_animal_shaped_pillow', '物件', '動物造型枕頭',
+          'animal-shaped pillow', 4),
+      _tag('object_floral_pillow', '物件', '花卉圖案枕頭', 'floral pillow', 4),
+      _tag('object_lace_pillow', '物件', '蕾絲枕頭', 'lace pillow', 4),
+      _tag('object_frilly_pillow', '物件', '荷葉邊枕頭', 'frilled pillow', 4),
+      _tag('object_striped_pillow', '物件', '條紋枕頭', 'striped pillow', 4),
+      _tag('object_bolster', '物件', '圓柱抱枕', 'bolster', 4),
       _tag('object_chair', '物件', '椅子', 'chair', 4),
       _tag('object_sofa', '物件', '沙發', 'sofa', 4),
       _tag('object_bed', '物件', '床', 'bed', 4),
@@ -10467,6 +10492,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         const {
           'object_pillow',
           'object_cushion',
+          'object_body_pillow',
+          'object_throw_pillow',
+          'object_heart_shaped_pillow',
+          'object_character_print_pillow',
+          'object_animal_shaped_pillow',
+          'object_floral_pillow',
+          'object_lace_pillow',
+          'object_frilly_pillow',
+          'object_striped_pillow',
+          'object_bolster',
           'object_chair',
           'object_sofa',
           'object_bed',
@@ -12903,6 +12938,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return 'riding $noun';
         case 'action_holding_object':
           return 'holding $noun';
+        case 'action_one_hand_holding_object':
+          return 'one hand holding $noun';
+        case 'action_both_hands_holding_object':
+          return 'holding $noun with both hands';
+        case 'action_one_hand_object_covering_face':
+          return 'one hand holding $noun covering face';
+        case 'action_both_hands_object_covering_face':
+          return 'both hands holding $noun covering face';
         case 'action_biting_object':
           return 'biting $noun';
         case 'action_holding_object_in_mouth':
@@ -12961,6 +13004,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return '騎著$noun';
         case 'action_holding_object':
           return '拿著$noun';
+        case 'action_one_hand_holding_object':
+          return '單手拿著$noun';
+        case 'action_both_hands_holding_object':
+          return '雙手抱著$noun';
+        case 'action_one_hand_object_covering_face':
+          return '單手以$noun遮臉';
+        case 'action_both_hands_object_covering_face':
+          return '雙手以$noun遮臉';
         case 'action_biting_object':
           return '嘴巴咬著$noun';
         case 'action_holding_object_in_mouth':
@@ -25648,6 +25699,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final target = _cleanTag(value).toLowerCase();
     if (target.isEmpty) return null;
     for (final package in [
+      ...dynamicMotionPackages,
+      ...pillowPosePackages,
       ...lalaWolfGirlPosePackages,
       ...felineSoloPosePackages,
       ...felineInteractionPackages,
@@ -26356,6 +26409,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           style: TextStyle(fontSize: 12)),
                       childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
                       children: [
+                        _promptPackagePanel(
+                          personIndex: index,
+                          panelId: 'dynamic-motion-pose',
+                          title: '動態強化套件',
+                          subtitle: '動作線、速度線、動態模糊與震動可單獨套用；可和一般或成人姿勢並用。',
+                          icon: Icons.motion_photos_on_outlined,
+                          tone: const Color(0xff38bdf8),
+                          packages: dynamicMotionPackages,
+                        ),
+                        _promptPackagePanel(
+                          personIndex: index,
+                          panelId: 'pillow-pose',
+                          title: '枕頭互動姿勢',
+                          subtitle: '單手、雙手、抱枕遮臉與不同枕頭樣式的安全個人姿勢。',
+                          icon: Icons.bed_outlined,
+                          tone: const Color(0xffa78bfa),
+                          packages: pillowPosePackages,
+                          previewAsCards: true,
+                        ),
                         _promptPackagePanel(
                           personIndex: index,
                           panelId: 'feline-solo-pose',

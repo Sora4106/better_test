@@ -2434,4 +2434,124 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
     ownerCharacterTags: ['konjiki no yami'],
     ownerCharacterLabel: '金色闇',
   ),
+  // 大圖書館的牧羊人 ---------------------------------------------------------
+  // These character-specific looks are deliberately kept as ordered unified
+  // phrases.  Each visible section may be disabled after applying, so users
+  // can retain the canonical silhouette while removing an outer layer, socks,
+  // shoes, or an accessory without breaking the remaining outfit.
+  OutfitReferencePresetData(
+    id: 'daitoshokan_fujimiya_sakuya_cream_sage_homewear',
+    category: '大圖書館・藤宮朔夜',
+    name: '藤宮朔夜・奶油綠居家睡裙',
+    palette: '奶油色 × 白色 × 鼠尾草綠',
+    description: '奶油色蕾絲睡裙、淡鼠尾草綠針織開襟衫與室內拖鞋的柔和居家造型；可單獨取消睡裙、外套、襪子、鞋子或胸前飾帶。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '藤宮朔夜・奶油綠居家睡裙',
+    unifiedPhraseEn:
+        'sleepwear, loungewear, cream nightgown, white soft pajama dress, high soft neckline, lace-trimmed neckline, frilled chest trim, long sleeves, soft cuffs, light sage-green chest ribbon, small bow detail, light sage-green knit cardigan, loose home cardigan, soft layered hem, frilled hem, cream thighhigh socks, brown house slippers',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'silhouette',
+        zh: '睡裙輪廓',
+        en: 'sleepwear, loungewear, cream nightgown, white soft pajama dress, soft layered hem, frilled hem',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '領口／袖口／外套',
+        en: 'high soft neckline, lace-trimmed neckline, frilled chest trim, long sleeves, soft cuffs, light sage-green knit cardigan, loose home cardigan',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '胸前飾帶',
+        en: 'light sage-green ribbon at the chest, small bow detail',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '襪類',
+        en: 'cream thighhigh socks',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '室內鞋',
+        en: 'brown house slippers',
+      ),
+    ],
+    ownerCharacterTags: ['fujimiya sakuya'],
+    ownerCharacterLabel: '藤宮朔夜',
+  ),
+  OutfitReferencePresetData(
+    id: 'daitoshokan_toki_nozomi_pink_plaid_blazer',
+    category: '大圖書館・土岐野乃美',
+    name: '土岐野乃美・粉紅紅格紋正裝裙',
+    palette: '白色 × 粉紅色 × 紅色 × 黑色',
+    description: '白襯衫、淡粉邊正式西裝外套、紅格紋領帶與百褶裙，搭配黑色長襪的整齊正裝造型；各部位可獨立關閉。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '土岐野乃美・粉紅紅格紋正裝裙',
+    unifiedPhraseEn:
+        'formal blazer outfit, white collared shirt, white dress shirt, light pink-trimmed blazer, contrast piping, fitted blazer, red plaid necktie, red checkered tie, red plaid pleated skirt, red checkered skirt, black thighhighs',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '襯衫與西裝外套',
+        en: 'formal blazer outfit, white collared shirt, white dress shirt, light pink-trimmed blazer, contrast piping, fitted blazer',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '頸部領帶',
+        en: 'red plaid necktie, red checkered tie',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '紅格紋百褶裙',
+        en: 'red plaid pleated skirt, red checkered skirt',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '黑色長襪',
+        en: 'black thighhighs',
+      ),
+    ],
+    ownerCharacterTags: ['toki nozomi'],
+    ownerCharacterLabel: '土岐野乃美',
+  ),
+  OutfitReferencePresetData(
+    id: 'daitoshokan_suzuki_kana_blue_white_waitress',
+    category: '大圖書館・鈴木佳奈',
+    name: '鈴木佳奈・藍白餐廳服務制服',
+    palette: '白色 × 深藍色 × 淺藍色 × 深棕色',
+    description: '藍白荷葉領上衣、格紋領結、深藍腰身、百褶裙與白色圍裙的餐廳服務造型；可分別保留或移除每個服裝區域。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '鈴木佳奈・藍白餐廳服務制服',
+    unifiedPhraseEn:
+        'restaurant waitress outfit, elegant restaurant uniform, blue and white uniform, white frilled blouse, high frilled collar, frilled collar edge, frilled front trim, slightly puffed sleeves, frilled sleeve openings, blue ribbon details at sleeve openings, large blue plaid bowtie at the neck, blue checkered neck ribbon, dark fitted waist corset, dark navy corset, front-laced corset, structured waist panel, subtle gold decorative details, blue flared skirt, deep blue pleated skirt, softly flared skirt silhouette, white frilled skirt trim, white waist apron, white restaurant apron, frilled apron edge, deep navy over-knee stockings, dark brown mary jane shoes, single instep strap, polished leather shoes',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '荷葉領上衣與袖口',
+        en: 'restaurant waitress outfit, elegant restaurant uniform, blue and white uniform, white frilled blouse, high frilled collar, frilled collar edge, frilled front trim, slightly puffed sleeves, frilled sleeve openings, blue ribbon details at sleeve openings',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '領結與腰身裝飾',
+        en: 'large blue plaid bowtie at the neck, blue checkered neck ribbon, dark fitted waist corset, dark navy corset, front-laced corset, structured waist panel, subtle gold decorative details',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '藍色百褶裙與圍裙',
+        en: 'blue flared skirt, deep blue pleated skirt, softly flared skirt silhouette, white frilled skirt trim, white waist apron, white restaurant apron, frilled apron edge',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '深藍過膝襪',
+        en: 'deep navy over-knee stockings',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '深棕瑪莉珍鞋',
+        en: 'dark brown mary jane shoes, single instep strap, polished leather shoes',
+      ),
+    ],
+    ownerCharacterTags: ['suzuki kana'],
+    ownerCharacterLabel: '鈴木佳奈',
+  ),
 ];
