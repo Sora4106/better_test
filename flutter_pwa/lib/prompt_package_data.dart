@@ -109,8 +109,8 @@ const dynamicMotionPackages = <PromptPackageData>[
 ];
 
 /// Pillow interactions are non-explicit personal-pose packages.  They use a
-/// complete natural phrase so the hand count, the pillow, and face coverage
-/// stay together in the generated prompt.
+/// complete natural phrase so the hand count, the pillow, and face or mouth
+/// coverage stay together in the generated prompt.
 const pillowPosePackages = <PromptPackageData>[
   PromptPackageData(
     id: 'pillow_one_hand_hold',
@@ -128,6 +128,24 @@ const pillowPosePackages = <PromptPackageData>[
     naturalPrompt:
         'holding a pillow with both hands, hugging pillow close to chest',
     naturalPromptZh: '雙手抱著枕頭並靠近胸前。',
+  ),
+  PromptPackageData(
+    id: 'pillow_one_hand_mouth_cover',
+    name: '單手抱枕遮嘴',
+    description: '單手拿著抱枕擋住嘴巴，保留眼睛與大部分臉部表情。',
+    category: '遮嘴互動',
+    naturalPrompt:
+        'one hand holding a pillow in front of mouth, pillow covering mouth, mouth hidden behind pillow',
+    naturalPromptZh: '單手拿著抱枕遮住嘴巴，眼睛與大部分臉部仍可見。',
+  ),
+  PromptPackageData(
+    id: 'pillow_both_hands_mouth_cover',
+    name: '雙手抱枕遮嘴',
+    description: '雙手抱住抱枕遮住嘴巴，保留眼睛與大部分臉部表情。',
+    category: '遮嘴互動',
+    naturalPrompt:
+        'holding a pillow with both hands in front of mouth, pillow covering mouth, mouth hidden behind pillow',
+    naturalPromptZh: '雙手抱著抱枕遮住嘴巴，眼睛與大部分臉部仍可見。',
   ),
   PromptPackageData(
     id: 'pillow_one_hand_face_cover',

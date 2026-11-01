@@ -26622,7 +26622,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           personIndex: index,
                           panelId: 'pillow-pose',
                           title: '枕頭互動姿勢',
-                          subtitle: '單手、雙手、抱枕遮臉與不同枕頭樣式的安全個人姿勢。',
+                          subtitle: '單手、雙手、抱枕遮嘴／遮臉與不同枕頭樣式的安全個人姿勢。',
                           icon: Icons.bed_outlined,
                           tone: const Color(0xffa78bfa),
                           packages: pillowPosePackages,
