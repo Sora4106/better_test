@@ -167,6 +167,129 @@ const pillowPosePackages = <PromptPackageData>[
   ),
 ];
 
+/// Normal, non-adult companion-animal interaction kits.  They are natural
+/// phrases because the animal, contact point, and supporting hand need to
+/// remain together instead of being incorrectly split into generic prop tags.
+const petCompanionPosePackages = <PromptPackageData>[
+  PromptPackageData(
+    id: 'pet_cat_in_arms',
+    name: '抱著貓咪',
+    description: '將貓咪安穩抱在懷中，呈現日常陪伴感。',
+    category: '貓咪互動',
+    naturalPrompt:
+        'holding a cat in arms, cat held close, gentle pet interaction',
+    naturalPromptZh: '抱著貓咪，將牠安穩抱在懷中，呈現溫柔的寵物互動。',
+  ),
+  PromptPackageData(
+    id: 'pet_cat_on_lap',
+    name: '貓咪趴在腿上',
+    description: '坐著時讓貓咪蜷伏或趴在腿上，並輕撫牠。',
+    category: '貓咪互動',
+    naturalPrompt:
+        'cat lying on lap, one hand gently petting cat, relaxed seated pose',
+    naturalPromptZh: '貓咪趴在腿上，單手輕撫貓咪，採自然坐姿。',
+  ),
+  PromptPackageData(
+    id: 'pet_cat_on_chest',
+    name: '貓咪趴在胸前',
+    description: '貓咪依偎在上半身／胸前，手部輕扶牠。',
+    category: '貓咪互動',
+    naturalPrompt:
+        'cat resting on chest, holding cat close, gentle pet interaction',
+    naturalPromptZh: '貓咪趴在胸前，角色輕扶並靠近貓咪。',
+  ),
+  PromptPackageData(
+    id: 'pet_cat_on_stomach',
+    name: '貓咪趴在腹部',
+    description: '角色仰躺時，貓咪舒服地趴在腹部。',
+    category: '貓咪互動',
+    naturalPrompt:
+        'lying on back, cat resting on stomach, one hand gently petting cat',
+    naturalPromptZh: '角色仰躺，貓咪趴在腹部，單手輕撫貓咪。',
+  ),
+  PromptPackageData(
+    id: 'pet_cat_on_shoulder',
+    name: '貓咪停在肩上',
+    description: '貓咪穩穩停在肩膀上，角色以手支撐或側望牠。',
+    category: '貓咪互動',
+    naturalPrompt:
+        'cat perched on shoulder, one hand supporting cat, looking at cat',
+    naturalPromptZh: '貓咪停在肩上，角色以單手支撐並看向貓咪。',
+  ),
+  PromptPackageData(
+    id: 'pet_cat_rubbing_legs',
+    name: '貓咪蹭著腿',
+    description: '站立或坐著時，貓咪親近地磨蹭角色腿邊。',
+    category: '貓咪互動',
+    naturalPrompt:
+        'cat rubbing against legs, one hand gently petting cat, affectionate pet interaction',
+    naturalPromptZh: '貓咪磨蹭角色腿邊，角色單手輕撫貓咪。',
+  ),
+  PromptPackageData(
+    id: 'pet_dog_in_arms',
+    name: '抱著小狗',
+    description: '將小狗抱在懷中，適合日常或溫馨場景。',
+    category: '狗狗互動',
+    naturalPrompt:
+        'holding a small dog in arms, dog held close, gentle pet interaction',
+    naturalPromptZh: '抱著小狗，將牠安穩抱在懷中，呈現溫柔的寵物互動。',
+  ),
+  PromptPackageData(
+    id: 'pet_dog_on_lap',
+    name: '小狗趴在腿上',
+    description: '坐著時讓小狗趴在腿上，並以單手撫摸牠。',
+    category: '狗狗互動',
+    naturalPrompt:
+        'small dog lying on lap, one hand gently petting dog, relaxed seated pose',
+    naturalPromptZh: '小狗趴在腿上，角色以單手輕撫小狗，採自然坐姿。',
+  ),
+  PromptPackageData(
+    id: 'pet_rabbit_in_arms',
+    name: '抱著兔子',
+    description: '雙手小心抱著兔子，適合安靜陪伴畫面。',
+    category: '小型寵物',
+    naturalPrompt:
+        'holding a rabbit in arms with both hands, gentle pet interaction',
+    naturalPromptZh: '雙手抱著兔子，呈現安靜溫柔的寵物互動。',
+  ),
+  PromptPackageData(
+    id: 'pet_rabbit_on_lap',
+    name: '兔子坐在腿上',
+    description: '坐著時讓兔子待在腿上，手部輕撫。',
+    category: '小型寵物',
+    naturalPrompt:
+        'rabbit sitting on lap, one hand gently petting rabbit, relaxed seated pose',
+    naturalPromptZh: '兔子坐在腿上，角色單手輕撫兔子，採自然坐姿。',
+  ),
+  PromptPackageData(
+    id: 'pet_bird_on_shoulder',
+    name: '小鳥停在肩上',
+    description: '小鳥停在肩膀上，角色側望或注視牠。',
+    category: '小型寵物',
+    naturalPrompt:
+        'small bird perched on shoulder, looking at bird, calm companion interaction',
+    naturalPromptZh: '小鳥停在肩上，角色看向小鳥，呈現安靜陪伴互動。',
+  ),
+  PromptPackageData(
+    id: 'pet_hamster_in_hands',
+    name: '雙手捧著倉鼠',
+    description: '以雙手掌心輕捧倉鼠，適合近距離溫馨構圖。',
+    category: '小型寵物',
+    naturalPrompt:
+        'hamster resting in cupped hands, gentle pet interaction, close careful hold',
+    naturalPromptZh: '倉鼠待在雙手掌心中，呈現近距離、細心的寵物互動。',
+  ),
+  PromptPackageData(
+    id: 'pet_beside_feet',
+    name: '寵物趴在腳邊',
+    description: '小型寵物安靜趴在角色腳邊或身旁。',
+    category: '陪伴構圖',
+    naturalPrompt:
+        "small pet lying beside person's feet, calm companion animal, gentle everyday scene",
+    naturalPromptZh: '小型寵物安靜趴在角色腳邊，呈現日常陪伴場景。',
+  ),
+];
+
 /// Fifteen feline-inspired single-person pose kits. They are intentionally
 /// built from the normal editable pose tags, so a cat tail, ears, paws, or
 /// anthro identity can be added separately only when wanted.

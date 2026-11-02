@@ -294,9 +294,11 @@ const _objectTravelGroup = '物件・交通／旅行';
 const _objectDailyGroup = '物件・日常／裝飾';
 const _objectClothingGroup = '物件・衣物／貼身衣物';
 const _objectGlassGroup = '物件・透明／玻璃建材';
+const _objectPetGroup = '物件・動物／寵物';
 
 const _objectPickerGroups = <String>{
   _objectClothingGroup,
+  _objectPetGroup,
   _objectGlassGroup,
   _objectFurnitureGroup,
   _objectDiningGroup,
@@ -530,6 +532,7 @@ const _organizedPosePickerSections = <String, List<String>>{
   ],
   '⑦ 物件・道具互動': [
     '互動・物件動作',
+    _objectPetGroup,
     _objectGlassGroup,
     '物件・家具／室內',
     '物件・飲食／餐具',
@@ -10632,6 +10635,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   bool _isObjectTag(TagItem tag) => tag.group == '物件';
 
+  /// Companion animals are normal, non-adult props. Keep their actions narrow
+  /// so a generic object action cannot turn a selected pet into an implausible
+  /// interaction target.
+  bool _isPetAnimalObject(TagItem tag) =>
+      _isObjectTag(tag) && _rawCatalogTagId(tag).startsWith('obj_pet_');
+
+  bool _allowsObjectInteractionFor(TagItem mode, TagItem object) {
+    if (!_isPetAnimalObject(object)) return true;
+    return const <String>{
+      'action_hugging_object',
+      'action_holding_object',
+      'action_one_hand_holding_object',
+      'action_both_hands_holding_object',
+      'action_carrying_object',
+      'action_object_beside',
+      'action_object_on_floor_beside',
+    }.contains(mode.id);
+  }
+
   /// Catalog tags are stored with a `catalog_` namespace at runtime, while
   /// legacy tags retain their original ID.  Picker routing must work for both.
   String _rawCatalogTagId(TagItem tag) => tag.id.startsWith('catalog_')
@@ -10696,6 +10718,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (!_isObjectTag(tag)) return null;
     final id = _rawCatalogTagId(tag);
     if (_isEquipmentWeaponTag(tag)) return _equipmentWeaponGroup;
+    if (id.startsWith('obj_pet_')) return _objectPetGroup;
     if (id.startsWith('obj_glass_')) return _objectGlassGroup;
     if (id.startsWith('obj_furniture_') ||
         const {
@@ -13275,6 +13298,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         TagItem? mode, Iterable<TagItem> nouns) {
       if (mode == null) return const <_GeneratedOutputTag>[];
       return nouns
+          .where((object) => _allowsObjectInteractionFor(mode, object))
           .map((object) => _GeneratedOutputTag(
                 zh: chineseFor(mode, object),
                 en: englishFor(mode, object),
@@ -22926,6 +22950,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       '角色姿勢': Color(0xffc084fc),
       '物件': Color(0xff94a3b8),
       _objectInteractionGroup: Color(0xff14b8a6),
+      _objectPetGroup: Color(0xfff59e0b),
       _objectGlassGroup: Color(0xff38bdf8),
       _objectFurnitureGroup: Color(0xffa8a29e),
       _objectDiningGroup: Color(0xfffb923c),
@@ -26072,6 +26097,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     for (final package in [
       ...dynamicMotionPackages,
       ...pillowPosePackages,
+      ...petCompanionPosePackages,
       ...lalaWolfGirlPosePackages,
       ...felineSoloPosePackages,
       ...felineInteractionPackages,
@@ -26797,6 +26823,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           icon: Icons.bed_outlined,
                           tone: const Color(0xffa78bfa),
                           packages: pillowPosePackages,
+                          previewAsCards: true,
+                        ),
+                        _promptPackagePanel(
+                          personIndex: index,
+                          panelId: 'pet-companion-pose',
+                          title: '寵物互動姿勢套件',
+                          subtitle: '抱著、趴在胸前／腹部／腿上、肩上與腳邊等非成人寵物互動；可直接套用後再調整。',
+                          icon: Icons.pets_outlined,
+                          tone: const Color(0xfff59e0b),
+                          packages: petCompanionPosePackages,
                           previewAsCards: true,
                         ),
                         _promptPackagePanel(

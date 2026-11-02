@@ -74,6 +74,64 @@ const objectCatalogTags = <CatalogTagData>[
   CatalogTagData(
       id: 'obj_furniture_rug', group: '物件', zh: '地毯', en: 'rug', order: 4),
 
+  // 動物／寵物（8）— 實際動物夥伴，與獸耳、獸尾等人物特徵分開。
+  CatalogTagData(
+      id: 'obj_pet_cat',
+      group: '物件',
+      zh: '寵物貓',
+      en: 'cat',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_kitten',
+      group: '物件',
+      zh: '小貓',
+      en: 'kitten',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_dog',
+      group: '物件',
+      zh: '寵物狗',
+      en: 'dog',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_puppy',
+      group: '物件',
+      zh: '小狗',
+      en: 'puppy',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_rabbit',
+      group: '物件',
+      zh: '兔子',
+      en: 'rabbit',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_bird',
+      group: '物件',
+      zh: '小鳥',
+      en: 'bird',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_hamster',
+      group: '物件',
+      zh: '倉鼠',
+      en: 'hamster',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_ferret',
+      group: '物件',
+      zh: '雪貂',
+      en: 'ferret',
+      order: 4,
+      support: 'official'),
+
   // 透明／玻璃建材（6）
   CatalogTagData(
       id: 'obj_glass_table',
