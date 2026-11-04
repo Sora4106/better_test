@@ -2554,4 +2554,318 @@ const outfitReferencePresets = <OutfitReferencePresetData>[
     ownerCharacterTags: ['suzuki kana'],
     ownerCharacterLabel: '鈴木佳奈',
   ),
+  // 嬉野紗弓實 ---------------------------------------------------------------
+  // These references intentionally use unified, independently removable
+  // sections. This keeps each coordinated look together while allowing the
+  // wearer to remove a hat, outer layer, legwear, or shoes afterwards.
+  OutfitReferencePresetData(
+    id: 'daitoshokan_ureshino_sayumi_pink_beret_spring_floral',
+    category: '大圖書館・嬉野紗弓實',
+    name: '嬉野紗弓實・粉紅貝雷春日花裙',
+    palette: '柔粉色 × 象牙白 × 淺粉紅 × 棕色',
+    description: '粉紅貝雷、奶油麻花針織開襟衫、白色荷葉領上衣與粉紅花卉傘裙的春日休閒造型；各部位皆可單獨關閉。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '嬉野紗弓實・粉紅貝雷春日花裙',
+    unifiedPhraseEn:
+        'soft pink beret, small ribbon on beret, spring casual outfit, soft feminine casual outfit, cream cable-knit cardigan, ivory cardigan, buttoned knit cardigan, white frilled blouse, frilled collar, pink ribbon bow at the neck, pink floral skirt, light pink flared skirt, floral print skirt, white frilled skirt hem, white ankle socks, frilled ankle socks, brown loafers, rounded toe shoes',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'headwear',
+        zh: '粉紅貝雷與緞帶',
+        en: 'soft pink beret, small ribbon on beret',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '針織開襟衫與荷葉領上衣',
+        en: 'spring casual outfit, soft feminine casual outfit, cream cable-knit cardigan, ivory cardigan, buttoned knit cardigan, white frilled blouse, frilled collar',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '粉紅頸部蝴蝶結',
+        en: 'pink ribbon bow at the neck',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '粉紅花卉傘裙',
+        en: 'pink floral skirt, light pink flared skirt, floral print skirt, white frilled skirt hem',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '白色荷葉邊短襪',
+        en: 'white ankle socks, frilled ankle socks',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '棕色圓頭樂福鞋',
+        en: 'brown loafers, rounded toe shoes',
+      ),
+    ],
+    ownerCharacterTags: ['ureshino sayumi'],
+    ownerCharacterLabel: '嬉野紗弓實',
+  ),
+  OutfitReferencePresetData(
+    id: 'daitoshokan_ureshino_sayumi_straw_hat_summer_sundress',
+    category: '大圖書館・嬉野紗弓實',
+    name: '嬉野紗弓實・草帽綠緞帶白色夏日裙',
+    palette: '白色 × 草綠色 × 花卉色彩',
+    description: '寬簷花飾草帽、白色細肩帶夏日洋裝與綠色腰間蝴蝶結的清爽夏日造型；帽子、洋裝、腰飾與涼鞋可分別調整。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '嬉野紗弓實・草帽綠緞帶白色夏日裙',
+    unifiedPhraseEn:
+        'wide-brim straw hat, straw sun hat, flower-decorated hat, green ribbon on hat, summer casual outfit, light summer dress, white sundress, white sleeveless dress, thin shoulder straps, frilled neckline, gathered bodice, green waist ribbon, large green bow at the waist, floral print, small green floral pattern, layered skirt, soft flared skirt, frilled skirt hem, white sandals, flower-decorated sandals, ankle strap sandals',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'headwear',
+        zh: '花飾草帽與綠色緞帶',
+        en: 'wide-brim straw hat, straw sun hat, flower-decorated hat, green ribbon on hat',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '白色細肩帶洋裝上身',
+        en: 'summer casual outfit, light summer dress, white sundress, white sleeveless dress, thin shoulder straps, frilled neckline, gathered bodice',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '綠色腰間蝴蝶結',
+        en: 'green waist ribbon, large green bow at the waist',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '花卉層次傘裙',
+        en: 'floral print, small green floral pattern, layered skirt, soft flared skirt, frilled skirt hem',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '花飾繫帶涼鞋',
+        en: 'white sandals, flower-decorated sandals, ankle strap sandals',
+      ),
+    ],
+    ownerCharacterTags: ['ureshino sayumi'],
+    ownerCharacterLabel: '嬉野紗弓實',
+  ),
+  OutfitReferencePresetData(
+    id: 'daitoshokan_ureshino_sayumi_navy_beret_cafe_date',
+    category: '大圖書館・嬉野紗弓實',
+    name: '嬉野紗弓實・深藍貝雷咖啡約會裙',
+    palette: '深藍色 × 白色 × 藍灰色 × 金色',
+    description: '深藍貝雷、白荷葉領上衣、金扣短版針織外套與藍灰格紋百褶裙的咖啡約會造型；肩包、襪子與鞋履可獨立切換。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '嬉野紗弓實・深藍貝雷咖啡約會裙',
+    unifiedPhraseEn:
+        'navy beret, dark blue beret, cafe date outfit, elegant casual outfit, classic feminine outfit, navy cropped cardigan, dark blue cropped cardigan, white piping, gold buttons, white frilled blouse, high frilled collar, navy ribbon bow at the neck, blue-gray plaid skirt, gray-blue pleated skirt, checkered skirt, navy shoulder bag, small structured handbag, white ankle socks, frilled ankle socks, navy mary jane shoes, ribbon strap shoes, rounded toe shoes',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'headwear',
+        zh: '深藍貝雷帽',
+        en: 'navy beret, dark blue beret',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '金扣針織外套與荷葉領上衣',
+        en: 'cafe date outfit, elegant casual outfit, classic feminine outfit, navy cropped cardigan, dark blue cropped cardigan, white piping, gold buttons, white frilled blouse, high frilled collar',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '深藍頸部蝴蝶結與肩包',
+        en: 'navy ribbon bow at the neck, navy shoulder bag, small structured handbag',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '藍灰格紋百褶裙',
+        en: 'blue-gray plaid skirt, gray-blue pleated skirt, checkered skirt',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '白色荷葉邊短襪',
+        en: 'white ankle socks, frilled ankle socks',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '深藍蝴蝶結瑪莉珍鞋',
+        en: 'navy mary jane shoes, ribbon strap shoes, rounded toe shoes',
+      ),
+    ],
+    ownerCharacterTags: ['ureshino sayumi'],
+    ownerCharacterLabel: '嬉野紗弓實',
+  ),
+  OutfitReferencePresetData(
+    id: 'daitoshokan_ureshino_sayumi_white_beret_red_plaid_daily',
+    category: '大圖書館・嬉野紗弓實',
+    name: '嬉野紗弓實・白貝雷深紅格紋日常裙',
+    palette: '白色 × 淺米色 × 深紅色 × 黑色',
+    description: '白色緞帶貝雷、淺米色開襟衫、白色荷葉上衣與深紅格紋百褶裙的端莊日常造型；可單獨移除帽子、領結、裙子、襪子或鞋子。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '嬉野紗弓實・白貝雷深紅格紋日常裙',
+    unifiedPhraseEn:
+        'white beret, beret with ribbon, small white hat, casual outfit, neat feminine outfit, modest casual fashion, light beige cardigan, soft cream cardigan, white blouse, frilled blouse collar, frilled front trim, dark red ribbon, plaid ribbon bow, neck ribbon, pleated skirt, dark red plaid skirt, checkered skirt, black thighhighs, brown loafers, rounded toe shoes',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'headwear',
+        zh: '白色緞帶貝雷帽',
+        en: 'white beret, beret with ribbon, small white hat',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '米色開襟衫與白色荷葉上衣',
+        en: 'casual outfit, neat feminine outfit, modest casual fashion, light beige cardigan, soft cream cardigan, white blouse, frilled blouse collar, frilled front trim',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '深紅格紋頸部緞帶',
+        en: 'dark red ribbon, plaid ribbon bow, neck ribbon',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '深紅格紋百褶裙',
+        en: 'pleated skirt, dark red plaid skirt, checkered skirt',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '黑色大腿襪',
+        en: 'black thighhighs',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '棕色圓頭樂福鞋',
+        en: 'brown loafers, rounded toe shoes',
+      ),
+    ],
+    ownerCharacterTags: ['ureshino sayumi'],
+    ownerCharacterLabel: '嬉野紗弓實',
+  ),
+  OutfitReferencePresetData(
+    id: 'daitoshokan_ureshino_sayumi_white_beret_red_plaid_date',
+    category: '大圖書館・嬉野紗弓實',
+    name: '嬉野紗弓實・白貝雷深紅格紋約會裙',
+    palette: '白色 × 奶油色 × 深紅色 × 黑色',
+    description: '白貝雷、奶油針織開襟衫、頸部大蝴蝶結與深紅格紋傘裙的優雅約會搭配；服裝部位保留獨立開關。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '嬉野紗弓實・白貝雷深紅格紋約會裙',
+    unifiedPhraseEn:
+        'white beret, beret with ribbon, small white hat, romantic date outfit, sweet feminine fashion, soft elegant outfit, off-white knit cardigan, cream cardigan, light blouse, frilled collar blouse, large ribbon bow at the neckline, dark red bow, above-knee pleated skirt, dark red plaid skirt, soft flared skirt, black thighhighs, semi-opaque black stockings, brown loafers, strap loafers',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'headwear',
+        zh: '白色緞帶貝雷帽',
+        en: 'white beret, beret with ribbon, small white hat',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '奶油針織開襟衫與荷葉領上衣',
+        en: 'romantic date outfit, sweet feminine fashion, soft elegant outfit, off-white knit cardigan, cream cardigan, light blouse, frilled collar blouse',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '深紅大蝴蝶結',
+        en: 'large ribbon bow at the neckline, dark red bow',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '深紅格紋傘裙',
+        en: 'above-knee pleated skirt, dark red plaid skirt, soft flared skirt',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '半透明黑色長襪',
+        en: 'black thighhighs, semi-opaque black stockings',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '棕色繫帶樂福鞋',
+        en: 'brown loafers, strap loafers',
+      ),
+    ],
+    ownerCharacterTags: ['ureshino sayumi'],
+    ownerCharacterLabel: '嬉野紗弓實',
+  ),
+  OutfitReferencePresetData(
+    id: 'daitoshokan_ureshino_sayumi_white_beret_red_plaid_winter',
+    category: '大圖書館・嬉野紗弓實',
+    name: '嬉野紗弓實・白貝雷深紅格紋冬日裙',
+    palette: '白色 × 米色 × 深紅色 × 黑色 × 深棕色',
+    description: '白貝雷、柔米色開襟衫、奶油長袖荷葉上衣與較長的深紅格紋層次裙，搭配不透明黑襪與深棕樂福鞋。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '嬉野紗弓實・白貝雷深紅格紋冬日裙',
+    unifiedPhraseEn:
+        'white beret, beret with ribbon, small white hat, autumn winter outfit, layered casual outfit, warm feminine outfit, soft beige cardigan, long-sleeved cream blouse, high frilled collar, frilled blouse front, dark red neck ribbon, plaid ribbon bow, dark red plaid pleated skirt, slightly longer skirt, layered skirt silhouette, black thighhighs, opaque black stockings, dark brown loafers, classic loafers',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'headwear',
+        zh: '白色緞帶貝雷帽',
+        en: 'white beret, beret with ribbon, small white hat',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '米色開襟衫與奶油長袖上衣',
+        en: 'autumn winter outfit, layered casual outfit, warm feminine outfit, soft beige cardigan, long-sleeved cream blouse, high frilled collar, frilled blouse front',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '深紅格紋頸部緞帶',
+        en: 'dark red neck ribbon, plaid ribbon bow',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '較長的深紅格紋層次裙',
+        en: 'dark red plaid pleated skirt, slightly longer skirt, layered skirt silhouette',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '不透明黑色長襪',
+        en: 'black thighhighs, opaque black stockings',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '深棕經典樂福鞋',
+        en: 'dark brown loafers, classic loafers',
+      ),
+    ],
+    ownerCharacterTags: ['ureshino sayumi'],
+    ownerCharacterLabel: '嬉野紗弓實',
+  ),
+  OutfitReferencePresetData(
+    id: 'daitoshokan_ureshino_sayumi_white_beret_red_plaid_doll',
+    category: '大圖書館・嬉野紗弓實',
+    name: '嬉野紗弓實・白貝雷深紅格紋人偶裙',
+    palette: '白色 × 奶油色 × 深紅色 × 黑色 × 棕色',
+    description: '白貝雷、奶油荷葉上衣、大型深紅蝴蝶結與深紅格紋傘裙的人偶感經典搭配；每個服裝部位皆可自由保留或取消。',
+    pieces: const <OutfitPiecePresetData>[],
+    unifiedPhraseZh: '嬉野紗弓實・白貝雷深紅格紋人偶裙',
+    unifiedPhraseEn:
+        'white beret, beret with ribbon, small white hat, sweet doll-like outfit, sweet feminine fashion, soft classic outfit, cream blouse, frilled collar, frilled chest trim, ruffled blouse details, large dark red ribbon bow, plaid neck bow, dark red plaid pleated skirt, soft flared skirt, classic feminine skirt, black thighhighs, black stockings, brown loafers, polished loafers',
+    unifiedPhraseSections: const <OutfitUnifiedPhraseSectionData>[
+      OutfitUnifiedPhraseSectionData(
+        id: 'headwear',
+        zh: '白色緞帶貝雷帽',
+        en: 'white beret, beret with ribbon, small white hat',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'upper',
+        zh: '奶油荷葉上衣',
+        en: 'sweet doll-like outfit, sweet feminine fashion, soft classic outfit, cream blouse, frilled collar, frilled chest trim, ruffled blouse details',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'accessory',
+        zh: '大型深紅格紋蝴蝶結',
+        en: 'large dark red ribbon bow, plaid neck bow',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'lower',
+        zh: '深紅格紋人偶傘裙',
+        en: 'dark red plaid pleated skirt, soft flared skirt, classic feminine skirt',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'legwear',
+        zh: '黑色長襪',
+        en: 'black thighhighs, black stockings',
+      ),
+      OutfitUnifiedPhraseSectionData(
+        id: 'footwear',
+        zh: '棕色亮面樂福鞋',
+        en: 'brown loafers, polished loafers',
+      ),
+    ],
+    ownerCharacterTags: ['ureshino sayumi'],
+    ownerCharacterLabel: '嬉野紗弓實',
+  ),
 ];

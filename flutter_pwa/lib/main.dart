@@ -10311,6 +10311,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'yui kotegawa': 'kotegawa yui',
       'risa momioka': 'momioka risa',
       'ryouko mikado': 'mikado ryouko',
+      'urushino sayumi': 'ureshino sayumi',
     };
     return aliases[key] ?? key;
   }
@@ -17700,6 +17701,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'risa momioka': 'momioka_risa',
       'mikado ryouko': 'mikado_ryouko',
       'ryouko mikado': 'mikado_ryouko',
+      'urushino sayumi': 'ureshino sayumi',
       // Accept the older readable spelling during reverse import, while the
       // emitted model label stays `aisha_(elsword)`.
       'aisha elsword': 'aisha_(elsword)',
