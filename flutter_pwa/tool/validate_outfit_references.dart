@@ -42,7 +42,6 @@ const _colors = <String>{
   'scarlet',
   'maroon',
   'burgundy',
-  'wine red',
   'coral',
   'light green',
   'dark green',
@@ -731,6 +730,7 @@ void main() {
     return !safeEquipmentOrClothingTerms.contains(normalized) &&
         profileForbiddenTerms.hasMatch(normalized);
   }
+
   for (final profile in elswordFemaleJobPromptProfiles.values) {
     final key = profile.key;
     if (profile.base.characterEn == 'Aisha') {
@@ -793,7 +793,8 @@ void main() {
         !recommended.contains(profile.outfitAnchor)) {
       problems.add('$key: malformed recommended prompt.');
     }
-    final outfitSegmentIds = profile.outfitSegments.map((segment) => segment.id).toSet();
+    final outfitSegmentIds =
+        profile.outfitSegments.map((segment) => segment.id).toSet();
     const requiredOutfitSegmentIds = <String>{
       'silhouette',
       'upper',

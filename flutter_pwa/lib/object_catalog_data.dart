@@ -186,12 +186,6 @@ const objectCatalogTags = <CatalogTagData>[
   CatalogTagData(
       id: 'obj_food_kettle', group: '物件', zh: '水壺', en: 'kettle', order: 4),
   CatalogTagData(
-      id: 'obj_food_wine_glass',
-      group: '物件',
-      zh: '紅酒杯',
-      en: 'wine glass',
-      order: 4),
-  CatalogTagData(
       id: 'obj_food_cocktail_glass',
       group: '物件',
       zh: '雞尾酒杯',

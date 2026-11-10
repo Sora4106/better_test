@@ -6789,7 +6789,6 @@ const _clothingColorShades = <List<String>>[
   ['scarlet', '\u7336\u7D05\u8272', 'scarlet'],
   ['maroon', '\u6817\u8272', 'maroon'],
   ['burgundy', '\u9152\u7D05\u8272', 'burgundy'],
-  ['wine_red', '\u9152\u7D05\u8272', 'wine red'],
   ['coral', '\u73CA\u745A\u8272', 'coral'],
   ['light_green', '\u6DFA\u7DA0\u8272', 'light green'],
   ['dark_green', '\u6DF1\u7DA0\u8272', 'dark green'],
@@ -6896,7 +6895,6 @@ const _promptColorChinese = <String, String>{
   'scarlet': '\u7336\u7D05\u8272',
   'maroon': '\u6817\u8272',
   'burgundy': '\u9152\u7D05\u8272',
-  'wine red': '\u9152\u7D05\u8272',
   'coral': '\u73CA\u745A\u8272',
   'light green': '\u6DFA\u7DA0\u8272',
   'dark green': '\u6DF1\u7DA0\u8272',
@@ -6974,7 +6972,6 @@ const _promptColorTypeOrder = <String>[
   // Red and pink.
   'maroon',
   'burgundy',
-  'wine red',
   'dark red',
   'crimson',
   'red',
@@ -7165,7 +7162,6 @@ const _promptColorValues = <String, Color>{
   'scarlet': Color(0xffff2400),
   'maroon': Color(0xff800000),
   'burgundy': Color(0xff800020),
-  'wine red': Color(0xff722f37),
   'coral': Color(0xffff7f50),
   'light green': Color(0xff86efac),
   'dark green': Color(0xff166534),
@@ -9616,6 +9612,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     'piss',
     'golden shower',
   };
+  // BetterWaifu rejects prompts containing this beverage word. The related
+  // picker entries are retired, while legacy colour choices migrate to the
+  // already-supported `burgundy` shade so saved outfits retain their tone.
+  static const _retiredWineTagIdFragments = <String>{
+    'wine_red',
+    'wine_glass',
+  };
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
   // Only the IDs that an adult pose package itself added are tracked here.
@@ -11586,7 +11589,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     'light blue',
     'dark blue',
     'navy blue-black',
-    'wine red',
     'mustard yellow',
     'lemon yellow',
     'forest green',
@@ -14236,6 +14238,216 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return changed;
   }
 
+  bool _isRetiredWineTagId(String id) {
+    final value = id.toLowerCase();
+    return _retiredWineTagIdFragments.any(value.contains);
+  }
+
+  String? _retiredWineReplacementId(String id) {
+    if (!id.toLowerCase().contains('wine_red')) return null;
+    return id.replaceAll(RegExp('wine_red', caseSensitive: false), 'burgundy');
+  }
+
+  bool _migrateRetiredWineTagIds(Set<String> ids) {
+    var changed = false;
+    for (final id in ids.toList()) {
+      if (!_isRetiredWineTagId(id)) continue;
+      ids.remove(id);
+      final replacement = _retiredWineReplacementId(id);
+      if (replacement != null && _tagsById.containsKey(replacement)) {
+        ids.add(replacement);
+      }
+      changed = true;
+    }
+    return changed;
+  }
+
+  bool _containsRetiredWineTerm(String value) =>
+      RegExp(r'\bwine\b', caseSensitive: false).hasMatch(value);
+
+  String _removeRetiredWinePromptTerms(
+    String value, {
+    bool poseSyntax = false,
+  }) {
+    final terms = poseSyntax ? _poseExtraPrompts(value) : _extraTags(value);
+    return terms
+        .where((term) => !_containsRetiredWineTerm(term))
+        .join(poseSyntax ? '\n' : ', ');
+  }
+
+  bool _pruneRetiredWineTagIdsFromPayload(dynamic value) {
+    var changed = false;
+    if (value is List) {
+      for (var index = value.length - 1; index >= 0; index--) {
+        final item = value[index];
+        if (item is String && _isRetiredWineTagId(item)) {
+          final replacement = _retiredWineReplacementId(item);
+          if (replacement == null) {
+            value.removeAt(index);
+          } else {
+            value[index] = replacement;
+          }
+          changed = true;
+          continue;
+        }
+        changed = _pruneRetiredWineTagIdsFromPayload(item) || changed;
+      }
+    } else if (value is Map) {
+      for (final item in value.values) {
+        changed = _pruneRetiredWineTagIdsFromPayload(item) || changed;
+      }
+    }
+    return changed;
+  }
+
+  /// Removes retired picker choices from local selections and saved reusable
+  /// content. Colour choices are remapped to burgundy; the retired object and
+  /// any free-form tag containing the word are discarded.
+  bool _removeRetiredWineSelections() {
+    var changed = _migrateRetiredWineTagIds(_selectedIds);
+    for (final ids in _personSelectedIds.values) {
+      changed = _migrateRetiredWineTagIds(ids) || changed;
+    }
+    for (final slot in _personSlots) {
+      final hairIds = slot.hairGradientColorIds.toSet();
+      if (_migrateRetiredWineTagIds(hairIds)) {
+        slot.hairGradientColorIds = hairIds.toList();
+        changed = true;
+      }
+      for (final entry in slot.physicalTraitGradientColorIds.entries) {
+        final colorIds = entry.value.toSet();
+        if (_migrateRetiredWineTagIds(colorIds)) {
+          entry.value
+            ..clear()
+            ..addAll(colorIds);
+          changed = true;
+        }
+      }
+      final featureExtra =
+          _removeRetiredWinePromptTerms(slot.featureExtraPositive);
+      final clothingExtra =
+          _removeRetiredWinePromptTerms(slot.clothingExtraPositive);
+      final poseExtra = _removeRetiredWinePromptTerms(
+        slot.poseExtraPositive,
+        poseSyntax: true,
+      );
+      final originalTraits = _removeRetiredWinePromptTerms(slot.originalTraits);
+      if (featureExtra != slot.featureExtraPositive ||
+          clothingExtra != slot.clothingExtraPositive ||
+          poseExtra != slot.poseExtraPositive ||
+          originalTraits != slot.originalTraits) {
+        slot
+          ..featureExtraPositive = featureExtra
+          ..clothingExtraPositive = clothingExtra
+          ..poseExtraPositive = poseExtra
+          ..originalTraits = originalTraits;
+        changed = true;
+      }
+      if (_englishTagKey(slot.outfitPaletteMainColorKey) == 'wine red') {
+        slot.outfitPaletteMainColorKey = 'burgundy';
+        changed = true;
+      }
+      if (_englishTagKey(slot.outfitPaletteSecondaryColorKey) == 'wine red') {
+        slot.outfitPaletteSecondaryColorKey = 'burgundy';
+        changed = true;
+      }
+      if (_englishTagKey(slot.objectColorKey) == 'wine red') {
+        slot.objectColorKey = 'burgundy';
+        changed = true;
+      }
+    }
+    for (var index = 0; index < _originalCharacterPresets.length; index++) {
+      final preset = _originalCharacterPresets[index];
+      final ids = preset.featureTagIds.toSet();
+      final originalTraits =
+          _removeRetiredWinePromptTerms(preset.originalTraits);
+      final featureExtra =
+          _removeRetiredWinePromptTerms(preset.featureExtraPositive);
+      final hairIds = preset.hairGradientColorIds.toSet();
+      final physicalColors = <String, List<String>>{
+        for (final entry in preset.physicalTraitGradientColorIds.entries)
+          entry.key: entry.value.toList(),
+      };
+      var presetChanged = _migrateRetiredWineTagIds(ids) ||
+          _migrateRetiredWineTagIds(hairIds) ||
+          originalTraits != preset.originalTraits ||
+          featureExtra != preset.featureExtraPositive;
+      for (final entry in physicalColors.entries) {
+        final colors = entry.value.toSet();
+        if (_migrateRetiredWineTagIds(colors)) {
+          physicalColors[entry.key] = colors.toList();
+          presetChanged = true;
+        }
+      }
+      if (!presetChanged) continue;
+      _originalCharacterPresets[index] = OriginalCharacterPreset(
+        id: preset.id,
+        name: preset.name,
+        featureTagIds: ids.toList(),
+        originalTraits: originalTraits,
+        featureExtraPositive: featureExtra,
+        hairGradientColorIds: hairIds.toList(),
+        hairGradientStyle: preset.hairGradientStyle,
+        physicalTraitGradientColorIds: physicalColors,
+      );
+      changed = true;
+    }
+    for (var index = 0; index < _combinations.length; index++) {
+      final combination = _combinations[index];
+      final ids = combination.tagIds.toSet();
+      final extra = _removeRetiredWinePromptTerms(combination.extraPositive);
+      if (!_migrateRetiredWineTagIds(ids) &&
+          extra == combination.extraPositive) {
+        continue;
+      }
+      _combinations[index] = PromptCombination(
+        id: combination.id,
+        name: combination.name,
+        tagIds: ids.toList(),
+        extraPositive: extra,
+        kind: combination.kind,
+      );
+      changed = true;
+    }
+    for (final preset in _presets) {
+      changed = _pruneRetiredWineTagIdsFromPayload(preset.payload) || changed;
+    }
+    final customBefore = _customTags.length;
+    _customTags.removeWhere((tag) =>
+        _isRetiredWineTagId(tag.id) || _containsRetiredWineTerm(tag.en));
+    if (_customTags.length != customBefore) {
+      _invalidateTagCaches();
+      changed = true;
+    }
+
+    String updateText(String value, {bool poseSyntax = false}) =>
+        _removeRetiredWinePromptTerms(value, poseSyntax: poseSyntax);
+    final extraPositive = updateText(_extraPositive.text);
+    final sharedPose = updateText(_sharedPoseExtra.text, poseSyntax: true);
+    final negative = updateText(_negative.text);
+    final preprompt = updateText(_preprompt.text);
+    final reversePrompt = updateText(_reversePrompt.text);
+    final reverseSource = updateText(_reversePromptResultSource);
+    if (extraPositive != _extraPositive.text ||
+        sharedPose != _sharedPoseExtra.text ||
+        negative != _negative.text ||
+        preprompt != _preprompt.text ||
+        reversePrompt != _reversePrompt.text ||
+        reverseSource != _reversePromptResultSource) {
+      _extraPositive.text = extraPositive;
+      _sharedPoseExtra.text = sharedPose;
+      _negative.text = negative;
+      _preprompt.text = preprompt;
+      _reversePrompt.text = reversePrompt;
+      _reversePromptResultSource = reverseSource;
+      changed = true;
+    }
+    final translationsBefore = _customNegativeTranslations.length;
+    _customNegativeTranslations.removeWhere((key, value) =>
+        _containsRetiredWineTerm(key) || _containsRetiredWineTerm(value));
+    return changed || translationsBefore != _customNegativeTranslations.length;
+  }
+
   /// Removes the retired urination picker IDs from every persisted selection
   /// container. Free-form text deliberately remains user-controlled.
   bool _removeRetiredUrinationSelections() {
@@ -14618,6 +14830,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           data['customNegativeTranslations'] as Map? ?? <String, dynamic>{},
         ).map((key, value) => MapEntry(key.toLowerCase(), '$value')));
       _preprompt.text = '${data['preprompt'] ?? _preprompt.text}';
+      restoredDuplicatesMigrated =
+          _removeRetiredWineSelections() || restoredDuplicatesMigrated;
+      if (restoredDuplicatesMigrated) {
+        final cleanedReverseAnalysisSource =
+            _reversePrompt.text.trim().isNotEmpty
+                ? _reversePrompt.text
+                : _reversePromptResultSource;
+        _reversePromptAnalysis =
+            _analyzeReversePrompt(cleanedReverseAnalysisSource);
+      }
       _peopleCount = _personSlots.length;
       for (var index = 0; index < _personSlots.length; index++) {
         _syncCharacterTraitsForSlot(index);
