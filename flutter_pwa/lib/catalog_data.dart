@@ -6114,8 +6114,10 @@ final catalogCharacters = <CatalogCharacter>[
     characterEn: 'Sayumi Ureshino',
     characterTag: 'ureshino sayumi',
     traits: [
-      _trait('ureshino_sayumi_aqua_hair', '水藍髮', 'aqua hair'),
-      _trait('ureshino_sayumi_light_blue_hair', '淺藍髮', 'light blue hair'),
+      // Keep the two canonical blue descriptors together.  They describe one
+      // established hair colour, not a user-selected two-colour gradient.
+      _trait('ureshino_sayumi_aqua_light_blue_hair', '水藍與淺藍髮',
+          'aqua hair, light blue hair'),
       _trait('ureshino_sayumi_very_long_hair', '極長髮', 'very long hair'),
       _trait('ureshino_sayumi_long_straight_hair', '長直髮', 'long straight hair'),
       _trait('ureshino_sayumi_smooth_flowing_hair', '柔順飄逸髮',

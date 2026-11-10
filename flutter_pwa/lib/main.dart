@@ -15054,6 +15054,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _characterTraitOptions(CatalogTagData trait) {
     final value = _cleanTag(trait.en);
+    // `long straight hair`, `very long wavy hair`, etc. are complete hairstyle
+    // descriptions.  Do not mistake the word after the length for a colour and
+    // split them into generic `long hair` + `straight hair` selections.
+    final lengthStyleHair = RegExp(
+      r'^(?:close-cropped|cropped|very short|very long|waist-length|long|medium|short)\s+(?:straight|wavy|curly|curled|messy|scruffy|spiky|fluffy|flowing|layered|feathered|shaggy)\s+hair$',
+      caseSensitive: false,
+    ).hasMatch(value);
+    if (lengthStyleHair) {
+      final direct = _tagByEnglish(trait.en);
+      return [direct ?? _createCharacterTraitOption(trait)];
+    }
     final lengthFirst = RegExp(
       r'^(close-cropped|cropped|very short|very long|waist-length|long|medium|short)\s+(.+?)\s+hair$',
       caseSensitive: false,
@@ -15216,6 +15227,32 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (character.id == 'project_sekai_yoisaki_kanade') {
       final legacyLongHair = _tagByEnglish('long hair');
       if (legacyLongHair != null) ids.remove(legacyLongHair.id);
+    }
+    // Sayumi's original catalogue entry used two ordinary hair-colour tags and
+    // a generic long/straight pair.  Those were interpreted as a selectable
+    // gradient and emitted an unintended `aqua to light blue gradient hair`.
+    // Replace only that complete legacy pair with the canonical fixed traits.
+    if (character.id == 'daitoshokan_urushino_sayumi') {
+      final oldAquaHair = _tagByEnglish('aqua hair');
+      final oldLightBlueHair = _tagByEnglish('light blue hair');
+      if (oldAquaHair != null &&
+          oldLightBlueHair != null &&
+          ids.contains(oldAquaHair.id) &&
+          ids.contains(oldLightBlueHair.id)) {
+        ids
+          ..remove(oldAquaHair.id)
+          ..remove(oldLightBlueHair.id);
+      }
+      final oldLongHair = _tagByEnglish('long hair');
+      final oldStraightHair = _tagByEnglish('straight hair');
+      if (oldLongHair != null &&
+          oldStraightHair != null &&
+          ids.contains(oldLongHair.id) &&
+          ids.contains(oldStraightHair.id)) {
+        ids
+          ..remove(oldLongHair.id)
+          ..remove(oldStraightHair.id);
+      }
     }
     // Remove old auto-applied source / expression entries from saved sessions.
     // A manual expression can still be picked normally after this migration.
@@ -15653,16 +15690,15 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   /// Canonical tag spellings used by the target Danbooru-style model.
   ///
-  /// The catalogue stores stable database-style IDs (underscores and unescaped
-  /// parentheses) so selections, reverse import, and old saved data stay
-  /// compatible. Most freeform prompt text remains human-readable, while
-  /// character and model-identity labels can retain their official underscore
-  /// syntax through [preserveUnderscores]. A handful of Project Sekai entries
-  /// used old convenience labels; map them to their actual trigger tags here.
+  /// The catalogue stores stable database-style IDs (including underscores and
+  /// unescaped parentheses) so selections, reverse import, and old saved data
+  /// stay compatible. Prompt output deliberately converts each underscore to
+  /// one space, while keeping usable parenthetical model identifiers intact.
+  /// A handful of Project Sekai entries use old convenience labels; map them to
+  /// their current readable prompt form here.
   String _canonicalModelTag(
     String value, {
     bool escapeParentheses = true,
-    bool preserveUnderscores = false,
   }) {
     var normalized =
         _cleanTag(value).replaceAll(r'\(', '(').replaceAll(r'\)', ')');
@@ -15683,19 +15719,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'virtual_singer': 'virtual singer (project_sekai)',
     };
     normalized = aliases[normalized.toLowerCase()] ?? normalized;
-    if (!preserveUnderscores) normalized = normalized.replaceAll('_', ' ');
+    normalized = normalized.replaceAll('_', ' ');
     if (!escapeParentheses) return normalized;
     return normalized.replaceAll('(', r'\(').replaceAll(')', r'\)');
   }
 
-  /// Keeps the model-facing character tag exactly as catalogued. In particular,
-  /// tags such as `aisha_(elsword)` must retain both the underscore and source
-  /// suffix even when the separate series tag follows it.
+  /// Converts the internally catalogued character name to the readable prompt
+  /// form. For example, `aisha_(elsword)` becomes `aisha (elsword)`.
   String _characterPromptTagWithoutEmbeddedSource(CatalogCharacter character) {
     return _canonicalModelTag(
       character.characterTag,
       escapeParentheses: false,
-      preserveUnderscores: true,
     );
   }
 
@@ -16047,11 +16081,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         RegExp(r'\([^()]+:\s*\d+(?:\.\d+)?\)').hasMatch(result);
     return _canonicalModelTag(
       result,
-      // Character Select / model labels such as `aisha_(elsword)` are prompt
-      // tags rather than structural grouping. Preserve their exact syntax;
-      // ordinary freeform labels still escape literal parentheses safely.
+      // Character/model labels such as `aisha (elsword)` are prompt tags rather
+      // than structural grouping. Keep their parentheses readable; ordinary
+      // freeform labels still escape literal parentheses safely.
       escapeParentheses: preserveModelSyntax ? false : !hasExplicitWeight,
-      preserveUnderscores: preserveModelSyntax,
     );
   }
 
@@ -16220,7 +16253,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         // Default layout: use one structural outer group for each character's
         // identity, fixed appearance and clothing, but do not add a numeric
         // weight. The inner identity tags stay plain, preserving
-        // `aisha_(elsword), elsword, elemental_master, ...`; individual
+        // `aisha (elsword), elsword, elemental master, ...`; individual
         // actions deliberately remain outside the character-core group.
         final identityTagsLine = _inlinePromptTags([
           ...regularCharacterFeatures.where((tag) => tag.characterTag),
@@ -17702,8 +17735,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'mikado ryouko': 'mikado_ryouko',
       'ryouko mikado': 'mikado_ryouko',
       'urushino sayumi': 'ureshino sayumi',
-      // Accept the older readable spelling during reverse import, while the
-      // emitted model label stays `aisha_(elsword)`.
+      // Accept older readable spellings during reverse import. Prompt output
+      // uses the user-facing space-separated form `aisha (elsword)`.
       'aisha elsword': 'aisha_(elsword)',
       'aisha landar': 'aisha_(elsword)',
     };
@@ -18149,7 +18182,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return value
         // Preserve the model-facing prompt spelling at output time, but use a
         // temporary readable alias while reverse parsing so
-        // `aisha_(elsword)` is not interpreted as a structural bracket group.
+        // `aisha (elsword)` is not interpreted as a structural bracket group.
         .replaceAllMapped(
             RegExp(r'\baisha_\s*\(\s*elsword\s*\)', caseSensitive: false),
             (_) => 'aisha landar')
