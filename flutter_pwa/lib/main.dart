@@ -17026,229 +17026,385 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     });
   }
 
-  TagItem? _randomClothingTag(List<String> groups, Random random) {
+  List<TagItem> _randomClothingCandidates(
+    Iterable<String> groups,
+    Random random, {
+    bool Function(TagItem tag)? predicate,
+  }) {
+    final groupSet = groups.toSet();
     final seen = <String>{};
     final candidates = _allTags
         .where((tag) =>
-            groups.contains(tag.group) &&
+            groupSet.contains(tag.group) &&
             (_showAdult || !tag.adult) &&
+            (predicate == null || predicate(tag)) &&
             seen.add('${tag.group}|${tag.en}'))
         .toList()
       ..shuffle(random);
-    return candidates.isEmpty ? null : candidates.first;
+    return candidates;
   }
 
-  void _randomizeScopedClothing(int personIndex, Random random) {
-    final target = _personTagIds(personIndex);
-    final bases = _clothingDesignBases(_selectedTagsForPerson(personIndex));
+  /// Returns the one anatomical lane used by the pose randomizer.  The normal
+  /// picker deliberately allows users to compose many pose details, but random
+  /// selection should stay conservative: a character cannot, for example,
+  /// randomly receive two unrelated hand gestures or two contradictory calf
+  /// motions at the same time.
+  String? _randomPoseLane(TagItem tag) {
+    if (const <String>{
+      '姿勢',
+      '站立與蹲姿',
+      '坐姿與跪姿',
+      '躺臥姿勢',
+      '全身姿勢',
+      '單人・站姿',
+      '單人・靠牆姿勢',
+      '單人・椅子坐姿',
+      '單人・桌邊姿勢',
+      '單人・地板坐姿',
+      '單人・床上坐姿',
+      '單人・仰躺姿勢',
+      '單人・側躺姿勢',
+      '單人・俯臥姿勢',
+      '單人・跪蹲姿勢',
+    }.contains(tag.group)) {
+      return 'base';
+    }
+    if (tag.group == '頭部姿勢') return 'head';
+    if (_expressionSubgroupForTag(tag) != null ||
+        tag.group == '表情' ||
+        (tag.group == '臉部特徵' && !_isStaticFaceAppearanceTag(tag))) {
+      return 'expression';
+    }
+    if (const <String>{
+      '手臂姿勢',
+      '手部姿勢',
+      '手部・接觸位置',
+      '手指・指向方向',
+      '手指・手勢形狀',
+      '手指・嘴臉互動',
+      '手指・細節動作',
+    }.contains(tag.group)) {
+      return 'hand';
+    }
+    if (const <String>{
+      '軀幹姿勢',
+      _upperBodyChestActionGroup,
+      '軀幹・腰臀動態',
+      '軀幹・角度控制',
+    }.contains(tag.group)) {
+      return 'upper';
+    }
+    if (const <String>{
+      '臀部・髖部細節',
+      '臀部・角度控制',
+      '臀部・正背面構圖',
+    }.contains(tag.group)) {
+      return 'butt';
+    }
+    if (const <String>{
+      '腿部姿勢',
+      '腿部・角度控制',
+      '大腿・膝蓋動態',
+      '腿部・朝鏡頭構圖',
+    }.contains(tag.group)) {
+      return 'thigh';
+    }
+    if (tag.group == '小腿・腳踝動態') return 'calf';
+    if (tag.group == '腳掌・腳趾動態') return 'foot';
+    if (const <String>{
+      '動態姿勢',
+      '身體動作',
+      '姿勢擴充・動態輔助',
+      _motionEffectGroup,
+    }.contains(tag.group)) {
+      return 'motion';
+    }
+    if (tag.group == '性姿勢' || expandedSexualPoseGroups.contains(tag.group)) {
+      return 'adult_position';
+    }
+    if (const <String>{
+      '性行為・動態',
+      _adultMotionAssistGroup,
+      _maleSexMotionGroup,
+      _femaleSexMotionGroup,
+      '性行為・前後',
+    }.contains(tag.group)) {
+      return 'adult_motion';
+    }
+    if (tag.group == '性行為' || expandedSexualActGroups.contains(tag.group)) {
+      return 'adult_action';
+    }
+    return null;
+  }
 
-    void choose(String group) {
-      final candidate = _randomClothingTag([group], random);
-      if (candidate == null) return;
-      final conflicts = _selectedTagsForPerson(personIndex)
-          .where((tag) => _tagsConflict(tag, candidate))
-          .map((tag) => tag.id)
+  bool _isPoseRandomizationTag(TagItem tag) {
+    if (_randomPoseLane(tag) != null) return true;
+    // Ordinary actions are part of the pose workflow, but object / weapon
+    // interaction is intentionally preserved when randomizing the body pose.
+    return tag.group == '動作' &&
+        !_isObjectInteractionTag(tag) &&
+        !_isWeaponPresentationTag(tag);
+  }
+
+  /// Generates a coherent individual pose.  One item is chosen at most for
+  /// each anatomical lane.  Adult mode uses an adult position as the base and
+  /// leaves general base poses out, avoiding combinations such as a standing
+  /// tag with a lying-only adult position.
+  void _randomizePose(int personIndex, {required bool includeAdult}) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    if (includeAdult && !_showAdult) return;
+
+    final random = Random();
+    setState(() {
+      final target = _personTagIds(personIndex);
+      final protectedTags = _selectedTagsForPerson(personIndex)
+          .where((tag) => !_isPoseRandomizationTag(tag))
           .toList();
-      target.removeAll(conflicts);
-      target.add(candidate.id);
-    }
+      target.removeWhere((id) {
+        final tag = _tagsById[id];
+        return tag != null && _isPoseRandomizationTag(tag);
+      });
 
-    for (final base in bases) {
-      final scope = _clothingScopeForBase(base);
-      if (scope == null) continue;
-      choose(_scopedClothingGroup(scope, 'style'));
-      choose(_scopedClothingGroup(scope, 'material'));
-      if (random.nextBool()) choose(_scopedClothingGroup(scope, 'detail'));
-      if (random.nextBool()) {
-        choose(_scopedClothingGroup(scope, 'detail_color'));
+      final candidates = _allTags.where((tag) {
+        final lane = _randomPoseLane(tag);
+        if (lane == null) return false;
+        if (!includeAdult && tag.adult) return false;
+        if (!includeAdult &&
+            (lane == 'adult_position' ||
+                lane == 'adult_action' ||
+                lane == 'adult_motion')) {
+          return false;
+        }
+        return true;
+      }).toList()
+        ..shuffle(random);
+
+      final added = <TagItem>[];
+      final usedLanes = <String>{};
+      final usedConflicts = <String>{};
+
+      bool add(TagItem tag) {
+        final lane = _randomPoseLane(tag);
+        if (lane == null || usedLanes.contains(lane)) return false;
+        final conflict = _conflictGroup(tag);
+        if (conflict != null && usedConflicts.contains(conflict)) return false;
+        if (protectedTags.any((other) => _tagsConflict(other, tag)) ||
+            added.any((other) => _tagsConflict(other, tag))) {
+          return false;
+        }
+        target.add(tag.id);
+        added.add(tag);
+        usedLanes.add(lane);
+        if (conflict != null) usedConflicts.add(conflict);
+        return true;
       }
-      if (random.nextBool()) choose(_scopedClothingGroup(scope, 'wear'));
-    }
+
+      void choose(String lane, {required bool required, double chance = 1}) {
+        if (!required && random.nextDouble() > chance) return;
+        for (final tag in candidates) {
+          if (_randomPoseLane(tag) == lane && add(tag)) return;
+        }
+      }
+
+      if (includeAdult) {
+        choose('adult_position', required: true);
+        choose('adult_action', required: false, chance: .55);
+        choose('adult_motion', required: false, chance: .75);
+      } else {
+        choose('base', required: true);
+      }
+
+      // Each part is independently optional, but it can contribute only one
+      // action. This keeps the output expressive without stacking impossible
+      // motions for the same head, hand, leg, or foot.
+      choose('head', required: false, chance: .62);
+      choose('expression', required: false, chance: .78);
+      choose('upper', required: false, chance: .46);
+      choose('hand', required: false, chance: .52);
+      choose('butt', required: false, chance: includeAdult ? .58 : .32);
+      choose('thigh', required: false, chance: includeAdult ? .55 : .48);
+      choose('calf', required: false, chance: .38);
+      choose('foot', required: false, chance: .32);
+      choose('motion', required: false, chance: includeAdult ? .42 : .28);
+
+      _persist();
+    });
   }
 
   void _randomizeClothing(int personIndex) {
     if (personIndex < 0 || personIndex >= _personSlots.length) return;
     final random = Random();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      setState(() {
-        _randomizeScopedClothing(personIndex, Random());
-        _persist();
+    setState(() {
+      final target = _personTagIds(personIndex);
+      final protectedTags = _selectedTagsForPerson(personIndex)
+          .where((tag) => !_isClothingGroup(tag.group))
+          .toList();
+      target.removeWhere((id) {
+        final tag = _tagsById[id];
+        return tag != null && _isClothingGroup(tag.group);
       });
-    });
-    final clothingGroups = {
-      '上衣',
-      '褲子',
-      '短褲',
-      '裙子',
-      '內衣',
-      '胸罩',
-      '內褲',
-      '襪子',
-      '鞋子',
-      '服裝',
-      _cosplayGroup,
-      '配件',
-      '配件位置',
-      '配件顏色',
-      '服裝邊線色',
-      '上衣邊線色',
-      '下身邊線色',
-      '褲子邊線色',
-      '短褲邊線色',
-      '裙子邊線色',
-      '內衣邊線色',
-      '胸罩邊線色',
-      '內褲邊線色',
-      '襪子邊線色',
-      '鞋子邊線色',
-      '配件邊線色',
-      '內衣顏色',
-      '胸罩顏色',
-      '內褲顏色',
-      '襪子顏色',
-      '鞋子顏色',
-      '上衣風格',
-      '下身風格',
-      '上衣顏色',
-      '下身顏色',
-      '褲子顏色',
-      '短褲顏色',
-      '裙子顏色',
-      '服裝顏色',
-      '服裝細節',
-      '服裝細節顏色',
-      '服裝材質',
-      '穿脫狀態',
-    };
-    final target = _personTagIds(personIndex);
-    final protectedTags = _selectedTagsForPerson(personIndex)
-        .where((tag) =>
-            !clothingGroups.contains(tag.group) &&
-            !_isScopedClothingGroup(tag.group))
-        .toList();
-    target.removeWhere((id) => _allTags.any((tag) =>
-        tag.id == id &&
-        (clothingGroups.contains(tag.group) ||
-            _isScopedClothingGroup(tag.group))));
+      _personCombinationIds[personIndex]?.removeWhere(_isClothingCombinationId);
 
-    final added = <TagItem>[];
-    void add(TagItem? tag) {
-      if (tag == null ||
-          protectedTags.any((other) => _tagsConflict(other, tag)) ||
-          added.any((other) => _tagsConflict(other, tag))) {
-        return;
+      final added = <TagItem>[];
+      bool add(TagItem? tag) {
+        if (tag == null ||
+            protectedTags.any((other) => _tagsConflict(other, tag)) ||
+            added.any((other) => _tagsConflict(other, tag))) {
+          return false;
+        }
+        target.add(tag.id);
+        added.add(tag);
+        return true;
       }
-      target.add(tag.id);
-      added.add(tag);
-    }
 
-    if (random.nextBool()) {
-      add(_randomClothingTag(['服裝'], random));
-      if (random.nextBool()) {
-        add(_randomClothingTag(
-            [_scopedClothingGroup('onepiece', 'style'), _cosplayGroup],
-            random));
+      TagItem? chooseBase(
+        Iterable<String> groups, {
+        bool Function(TagItem tag)? predicate,
+      }) {
+        final candidates = _randomClothingCandidates(
+          groups,
+          random,
+          predicate: (tag) =>
+              _isClothingBaseTag(tag) &&
+              !_isUnifiedOutfitPhraseTag(tag) &&
+              !_isClothingAbsenceBase(tag) &&
+              (predicate == null || predicate(tag)),
+        );
+        for (final candidate in candidates) {
+          if (add(candidate)) return candidate;
+        }
+        return null;
       }
-      add(_randomClothingTag(['服裝顏色'], random));
-    } else {
-      add(_randomClothingTag(['上衣'], random));
-      final lowerBody = _randomClothingTag(['褲子', '短褲', '裙子'], random);
-      add(lowerBody);
-      if (random.nextBool()) add(_randomClothingTag(['上衣風格'], random));
-      if (random.nextBool()) add(_randomClothingTag(['下身風格'], random));
-      if (random.nextBool()) add(_randomClothingTag(['上衣顏色'], random));
-      if (lowerBody != null && random.nextBool()) {
-        final colorGroup = _clothingColorGroupForBase(lowerBody);
-        if (colorGroup != null) {
-          add(_randomClothingTag([colorGroup], random));
+
+      List<TagItem> colorOptions(String? group) {
+        if (group == null) return const <TagItem>[];
+        return _randomClothingCandidates(
+          [group],
+          random,
+          predicate: _isColorPickerTag,
+        );
+      }
+
+      String? paletteKey(
+        Iterable<String?> groups, {
+        Set<String> excluded = const <String>{},
+      }) {
+        Set<String>? shared;
+        final fallback = <String>{};
+        for (final group in groups.whereType<String>()) {
+          final keys = colorOptions(group)
+              .map(_clothingColorChoiceKey)
+              .where((key) => key.isNotEmpty && key != 'multicolored')
+              .toSet();
+          if (keys.isEmpty) continue;
+          fallback.addAll(keys);
+          shared = shared == null ? keys : shared.intersection(keys);
+        }
+        final choices = (shared?.isNotEmpty == true ? shared! : fallback)
+            .where((key) => !excluded.contains(key))
+            .toList()
+          ..shuffle(random);
+        return choices.isEmpty ? null : choices.first;
+      }
+
+      TagItem? chooseColor(
+        String? group, {
+        String? preferredKey,
+        String? excludedKey,
+      }) {
+        final candidates = colorOptions(group)
+            .where((tag) =>
+                excludedKey == null ||
+                _clothingColorChoiceKey(tag) != excludedKey)
+            .toList();
+        if (candidates.isEmpty) return null;
+        if (preferredKey != null) {
+          for (final candidate in candidates) {
+            if (_clothingColorChoiceKey(candidate) == preferredKey) {
+              return candidate;
+            }
+          }
+        }
+        return candidates.first;
+      }
+
+      const headAccessoryGroups = <String>{
+        _clothingGroupHat,
+        _clothingGroupHeadAccessory,
+        _clothingGroupHairAccessory,
+        _clothingGroupEyewear,
+        _clothingGroupFaceAccessory,
+      };
+      final bases = <TagItem>[];
+
+      // Each visual body slot deliberately has one garment at most.  A
+      // one-piece selection owns both torso and lower body, so it is never
+      // combined with a top, pants, shorts, or skirt.
+      if (random.nextDouble() < 0.45) {
+        final head = chooseBase(
+          [_clothingGroupAccessory],
+          predicate: (tag) =>
+              headAccessoryGroups.contains(_clothingAccessoryPickerGroup(tag)),
+        );
+        if (head != null) bases.add(head);
+      }
+
+      final chooseOnePiece = random.nextDouble() < 0.30;
+      if (chooseOnePiece) {
+        final onePiece = chooseBase([_clothingGroupOnePiece]);
+        if (onePiece != null) bases.add(onePiece);
+      } else {
+        if (random.nextDouble() < 0.78) {
+          final top = chooseBase([_clothingGroupTop]);
+          if (top != null) bases.add(top);
+        }
+        if (random.nextDouble() < 0.78) {
+          final lower = chooseBase([
+            _clothingGroupPants,
+            _clothingGroupShorts,
+            _clothingGroupSkirt,
+          ]);
+          if (lower != null) bases.add(lower);
         }
       }
-    }
-    if (random.nextBool()) add(_randomClothingTag(['胸罩'], random));
-    if (random.nextBool()) add(_randomClothingTag(['內衣'], random));
-    if (random.nextBool()) add(_randomClothingTag(['內褲'], random));
-    if (random.nextBool()) add(_randomClothingTag(['襪子'], random));
-    if (random.nextBool()) add(_randomClothingTag(['鞋子'], random));
-    if (random.nextBool()) add(_randomClothingTag(['穿脫狀態'], random));
-    if (random.nextBool()) add(_randomClothingTag(['服裝材質'], random));
 
-    final detailCandidates = _allTags
-        .where((tag) => tag.group == '服裝細節' && (_showAdult || !tag.adult))
-        .toList()
-      ..shuffle(random);
-    for (final tag in detailCandidates.take(1 + random.nextInt(3))) {
-      add(tag);
-    }
-    if (added.any((tag) => tag.group == '服裝細節' || tag.group == '服裝材質') &&
-        random.nextBool()) {
-      add(_randomClothingTag(['服裝細節顏色'], random));
-    }
-    final accessoryCandidates = _allTags
-        .where((tag) => tag.group == '配件' && (_showAdult || !tag.adult))
-        .toList()
-      ..shuffle(random);
-    for (final tag in accessoryCandidates.take(random.nextInt(3))) {
-      add(tag);
-    }
-    if (accessoryCandidates.isNotEmpty && random.nextDouble() < 0.8) {
-      add(_randomClothingTag(['配件顏色'], random));
-    }
-    bool hasTargetGroup(String group) => target
-        .any((id) => _allTags.any((tag) => tag.id == id && tag.group == group));
-    if (hasTargetGroup('內衣') && random.nextBool()) {
-      add(_randomClothingTag(['內衣顏色'], random));
-    }
-    if (hasTargetGroup('胸罩') && random.nextBool()) {
-      add(_randomClothingTag(['胸罩顏色'], random));
-    }
-    if (hasTargetGroup('內褲') && random.nextBool()) {
-      add(_randomClothingTag(['內褲顏色'], random));
-    }
-    if (hasTargetGroup('襪子') && random.nextBool()) {
-      add(_randomClothingTag(['襪子顏色'], random));
-    }
-    if (hasTargetGroup('鞋子') && random.nextBool()) {
-      add(_randomClothingTag(['鞋子顏色'], random));
-    }
-    if (hasTargetGroup('服裝') && random.nextBool()) {
-      add(_randomClothingTag(['服裝邊線色'], random));
-    }
-    if (hasTargetGroup('上衣') && random.nextBool()) {
-      add(_randomClothingTag(['上衣邊線色'], random));
-    }
-    for (final lowerBody in const [
-      ('褲子', '褲子邊線色'),
-      ('短褲', '短褲邊線色'),
-      ('裙子', '裙子邊線色'),
-    ]) {
-      if (hasTargetGroup(lowerBody.$1) && random.nextBool()) {
-        add(_randomClothingTag([lowerBody.$2], random));
+      if (random.nextDouble() < 0.68) {
+        final socks = chooseBase([_clothingGroupSocks]);
+        if (socks != null) bases.add(socks);
       }
-    }
-    if (hasTargetGroup('內衣') && random.nextBool()) {
-      add(_randomClothingTag(['內衣邊線色'], random));
-    }
-    if (hasTargetGroup('胸罩') && random.nextBool()) {
-      add(_randomClothingTag(['胸罩邊線色'], random));
-    }
-    if (hasTargetGroup('內褲') && random.nextBool()) {
-      add(_randomClothingTag(['內褲邊線色'], random));
-    }
-    if (hasTargetGroup('襪子') && random.nextBool()) {
-      add(_randomClothingTag(['襪子邊線色'], random));
-    }
-    if (hasTargetGroup('鞋子') && random.nextBool()) {
-      add(_randomClothingTag(['鞋子邊線色'], random));
-    }
-    if (hasTargetGroup('配件') && random.nextBool()) {
-      add(_randomClothingTag(['配件邊線色'], random));
-    }
-    if (hasTargetGroup('配件') && random.nextBool()) {
-      add(_randomClothingTag(['配件位置'], random));
-    }
+      if (random.nextDouble() < 0.72) {
+        final shoes = chooseBase([_clothingGroupShoes]);
+        if (shoes != null) bases.add(shoes);
+      }
 
-    setState(() {
+      // Build one coherent palette for all generated pieces.  Every selected
+      // piece receives the primary colour when available; a separate secondary
+      // trim colour is used only for a random dual-colour result.
+      final primaryKey = paletteKey(
+        bases.map(_clothingColorGroupForBase),
+      );
+      final trimGroups = bases.map(_clothingTrimColorGroupForBase).toList();
+      final secondaryKey = random.nextBool()
+          ? paletteKey(trimGroups, excluded: {
+              if (primaryKey != null) primaryKey,
+            })
+          : null;
+      for (final base in bases) {
+        final main = chooseColor(
+          _clothingColorGroupForBase(base),
+          preferredKey: primaryKey,
+        );
+        add(main);
+        if (secondaryKey != null) {
+          add(chooseColor(
+            _clothingTrimColorGroupForBase(base),
+            preferredKey: secondaryKey,
+            excludedKey:
+                main == null ? primaryKey : _clothingColorChoiceKey(main),
+          ));
+        }
+      }
+
       _persist();
     });
   }
@@ -26799,12 +26955,63 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         ),
                       ),
                       IconButton(
-                        tooltip: '隨機目前分類（自動避開衝突）',
+                        tooltip: '隨機目前細分類（自動避開衝突）',
                         onPressed: () =>
                             _randomizePersonGroups(index, currentGroups),
                         icon: const Icon(Icons.shuffle),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: const Color(0xff17283c),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xff5aa9e6)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          '姿勢隨機（每部位最多一個動作）',
+                          style: TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          _showAdult
+                              ? '一般模式只使用非成人姿勢；成人模式會隨機一種成人姿勢與相容動態。頭部、表情、上半身、手、臀、腿與腳各自最多一項。'
+                              : '一般模式只使用非成人姿勢；頭部、表情、上半身、手、臀、腿與腳各自最多一項。開啟 18+ 分類後可使用成人隨機。',
+                          style: const TextStyle(fontSize: 12),
+                        ),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            OutlinedButton.icon(
+                              onPressed: () =>
+                                  _randomizePose(index, includeAdult: false),
+                              icon: const Icon(Icons.shuffle, size: 18),
+                              label: const Text('一般姿勢隨機'),
+                            ),
+                            if (_showAdult)
+                              FilledButton.icon(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: const Color(0xff9f1239),
+                                  foregroundColor: Colors.white,
+                                ),
+                                onPressed: () =>
+                                    _randomizePose(index, includeAdult: true),
+                                icon: const Icon(Icons.local_fire_department,
+                                    size: 18),
+                                label: const Text('成人姿勢隨機'),
+                              ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
                   if (!slot.detailed)
                     const Padding(
@@ -27877,7 +28084,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                 const TextStyle(fontWeight: FontWeight.w700)),
                       ),
                       IconButton(
-                        tooltip: '隨機服裝穿搭（自動避開衝突）',
+                        tooltip: '隨機核心穿搭（每部位最多一件）',
                         onPressed: () => _randomizeClothing(index),
                         icon: const Icon(Icons.shuffle),
                       ),
