@@ -2655,11 +2655,12 @@ const supplementalTags = <CatalogTagData>[
       adult: true),
   CatalogTagData(
       id: 'act_deepthroat',
-      group: '性行為',
+      group: '性行為・口交主類型（單選）',
       zh: '深喉（成年角色）',
       en: 'deepthroat',
       order: 7,
-      adult: true),
+      adult: true,
+      conflictGroup: 'oral_fellatio_primary'),
   CatalogTagData(
       id: 'act_tribadism',
       group: '性行為',

@@ -9096,8 +9096,24 @@ List<TagItem> _seedTags() => [
       _tag('act_mutual_anal_penetration', '性行為', '雙向肛交（成年角色）',
           'mutual anal penetration', 7,
           adult: true),
-      _tag('act_oral', '性行為', '口交（成年角色）', 'oral', 7, adult: true),
-      _tag('act_blowjob', '性行為', '口交行為（成年角色）', 'blowjob', 7, adult: true),
+      _tag(
+        'act_oral',
+        oralSexPrimaryGroup,
+        '口交（成年角色）',
+        'oral',
+        7,
+        adult: true,
+        conflictGroup: oralFellatioPrimaryConflictGroup,
+      ),
+      _tag(
+        'act_blowjob',
+        oralSexPrimaryGroup,
+        '口交行為（成年角色）',
+        'blowjob',
+        7,
+        adult: true,
+        conflictGroup: oralFellatioPrimaryConflictGroup,
+      ),
       _tag('act_handjob', '性行為', '手交（成年角色）', 'handjob', 7, adult: true),
       _tag('act_fingering', '性行為', '手指刺激（成年角色）', 'fingering', 7,
           adult: true, conflictGroup: 'masturbation_method'),
@@ -13607,19 +13623,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final packagePersonTags =
         _activeAdultPosePackagePersonTagIds[personIndex] ?? const <String>{};
     if (output.tagIds.any(packagePersonTags.contains)) return false;
-    const individualAdultMotionGroups = {
-      _adultMotionAssistGroup,
-      _adultSoundAssistGroup,
-      _maleSexMotionGroup,
-      _femaleSexMotionGroup,
-      '性行為・動態',
-      '性行為・手交動態',
-      '性行為・口交動態',
-      '性行為・舔舐動態',
-    };
+    // A user selects these actions for one specific character, so retain them
+    // inside that character's parenthesized block. Shared sex-position kits
+    // continue to be emitted after all characters instead.
     if (output.tagIds.any((id) => selected.any(
           (tag) =>
-              tag.id == id && individualAdultMotionGroups.contains(tag.group),
+              tag.id == id &&
+              (individualAdultPersonActionGroups.contains(tag.group) ||
+                  _isOralFellatioPrimaryTag(tag)),
         ))) {
       return false;
     }
@@ -14300,6 +14311,29 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return changed;
   }
 
+  /// Old saves allowed several mutually exclusive oral primary modes or body
+  /// layouts at once. Keep the most recently selected value in each lane so
+  /// the upgraded prompt has one clear instruction instead of contradictory
+  /// synonyms.
+  bool _normalizeOralFellatioModeSelections(Set<String> ids) {
+    bool keepMostRecent(String conflictGroup) {
+      final matches = ids
+          .map((id) => _tagsById[id])
+          .whereType<TagItem>()
+          .where((tag) => _conflictGroup(tag) == conflictGroup)
+          .toList();
+      if (matches.length <= 1) return false;
+      final retainedId = matches.last.id;
+      ids.removeAll(matches.map((tag) => tag.id));
+      ids.add(retainedId);
+      return true;
+    }
+
+    final primaryChanged = keepMostRecent(oralFellatioPrimaryConflictGroup);
+    final positionChanged = keepMostRecent(oralFellatioPositionConflictGroup);
+    return primaryChanged || positionChanged;
+  }
+
   /// Removes retired picker choices from local selections and saved reusable
   /// content. Colour choices are remapped to burgundy; the retired object and
   /// any free-form tag containing the word are discarded.
@@ -14737,6 +14771,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         combination.tagIds
           ..clear()
           ..addAll(migrated);
+      }
+      restoredDuplicatesMigrated =
+          _normalizeOralFellatioModeSelections(_selectedIds) ||
+              restoredDuplicatesMigrated;
+      for (final ids in _personSelectedIds.values) {
+        restoredDuplicatesMigrated =
+            _normalizeOralFellatioModeSelections(ids) ||
+                restoredDuplicatesMigrated;
       }
       restoredDuplicatesMigrated =
           _removeRetiredUrinationSelections() || restoredDuplicatesMigrated;
@@ -16532,19 +16574,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         }
         if (clothingLine.isNotEmpty) coreSections.add(clothingLine);
 
+        // Keep a character's own pose/action inside that person's outer
+        // delimiter with identity, fixed traits, and clothing. This gives the
+        // model an explicit ownership boundary instead of leaving the action
+        // as a separate sibling block.
+        if (hasCoreContent && actionTagsLine.isNotEmpty) {
+          coreSections.add('($actionTagsLine)');
+        }
+
         // If this person has only an individual pose/action, retain the owner
-        // token inside that action block: `(1boy, standing, ...)`. A person
-        // with character/clothing content already has the token in the core
-        // block, while their action remains a separately readable block.
+        // token inside the one available block: `(1boy, standing, ...)`.
         final actionLine = actionTagsLine.isEmpty
             ? ''
-            : coreSections.isEmpty
-                ? '($personToken, $actionTagsLine)'
-                : '($actionTagsLine)';
+            : hasCoreContent
+                ? ''
+                : coreSections.isEmpty
+                    ? '($personToken, $actionTagsLine)'
+                    : '';
 
         // Keep the overall person delimiter even without a numeric weight.
-        // It closes immediately after clothing, so a separately selected
-        // action reads as its own `(action, pose, ...)` group afterwards.
         final coreBlock =
             coreSections.isEmpty ? '' : '(${coreSections.join(',\n\n')})';
         final personBlock = [coreBlock, actionLine]
@@ -16828,6 +16876,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _isPoseCompositionTag(tag) ||
       _isFaceExpressionTag(tag);
 
+  bool _isOralFellatioPrimaryTag(TagItem tag) =>
+      oralFellatioPrimaryTerms.contains(_englishTagKey(tag.en));
+
   String? _conflictGroup(TagItem tag) {
     if (_isOnePieceStyleTag(tag)) return 'onepiece_style';
     if (_isLegacyClothingStyleTag(tag)) {
@@ -16843,6 +16894,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (tag.group == '襪子顏色') return 'legwear_color';
     if (tag.group == '鞋子顏色') return 'footwear_color';
     if (tag.group == '服裝細節顏色') return 'clothing_detail_color';
+    if (_isOralFellatioPrimaryTag(tag)) {
+      return oralFellatioPrimaryConflictGroup;
+    }
     if (tag.conflictGroup != null) return tag.conflictGroup;
     final traitGroups = _traitOverrideGroups(tag.en);
     if (traitGroups.isNotEmpty) return traitGroups.first;
@@ -16903,6 +16957,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     // Keep this narrow exception while leaving ordinary poses composable.
     if (firstGroup == _weaponPresentationModeConflictGroup &&
         firstGroup == secondGroup) {
+      return true;
+    }
+    // Oral primary type and body layout are narrow exceptions to the general
+    // "poses are composable" rule. Keeping them single-choice prevents a
+    // generic or stale selection from flattening the newly selected variation.
+    if (firstGroup == secondGroup &&
+        (firstGroup == oralFellatioPrimaryConflictGroup ||
+            firstGroup == oralFellatioPositionConflictGroup)) {
       return true;
     }
     // Clothing and pose tags are intentionally composable. A character may

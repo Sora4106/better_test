@@ -111,8 +111,34 @@ const _clothedIntimateHandGroup = '性行為・衣物內手部互動';
 const _footjobGroup = '性行為・足交';
 const _legjobGroup = '性行為・腿交／大腿摩擦';
 const _handjobGroup = '性行為・手交';
-const _oralSexGroup = '性行為・口交';
-const _oralSexMotionGroup = '性行為・口交動態';
+// Keep the activity, body layout, and fine movement in separate pickers.  The
+// first two lanes are mutually exclusive, while motion/detail chips remain
+// composable.
+const oralSexPrimaryGroup = '性行為・口交主類型（單選）';
+const oralSexPositionGroup = '性行為・口交姿勢（單選）';
+const _oralSexGroup = oralSexPrimaryGroup;
+const _oralSexMotionGroup = '性行為・口交動態／細節';
+const oralFellatioPrimaryConflictGroup = 'oral_fellatio_primary';
+const oralFellatioPositionConflictGroup = 'oral_fellatio_position';
+
+/// Variants that describe the same primary penis-oral action.  They are kept
+/// exclusive so a stale generic `oral` or `blowjob` token cannot flatten a
+/// newly selected, more specific variation.
+const oralFellatioPrimaryTerms = <String>{
+  'oral',
+  'blowjob',
+  'fellatio',
+  'deepthroat',
+  'irrumatio',
+  'assisted fellatio',
+  'autofellatio',
+  'implied fellatio',
+  'cooperative fellatio',
+  'multiple penis fellatio',
+  'reverse fellatio',
+  'simulated fellatio',
+  'sword-swallowing fellatio',
+};
 const _handjobMotionGroup = '性行為・手交動態';
 const _lickingAdultGroup = '性行為・舔舐動態';
 const _oralTechniqueGroup = '性行為・口交・部位／舌法';
@@ -189,6 +215,7 @@ const expandedSexualActGroups = <String>{
   '性行為・女性主動擺動',
   '性行為・親吻',
   _oralSexGroup,
+  oralSexPositionGroup,
   _oralSexMotionGroup,
   _vaginalSexGroup,
   _analSexGroup,
@@ -203,6 +230,34 @@ const expandedSexualActGroups = <String>{
   'BDSM行為',
   ...bodyFluidPickerGroups,
   '公開與窺視',
+};
+
+/// Actions that belong to the person who selected them.  They stay in that
+/// person's parenthesized prompt block; shared sex-position kits still remain
+/// after all character blocks.
+const individualAdultPersonActionGroups = <String>{
+  _breastAdultActionGroup,
+  _clothedIntimateHandGroup,
+  _sensoryObjectAdultGroup,
+  _footjobGroup,
+  _legjobGroup,
+  '性行為・摩擦',
+  _handjobGroup,
+  '性行為・自慰',
+  '性行為・動態',
+  '性行為・動態輔助',
+  '性行為・聲音',
+  '性行為・男性主動擺動',
+  '性行為・女性主動擺動',
+  '性行為・親吻',
+  oralSexPrimaryGroup,
+  oralSexPositionGroup,
+  _oralSexMotionGroup,
+  _handjobMotionGroup,
+  _lickingAdultGroup,
+  _oralTechniqueGroup,
+  _handjobTechniqueGroup,
+  _footLegTechniqueGroup,
 };
 
 const expandedAdultClothingGroups = <String>{
@@ -349,6 +404,7 @@ const expandedTagPickerSections = <String, List<String>>{
     '性行為・女性主動擺動',
     '性行為・親吻',
     _oralSexGroup,
+    oralSexPositionGroup,
     _oralSexMotionGroup,
     _lickingAdultGroup,
     _oralTechniqueGroup,
@@ -1880,36 +1936,41 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     order: 7,
     adult: true,
     rows: const [
-      ['口交', 'oral'],
+      ['口交', 'oral', oralFellatioPrimaryConflictGroup],
       ['舔肛', 'anilingus'],
       ['鏽長號式', 'rusty trombone'],
       ['吸吮胸部', 'breast sucking'],
       ['舔陰', 'cunnilingus'],
       ['自體舔陰', 'autocunnilingus'],
       ['暗示舔陰', 'implied cunnilingus'],
-      ['陰莖口交', 'fellatio'],
-      ['輔助口交', 'assisted fellatio'],
-      ['自體口交', 'autofellatio'],
+      ['陰莖口交', 'fellatio', oralFellatioPrimaryConflictGroup],
+      ['輔助口交', 'assisted fellatio', oralFellatioPrimaryConflictGroup],
+      ['自體口交', 'autofellatio', oralFellatioPrimaryConflictGroup],
       ['交換精液', 'cum swap'],
-      ['深喉', 'deepthroat'],
-      ['暗示口交', 'implied fellatio'],
-      ['強制深入口交姿勢', 'irrumatio'],
-      ['協力口交', 'cooperative fellatio'],
-      ['多人陰莖口交', 'multiple penis fellatio'],
-      ['直立六九式', 'upright 69'],
+      ['深喉', 'deepthroat', oralFellatioPrimaryConflictGroup],
+      ['暗示口交', 'implied fellatio', oralFellatioPrimaryConflictGroup],
+      ['主導深入口交', 'irrumatio', oralFellatioPrimaryConflictGroup],
+      ['協力口交', 'cooperative fellatio', oralFellatioPrimaryConflictGroup],
+      ['多人陰莖口交', 'multiple penis fellatio', oralFellatioPrimaryConflictGroup],
+      [
+        '直立六九式',
+        'upright 69',
+        oralFellatioPositionConflictGroup,
+        oralSexPositionGroup
+      ],
       ['抱住吸吮', 'hug and suck'],
       ['舔睪丸', 'licking testicle'],
       ['顏面騎乘', 'facesitting'],
       ['吸吮睪丸', 'testicle sucking'],
       ['舔腋下', 'licking armpit'],
       ['口交手勢', 'fellatio gesture'],
-      ['反向口交', 'reverse fellatio'],
+      ['反向口交', 'reverse fellatio', oralFellatioPrimaryConflictGroup],
       ['清理式口交', 'cleanup fellatio'],
       ['遮擋口交', 'covered fellatio'],
-      ['模擬口交', 'simulated fellatio'],
+      ['模擬口交', 'simulated fellatio', oralFellatioPrimaryConflictGroup],
       ['口罩下口交', 'fellatio under mask'],
       ['隔衣口交', 'fellatio through clothes'],
-      ['吞劍式口交', 'sword-swallowing fellatio'],
+      ['吞劍式口交', 'sword-swallowing fellatio', oralFellatioPrimaryConflictGroup],
     ],
   ),
   // Natural-language motion layers for oral scenes. These complement the
@@ -1921,11 +1982,36 @@ final List<CatalogTagData> expandedPromptTags = <CatalogTagData>[
     adult: true,
     support: 'description',
     rows: const [
-      ['跪姿陰莖口交', 'kneeling fellatio'],
-      ['站姿陰莖口交', 'standing fellatio'],
-      ['躺姿陰莖口交', 'lying down fellatio'],
-      ['從上方口交', 'oral sex from above'],
-      ['從下方口交', 'oral sex from below'],
+      [
+        '跪姿陰莖口交',
+        'kneeling fellatio',
+        oralFellatioPositionConflictGroup,
+        oralSexPositionGroup
+      ],
+      [
+        '站姿陰莖口交',
+        'standing fellatio',
+        oralFellatioPositionConflictGroup,
+        oralSexPositionGroup
+      ],
+      [
+        '躺姿陰莖口交',
+        'lying down fellatio',
+        oralFellatioPositionConflictGroup,
+        oralSexPositionGroup
+      ],
+      [
+        '從上方口交',
+        'oral sex from above',
+        oralFellatioPositionConflictGroup,
+        oralSexPositionGroup
+      ],
+      [
+        '從下方口交',
+        'oral sex from below',
+        oralFellatioPositionConflictGroup,
+        oralSexPositionGroup
+      ],
       ['口交時注視對方', 'oral sex with eye contact'],
       ['口交時手扶陰莖', 'oral sex, hand on penis'],
       ['口交時手扶頭部', 'oral sex, hands on head'],
