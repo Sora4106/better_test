@@ -30,7 +30,7 @@ const _showPersonFeatureGuidance = false;
 // Version 6 removes the standalone "組合" step.  Saved progress is migrated
 // below, while the underlying reusable outfit/pose data remains available in
 // its integrated pickers.
-const _stepLayoutVersion = 6;
+const _stepLayoutVersion = 7;
 const _wingTypeGroup = '翅膀類型';
 const _wingColorGroup = '翅膀顏色';
 const _animalEarColorGroup = '獸耳顏色';
@@ -9597,6 +9597,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     '固定角色外觀',
     '服裝與穿脫',
     '姿勢與互動',
+    '自行輸入',
     '品質與負面',
   ];
   static const _imageStepShortTitles = <String>[
@@ -9605,6 +9606,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     '特徵',
     '服裝',
     '姿勢',
+    '輸入',
     '品質',
   ];
   static const _imageStepIcons = <IconData>[
@@ -9613,6 +9615,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     Icons.face_retouching_natural,
     Icons.checkroom_outlined,
     Icons.accessibility_new,
+    Icons.edit_note_outlined,
     Icons.tune,
   ];
 
@@ -14853,6 +14856,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         // tags remain in the relevant feature, clothing, and pose sections.
         savedStep -= 1;
       }
+      if (savedLayoutVersion < 7 && savedStep >= 5) {
+        // Version 7 inserts the consolidated manual-input step before the
+        // quality and negative-prompt step.
+        savedStep += 1;
+      }
       _stepIndex = savedStep.clamp(0, _imageStepTitles.length - 1).toInt();
       _workspaceMode = data['workspaceMode'] == 'video' ? 'video' : 'image';
       _sideNavigationOnRight = data['sideNavigationOnRight'] == true;
@@ -16086,16 +16094,36 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _unregisteredPositiveTags.removeWhere(_isRegisteredPositiveTag);
   }
 
-  void _clearExtraPositive() {
-    if (_extraPositive.text.trim().isEmpty) return;
-    setState(() {
-      _extraPositive.clear();
-      _collectUnknownExtraPositiveTags();
-      _persist();
-    });
+  void _updateExtraPositive(String _) {
+    _collectUnknownExtraPositiveTags();
+    _persist();
+    if (mounted) setState(() {});
   }
 
-  Future<void> _pasteAndReplaceExtraPositive() async {
+  void _updatePreprompt(String _) {
+    _persist();
+    if (mounted) setState(() {});
+  }
+
+  void _updateReversePrompt(String _) {
+    _persist();
+    _scheduleReversePromptAnalysis();
+    if (mounted) setState(() {});
+  }
+
+  void _clearManualInput(
+    TextEditingController controller, {
+    required ValueChanged<String> onChanged,
+  }) {
+    if (controller.text.isEmpty) return;
+    controller.clear();
+    onChanged('');
+  }
+
+  Future<void> _pasteAndReplaceManualInput(
+    TextEditingController controller, {
+    required ValueChanged<String> onChanged,
+  }) async {
     String? pasted;
     try {
       pasted = (await Clipboard.getData(Clipboard.kTextPlain))?.text;
@@ -16107,13 +16135,58 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return;
     }
     if (!mounted) return;
-    setState(() {
-      // Replace, rather than append, so pasted prompts never mix with an old
-      // extra-positive sentence by accident.
-      _extraPositive.text = value;
-      _collectUnknownExtraPositiveTags();
-      _persist();
-    });
+    // Replace, rather than append, so pasted content never mixes with an old
+    // manual phrase by accident. Programmatic controller writes do not invoke
+    // TextField.onChanged, so call the same state handler explicitly.
+    controller.value = TextEditingValue(
+      text: value,
+      selection: TextSelection.collapsed(offset: value.length),
+    );
+    onChanged(value);
+  }
+
+  Widget _manualInputField({
+    required TextEditingController controller,
+    required String labelText,
+    required ValueChanged<String> onChanged,
+    String? hintText,
+    String? helperText,
+    IconData? prefixIcon,
+    int minLines = 1,
+    int maxLines = 1,
+  }) {
+    return TextField(
+      controller: controller,
+      minLines: minLines,
+      maxLines: maxLines,
+      onChanged: onChanged,
+      decoration: InputDecoration(
+        labelText: labelText,
+        hintText: hintText,
+        helperText: helperText,
+        prefixIcon: prefixIcon == null ? null : Icon(prefixIcon),
+        border: const OutlineInputBorder(),
+        suffixIconConstraints: const BoxConstraints(minWidth: 0),
+        suffixIcon: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: '貼上並取代目前內容',
+              onPressed: () => unawaited(
+                _pasteAndReplaceManualInput(controller, onChanged: onChanged),
+              ),
+              icon: const Icon(Icons.content_paste_go_outlined),
+            ),
+            IconButton(
+              tooltip: '清空此欄位',
+              onPressed: () =>
+                  _clearManualInput(controller, onChanged: onChanged),
+              icon: const Icon(Icons.clear),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   String _positiveEnglishTag(String value) {
@@ -19752,7 +19825,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       2: '固定角色外觀',
       3: '服裝與穿脫狀態',
       4: '姿勢、互動與成人分類',
-      5: '品質、額外與負面',
+      5: '自行輸入',
+      6: '品質與負面',
       7: '動畫分鏡與動態語句',
     };
     final title = titles[index] ?? '本大項';
@@ -19829,6 +19903,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           _removedCharacterTags.clear();
           _personTagQueries.clear();
           _personActiveGroups.clear();
+          for (var personIndex = 0;
+              personIndex < _personSlots.length;
+              personIndex++) {
+            _clearPersonSearchController(personIndex, 'original-anime-zh');
+            _clearPersonSearchController(personIndex, 'original-anime-en');
+            _clearPersonSearchController(personIndex, 'original-preset-name');
+            _clearPersonSearchController(personIndex, 'original-traits');
+          }
           break;
         case 2:
           removePersonTagsWhere(_isFixedCharacterFeatureTag);
@@ -19850,26 +19932,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             slot.hairGradientColorIds = <String>[];
             slot.hairGradientStyle = _defaultHairGradientStyle;
             slot.physicalTraitGradientColorIds = <String, List<String>>{};
-            slot.featureExtraPositive = '';
-            _clearPersonSearchController(
-              personIndex,
-              'feature-extra-positive',
-            );
           }
           break;
         case 3:
           removePersonTagsWhere(_isClothingOrEquipmentTag);
           _outfitReferenceHiddenSectionsByPerson.clear();
           _scatteredOutfitWornBlocksByPerson.clear();
-          for (var personIndex = 0;
-              personIndex < _personSlots.length;
-              personIndex++) {
-            _personSlots[personIndex].clothingExtraPositive = '';
-            _clearPersonSearchController(
-              personIndex,
-              'clothing-extra-positive',
-            );
-          }
           break;
         case 4:
           _removeAdultPosePackageTags();
@@ -19877,24 +19945,35 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               removableByGroup(_sharedActionPickerGroups.toSet());
           _selectedIds.removeWhere(sharedActionIds.contains);
           removePersonTagsWhere(_isPoseWorkflowTag);
-          for (var personIndex = 0;
-              personIndex < _personSlots.length;
-              personIndex++) {
-            _personSlots[personIndex].poseExtraPositive = '';
-            _clearPersonSearchController(
-              personIndex,
-              'pose-extra-positive',
-            );
-          }
           break;
         case 5:
           _extraPositive.clear();
+          _sharedPoseExtra.clear();
           _reversePrompt.clear();
           _reversePromptResultSource = '';
           _reversePromptExcludedKeys.clear();
           _reversePromptAnalysis = const _ReversePromptAnalysis.empty();
-          _negative.text = _defaultNegativeText;
           _preprompt.clear();
+          _unregisteredPositiveTags.clear();
+          for (var personIndex = 0;
+              personIndex < _personSlots.length;
+              personIndex++) {
+            _personSlots[personIndex]
+              ..featureExtraPositive = ''
+              ..clothingExtraPositive = ''
+              ..poseExtraPositive = ''
+              ..originalOutfitVariant = '';
+            _clearPersonSearchController(
+                personIndex, 'feature-extra-positive');
+            _clearPersonSearchController(
+                personIndex, 'clothing-extra-positive');
+            _clearPersonSearchController(personIndex, 'pose-extra-positive');
+            _clearPersonSearchController(
+                personIndex, 'original-outfit-variant');
+          }
+          break;
+        case 6:
+          _negative.text = _defaultNegativeText;
           break;
         case 7:
           _animationBeats
@@ -21281,6 +21360,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _openCharacterPickers.remove(index);
       _clearPersonSearchController(index, 'anime');
       _clearPersonSearchController(index, 'character');
+      _clearPersonSearchController(index, 'original-anime-zh');
+      _clearPersonSearchController(index, 'original-anime-en');
+      _clearPersonSearchController(index, 'original-traits');
 
       slot
         ..mode = mode
@@ -21517,12 +21599,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           ),
           const SizedBox(height: 4),
           const Text(
-            '選取後會恢復第 4 項的角色原有特徵；名稱只供清單辨識，不會輸出為提示詞。',
+            '選取後會恢復已儲存的原創角色固定特徵；名稱只供清單辨識，不會輸出為提示詞。',
             style: TextStyle(fontSize: 12),
           ),
           if (presets.isEmpty) ...[
             const SizedBox(height: 7),
-            const Text('尚未儲存原創角色。先在第 4 項挑選特徵並儲存即可。'),
+            const Text('尚未儲存原創角色。可直接在目前角色資料填寫固定特徵後儲存。'),
           ] else ...[
             const SizedBox(height: 8),
             Wrap(
@@ -21577,8 +21659,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 ),
                 Text(
                   canSave
-                      ? '將目前 $featureCount 個既有特徵與手動補充保存到「${_cleanTag(slot.originalCharacterZh)}」。'
-                      : '填寫角色名稱，並至少選擇一個角色特徵或手動補充後即可儲存。',
+                      ? '將目前 $featureCount 個既有特徵與此處手動固定特徵保存到「${_cleanTag(slot.originalCharacterZh)}」。'
+                      : '填寫角色名稱，並在此輸入至少一項固定特徵，或選擇既有特徵後即可儲存。',
                   style: const TextStyle(fontSize: 12),
                 ),
               ],
@@ -25918,30 +26000,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                   const SizedBox(height: 8),
                   _personPromptWeightControls(index),
-                  if (slot.mode == '原創') ...[
-                    const SizedBox(height: 8),
-                    _originalCharacterFeatureSavePanel(index),
-                  ],
-                  if (groups.contains(_canonicalOutfitFeatureGroup) &&
-                      _usesCanonicalOutfit(index)) ...[
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _personSearchController(
-                        index,
-                        'original-outfit-variant',
-                        slot.originalOutfitVariant,
-                      ),
-                      onChanged: (value) =>
-                          _updateOriginalOutfitVariant(index, value),
-                      decoration: const InputDecoration(
-                        labelText: '原作服裝版本／變體（選填）',
-                        hintText: '例如：game 1 outfit, alternate outfit',
-                        helperText: '會跟在「原作設定服裝」後方，作為模型可理解的補充描述。',
-                        prefixIcon: Icon(Icons.auto_awesome_outlined),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ],
                   if (groups.contains('髮型')) ...[
                     _hairStylePackagePanel(index),
                     const SizedBox(height: 8),
@@ -25951,32 +26009,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       nextLabel: nextLabel,
                       personIndex: index,
                       showNext: false),
-                  if (groups.contains('髮型') &&
-                      groups.contains(_animalTraitGroup)) ...[
-                    const SizedBox(height: 14),
-                    const Divider(),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _personSearchController(
-                        index,
-                        'feature-extra-positive',
-                        slot.featureExtraPositive,
-                      ),
-                      minLines: 2,
-                      maxLines: 4,
-                      onChanged: (value) =>
-                          _updatePersonFeatureExtra(index, value),
-                      decoration: const InputDecoration(
-                        labelText: '自行加入角色特徵標籤',
-                        hintText:
-                            '例如：silver facial markings, delicate freckles',
-                        helperText:
-                            '每行或句點分隔一段；會併入此人物的「特徵」括號區塊，英文原樣保留，中文會依內建對照轉換。',
-                        prefixIcon: Icon(Icons.face_retouching_natural),
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ],
                 ],
               ),
             ),
@@ -27235,20 +27267,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               );
             },
           ),
-          const Divider(height: 24),
-          TextField(
-            controller: _sharedPoseExtra,
-            minLines: 2,
-            maxLines: 4,
-            onChanged: _updateSharedPoseExtra,
-            decoration: const InputDecoration(
-              labelText: '共用自然敘述動作',
-              hintText: '例如：walking together while playfully holding hands',
-              helperText: '套用於所有人物後方的共用動作；可直接輸入未收錄的英文自然敘述。',
-              prefixIcon: Icon(Icons.groups_outlined),
-              border: OutlineInputBorder(),
-            ),
-          ),
         ],
       ),
     );
@@ -27594,28 +27612,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                   if (currentGroups.contains(_objectInteractionGroup))
                     _objectColorControl(index),
-                  const SizedBox(height: 14),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _personSearchController(
-                      index,
-                      'pose-extra-positive',
-                      slot.poseExtraPositive,
-                    ),
-                    minLines: 2,
-                    maxLines: 4,
-                    onChanged: (value) => _updatePersonPoseExtra(index, value),
-                    decoration: const InputDecoration(
-                      labelText: '自行加入姿勢／動作標籤',
-                      hintText:
-                          '例如：swinging a sword in a wide arc while stepping forward',
-                      helperText:
-                          '內容只套用到此人物；每行或句點分隔一段，會併入此人物的「姿勢」括號區塊。英文會原樣保留，中文會依內建對照轉成英文。',
-                      prefixIcon: Icon(Icons.edit_note_outlined),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -28664,28 +28660,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ),
                       child: const Text('請先在上方目前部位選擇一件服裝，再設定其顏色、細節與穿脫狀態。'),
                     ),
-                  const SizedBox(height: 14),
-                  const Divider(),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _personSearchController(
-                      index,
-                      'clothing-extra-positive',
-                      slot.clothingExtraPositive,
-                    ),
-                    minLines: 2,
-                    maxLines: 4,
-                    onChanged: (value) =>
-                        _updatePersonClothingExtra(index, value),
-                    decoration: const InputDecoration(
-                      labelText: '自行加入服裝／配件標籤',
-                      hintText: '例如：silver moon-shaped choker necklace',
-                      helperText:
-                          '每行或句點分隔一段；會放入此人物服裝的大括號，與既有服裝部位同層分組，不會跑到姿勢或場景。',
-                      prefixIcon: Icon(Icons.add_circle_outline),
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -28697,7 +28671,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           child: FilledButton.icon(
             onPressed: _advanceStep,
             icon: const Icon(Icons.arrow_forward),
-            label: const Text('下一步：表情'),
+            label: const Text('下一步：姿勢與互動'),
           ),
         ),
       ],
@@ -30141,18 +30115,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ),
                   ],
                   const SizedBox(height: 6),
-                  TextFormField(
-                    initialValue: beat.extraDirection,
+                  _manualInputField(
+                    controller: _personSearchController(
+                      -1,
+                      'animation-extra-${beat.id}',
+                      beat.extraDirection,
+                    ),
+                    labelText: '補充動態敘述（可選）',
+                    hintText: '中文或英文皆可；建議描述節奏、視線、物件互動或不在選項中的細節。',
+                    prefixIcon: Icons.edit_note_outlined,
                     minLines: 2,
                     maxLines: 4,
-                    onChanged: (value) {
-                      beat.extraDirection = value;
-                      _persist();
-                    },
-                    decoration: const InputDecoration(
-                      labelText: '補充動態敘述（可選）',
-                      hintText: '中文或英文皆可；建議描述節奏、視線、物件互動或不在選項中的細節。',
-                      prefixIcon: Icon(Icons.edit_note_outlined),
+                    onChanged: (value) => _updateAnimationBeat(
+                      beat,
+                      () => beat.extraDirection = value,
                     ),
                   ),
                 ],
@@ -30833,53 +30809,69 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                         const SizedBox(height: 10),
                         _originalCharacterPresetPicker(index),
                         const SizedBox(height: 10),
-                        TextFormField(
-                            initialValue: slot.originalAnimeZh,
-                            decoration: const InputDecoration(
-                                labelText: '原創作品/世界觀中文（可選）'),
-                            onChanged: (value) {
-                              slot.originalAnimeZh = value;
-                              _persist();
-                            }),
+                        _manualInputField(
+                          controller: _personSearchController(
+                            index,
+                            'original-anime-zh',
+                            slot.originalAnimeZh,
+                          ),
+                          labelText: '原創作品／世界觀中文（可選）',
+                          onChanged: (value) {
+                            slot.originalAnimeZh = value;
+                            _persist();
+                            if (mounted) setState(() {});
+                          },
+                        ),
                         const SizedBox(height: 8),
-                        TextFormField(
-                            initialValue: slot.originalAnimeEn,
-                            decoration: const InputDecoration(
-                                labelText: 'Original work English（可選）'),
-                            onChanged: (value) {
-                              slot.originalAnimeEn = value;
-                              _persist();
-                            }),
+                        _manualInputField(
+                          controller: _personSearchController(
+                            index,
+                            'original-anime-en',
+                            slot.originalAnimeEn,
+                          ),
+                          labelText: 'Original work English（可選）',
+                          onChanged: (value) {
+                            slot.originalAnimeEn = value;
+                            _persist();
+                            if (mounted) setState(() {});
+                          },
+                        ),
                         const SizedBox(height: 8),
-                        TextFormField(
-                            controller: _personSearchController(
-                              index,
-                              'original-preset-name',
-                              slot.originalCharacterZh,
-                            ),
-                            decoration: const InputDecoration(
-                              labelText: '原創角色名稱（僅供清單辨識）',
-                              helperText: '此名稱不會加入英文或中文提示詞；第 4 項可將特徵儲存為此角色。',
-                            ),
-                            onChanged: (value) {
-                              slot.originalCharacterZh = value;
-                              slot.originalCharacterPresetId = '';
-                              _persist();
-                            }),
+                        _manualInputField(
+                          controller: _personSearchController(
+                            index,
+                            'original-preset-name',
+                            slot.originalCharacterZh,
+                          ),
+                          labelText: '原創角色名稱（僅供清單辨識）',
+                          helperText: '此名稱不會加入英文或中文提示詞；可直接在此步驟保存固定特徵。',
+                          onChanged: (value) {
+                            slot.originalCharacterZh = value;
+                            slot.originalCharacterPresetId = '';
+                            _persist();
+                            if (mounted) setState(() {});
+                          },
+                        ),
                         const SizedBox(height: 8),
-                        TextFormField(
-                            controller: _personSearchController(
-                              index,
-                              'original-traits',
-                              slot.originalTraits,
-                            ),
-                            decoration: const InputDecoration(
-                                labelText: '原創角色固定特徵補充（中英文皆可）',
-                                helperText: '逗號分隔；會與第 4 項既有特徵一起保存及輸出。'),
-                            onChanged: (value) {
-                              slot.originalTraits = value;
-                              _persist();
-                            }),
+                        _manualInputField(
+                          controller: _personSearchController(
+                            index,
+                            'original-traits',
+                            slot.originalTraits,
+                          ),
+                          labelText: '原創角色固定特徵（中英文皆可）',
+                          hintText: '例如：brown hair, green eyes, long hair',
+                          helperText: '填寫角色名稱與至少一項特徵後，即可直接在此步驟儲存；不必先到固定角色外觀勾選標籤。',
+                          prefixIcon: Icons.face_retouching_natural,
+                          minLines: 2,
+                          maxLines: 4,
+                          onChanged: (value) {
+                            slot.originalTraits = value;
+                            slot.originalCharacterPresetId = '';
+                            _persist();
+                            if (mounted) setState(() {});
+                          },
+                        ),
                         const SizedBox(height: 10),
                         _originalCharacterFeatureSavePanel(index),
                       ],
@@ -31085,92 +31077,238 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
-  Widget _stepFinal() {
-    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-      TextField(
-          controller: _preprompt,
-          maxLines: 2,
-          onChanged: (_) => setState(() {}),
-          decoration: const InputDecoration(
-              labelText: 'Amanatsu 品質前綴（可修改）',
-              helperText: '角色基本特徵與整套服裝會分別使用括號權重；表情、姿勢、動作與場景維持一般權重。')),
-      const SizedBox(height: 10),
-      TextField(
-          controller: _extraPositive,
-          maxLines: 2,
-          onChanged: (_) {
-            _collectUnknownExtraPositiveTags();
-            _persist();
-            setState(() {});
-          },
-          decoration: InputDecoration(
-            labelText: '額外正向標籤',
-            hintText: '中文或英文，逗號/換行分隔',
-            suffixIconConstraints: const BoxConstraints(minWidth: 0),
-            suffixIcon: Row(
-              mainAxisSize: MainAxisSize.min,
+  Widget _stepManualInputs() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '所有自行輸入集中於此。每個欄位的內容仍會依用途輸出到角色特徵、服裝、個人姿勢或多人共用動作的正確括號區塊；貼上會取代目前欄位內容，X 可立即清空。',
+        ),
+        const SizedBox(height: 10),
+        Card(
+          margin: EdgeInsets.zero,
+          color: Theme.of(context)
+              .colorScheme
+              .primaryContainer
+              .withValues(alpha: .18),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                IconButton(
-                  tooltip: '貼上並取代目前內容',
-                  onPressed: () => unawaited(_pasteAndReplaceExtraPositive()),
-                  icon: const Icon(Icons.content_paste_go_outlined),
+                const Row(
+                  children: [
+                    Icon(Icons.edit_note_outlined),
+                    SizedBox(width: 8),
+                    Text('全域補充',
+                        style: TextStyle(fontWeight: FontWeight.w800)),
+                  ],
                 ),
-                IconButton(
-                  tooltip: '清除額外正向標籤',
-                  onPressed: _extraPositive.text.trim().isEmpty
-                      ? null
-                      : _clearExtraPositive,
-                  icon: const Icon(Icons.clear),
+                const SizedBox(height: 9),
+                _manualInputField(
+                  controller: _extraPositive,
+                  labelText: '額外正向標籤',
+                  hintText: '中文或英文，逗號／換行分隔',
+                  helperText: '輸出在人物與共用動作後方；英文原樣保留，中文會依系統對照轉換。',
+                  prefixIcon: Icons.add_circle_outline,
+                  minLines: 2,
+                  maxLines: 4,
+                  onChanged: _updateExtraPositive,
+                ),
+                const SizedBox(height: 10),
+                _manualInputField(
+                  controller: _sharedPoseExtra,
+                  labelText: '共用自然敘述動作',
+                  hintText: '例如：walking together while playfully holding hands',
+                  helperText: '輸出在所有人物後方，適合多人共用互動或未收錄的自然敘述。',
+                  prefixIcon: Icons.groups_outlined,
+                  minLines: 2,
+                  maxLines: 4,
+                  onChanged: _updateSharedPoseExtra,
+                ),
+                const SizedBox(height: 10),
+                _manualInputField(
+                  controller: _preprompt,
+                  labelText: 'Amanatsu 品質前綴（可修改）',
+                  helperText: '角色基本特徵與整套服裝會各自使用括號權重；表情、姿勢、動作與場景維持一般權重。',
+                  prefixIcon: Icons.auto_awesome_outlined,
+                  minLines: 2,
+                  maxLines: 3,
+                  onChanged: _updatePreprompt,
                 ),
               ],
             ),
-          )),
-      if (!_isCompactMobileViewport) ...[
+          ),
+        ),
+        if (!_isCompactMobileViewport) ...[
+          const SizedBox(height: 10),
+          _unregisteredPositiveTagsPanel(),
+        ],
         const SizedBox(height: 10),
-        _unregisteredPositiveTagsPanel(),
-        const SizedBox(height: 10),
-      ],
-      TextField(
-        controller: _reversePrompt,
-        maxLines: 4,
-        onChanged: (_) {
-          setState(() {});
-          _scheduleReversePromptAnalysis();
-        },
-        decoration: InputDecoration(
-          labelText: '標籤反推（貼上既有提示詞）',
-          hintText: '貼上後按「分析並建立標籤」，可再逐一排除不需要的項目',
-          suffixIcon: _reversePrompt.text.trim().isEmpty
-              ? null
-              : IconButton(
-                  tooltip: '清除輸入文字',
-                  onPressed: () {
-                    setState(_reversePrompt.clear);
-                    _scheduleReversePromptAnalysis();
-                  },
-                  icon: const Icon(Icons.clear),
+        Card(
+          margin: EdgeInsets.zero,
+          color: Theme.of(context)
+              .colorScheme
+              .secondaryContainer
+              .withValues(alpha: .18),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('標籤反推',
+                    style: TextStyle(fontWeight: FontWeight.w800)),
+                const SizedBox(height: 8),
+                _manualInputField(
+                  controller: _reversePrompt,
+                  labelText: '貼上既有提示詞',
+                  hintText: '貼上後按「分析並建立標籤」，可再逐一排除不需要的項目',
+                  helperText: '分析完成後輸入欄會清空，結果會轉為可點選的系統標籤或額外標籤。',
+                  prefixIcon: Icons.manage_search_outlined,
+                  minLines: 3,
+                  maxLines: 6,
+                  onChanged: _updateReversePrompt,
                 ),
+                const SizedBox(height: 8),
+                FilledButton.icon(
+                  onPressed: _reversePrompt.text.trim().isEmpty
+                      ? null
+                      : _commitReversePromptAnalysis,
+                  icon: const Icon(Icons.manage_search_outlined),
+                  label: const Text('分析並建立標籤'),
+                ),
+                const SizedBox(height: 4),
+                _reversePromptPreviewPanel(),
+              ],
+            ),
+          ),
         ),
-      ),
-      const SizedBox(height: 8),
-      Align(
-        alignment: Alignment.centerLeft,
-        child: FilledButton.icon(
-          onPressed: _reversePrompt.text.trim().isEmpty
-              ? null
-              : _commitReversePromptAnalysis,
-          icon: const Icon(Icons.manage_search_outlined),
-          label: const Text('分析並建立標籤'),
+        const SizedBox(height: 10),
+        ..._personSlots.asMap().entries.map((entry) {
+          final index = entry.key;
+          final slot = entry.value;
+          final names = _characterChineseForSlot(slot, index);
+          final title = names.isEmpty ? '人物 ${index + 1}' : names.first;
+          return Card(
+            margin: const EdgeInsets.only(bottom: 10),
+            color: Theme.of(context)
+                .colorScheme
+                .surfaceContainerHighest
+                .withValues(alpha: .30),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      CircleAvatar(child: Text('${index + 1}')),
+                      const SizedBox(width: 9),
+                      Expanded(
+                        child: Text(
+                          '人物 ${index + 1} · $title',
+                          style: const TextStyle(fontWeight: FontWeight.w800),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (slot.detailed) ...[
+                    _manualInputField(
+                      controller: _personSearchController(
+                        index,
+                        'feature-extra-positive',
+                        slot.featureExtraPositive,
+                      ),
+                      labelText: '角色特徵補充',
+                      hintText:
+                          '例如：silver facial markings, delicate freckles',
+                      helperText: '只會併入此人物的特徵括號區塊。',
+                      prefixIcon: Icons.face_retouching_natural,
+                      minLines: 2,
+                      maxLines: 4,
+                      onChanged: (value) =>
+                          _updatePersonFeatureExtra(index, value),
+                    ),
+                    const SizedBox(height: 10),
+                    _manualInputField(
+                      controller: _personSearchController(
+                        index,
+                        'clothing-extra-positive',
+                        slot.clothingExtraPositive,
+                      ),
+                      labelText: '服裝／配件補充',
+                      hintText: '例如：silver moon-shaped choker necklace',
+                      helperText: '只會併入此人物的服裝括號區塊，不會跑到姿勢或場景。',
+                      prefixIcon: Icons.checkroom_outlined,
+                      minLines: 2,
+                      maxLines: 4,
+                      onChanged: (value) =>
+                          _updatePersonClothingExtra(index, value),
+                    ),
+                    if (_usesCanonicalOutfit(index)) ...[
+                      const SizedBox(height: 10),
+                      _manualInputField(
+                        controller: _personSearchController(
+                          index,
+                          'original-outfit-variant',
+                          slot.originalOutfitVariant,
+                        ),
+                        labelText: '原作服裝版本／變體（選填）',
+                        hintText: '例如：game 1 outfit, alternate outfit',
+                        helperText: '會跟在「原作設定服裝」後方，作為模型可理解的補充描述。',
+                        prefixIcon: Icons.auto_awesome_outlined,
+                        minLines: 1,
+                        maxLines: 2,
+                        onChanged: (value) =>
+                            _updateOriginalOutfitVariant(index, value),
+                      ),
+                    ],
+                    const SizedBox(height: 10),
+                  ] else
+                    const Padding(
+                      padding: EdgeInsets.only(bottom: 10),
+                      child: Text(
+                        '此人物設定為不需細節，保留個人姿勢／動作補充可用。',
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  _manualInputField(
+                    controller: _personSearchController(
+                      index,
+                      'pose-extra-positive',
+                      slot.poseExtraPositive,
+                    ),
+                    labelText: '個人姿勢／動作補充',
+                    hintText:
+                        '例如：swinging a sword in a wide arc while stepping forward',
+                    helperText: '只會併入此人物的姿勢括號區塊。',
+                    prefixIcon: Icons.accessibility_new,
+                    minLines: 2,
+                    maxLines: 4,
+                    onChanged: (value) =>
+                        _updatePersonPoseExtra(index, value),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: FilledButton.icon(
+            onPressed: _advanceStep,
+            icon: const Icon(Icons.arrow_forward),
+            label: const Text('下一步：品質與負面'),
+          ),
         ),
-      ),
-      const SizedBox(height: 4),
-      _reversePromptPreviewPanel(),
-      const SizedBox(height: 8),
-      Text('分析後輸入欄會自動清空，結果轉為可點選標籤；點選或按 X 可排除單一項目，再套用其餘標籤。未對應詞也可個別排除或加入額外欄位。',
-          style: TextStyle(
-              fontSize: 12,
-              color: Theme.of(context).colorScheme.onSurfaceVariant)),
-      const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  Widget _stepFinal() {
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Container(
           width: double.infinity,
           padding: const EdgeInsets.all(12),
@@ -31560,13 +31698,26 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               .ifEmpty('每位人物分別設定'),
           Icons.accessibility_new,
           _stepCategorizedPersonTagPicker(_organizedPosePickerSections,
-              nextLabel: '下一步：品質與負面',
+              nextLabel: '下一步：自行輸入',
               instruction:
                   '依序選頭部、上半身、下半身、全身姿勢，再選物件或人物互動；成人性姿勢與道具集中在最後。每位人物會保留自己的動作與互動。'),
           onClear: () => _clearStepTags(4)),
-      () => _stepCard(5, '品質、額外與負面', '設定品質前綴、negative prompt 與 18+ 顯示',
-          Icons.tune, _stepFinal(),
-          onClear: () => _clearStepTags(5)),
+      () => _stepCard(
+            5,
+            '自行輸入',
+            '集中管理全域、共用與各人物的手動提示詞',
+            Icons.edit_note_outlined,
+            _stepManualInputs(),
+            onClear: () => _clearStepTags(5),
+          ),
+      () => _stepCard(
+            6,
+            '品質與負面',
+            '設定 negative prompt 與 18+ 顯示',
+            Icons.tune,
+            _stepFinal(),
+            onClear: () => _clearStepTags(6),
+          ),
     ];
     final index = _stepIndex.clamp(0, steps.length - 1).toInt();
     return steps[index]();
@@ -31707,35 +31858,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 _persist();
               }),
             ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: _preprompt,
-              maxLines: 2,
-              onChanged: (_) => setState(() {}),
-              decoration: const InputDecoration(
-                labelText: 'Amanatsu 品質前綴（可修改）',
-                helperText: '會在全部選取標籤之後輸出，避免破壞你指定的角色→服裝→表情→姿勢順序。',
-                prefixIcon: Icon(Icons.tune),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _extraPositive,
-              maxLines: 2,
-              onChanged: (_) {
-                _collectUnknownExtraPositiveTags();
-                _persist();
-                setState(() {});
-              },
-              decoration: const InputDecoration(
-                labelText: '額外正向標籤',
-                hintText: '可輸入中文或英文；中文會自動轉成英文標籤',
-                helperText: '可用逗號或換行分隔；內建標籤會自動對應英文，英文欄位仍以英文輸出。',
-                prefixIcon: Icon(Icons.add_circle_outline),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _unregisteredPositiveTagsPanel(),
             const SizedBox(height: 12),
             const Row(children: [
               Icon(Icons.visibility_off_outlined, size: 18),
