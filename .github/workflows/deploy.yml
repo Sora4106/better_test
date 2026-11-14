@@ -57,7 +57,11 @@ jobs:
         working-directory: flutter_pwa
         run: |
           flutter pub get
-          flutter analyze
+          # Newer Flutter releases report the framework's ongoing Material
+          # package migration as an informational deprecation. Keep real
+          # errors and warnings fatal, but do not block Pages deployment on
+          # that upstream informational notice.
+          flutter analyze --no-fatal-infos
           dart run tool/check_clothing_taxonomy.dart
           dart run tool/check_lower_body_color_channels.dart
           dart run tool/check_finger_gestures.dart
