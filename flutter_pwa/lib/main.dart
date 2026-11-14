@@ -334,6 +334,14 @@ const _defaultNegativeText =
     'poorly drawn face, malformed face, asymmetrical eyes, cross-eyed, deformed, multiple views, '
     'text, error, jpeg artifacts, watermark, unfinished, displeasing, signature, username, scan artifacts';
 
+/// Anatomy details that are always emitted with the positive prompt.  These
+/// are deliberately not selectable catalog tags: every generated character
+/// benefits from the same explicit hand and foot count guidance.
+const _automaticAnatomyPositiveCatalog = <Map<String, String>>[
+  {'en': 'five fingers', 'zh': '五根手指'},
+  {'en': 'five toes', 'zh': '五根腳趾'},
+];
+
 /// Generic person-rendering faults that should be suppressed for every
 /// character.  They are intentionally independent of hairstyle, species,
 /// clothing, pose, scene, and character count, so no selected prompt detail is
@@ -349,6 +357,10 @@ const _sharedCharacterNegativeCatalog = <Map<String, String>>[
   {'en': 'malformed limbs', 'zh': '肢體畸形'},
   {'en': 'fused fingers', 'zh': '手指黏連'},
   {'en': 'malformed fingers', 'zh': '手指畸形'},
+  {'en': 'four fingers', 'zh': '四根手指'},
+  {'en': 'six fingers', 'zh': '六根手指'},
+  {'en': 'four toes', 'zh': '四根腳趾'},
+  {'en': 'six toes', 'zh': '六根腳趾'},
   {'en': 'poorly drawn face', 'zh': '臉部繪製不佳'},
   {'en': 'malformed face', 'zh': '臉部畸形'},
   {'en': 'asymmetrical eyes', 'zh': '雙眼不對稱'},
@@ -982,6 +994,7 @@ class _GeneratedOutputTag {
     this.extraPositiveValue,
     this.prepromptValue,
     this.clothingBlockKey,
+    this.automatic = false,
   });
 
   final String zh;
@@ -998,6 +1011,10 @@ class _GeneratedOutputTag {
   final String? sharedPoseExtraValue;
   final String? extraPositiveValue;
   final String? prepromptValue;
+
+  /// A system safety/correction tag. It is shown in output summaries but
+  /// cannot be removed through the generated Chinese tag chips.
+  final bool automatic;
 
   /// Identifies the garment block that owns this generated clothing phrase.
   /// This is used only when rendering the English prompt, so its individual
@@ -15785,8 +15802,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     result.addAll(_selectedTags.map(
         (tag) => _GeneratedOutputTag(zh: tag.zh, en: tag.en, tagId: tag.id)));
     result.addAll(_sharedPoseExtraOutputTags());
+    result.addAll(_automaticAnatomyPositiveOutputTags);
     return _deduplicateGeneratedOutputTags(result);
   }
+
+  List<_GeneratedOutputTag> get _automaticAnatomyPositiveOutputTags =>
+      _automaticAnatomyPositiveCatalog
+          .map(
+            (item) => _GeneratedOutputTag(
+              zh: item['zh']!,
+              en: item['en']!,
+              automatic: true,
+            ),
+          )
+          .toList(growable: false);
 
   List<_GeneratedOutputTag> _deduplicateGeneratedOutputTags(
       List<_GeneratedOutputTag> tags) {
@@ -15834,6 +15863,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             previous.extraPositiveValue ?? tag.extraPositiveValue,
         prepromptValue: previous.prepromptValue ?? tag.prepromptValue,
         clothingBlockKey: previous.clothingBlockKey ?? tag.clothingBlockKey,
+        automatic: previous.automatic || tag.automatic,
       );
     }
     return result;
@@ -15860,6 +15890,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   void _removeGeneratedOutputTag(_GeneratedOutputTag outputTag) {
+    if (outputTag.automatic) return;
     setState(() {
       if (outputTag.combinationId != null && outputTag.personIndex != null) {
         _personCombinationIds[outputTag.personIndex!]
@@ -16508,6 +16539,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .map((tag) => tag.en),
     );
     tokens.addAll(_sharedPoseExtraOutputTags().map((tag) => tag.en));
+    tokens.addAll(_automaticAnatomyPositiveCatalog.map((item) => item['en']!));
     final seen = <String>{};
     return tokens
         .map(_moderationSafePromptTag)
@@ -16523,6 +16555,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .map((tag) => tag.en),
         ..._extraTags(_extraPositive.text).map(_positiveEnglishTag),
         ..._extraTags(_preprompt.text),
+        ..._automaticAnatomyPositiveCatalog.map((item) => item['en']!),
       ].map(_moderationSafePromptTag).where((tag) => tag.isNotEmpty).toList();
 
   List<String> get _sharedActionTokens => _selectedTags
@@ -16808,6 +16841,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'Amanatsu 品質前綴：${_extraTags(_preprompt.text).map(_positiveChineseTag).join('、')}',
       );
     }
+    tokens.addAll(_automaticAnatomyPositiveCatalog.map((item) => item['zh']!));
     return tokens.join('。 ');
   }
 
@@ -31986,6 +32020,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         sourceTags.any((tag) => _isSharedActionGroup(tag.group))) {
       return '共享互動／姿勢';
     }
+    if (output.automatic) return '自動肢體校正';
     if (output.extraPositiveValue != null) return '額外正向標籤';
     if (output.prepromptValue != null) return 'Amanatsu 品質前綴';
     if (sourceTags.any((tag) => _isSceneVisualPromptGroup(tag.group))) {
@@ -32004,7 +32039,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   Widget _chineseOutputTagChip(_GeneratedOutputTag tag) {
-    final locked = _isMandatoryCharacterIdentityOutput(tag);
+    final locked = _isMandatoryCharacterIdentityOutput(tag) || tag.automatic;
     return Tooltip(
       message: locked
           ? '${_moderationSafePromptTag(tag.en)}（角色名稱必定保留）'
