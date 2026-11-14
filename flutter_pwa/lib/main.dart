@@ -768,6 +768,7 @@ class _ReversePromptAnalysis {
     required this.matchedTags,
     required this.unmatchedTokens,
     required this.people,
+    this.declaredPersonGenders = const <String>[],
     this.peopleCount,
     this.gender,
   });
@@ -777,6 +778,7 @@ class _ReversePromptAnalysis {
         matchedTags = const <TagItem>[],
         unmatchedTokens = const <String>[],
         people = const <_ReversePersonAnalysis>[],
+        declaredPersonGenders = const <String>[],
         peopleCount = null,
         gender = null;
 
@@ -788,6 +790,10 @@ class _ReversePromptAnalysis {
   /// Unknown text outside a person block.
   final List<String> unmatchedTokens;
   final List<_ReversePersonAnalysis> people;
+  /// Gender declarations read only from the prompt's shared count prefix.
+  /// For example, `1boy, 2girls, (1girl, ...)` is stored as
+  /// `[男性, 女性, 女性]`; nested per-person count labels are not counted again.
+  final List<String> declaredPersonGenders;
   final int? peopleCount;
   final String? gender;
 
@@ -18683,6 +18689,48 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
+  /// Reads only explicit person-count labels.  The caller decides which part
+  /// of the source should be inspected, so nested `1girl` labels inside a
+  /// person's own block do not accidentally get counted a second time.
+  List<String> _reverseDeclaredPersonGenders(Iterable<String> tokens) {
+    final genders = <String>[];
+    for (final token in tokens) {
+      final match = RegExp(
+        r'^(\d+)\s*(girls?|boys?|others?|people?|persons?)$',
+        caseSensitive: false,
+      ).firstMatch(_englishTagKey(token));
+      if (match == null) continue;
+      final count = (int.tryParse(match.group(1)!) ?? 1).clamp(1, 10).toInt();
+      final kind = match.group(2)!.toLowerCase();
+      final gender = kind.startsWith('girl')
+          ? '女性'
+          : kind.startsWith('boy')
+              ? '男性'
+              : '其他／混合';
+      genders.addAll(List<String>.filled(count, gender));
+    }
+    return genders;
+  }
+
+  String? _reverseUniformGender(Iterable<String> values) {
+    final genders = values.toList(growable: false);
+    if (genders.isEmpty) return null;
+    return genders.every((gender) => gender == genders.first)
+        ? genders.first
+        : null;
+  }
+
+  String? _reversePersonGender(_ReversePersonAnalysis analysis) {
+    final genders = _reverseDeclaredPersonGenders(analysis.tokens);
+    return _reverseUniformGender(genders);
+  }
+
+  bool _reverseHasPersonContent(_ReversePersonAnalysis analysis) =>
+      analysis.detectedCharacter != null ||
+      analysis.detectedAnimeTag != null ||
+      analysis.unmatchedTokens.isNotEmpty ||
+      analysis.matchedTags.any((tag) => !_isGlobalPromptGroup(tag.group));
+
   List<_ReverseBracketGroup> _reverseBracketGroups(String value) {
     final roots = <_ReverseBracketGroup>[];
     final stack = <_ReverseBracketGroup>[];
@@ -18883,29 +18931,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final tokens = _reverseTokensFromSource(source);
     if (tokens.isEmpty) return const _ReversePromptAnalysis.empty();
 
-    int? importedPeopleCount;
-    String? importedGender;
-    for (final token in tokens) {
-      final peopleMatch = RegExp(
-        r'^(\d+)\s*(girls?|boys?|people?|persons?)$',
-        caseSensitive: false,
-      ).firstMatch(_englishTagKey(token));
-      if (peopleMatch != null) {
-        importedPeopleCount =
-            (int.tryParse(peopleMatch.group(1)!) ?? 1).clamp(1, 10).toInt();
-        final kind = peopleMatch.group(2)!.toLowerCase();
-        importedGender = kind.startsWith('girl')
-            ? '女性'
-            : kind.startsWith('boy')
-                ? '男性'
-                : '其他／混合';
-      }
-    }
-
-    final groups = _reversePersonGroups(
-      source,
-      expectedPeopleCount: importedPeopleCount,
+    // Count only the shared prefix.  A generated multi-person prompt can be
+    // `1boy, 2girls, (1girl, ...), (1girl, ...)`; scanning all tokens would
+    // incorrectly use only the final nested `1girl` and collapse the prompt
+    // into one person.
+    final rootGroups = _reverseBracketGroups(source);
+    final rootDeclaredPersonGenders = _reverseDeclaredPersonGenders(
+      _reverseTokensFromSource(_reverseSourceOutsideGroups(source, rootGroups)),
     );
+    var groups = _reversePersonGroups(
+      source,
+      expectedPeopleCount: rootDeclaredPersonGenders.isEmpty
+          ? null
+          : rootDeclaredPersonGenders.length,
+    );
+    var declaredPersonGenders = _reverseDeclaredPersonGenders(
+      _reverseTokensFromSource(_reverseSourceOutsideGroups(source, groups)),
+    );
+    // Some older prompts wrap the entire multi-person prompt in one outer
+    // pair of parentheses.  Once individual person blocks are removed, their
+    // shared `1boy, 2girls` prefix becomes visible here.  Run the fallback a
+    // second time so unnamed/original characters still get distinct slots.
+    if (groups.isEmpty && declaredPersonGenders.isNotEmpty) {
+      groups = _reversePersonGroups(
+        source,
+        expectedPeopleCount: declaredPersonGenders.length,
+      );
+      declaredPersonGenders = _reverseDeclaredPersonGenders(
+        _reverseTokensFromSource(_reverseSourceOutsideGroups(source, groups)),
+      );
+    }
+    final importedPeopleCount = declaredPersonGenders.isEmpty
+        ? null
+        : declaredPersonGenders.length;
+    final importedGender = _reverseUniformGender(declaredPersonGenders);
     var people = groups
         .map((group) => _analyzeReverseTokens(
             _reverseTokensFromSource(group.contentOf(source))))
@@ -18913,9 +18972,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     var shared = _analyzeReverseTokens(
       _reverseTokensFromSource(_reverseSourceOutsideGroups(source, groups)),
     );
-    // Legacy prompts may have no grouping at all.  Keep their one recognised
-    // character usable rather than treating that identity as a shared tag.
-    if (people.isEmpty && shared.detectedCharacter != null) {
+    // Legacy prompts may have no grouping at all.  Keep a recognisable
+    // character — or a one-person set of personal traits — attached to that
+    // person instead of treating the entire prompt as shared content.
+    if (people.isEmpty &&
+        (shared.detectedCharacter != null ||
+            (importedPeopleCount == 1 && _reverseHasPersonContent(shared)))) {
       people = [shared];
       shared = const _ReversePersonAnalysis(
         tokens: <String>[],
@@ -18923,11 +18985,47 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         unmatchedTokens: <String>[],
       );
     }
+
+    // Scene, rendering, camera, quality, and shared-interaction terms belong
+    // in the common area even when a pasted prompt placed them inside a
+    // person's outer parentheses.  Use the same predicate as normal prompt
+    // rendering so this cannot drift when new scene categories are added.
+    final sharedTags = <TagItem>[...shared.matchedTags];
+    people = people
+        .map((person) {
+          final localTags = <TagItem>[];
+          for (final tag in person.matchedTags) {
+            if (_isGlobalPromptGroup(tag.group)) {
+              sharedTags.add(tag);
+            } else {
+              localTags.add(tag);
+            }
+          }
+          return _ReversePersonAnalysis(
+            tokens: person.tokens,
+            matchedTags: localTags,
+            unmatchedTokens: person.unmatchedTokens,
+            detectedCharacter: person.detectedCharacter,
+            detectedAnimeTag: person.detectedAnimeTag,
+          );
+        })
+        .toList();
+    final uniqueSharedTags = <String, TagItem>{
+      for (final tag in sharedTags) tag.id: tag,
+    };
+    shared = _ReversePersonAnalysis(
+      tokens: shared.tokens,
+      matchedTags: uniqueSharedTags.values.toList(),
+      unmatchedTokens: shared.unmatchedTokens,
+      detectedCharacter: shared.detectedCharacter,
+      detectedAnimeTag: shared.detectedAnimeTag,
+    );
     return _ReversePromptAnalysis(
       tokens: tokens,
       matchedTags: shared.matchedTags,
       unmatchedTokens: shared.unmatchedTokens,
       people: people,
+      declaredPersonGenders: declaredPersonGenders,
       peopleCount: importedPeopleCount,
       gender: importedGender,
     );
@@ -19125,21 +19223,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _persist();
   }
 
-  Set<String> get _reverseGlobalGroups => {
-        _indoorSceneGroup,
-        _outdoorSceneGroup,
-        _outdoorTimeGroup,
-        ..._sceneEffectPickerGroups,
-        _cameraFramingGroup,
-        _cameraFaceFocusGroup,
-        _cameraFocusGroup,
-        _cameraCropGroup,
-        _cameraBedViewGroup,
-        '畫面',
-        '品質',
-        '其他',
-      };
-
   void _applyReverseTagToTarget(
     TagItem tag,
     Set<String> target, {
@@ -19201,8 +19284,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
 
     for (final tag in analysis.matchedTags.toSet()) {
-      final isGlobal = _reverseGlobalGroups.contains(tag.group) ||
-          _isSharedActionGroup(tag.group);
+      final isGlobal = _isGlobalPromptGroup(tag.group);
       _applyReverseTagToTarget(
         tag,
         isGlobal ? _selectedIds : personIds,
@@ -19220,7 +19302,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
     setState(() {
       final importedPeopleCount = _visibleReversePeopleCount(analysis);
-      var targetPeopleCount = importedPeopleCount ?? analysis.people.length;
+      final declaredGenders = importedPeopleCount == null
+          ? const <String>[]
+          : analysis.declaredPersonGenders;
+      var targetPeopleCount = declaredGenders.isEmpty
+          ? analysis.people.length
+          : declaredGenders.length;
       if (analysis.people.length > targetPeopleCount) {
         targetPeopleCount = analysis.people.length;
       }
@@ -19244,10 +19331,48 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         _gender = analysis.gender!;
       }
 
+      // Seed undeclared-detail slots from `1boy, 2girls` before assigning the
+      // detailed blocks.  A detailed `1girl` then claims a female slot instead
+      // of always overwriting person 1, which is what previously caused mixed
+      // gender prompts to place their traits and clothing on the wrong person.
+      for (var index = 0;
+          index < declaredGenders.length && index < _personSlots.length;
+          index++) {
+        _personSlots[index].gender = declaredGenders[index];
+      }
+      final availableSlots =
+          List<int>.generate(targetPeopleCount, (index) => index);
+
+      int takeAvailableSlotWhere(bool Function(int index) test) {
+        final availableIndex = availableSlots.indexWhere(test);
+        return availableIndex < 0 ? -1 : availableSlots.removeAt(availableIndex);
+      }
+
       for (var index = 0; index < analysis.people.length; index++) {
+        final personAnalysis =
+            _visibleReversePersonAnalysis(analysis.people[index], index);
+        final desiredGender = _reversePersonGender(personAnalysis);
+        final detectedCharacter = personAnalysis.detectedCharacter;
+        var targetIndex = -1;
+        if (detectedCharacter != null) {
+          targetIndex = takeAvailableSlotWhere((slotIndex) =>
+              _characterForNew(_personSlots[slotIndex])?.id ==
+              detectedCharacter.id);
+        }
+        if (targetIndex < 0 && desiredGender != null) {
+          targetIndex = takeAvailableSlotWhere(
+              (slotIndex) => _personSlots[slotIndex].gender == desiredGender);
+        }
+        if (targetIndex < 0 && availableSlots.isNotEmpty) {
+          targetIndex = availableSlots.removeAt(0);
+        }
+        if (targetIndex < 0) continue;
+        if (desiredGender != null) {
+          _personSlots[targetIndex].gender = desiredGender;
+        }
         _applyReversePersonAnalysis(
-          index,
-          _visibleReversePersonAnalysis(analysis.people[index], index),
+          targetIndex,
+          personAnalysis,
         );
       }
       for (final tag
