@@ -8607,6 +8607,10 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'arm_pose'),
       _tag('pose_both_hands_up', '手臂姿勢', '抬起雙手', 'both hands raised', 4,
           conflictGroup: 'arm_pose'),
+      _tag('pose_one_hand_raised_forward', '手臂姿勢', '單手向前舉起',
+          'one hand raised forward', 4),
+      _tag('pose_both_hands_raised_forward', '手臂姿勢', '雙手向前舉起',
+          'both hands raised forward', 4),
       _tag('pose_waving', '手部姿勢', '揮手', 'waving', 4,
           conflictGroup: 'hand_gesture'),
       _tag('pose_hands_together', '手部姿勢', '雙手合十', 'hands together', 4,
@@ -8682,6 +8686,17 @@ List<TagItem> _seedTags() => [
       _tag('action_brushing_hair', '手部・接觸位置', '撥頭髮', 'brushing hair', 4),
       _tag('action_tucking_hair_behind_ear', '手部・接觸位置', '將頭髮撥到耳後',
           'tucking hair behind ear', 4),
+      // Direct object-interaction phrases intentionally include their noun.
+      // Unlike the generic object-action mode, these stay valid without a
+      // separately selected object and cannot be rebound to another prop.
+      _tag('action_holding_cat_both_hands', '手部・接觸位置', '雙手抱著貓',
+          'holding a cat with both hands', 4),
+      _tag('action_holding_cat_one_hand', '手部・接觸位置', '單手抱著貓',
+          'holding a cat with one hand', 4),
+      _tag('action_holding_pillow_both_hands', '手部・接觸位置', '雙手抱著抱枕',
+          'holding a pillow with both hands', 4),
+      _tag('action_holding_pillow_one_hand', '手部・接觸位置', '單手抱著抱枕',
+          'holding a pillow with one hand', 4),
       _tag('action_elbow_on_table', '手臂姿勢', '手肘撐在桌上', 'elbow on table', 4),
       _tag('action_elbows_on_table', '手臂姿勢', '雙手肘撐在桌上', 'elbows on table', 4),
       _tag('action_elbow_on_knee', '手臂姿勢', '手肘靠在膝上', 'elbow on knee', 4),
