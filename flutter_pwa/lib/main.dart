@@ -10212,13 +10212,80 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   String _unifiedOutfitPhraseTagId(OutfitReferencePresetData preset) =>
       '$_unifiedOutfitPhraseTagIdPrefix${preset.id}';
 
+  String _unifiedOutfitPhraseVariantTagId(
+    OutfitReferencePresetData preset,
+    OutfitReferenceVariantData variant,
+  ) =>
+      '${_unifiedOutfitPhraseTagId(preset)}_variant_${variant.id}';
+
+  List<String> _unifiedOutfitPhraseTagIds(OutfitReferencePresetData preset) =>
+      <String>[
+        _unifiedOutfitPhraseTagId(preset),
+        for (final variant in preset.variants)
+          _unifiedOutfitPhraseVariantTagId(preset, variant),
+      ];
+
   OutfitReferencePresetData? _unifiedOutfitReferenceForTag(TagItem tag) {
     if (!_isUnifiedOutfitPhraseTag(tag)) return null;
-    final id = tag.id.substring(_unifiedOutfitPhraseTagIdPrefix.length);
     for (final preset in outfitReferencePresets) {
-      if (preset.id == id) return preset;
+      if (_unifiedOutfitPhraseTagIds(preset).contains(tag.id)) return preset;
     }
     return null;
+  }
+
+  OutfitReferenceVariantData? _unifiedOutfitPhraseVariantForTag(TagItem tag) {
+    if (!_isUnifiedOutfitPhraseTag(tag)) return null;
+    for (final preset in outfitReferencePresets) {
+      for (final variant in preset.variants) {
+        if (_unifiedOutfitPhraseVariantTagId(preset, variant) == tag.id) {
+          return variant;
+        }
+      }
+    }
+    return null;
+  }
+
+  OutfitReferenceVariantData? _selectedOutfitReferenceVariant(
+    OutfitReferencePresetData preset,
+    int personIndex,
+  ) {
+    final selected = _personTagIds(personIndex);
+    for (final variant in preset.variants) {
+      if (selected
+          .contains(_unifiedOutfitPhraseVariantTagId(preset, variant))) {
+        return variant;
+      }
+    }
+    return null;
+  }
+
+  bool _isOutfitReferenceSelected(
+    OutfitReferencePresetData preset,
+    int personIndex,
+  ) =>
+      _unifiedOutfitPhraseTagIds(preset)
+          .any(_personTagIds(personIndex).contains);
+
+  void _setOutfitReferenceVariant(
+    OutfitReferencePresetData preset,
+    int personIndex,
+    OutfitReferenceVariantData? variant,
+  ) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final targetId = variant == null
+        ? _unifiedOutfitPhraseTagId(preset)
+        : _unifiedOutfitPhraseVariantTagId(preset, variant);
+    if (!_tagsById.containsKey(targetId)) return;
+    setState(() {
+      final selected = _personTagIds(personIndex);
+      selected.removeAll(_unifiedOutfitPhraseTagIds(preset));
+      selected.add(targetId);
+      _personCombinationIds
+          .putIfAbsent(personIndex, () => <String>{})
+          .add(preset.combinationId);
+      _clearOutfitReferenceSectionOverrides(preset, personIndex);
+      _persist();
+    });
   }
 
   Set<String> _hiddenOutfitReferenceSections(
@@ -10368,18 +10435,33 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   List<TagItem> _createUnifiedOutfitPhraseTags() {
     var order = 1;
-    return <TagItem>[
-      for (final preset in outfitReferencePresets)
-        if (preset.usesUnifiedPhrase)
+    final tags = <TagItem>[];
+    for (final preset in outfitReferencePresets) {
+      if (!preset.usesUnifiedPhrase) continue;
+      tags.add(
+        TagItem(
+          id: _unifiedOutfitPhraseTagId(preset),
+          group: _clothingGroupCostume,
+          zh: preset.unifiedPhraseZh!.trim(),
+          en: preset.unifiedPhraseEn!.trim(),
+          order: order++,
+          support: 'description',
+        ),
+      );
+      for (final variant in preset.variants) {
+        tags.add(
           TagItem(
-            id: _unifiedOutfitPhraseTagId(preset),
+            id: _unifiedOutfitPhraseVariantTagId(preset, variant),
             group: _clothingGroupCostume,
-            zh: preset.unifiedPhraseZh!.trim(),
-            en: preset.unifiedPhraseEn!.trim(),
+            zh: '${preset.unifiedPhraseZh!.trim()}・${variant.name}',
+            en: variant.en.trim(),
             order: order++,
             support: 'description',
           ),
-    ];
+        );
+      }
+    }
+    return tags;
   }
 
   List<TagItem> _createOutfitReferenceContextPhraseTags() {
@@ -12720,7 +12802,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         final visibleSections = preset == null
             ? const <OutfitUnifiedPhraseSectionData>[]
             : _visibleOutfitReferenceSections(preset, personIndex);
-        if (preset == null || preset.unifiedPhraseSections.isEmpty) {
+        final isVariant = _unifiedOutfitPhraseVariantForTag(base) != null;
+        if (preset == null ||
+            preset.unifiedPhraseSections.isEmpty ||
+            isVariant) {
           result.add(_GeneratedOutputTag(
             zh: base.zh,
             en: base.en,
@@ -14861,7 +14946,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     var changed = false;
     for (final preset in outfitReferencePresets) {
       if (preset.contextPhrases.isEmpty || !preset.usesUnifiedPhrase) continue;
-      if (!ids.contains(_unifiedOutfitPhraseTagId(preset))) continue;
+      if (!_unifiedOutfitPhraseTagIds(preset).any(ids.contains)) continue;
 
       for (final phrase in preset.contextPhrases) {
         changed = ids.add(_outfitReferenceContextPhraseTagId(preset, phrase)) ||
@@ -22565,6 +22650,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         removedBases.add(tag);
       }
     }
+    for (final tagId in _unifiedOutfitPhraseTagIds(preset)) {
+      final tag = _tagsById[tagId];
+      if (tag != null &&
+          selectedIds.remove(tag.id) &&
+          _isClothingBaseTag(tag)) {
+        removedBases.add(tag);
+      }
+    }
     selectedIds.removeAll(
       _outfitReferenceEquipmentTags(preset).map((tag) => tag.id),
     );
@@ -22584,8 +22677,23 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       OutfitReferencePresetData preset, int personIndex) async {
     if (!_isOutfitReferenceAvailableForPerson(preset, personIndex)) return;
     final resolution = _resolveOutfitReference(preset);
+    final previewSource = <TagItem>[...resolution.tags];
+    if (preset.usesUnifiedPhrase) {
+      TagItem? selectedPhrase;
+      for (final tagId in _unifiedOutfitPhraseTagIds(preset)) {
+        if (_personTagIds(personIndex).contains(tagId)) {
+          selectedPhrase = _tagsById[tagId];
+          break;
+        }
+      }
+      if (selectedPhrase != null) {
+        previewSource
+            .removeWhere((tag) => tag.id == _unifiedOutfitPhraseTagId(preset));
+        previewSource.add(selectedPhrase);
+      }
+    }
     final preview =
-        _combinationPreviewTags(resolution.tags, personIndex: personIndex);
+        _combinationPreviewTags(previewSource, personIndex: personIndex);
     final apply = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -28441,15 +28549,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           ?.contains(preset.combinationId) ==
                       true;
                   final outfitSelected = preset.usesUnifiedPhrase
-                      ? _personTagIds(personIndex)
-                          .contains(_unifiedOutfitPhraseTagId(preset))
+                      ? _isOutfitReferenceSelected(preset, personIndex)
                       : applied;
+                  final selectedVariant = outfitSelected
+                      ? _selectedOutfitReferenceVariant(preset, personIndex)
+                      : null;
+                  final displayedPalette =
+                      selectedVariant?.palette ?? preset.palette;
+                  final displayedDescription =
+                      selectedVariant?.description ?? preset.description;
                   final equipment = _outfitReferenceEquipmentTags(preset);
                   final equipmentSelected =
                       _outfitReferenceEquipmentSelected(preset, personIndex);
                   final contextTags = _outfitReferenceContextTags(preset);
-                  final sectionControls =
-                      _outfitReferenceSectionControls(preset);
+                  final sectionControls = selectedVariant == null
+                      ? _outfitReferenceSectionControls(preset)
+                      : const <OutfitUnifiedPhraseSectionData>[];
                   final hiddenSections = outfitSelected
                       ? _hiddenOutfitReferenceSections(preset, personIndex)
                       : const <String>{};
@@ -28491,14 +28606,67 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            preset.palette,
+                            displayedPalette,
                             style: TextStyle(
                               color: tone,
                               fontWeight: FontWeight.w800,
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Text(preset.description),
+                          Text(displayedDescription),
+                          if (preset.variants.isNotEmpty) ...[
+                            const SizedBox(height: 10),
+                            const Text(
+                              '配色版本',
+                              style: TextStyle(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 6),
+                            Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                ChoiceChip(
+                                  label: Text('原始米白款・${preset.palette}'),
+                                  selected:
+                                      outfitSelected && selectedVariant == null,
+                                  onSelected: (selected) async {
+                                    if (!selected) return;
+                                    if (!outfitSelected) {
+                                      await _applyOutfitReference(
+                                          preset, personIndex);
+                                      if (!mounted ||
+                                          !_isOutfitReferenceSelected(
+                                              preset, personIndex)) {
+                                        return;
+                                      }
+                                    }
+                                    _setOutfitReferenceVariant(
+                                        preset, personIndex, null);
+                                  },
+                                ),
+                                for (final variant in preset.variants)
+                                  ChoiceChip(
+                                    label: Text(
+                                        '${variant.name}・${variant.palette}'),
+                                    selected: selectedVariant?.id == variant.id,
+                                    onSelected: (selected) async {
+                                      if (!selected) return;
+                                      if (!outfitSelected) {
+                                        await _applyOutfitReference(
+                                            preset, personIndex);
+                                        if (!mounted ||
+                                            !_isOutfitReferenceSelected(
+                                                preset, personIndex)) {
+                                          return;
+                                        }
+                                      }
+                                      _setOutfitReferenceVariant(
+                                          preset, personIndex, variant);
+                                    },
+                                  ),
+                              ],
+                            ),
+                          ],
                           if (contextTags.isNotEmpty) ...[
                             const SizedBox(height: 10),
                             const Text(

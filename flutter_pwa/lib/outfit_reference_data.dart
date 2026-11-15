@@ -78,6 +78,36 @@ class OutfitUnifiedPhraseSectionData {
   final String en;
 }
 
+/// A mutually exclusive visual variant for a complete outfit phrase.
+///
+/// Unlike ordinary colour tags, a variant replaces the full prompt fragment so
+/// a preset can keep tightly related items (hood, mittens, shorts, socks and
+/// slippers) in one coherent palette instead of combining two colourways.
+class OutfitReferenceVariantData {
+  const OutfitReferenceVariantData({
+    required this.id,
+    required this.name,
+    required this.palette,
+    required this.description,
+    required this.en,
+  });
+
+  /// Stable identifier within the owning outfit preset.
+  final String id;
+
+  /// Short Chinese label displayed as a selectable chip on the outfit card.
+  final String name;
+
+  /// Human-readable palette summary.
+  final String palette;
+
+  /// Short explanation displayed when this colourway is selected.
+  final String description;
+
+  /// Complete replacement prompt phrase for the colourway.
+  final String en;
+}
+
 class OutfitReferencePresetData {
   const OutfitReferencePresetData({
     required this.id,
@@ -98,6 +128,7 @@ class OutfitReferencePresetData {
     this.unifiedPhraseZh,
     this.unifiedPhraseEn,
     this.unifiedPhraseSections = const <OutfitUnifiedPhraseSectionData>[],
+    this.variants = const <OutfitReferenceVariantData>[],
     this.equipmentTagIds = const <String>[],
     this.ownerCharacterTags = const <String>[],
     this.ownerCharacterLabel = '',
@@ -156,6 +187,10 @@ class OutfitReferencePresetData {
   /// If omitted, the canonical phrase keeps its original all-or-nothing
   /// behaviour.  Repeated section IDs intentionally form one UI control.
   final List<OutfitUnifiedPhraseSectionData> unifiedPhraseSections;
+
+  /// Optional full-phrase colourways for a unified outfit.  Exactly one of
+  /// these or the original unified phrase can be active for a person.
+  final List<OutfitReferenceVariantData> variants;
 
   /// Optional equipment shown beside this outfit reference.  These store raw
   /// [CatalogTagData.id] values and are deliberately not applied by default,

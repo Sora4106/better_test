@@ -23,6 +23,47 @@ class _AttachedPoseSeed {
   final String prompt;
 }
 
+/// Alternate colourways for the existing #56 plush animal loungewear card.
+/// Each entry deliberately contains the whole outfit so selecting a palette
+/// never leaves the original cream outfit layered underneath it.
+const _plushAnimalLoungewearVariants = <OutfitReferenceVariantData>[
+  OutfitReferenceVariantData(
+    id: 'cream_caramel',
+    name: '奶油＋焦糖色',
+    palette: '奶油白 × 焦糖棕',
+    description: '奶油毛絨連帽上衣搭配焦糖色滾邊、肉球手套與拖鞋。',
+    en: 'plush animal loungewear, cozy hooded loungewear, cream fluffy hoodie, caramel brown trim, soft fleece hoodie, hood up, hood worn on head, pulled-up hood, hood covering head, cat ears attached to hood, soft cat-ear hood, sewn-on animal ears, oversized sleeves, paw mittens, caramel paw pads, cream lounge shorts, soft lounge bottoms, brown ribbon details, cream thighhigh socks, fluffy socks, cream plush slippers, brown paw-print slippers, furry trim, soft fleece texture',
+  ),
+  OutfitReferenceVariantData(
+    id: 'pink_white',
+    name: '粉紅＋白色',
+    palette: '柔粉紅 × 白色',
+    description: '柔粉毛絨連帽上衣搭配白色內裡、肉球與荷葉短褲飾邊。',
+    en: 'plush animal loungewear, cute hooded roomwear, soft pink fluffy hoodie, white trim, white fluffy lining, hood up, hood worn on head, pulled-up hood, hood covering head, cat ears attached to hood, pink cat-ear hood, sewn-on animal ears, oversized sleeves, pink paw mittens, white paw pads, soft pink lounge shorts, white frilled trim, small white ribbon details, white thighhigh socks, pink fluffy socks, pink plush slippers, white paw-print slippers, furry trim, soft fleece texture',
+  ),
+  OutfitReferenceVariantData(
+    id: 'mint_cream',
+    name: '薄荷綠＋奶油白',
+    palette: '薄荷綠 × 奶油白',
+    description: '薄荷綠毛絨連帽上衣搭配奶油色內裡、手套、短褲與拖鞋。',
+    en: 'plush animal loungewear, soft pastel hooded loungewear, mint green fluffy hoodie, cream trim, cream fluffy lining, hood up, hood worn on head, pulled-up hood, hood covering head, cat ears attached to hood, mint cat-ear hood, sewn-on animal ears, oversized sleeves, mint paw mittens, cream paw pads, mint lounge shorts, cream ribbon details, cream thighhigh socks, mint fluffy socks, mint plush slippers, cream paw-print slippers, furry trim, soft fleece texture',
+  ),
+  OutfitReferenceVariantData(
+    id: 'lavender_white',
+    name: '淺紫＋白色',
+    palette: '淺薰衣草紫 × 白色',
+    description: '淺紫毛絨連帽居家服搭配白色內裡、肉球、緞帶和柔和荷葉邊。',
+    en: 'plush animal loungewear, lavender hooded roomwear, light lavender fluffy hoodie, white trim, white fleece lining, hood up, hood worn on head, pulled-up hood, hood covering head, cat ears attached to hood, lavender cat-ear hood, sewn-on animal ears, oversized sleeves, lavender paw mittens, white paw pads, light lavender lounge shorts, white ribbon details, soft frilled trim, white thighhigh socks, lavender fluffy socks, lavender plush slippers, white paw-print slippers, furry trim, soft fleece texture',
+  ),
+  OutfitReferenceVariantData(
+    id: 'red_black',
+    name: '紅＋黑色',
+    palette: '亮紅 × 黑色',
+    description: '亮紅毛絨連帽居家服搭配黑色內裡、肉球、緞帶和荷葉邊。',
+    en: 'plush animal loungewear, red hooded roomwear, bright red fluffy hoodie, black trim, black fleece lining, hood up, hood worn on head, pulled-up hood, hood covering head, cat ears attached to hood, red cat-ear hood, sewn-on animal ears, oversized sleeves, red paw mittens, black paw pads, red lounge shorts, black ribbon details, black frilled trim, black thighhigh socks, red fluffy socks, red plush slippers, black paw-print slippers, furry trim, soft fleece texture',
+  ),
+];
+
 /// Complete clothing sets transcribed from the supplied reference list.
 /// Every source line is retained in one unified phrase so selections preserve
 /// the original garments, palette, shoes, legwear and accessories.
@@ -46,6 +87,9 @@ final attachedOutfitReferencePresets =
               en: seed.tags,
             ),
           ],
+          variants: seed.number == 56
+              ? _plushAnimalLoungewearVariants
+              : const <OutfitReferenceVariantData>[],
         ),
       )
       .toList(growable: false),
