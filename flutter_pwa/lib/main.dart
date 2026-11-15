@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'app_version.dart';
+import 'attached_outfit_reference_data.dart'
+    show attachedPosePackages, attachedPosePackagesByCategory;
 import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'elsword_job_outfit_data.dart';
@@ -27060,6 +27062,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ..._felineSoloPosePackagesWithSides,
       ..._felineInteractionPackagesWithSides,
       ..._twoPersonInteractionPackagesWithSides,
+      ...attachedPosePackages,
     ]) {
       if (_promptPackageNaturalPromptVariants(package)
               .map((prompt) => _cleanTag(prompt).toLowerCase())
@@ -27278,18 +27281,17 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     required IconData icon,
     required Color tone,
     required List<PromptPackageData> packages,
+    Map<String, List<PromptPackageData>>? packagesByCategory,
     bool previewAsCards = false,
   }) {
-    final categories =
-        packages.map((package) => package.category).toSet().toList();
+    final grouped = packagesByCategory ?? _groupPromptPackages(packages);
+    final categories = grouped.keys.toList(growable: false);
     final stateKey = 'quick-package:$panelId:$personIndex';
     final stored = _personActiveGroups[stateKey];
     final activeCategory = stored != null && categories.contains(stored)
         ? stored
         : categories.first;
-    final visible = packages
-        .where((package) => package.category == activeCategory)
-        .toList();
+    final visible = grouped[activeCategory] ?? const <PromptPackageData>[];
     return Card(
       margin: const EdgeInsets.only(top: 10),
       color: tone.withValues(alpha: .08),
@@ -27412,6 +27414,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ],
       ),
     );
+  }
+
+  Map<String, List<PromptPackageData>> _groupPromptPackages(
+    Iterable<PromptPackageData> packages,
+  ) {
+    final grouped = <String, List<PromptPackageData>>{};
+    for (final package in packages) {
+      (grouped[package.category] ??= <PromptPackageData>[]).add(package);
+    }
+    return grouped;
   }
 
   bool _sharedPromptPackageIsSelected(PromptPackageData package) {
@@ -27801,6 +27813,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           style: TextStyle(fontSize: 12)),
                       childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
                       children: [
+                        _promptPackagePanel(
+                          personIndex: index,
+                          panelId: 'complete-attached-pose-library',
+                          title: '完整姿勢套件資料庫',
+                          subtitle:
+                              '附件整理的 1,000 組單人姿勢，依場景、姿態與物件互動分類；展開分類後可預覽與套用。',
+                          icon: Icons.auto_awesome_motion_outlined,
+                          tone: const Color(0xff60a5fa),
+                          packages: attachedPosePackages,
+                          packagesByCategory: attachedPosePackagesByCategory,
+                          previewAsCards: true,
+                        ),
                         _promptPackagePanel(
                           personIndex: index,
                           panelId: 'dynamic-motion-pose',
