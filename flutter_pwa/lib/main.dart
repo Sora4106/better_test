@@ -717,6 +717,242 @@ class TagItem {
       );
 }
 
+enum _LateralSide { left, right }
+
+String _lateralSideEnglish(_LateralSide side) =>
+    side == _LateralSide.left ? 'left' : 'right';
+
+String _lateralSideChinese(_LateralSide side) =>
+    side == _LateralSide.left ? '左' : '右';
+
+/// Returns a side-specific form for prompts that deliberately leave one body
+/// side unspecified. Camera wording such as `side view` is not changed: this
+/// helper is only for an actual limb, body part, clothing side, or side pose.
+String? _lateralizedEnglish(String value, _LateralSide side) {
+  final source = value.trim();
+  if (source.isEmpty ||
+      RegExp(r'\b(?:left|right)\b', caseSensitive: false).hasMatch(source)) {
+    return null;
+  }
+  final sideWord = _lateralSideEnglish(side);
+
+  final exactPhrases = <String, String>{
+    'single off shoulder': '$sideWord shoulder bare, off-shoulder',
+    'low side ponytail': 'low $sideWord side ponytail',
+    'side-swept bangs': 'bangs swept to $sideWord side',
+    'side-swept hair': 'hair swept to $sideWord side',
+    'lying on side': 'lying on $sideWord side',
+    'on side': 'on $sideWord side',
+    'side ponytail': '$sideWord side ponytail',
+    'side braid': '$sideWord side braid',
+    'side bun': '$sideWord side bun',
+    'side chignon': '$sideWord side chignon',
+    'side drills': '$sideWord side drills',
+    'side loop braid': '$sideWord side loop braid',
+    'side cape': '$sideWord side cape',
+    'side carry': '$sideWord side carry',
+  };
+  for (final entry in exactPhrases.entries) {
+    final expression = RegExp(
+      '\\b${RegExp.escape(entry.key)}\\b',
+      caseSensitive: false,
+    );
+    if (expression.hasMatch(source)) {
+      return source.replaceFirst(expression, entry.value);
+    }
+  }
+
+  const bodyPartPhrases = <String, String>{
+    'one hand': 'hand',
+    'one arm': 'arm',
+    'one foot': 'foot',
+    'one leg': 'leg',
+    'one knee': 'knee',
+    'one heel': 'heel',
+    'one breast': 'breast',
+    'one eye': 'eye',
+    'one ear': 'ear',
+    'one shoulder': 'shoulder',
+    'one hip': 'hip',
+    'one thigh': 'thigh',
+    'one calf': 'calf',
+    'one ankle': 'ankle',
+    'one wrist': 'wrist',
+    'one finger': 'finger',
+    'one toe': 'toe',
+    'one thighhigh': 'thighhigh',
+    'one stocking': 'stocking',
+    'one sock': 'sock',
+    'one shoe': 'shoe',
+    'one boot': 'boot',
+    'one glove': 'glove',
+    'one sleeve': 'sleeve',
+    'one pant leg': 'pant leg',
+    'one side': 'side',
+    'single side': 'side',
+  };
+  for (final entry in bodyPartPhrases.entries) {
+    final expression = RegExp(
+      '\\b${RegExp.escape(entry.key)}\\b',
+      caseSensitive: false,
+    );
+    if (expression.hasMatch(source)) {
+      return source.replaceFirst(expression, '$sideWord ${entry.value}');
+    }
+  }
+  return null;
+}
+
+String? _lateralizedTagEnglish(TagItem tag, _LateralSide side) {
+  final explicit = _lateralizedEnglish(tag.en, side);
+  if (explicit != null) return explicit;
+
+  final chinese = tag.zh;
+  final english = tag.en;
+  final sideWord = _lateralSideEnglish(side);
+  if (RegExp(r'單手|一手|單臂|一臂').hasMatch(chinese)) {
+    if (RegExp(r'\bhand\b', caseSensitive: false).hasMatch(english)) {
+      return english.replaceFirst(
+        RegExp(r'\bhand\b', caseSensitive: false),
+        '$sideWord hand',
+      );
+    }
+    if (RegExp(r'\barm\b', caseSensitive: false).hasMatch(english)) {
+      return english.replaceFirst(
+        RegExp(r'\barm\b', caseSensitive: false),
+        '$sideWord arm',
+      );
+    }
+    if (english.toLowerCase() == 'waving') return '$sideWord hand waving';
+    return '$sideWord hand, $english';
+  }
+  if (RegExp(r'單腳|一腳|單腿|一腿|單膝|一膝').hasMatch(chinese)) {
+    if (english.toLowerCase() == 'hopping') {
+      return 'hopping on $sideWord foot';
+    }
+    for (final entry in const <String, String>{
+      'foot': 'foot',
+      'leg': 'leg',
+      'knee': 'knee',
+      'heel': 'heel',
+      'thigh': 'thigh',
+      'calf': 'calf',
+      'ankle': 'ankle',
+      'toe': 'toe',
+    }.entries) {
+      final expression = RegExp('\\b${entry.key}\\b', caseSensitive: false);
+      if (expression.hasMatch(english)) {
+        return english.replaceFirst(expression, '$sideWord ${entry.value}');
+      }
+    }
+    return '$sideWord leg, $english';
+  }
+  if (RegExp(r'單側|一側').hasMatch(chinese)) {
+    return '$sideWord side, $english';
+  }
+  return null;
+}
+
+String _lateralVariantChineseLabel(TagItem tag, _LateralSide side) {
+  final direction = _lateralSideChinese(side);
+  final english = tag.en.toLowerCase();
+  final chinese = tag.zh;
+  String part = '側';
+  if (RegExp(r'單手|一手|單臂|一臂').hasMatch(chinese) ||
+      RegExp(r'\bone (?:hand|arm|wrist|finger)\b').hasMatch(english)) {
+    part = '手';
+  } else if (RegExp(r'單腳|一腳').hasMatch(chinese) ||
+      RegExp(r'\bone (?:foot|heel|toe|ankle)\b')
+      .hasMatch(english)) {
+    part = '腳';
+  } else if (RegExp(r'單腿|一腿').hasMatch(chinese) ||
+      RegExp(r'\bone (?:leg|thigh|calf)\b').hasMatch(english)) {
+    part = '腿';
+  } else if (RegExp(r'單膝|一膝').hasMatch(chinese) ||
+      RegExp(r'\bone knee\b').hasMatch(english)) {
+    part = '膝';
+  } else if (RegExp(r'\bone breast\b').hasMatch(english)) {
+    part = '胸部';
+  } else if (RegExp(r'\bone eye\b').hasMatch(english)) {
+    part = '眼';
+  } else if (RegExp(r'\bone ear\b').hasMatch(english)) {
+    part = '耳';
+  } else if (RegExp(r'\bone shoulder\b|off shoulder').hasMatch(english)) {
+    part = '肩';
+  } else if (RegExp(r'\bone hip\b').hasMatch(english)) {
+    part = '髖';
+  }
+  return '$direction$part・${tag.zh}';
+}
+
+/// Builds left/right alternatives in the original tag group. This keeps the
+/// variants available from category pickers, global search, reverse matching,
+/// and existing prompt output without duplicating every source catalogue.
+List<TagItem> _createLateralTagVariants(Iterable<TagItem> source) {
+  final variants = <TagItem>[];
+  for (final tag in source) {
+    if (tag.id.startsWith('lateral_')) continue;
+    for (final side in _LateralSide.values) {
+      final english = _lateralizedTagEnglish(tag, side);
+      if (english == null || english == tag.en) continue;
+      variants.add(TagItem(
+        id: 'lateral_${_lateralSideEnglish(side)}_${tag.id}',
+        group: tag.group,
+        zh: _lateralVariantChineseLabel(tag, side),
+        en: english,
+        order: tag.order,
+        adult: tag.adult,
+        builtIn: tag.builtIn,
+        conflictGroup: tag.conflictGroup,
+        support: tag.support,
+      ));
+    }
+  }
+  return variants;
+}
+
+/// Pose packages can contain either picker tags or a natural-language action.
+/// Give applicable packages the same left/right controls as ordinary tags.
+List<PromptPackageData> _withLateralPromptVariants(
+    Iterable<PromptPackageData> source) {
+  final result = <PromptPackageData>[];
+  for (final package in source) {
+    result.add(package);
+    for (final side in _LateralSide.values) {
+      var changed = false;
+      final transformedTags = <String>[];
+      for (final tag in package.tags) {
+        final transformed = _lateralizedEnglish(tag, side);
+        if (transformed != null) {
+          transformedTags.add(transformed);
+          changed = true;
+        } else {
+          transformedTags.add(tag);
+        }
+      }
+      final transformedPrompt =
+          _lateralizedEnglish(package.naturalPrompt, side) ??
+              package.naturalPrompt;
+      if (transformedPrompt != package.naturalPrompt) changed = true;
+      if (!changed) continue;
+
+      final direction = '${_lateralSideChinese(side)}側';
+      result.add(PromptPackageData(
+        id: '${package.id}_${_lateralSideEnglish(side)}',
+        name: '$direction・${package.name}',
+        description: '$direction指定：${package.description}',
+        category: package.category,
+        tags: transformedTags,
+        naturalPrompt: transformedPrompt,
+        naturalPromptZh: package.naturalPromptZh.trim().isEmpty
+            ? '$direction指定：${package.name}'
+            : '$direction指定：${package.naturalPromptZh}',
+      ));
+    }
+  }
+  return List<PromptPackageData>.unmodifiable(result);
+}
+
 /// A bracket-delimited person block found in a pasted prompt.  The raw bounds
 /// are retained so nested person blocks can be removed from the shared text
 /// without destroying the text that appears outside them.
@@ -2230,16 +2466,26 @@ const _animationPoseOptions = <_AnimationOption>[
   _AnimationOption('跪姿', 'kneeling'),
   _AnimationOption('仰躺', 'lying on back'),
   _AnimationOption('側躺', 'lying on side'),
+  _AnimationOption('左側躺', 'lying on left side'),
+  _AnimationOption('右側躺', 'lying on right side'),
   _AnimationOption('緩步行走', 'walking'),
 ];
 
 const _animationArmOptions = <_AnimationOption>[
   _AnimationOption('雙臂自然放身側', 'arms at sides'),
   _AnimationOption('單手舉起', 'raises one hand'),
+  _AnimationOption('左手舉起', 'raises left hand'),
+  _AnimationOption('右手舉起', 'raises right hand'),
   _AnimationOption('向前伸出單手', 'extends one arm forward'),
+  _AnimationOption('向前伸出左手', 'extends left arm forward'),
+  _AnimationOption('向前伸出右手', 'extends right arm forward'),
   _AnimationOption('雙臂交叉', 'crosses arms'),
   _AnimationOption('單手撥髮', 'brushes hair with one hand'),
+  _AnimationOption('左手撥髮', 'brushes hair with left hand'),
+  _AnimationOption('右手撥髮', 'brushes hair with right hand'),
   _AnimationOption('單手放髖部', 'rests one hand on hip'),
+  _AnimationOption('左手放髖部', 'rests left hand on hip'),
+  _AnimationOption('右手放髖部', 'rests right hand on hip'),
   _AnimationOption('雙手放在膝上', 'rests hands on knees'),
   _AnimationOption('雙臂伸展', 'extends both arms'),
 ];
@@ -2260,9 +2506,15 @@ const _animationLegOptions = <_AnimationOption>[
   _AnimationOption('腳踝交叉', 'crosses ankles'),
   _AnimationOption('膝蓋微彎', 'bends knees slightly'),
   _AnimationOption('抬起單腿', 'raises one leg'),
+  _AnimationOption('抬起左腿', 'raises left leg'),
+  _AnimationOption('抬起右腿', 'raises right leg'),
   _AnimationOption('抬起單邊腳跟', 'lifts one heel'),
+  _AnimationOption('抬起左腳跟', 'lifts left heel'),
+  _AnimationOption('抬起右腳跟', 'lifts right heel'),
   _AnimationOption('腳尖指向', 'points toes'),
   _AnimationOption('重心放在單腳', 'shifts weight onto one leg'),
+  _AnimationOption('重心放在左腳', 'shifts weight onto left leg'),
+  _AnimationOption('重心放在右腳', 'shifts weight onto right leg'),
 ];
 
 const _animationMotionOptions = <_AnimationOption>[
@@ -8741,12 +8993,24 @@ List<TagItem> _seedTags() => [
       _tag('action_one_hand_holding_object', '動作', '單手拿著物件',
           'one hand holding object', 4,
           conflictGroup: 'object_interaction_mode'),
+       _tag('action_left_hand_holding_object', '動作', '左手拿著物件',
+           'left hand holding object', 4,
+           conflictGroup: 'object_interaction_mode'),
+       _tag('action_right_hand_holding_object', '動作', '右手拿著物件',
+           'right hand holding object', 4,
+           conflictGroup: 'object_interaction_mode'),
       _tag('action_both_hands_holding_object', '動作', '雙手抱著物件',
           'holding object with both hands', 4,
           conflictGroup: 'object_interaction_mode'),
       _tag('action_one_hand_object_covering_face', '動作', '單手以物件遮臉',
           'one hand holding object covering face', 4,
           conflictGroup: 'object_interaction_mode'),
+       _tag('action_left_hand_object_covering_face', '動作', '左手以物件遮臉',
+           'left hand holding object covering face', 4,
+           conflictGroup: 'object_interaction_mode'),
+       _tag('action_right_hand_object_covering_face', '動作', '右手以物件遮臉',
+           'right hand holding object covering face', 4,
+           conflictGroup: 'object_interaction_mode'),
       _tag('action_both_hands_object_covering_face', '動作', '雙手以物件遮臉',
           'both hands holding object covering face', 4,
           conflictGroup: 'object_interaction_mode'),
@@ -9629,6 +9893,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   ];
 
   late final List<TagItem> _builtIns = _seedTags();
+  late final List<PromptPackageData> _dynamicMotionPackagesWithSides =
+      _withLateralPromptVariants(dynamicMotionPackages);
+  late final List<PromptPackageData> _pillowPosePackagesWithSides =
+      _withLateralPromptVariants(pillowPosePackages);
+  late final List<PromptPackageData> _petCompanionPosePackagesWithSides =
+      _withLateralPromptVariants(petCompanionPosePackages);
+  late final List<PromptPackageData> _lalaWolfGirlPosePackagesWithSides =
+      _withLateralPromptVariants(lalaWolfGirlPosePackages);
+  late final List<PromptPackageData> _felineSoloPosePackagesWithSides =
+      _withLateralPromptVariants(felineSoloPosePackages);
+  late final List<PromptPackageData> _felineInteractionPackagesWithSides =
+      _withLateralPromptVariants(felineInteractionPackages);
+  late final List<PromptPackageData> _twoPersonInteractionPackagesWithSides =
+      _withLateralPromptVariants(twoPersonInteractionPackages);
   late final List<TagItem> _unifiedOutfitPhraseTags =
       _createUnifiedOutfitPhraseTags();
   late final List<TagItem> _outfitReferenceContextPhraseTags =
@@ -9794,8 +10072,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     // the same bilingual tag before a character is selected.
     final catalogTraitTags = _catalogCharacterTraitTags();
     final animalTraitHairColorTags = _animalTraitHairColorTags();
-    final unique = <String, TagItem>{};
-    for (final tag in [
+    final baseTags = <TagItem>[
       ..._builtIns,
       ..._unifiedOutfitPhraseTags,
       ..._outfitReferenceContextPhraseTags,
@@ -9804,6 +10081,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...catalogTraitTags,
       ...animalTraitHairColorTags,
       ..._customTags,
+    ];
+    final unique = <String, TagItem>{};
+    for (final tag in [
+      ...baseTags,
+      ..._createLateralTagVariants(baseTags),
     ]) {
       final englishKey = _englishTagKey(tag.en);
       final preserveExpressionSymbol =
@@ -10700,6 +10982,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       'action_hugging_object',
       'action_holding_object',
       'action_one_hand_holding_object',
+      'action_left_hand_holding_object',
+      'action_right_hand_holding_object',
       'action_both_hands_holding_object',
       'action_carrying_object',
       'action_object_beside',
@@ -13225,10 +13509,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return 'holding $noun';
         case 'action_one_hand_holding_object':
           return 'one hand holding $noun';
+        case 'action_left_hand_holding_object':
+          return 'left hand holding $noun';
+        case 'action_right_hand_holding_object':
+          return 'right hand holding $noun';
         case 'action_both_hands_holding_object':
           return 'holding $noun with both hands';
         case 'action_one_hand_object_covering_face':
           return 'one hand holding $noun covering face';
+        case 'action_left_hand_object_covering_face':
+          return 'left hand holding $noun covering face';
+        case 'action_right_hand_object_covering_face':
+          return 'right hand holding $noun covering face';
         case 'action_both_hands_object_covering_face':
           return 'both hands holding $noun covering face';
         case 'action_biting_object':
@@ -13291,10 +13583,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           return '拿著$noun';
         case 'action_one_hand_holding_object':
           return '單手拿著$noun';
+        case 'action_left_hand_holding_object':
+          return '左手拿著$noun';
+        case 'action_right_hand_holding_object':
+          return '右手拿著$noun';
         case 'action_both_hands_holding_object':
           return '雙手抱著$noun';
         case 'action_one_hand_object_covering_face':
           return '單手以$noun遮臉';
+        case 'action_left_hand_object_covering_face':
+          return '左手以$noun遮臉';
+        case 'action_right_hand_object_covering_face':
+          return '右手以$noun遮臉';
         case 'action_both_hands_object_covering_face':
           return '雙手以$noun遮臉';
         case 'action_biting_object':
@@ -26753,13 +27053,13 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final target = _cleanTag(value).toLowerCase();
     if (target.isEmpty) return null;
     for (final package in [
-      ...dynamicMotionPackages,
-      ...pillowPosePackages,
-      ...petCompanionPosePackages,
-      ...lalaWolfGirlPosePackages,
-      ...felineSoloPosePackages,
-      ...felineInteractionPackages,
-      ...twoPersonInteractionPackages,
+      ..._dynamicMotionPackagesWithSides,
+      ..._pillowPosePackagesWithSides,
+      ..._petCompanionPosePackagesWithSides,
+      ..._lalaWolfGirlPosePackagesWithSides,
+      ..._felineSoloPosePackagesWithSides,
+      ..._felineInteractionPackagesWithSides,
+      ..._twoPersonInteractionPackagesWithSides,
     ]) {
       if (_promptPackageNaturalPromptVariants(package)
               .map((prompt) => _cleanTag(prompt).toLowerCase())
@@ -27157,8 +27457,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _sharedInteractionPackagePanel() {
     const tone = Color(0xfff59e0b);
     final packages = <PromptPackageData>[
-      ...twoPersonInteractionPackages,
-      ...felineInteractionPackages,
+      ..._twoPersonInteractionPackagesWithSides,
+      ..._felineInteractionPackagesWithSides,
     ];
     final categories =
         packages.map((package) => package.category).toSet().toList();
@@ -27508,7 +27808,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           subtitle: '動作線、速度線、動態模糊與震動可單獨套用；可和一般或成人姿勢並用。',
                           icon: Icons.motion_photos_on_outlined,
                           tone: const Color(0xff38bdf8),
-                          packages: dynamicMotionPackages,
+                          packages: _dynamicMotionPackagesWithSides,
                         ),
                         _promptPackagePanel(
                           personIndex: index,
@@ -27517,7 +27817,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           subtitle: '單手、雙手、抱枕遮嘴／遮臉與不同枕頭樣式的安全個人姿勢。',
                           icon: Icons.bed_outlined,
                           tone: const Color(0xffa78bfa),
-                          packages: pillowPosePackages,
+                          packages: _pillowPosePackagesWithSides,
                           previewAsCards: true,
                         ),
                         _promptPackagePanel(
@@ -27527,7 +27827,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           subtitle: '抱著、趴在胸前／腹部／腿上、肩上與腳邊等非成人寵物互動；可直接套用後再調整。',
                           icon: Icons.pets_outlined,
                           tone: const Color(0xfff59e0b),
-                          packages: petCompanionPosePackages,
+                          packages: _petCompanionPosePackagesWithSides,
                           previewAsCards: true,
                         ),
                         _promptPackagePanel(
@@ -27537,7 +27837,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           subtitle: '15 組貓系玩耍、休息、撒嬌與警覺姿態；不會自動加入獸耳、獸尾或 furry。',
                           icon: Icons.pets_outlined,
                           tone: const Color(0xfffbbf24),
-                          packages: felineSoloPosePackages,
+                          packages: _felineSoloPosePackagesWithSides,
                         ),
                         _promptPackagePanel(
                           personIndex: index,
@@ -27546,7 +27846,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           subtitle: '文件整理的 7 組休息、撒嬌與森林用個人姿勢；不會自動加入獸化特徵。',
                           icon: Icons.pets_outlined,
                           tone: const Color(0xffff9fbb),
-                          packages: lalaWolfGirlPosePackages,
+                          packages: _lalaWolfGirlPosePackagesWithSides,
                           previewAsCards: true,
                         ),
                         const SizedBox(height: 4),
