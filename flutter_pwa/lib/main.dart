@@ -334,14 +334,6 @@ const _defaultNegativeText =
     'poorly drawn face, malformed face, asymmetrical eyes, cross-eyed, deformed, multiple views, '
     'text, error, jpeg artifacts, watermark, unfinished, displeasing, signature, username, scan artifacts';
 
-/// Anatomy details that are always emitted with the positive prompt.  These
-/// are deliberately not selectable catalog tags: every generated character
-/// benefits from the same explicit hand and foot count guidance.
-const _automaticAnatomyPositiveCatalog = <Map<String, String>>[
-  {'en': 'five fingers', 'zh': '五根手指'},
-  {'en': 'five toes', 'zh': '五根腳趾'},
-];
-
 /// Generic person-rendering faults that should be suppressed for every
 /// character.  They are intentionally independent of hairstyle, species,
 /// clothing, pose, scene, and character count, so no selected prompt detail is
@@ -15802,20 +15794,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     result.addAll(_selectedTags.map(
         (tag) => _GeneratedOutputTag(zh: tag.zh, en: tag.en, tagId: tag.id)));
     result.addAll(_sharedPoseExtraOutputTags());
-    result.addAll(_automaticAnatomyPositiveOutputTags);
     return _deduplicateGeneratedOutputTags(result);
   }
-
-  List<_GeneratedOutputTag> get _automaticAnatomyPositiveOutputTags =>
-      _automaticAnatomyPositiveCatalog
-          .map(
-            (item) => _GeneratedOutputTag(
-              zh: item['zh']!,
-              en: item['en']!,
-              automatic: true,
-            ),
-          )
-          .toList(growable: false);
 
   List<_GeneratedOutputTag> _deduplicateGeneratedOutputTags(
       List<_GeneratedOutputTag> tags) {
@@ -16539,7 +16519,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           .map((tag) => tag.en),
     );
     tokens.addAll(_sharedPoseExtraOutputTags().map((tag) => tag.en));
-    tokens.addAll(_automaticAnatomyPositiveCatalog.map((item) => item['en']!));
     final seen = <String>{};
     return tokens
         .map(_moderationSafePromptTag)
@@ -16555,7 +16534,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             .map((tag) => tag.en),
         ..._extraTags(_extraPositive.text).map(_positiveEnglishTag),
         ..._extraTags(_preprompt.text),
-        ..._automaticAnatomyPositiveCatalog.map((item) => item['en']!),
       ].map(_moderationSafePromptTag).where((tag) => tag.isNotEmpty).toList();
 
   List<String> get _sharedActionTokens => _selectedTags
@@ -16841,7 +16819,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'Amanatsu 品質前綴：${_extraTags(_preprompt.text).map(_positiveChineseTag).join('、')}',
       );
     }
-    tokens.addAll(_automaticAnatomyPositiveCatalog.map((item) => item['zh']!));
     return tokens.join('。 ');
   }
 
