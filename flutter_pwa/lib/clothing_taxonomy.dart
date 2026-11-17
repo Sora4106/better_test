@@ -1349,6 +1349,34 @@ final List<CatalogTagData> clothingTaxonomyTags = <CatalogTagData>[
     ('草履', 'zouri'),
     ('分趾靴', 'tabi boots'),
   ]),
+  // Modular components for the plush animal loungewear presets.  The existing
+  // full outfits remain available as presets; these entries let a user build
+  // a different colourway or mix individual pieces with other clothing.
+  ..._garments('特殊服裝', 'costume', const [
+    ('毛絨動物居家睡衣', 'plush animal loungewear'),
+    ('動物連帽居家睡衣', 'hooded animal loungewear'),
+  ], support: 'description'),
+  ..._garments('上衣', 'top', const [
+    ('毛絨連帽上衣', 'fluffy hoodie'),
+    ('刷毛連帽上衣', 'fleece hoodie'),
+    ('貓耳連帽上衣', 'cat-ear hoodie'),
+  ], support: 'description'),
+  ..._garments('短褲', 'shorts', const [
+    ('居家短褲', 'lounge shorts'),
+    ('毛絨居家短褲', 'fluffy lounge shorts'),
+  ], support: 'description'),
+  ..._garments('襪子', 'socks', const [
+    ('毛絨襪', 'fluffy socks'),
+  ], support: 'description'),
+  ..._garments('鞋子', 'shoes', const [
+    ('毛絨拖鞋', 'plush slippers'),
+    ('肉球印花拖鞋', 'paw-print slippers'),
+  ], support: 'description'),
+  ..._garments('配件', 'accessory', const [
+    ('貓耳帽兜', 'cat-ear hood'),
+    ('動物耳帽兜', 'animal-ear hood'),
+    ('肉球手套', 'paw mittens'),
+  ], support: 'description'),
 ];
 
 final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
@@ -1514,6 +1542,45 @@ final List<CatalogTagData> clothingDimensionTags = <CatalogTagData>[
     ('及膝', 'knee length'),
     ('長版', 'long'),
   ]),
+  // Extra modular details used by the plush animal loungewear entries.
+  ..._dimensions('top', 'material', const [
+    ('刷毛絨', 'fleece'),
+  ], support: 'description'),
+  ..._dimensions('shorts', 'material', const [
+    ('刷毛絨', 'fleece'),
+  ], support: 'description'),
+  ..._dimensions('costume', 'material', const [
+    ('刷毛絨', 'fleece'),
+  ], support: 'description'),
+  ..._dimensions('socks', 'material', const [
+    ('刷毛絨', 'fleece'),
+  ], support: 'description'),
+  ..._dimensions('shoes', 'material', const [
+    ('刷毛絨', 'fleece'),
+  ], support: 'description'),
+  ..._dimensions('accessory', 'material', const [
+    ('刷毛絨', 'fleece'),
+  ], support: 'description'),
+  ..._dimensions('top', 'detail', const [
+    ('刷毛內裡', 'fleece lining'),
+  ], support: 'description'),
+  ..._dimensions('top', 'cut', const [
+    ('寬大袖子', 'oversized sleeves'),
+  ], support: 'description'),
+  ..._dimensions('costume', 'detail', const [
+    ('刷毛內裡', 'fleece lining'),
+  ], support: 'description'),
+  ..._dimensions('shorts', 'detail', const [
+    ('刷毛內裡', 'fleece lining'),
+  ], support: 'description'),
+  ..._dimensions('shoes', 'detail', const [
+    ('刷毛內裡', 'fleece lining'),
+  ], support: 'description'),
+  ..._dimensions('accessory', 'detail', const [
+    ('縫製動物耳', 'sewn-on animal ears'),
+    ('肉球墊', 'paw pads'),
+    ('刷毛內裡', 'fleece lining'),
+  ], support: 'description'),
   // Legwear height is a garment type (kneehighs, thighhighs, etc.), not a
   // generic sock plus a free-form length modifier.
 ];

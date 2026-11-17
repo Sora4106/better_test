@@ -2984,6 +2984,13 @@ final supplementalTags = <CatalogTagData>[
       en: 'towel slip',
       order: 2),
 
+  CatalogTagData(
+      id: 'clothing_hood_up',
+      group: '穿脫狀態',
+      zh: '帽兜戴起／罩頭',
+      en: 'hood up',
+      order: 2),
+
   // General pose and composition.
   CatalogTagData(
       id: 'pose_all_fours',
