@@ -2927,6 +2927,63 @@ final supplementalTags = <CatalogTagData>[
       order: 2,
       adult: true),
 
+  // Towel coverage states. These remain available without selecting a garment
+  // first, just like the whole-outfit removal presets above.
+  CatalogTagData(
+      id: 'clothing_towel',
+      group: '穿脫狀態',
+      zh: '浴巾（通用）',
+      en: 'towel',
+      order: 2),
+  CatalogTagData(
+      id: 'clothing_towel_upper_cover',
+      group: '穿脫狀態',
+      zh: '浴巾遮蔽上半身／裹胸',
+      en: 'towel around breasts',
+      order: 2),
+  CatalogTagData(
+      id: 'clothing_towel_lower_cover',
+      group: '穿脫狀態',
+      zh: '浴巾遮蔽下半身／圍腰',
+      en: 'towel around waist',
+      order: 2),
+  CatalogTagData(
+      id: 'clothing_towel_leg_cover',
+      group: '穿脫狀態',
+      zh: '浴巾遮蔽腿部（坐姿）',
+      en: 'towel on legs',
+      order: 2),
+  CatalogTagData(
+      id: 'clothing_towel_full_cover',
+      group: '穿脫狀態',
+      zh: '全身浴巾遮蔽／僅穿浴巾',
+      en: 'naked towel',
+      order: 2),
+  CatalogTagData(
+      id: 'clothing_towel_handheld_upper_cover',
+      group: '穿脫狀態',
+      zh: '手持浴巾遮胸',
+      en: 'holding towel, covering breasts',
+      order: 2),
+  CatalogTagData(
+      id: 'clothing_towel_handheld_lower_cover',
+      group: '穿脫狀態',
+      zh: '手持浴巾遮下身',
+      en: 'holding towel, covering crotch',
+      order: 2),
+  CatalogTagData(
+      id: 'clothing_towel_open_cover',
+      group: '穿脫狀態',
+      zh: '展開浴巾遮蔽身體',
+      en: 'open towel, nude cover',
+      order: 2),
+  CatalogTagData(
+      id: 'clothing_towel_slip',
+      group: '穿脫狀態',
+      zh: '浴巾滑落',
+      en: 'towel slip',
+      order: 2),
+
   // General pose and composition.
   CatalogTagData(
       id: 'pose_all_fours',
