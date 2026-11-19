@@ -132,6 +132,50 @@ const objectCatalogTags = <CatalogTagData>[
       order: 4,
       support: 'official'),
 
+  // 群體動物：作為場景中的生物／陪襯，不會改變人物數量。
+  CatalogTagData(
+      id: 'obj_pet_group_of_kittens',
+      group: '物件',
+      zh: '一群小貓',
+      en: 'group of kittens',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_group_of_cats',
+      group: '物件',
+      zh: '一群貓',
+      en: 'group of cats',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_group_of_penguins',
+      group: '物件',
+      zh: '一群企鵝',
+      en: 'group of penguins',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_group_of_puppies',
+      group: '物件',
+      zh: '一群小狗',
+      en: 'group of puppies',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_group_of_rabbits',
+      group: '物件',
+      zh: '一群兔子',
+      en: 'group of rabbits',
+      order: 4,
+      support: 'official'),
+  CatalogTagData(
+      id: 'obj_pet_flock_of_birds',
+      group: '物件',
+      zh: '一群小鳥',
+      en: 'flock of birds',
+      order: 4,
+      support: 'official'),
+
   // 透明／玻璃建材（6）
   CatalogTagData(
       id: 'obj_glass_table',
