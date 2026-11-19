@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.333';
-const appBuildNumber = 335;
-const appVersionLabel = '1.1.333+335';
+﻿const appVersion = '1.1.334';
+const appBuildNumber = 336;
+const appVersionLabel = '1.1.334+336';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.334', 'build': '336', 'label': '1.1.334+336', 'date': '2026-11-19', 'notes': '新增光速蒙面俠21的22位具名女性角色，提供中英文名稱與出處標籤，並保留可自行補充的角色特徵'},
   {'version': '1.1.333', 'build': '335', 'label': '1.1.333+335', 'date': '2026-11-19', 'notes': '新增群體動物標籤：一群小貓、貓、企鵝、小狗、兔子與鳥群，集中於物件・動物／寵物分類'},
   {'version': '1.1.332', 'build': '334', 'label': '1.1.332+334', 'date': '2026-11-19', 'notes': '修正鈴木佳奈髮色：移除錯誤漸層描述，改為金髮與柔順髮絲，並清理舊版已儲存特徵'},
   {'version': '1.1.331', 'build': '333', 'label': '1.1.331+333', 'date': '2026-11-17', 'notes': '新增可自由組合的毛絨動物居家睡衣、連帽上衣、襪子、拖鞋與肉球配件標籤；保留既有完整套裝'},
   {'version': '1.1.330', 'build': '332', 'label': '1.1.330+332', 'date': '2026-11-17', 'notes': '新增浴巾遮蔽：上半身、下半身、全身與手持遮蔽狀態'},
-  {'version': '1.1.329', 'build': '331', 'label': '1.1.329+331', 'date': '2026-11-15', 'notes': '毛絨動物居家風新增五種可切換配色套裝'},
 ];
