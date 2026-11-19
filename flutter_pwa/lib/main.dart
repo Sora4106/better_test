@@ -9948,6 +9948,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     'wine_red',
     'wine_glass',
   };
+  // Kana's former `blonde to smooth hair` helper was interpreted as a
+  // two-colour gradient by the hair renderer.  The catalogue now uses the
+  // separate fixed traits `blonde hair` and `smooth hair` instead.
+  static const _retiredSuzukiKanaHairTraitId =
+      'character_trait_blonde_to_smooth_hair';
+  static const _retiredSuzukiKanaHairTraitKey = 'blonde to smooth hair';
   final Set<String> _selectedIds = <String>{};
   final Map<int, Set<String>> _personSelectedIds = <int, Set<String>>{};
   // Only the IDs that an adult pose package itself added are tracked here.
@@ -14650,6 +14656,60 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return ids.length != before;
   }
 
+  bool _pruneRetiredSuzukiKanaHairTraitFromPayload(dynamic value) {
+    var changed = false;
+    if (value is List) {
+      final before = value.length;
+      value.removeWhere(
+        (item) => item is String && item == _retiredSuzukiKanaHairTraitId,
+      );
+      changed = value.length != before;
+      for (final item in value) {
+        changed = _pruneRetiredSuzukiKanaHairTraitFromPayload(item) || changed;
+      }
+    } else if (value is Map) {
+      for (final item in value.values) {
+        changed = _pruneRetiredSuzukiKanaHairTraitFromPayload(item) || changed;
+      }
+    }
+    return changed;
+  }
+
+  /// Retires the old Kana-only trait from active selections and stored content
+  /// so a previously saved character no longer emits a false hair gradient.
+  bool _removeRetiredSuzukiKanaHairTraitSelections() {
+    var changed = _selectedIds.remove(_retiredSuzukiKanaHairTraitId);
+    for (final ids in _personSelectedIds.values) {
+      changed = ids.remove(_retiredSuzukiKanaHairTraitId) || changed;
+    }
+    for (final preset in _originalCharacterPresets) {
+      if (preset.featureTagIds.remove(_retiredSuzukiKanaHairTraitId)) {
+        changed = true;
+      }
+    }
+    for (final combination in _combinations) {
+      if (combination.tagIds.remove(_retiredSuzukiKanaHairTraitId)) {
+        changed = true;
+      }
+    }
+    for (final preset in _presets) {
+      changed = _pruneRetiredSuzukiKanaHairTraitFromPayload(preset.payload) ||
+          changed;
+    }
+    for (final removed in _removedCharacterTags.values) {
+      if (removed.remove(_retiredSuzukiKanaHairTraitKey)) changed = true;
+    }
+    final customBefore = _customTags.length;
+    _customTags.removeWhere((tag) =>
+        tag.id == _retiredSuzukiKanaHairTraitId ||
+        _englishTagKey(tag.en) == _retiredSuzukiKanaHairTraitKey);
+    if (_customTags.length != customBefore) {
+      _invalidateTagCaches();
+      changed = true;
+    }
+    return changed;
+  }
+
   bool _pruneRetiredUrinationTagIdsFromPayload(dynamic value) {
     var changed = false;
     if (value is List) {
@@ -15230,6 +15290,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               (entry.value as List? ?? []).map((tag) => '$tag').toSet();
         }
       }
+      restoredDuplicatesMigrated =
+          _removeRetiredSuzukiKanaHairTraitSelections() ||
+              restoredDuplicatesMigrated;
       _peopleCount = (data['peopleCount'] as num?)?.toInt() ?? 1;
       var savedStep = (data['stepIndex'] as num?)?.toInt() ?? 0;
       final savedLayoutVersion =
