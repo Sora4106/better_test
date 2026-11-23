@@ -26,10 +26,10 @@ powershell -ExecutionPolicy Bypass -File tools/BetterWaifuPwaPublisher/build.ps1
 產物：
 
 ```text
-tools/BetterWaifuPwaPublisher/release/BetterWaifuPwaPublisher.exe
+tools/BetterWaifuPwaPublisher/release/BetterWaifuPwaPublisher-v<版本號>.exe
 ```
 
-這是使用 Windows 內建 .NET Framework 編譯的單一 x64 EXE，不需要攜帶 DLL。
+檔名、視窗標題、Windows Product Version 與 File Version 都會自動讀取專案的 `version.json`。這是使用 Windows 內建 .NET Framework 編譯的單一 x64 EXE，不需要攜帶 DLL。
 
 ## 煙霧測試
 

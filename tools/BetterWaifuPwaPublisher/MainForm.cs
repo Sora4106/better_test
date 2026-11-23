@@ -42,7 +42,7 @@ namespace BetterWaifuPwaPublisher
 
         private void InitializeWindow()
         {
-            Text = "BetterWaifu PWA Publisher（系統管理員）";
+            Text = "BetterWaifu PWA Publisher v" + PublisherBuildInfo.VersionLabel + "（系統管理員）";
             StartPosition = FormStartPosition.CenterScreen;
             ClientSize = new Size(1040, 800);
             MinimumSize = new Size(860, 680);
@@ -67,7 +67,7 @@ namespace BetterWaifuPwaPublisher
             Label title = new Label
             {
                 AutoSize = true,
-                Text = "BetterWaifu PWA Publisher",
+                Text = "BetterWaifu PWA Publisher  v" + PublisherBuildInfo.VersionLabel,
                 ForeColor = _text,
                 Font = new Font(Font.FontFamily, 19F, FontStyle.Bold),
                 Location = new Point(20, 14)

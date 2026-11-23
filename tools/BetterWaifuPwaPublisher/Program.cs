@@ -9,8 +9,6 @@ using System.Windows.Forms;
 [assembly: AssemblyCompany("BetterWaifu")]
 [assembly: AssemblyProduct("BetterWaifu PWA Publisher")]
 [assembly: AssemblyCopyright("Copyright © BetterWaifu 2026")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
 [assembly: ComVisible(false)]
 
 namespace BetterWaifuPwaPublisher
@@ -27,7 +25,7 @@ namespace BetterWaifuPwaPublisher
             {
                 MessageBox.Show(
                     "此工具需要系統管理員權限。請確認 Windows 的 UAC 提示後重新啟動。",
-                    "BetterWaifu PWA Publisher",
+                    "BetterWaifu PWA Publisher v" + PublisherBuildInfo.VersionLabel,
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 return;

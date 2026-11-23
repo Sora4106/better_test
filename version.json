@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.337",
-    "build":  339,
-    "label":  "1.1.337+339",
+    "version":  "1.1.338",
+    "build":  340,
+    "label":  "1.1.338+340",
     "history":  [
+                    {
+                        "version":  "1.1.338",
+                        "build":  340,
+                        "label":  "1.1.338+340",
+                        "date":  "2026-11-23",
+                        "notes":  "管理員 PWA 發布工具改為自動讀取 version.json，將版本號加入 EXE 檔名與程式視窗標題,Windows File Version 與 Product Version 同步寫入版本資訊，方便辨識及保存不同版本的發布工具"
+                    },
                     {
                         "version":  "1.1.337",
                         "build":  339,

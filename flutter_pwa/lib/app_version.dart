@@ -1,10 +1,10 @@
-﻿const appVersion = '1.1.337';
-const appBuildNumber = 339;
-const appVersionLabel = '1.1.337+339';
+﻿const appVersion = '1.1.338';
+const appBuildNumber = 340;
+const appVersionLabel = '1.1.338+340';
 const appVersionHistory = <Map<String, String>>[
+  {'version': '1.1.338', 'build': '340', 'label': '1.1.338+340', 'date': '2026-11-23', 'notes': '管理員 PWA 發布工具改為自動讀取 version.json，將版本號加入 EXE 檔名與程式視窗標題,Windows File Version 與 Product Version 同步寫入版本資訊，方便辨識及保存不同版本的發布工具'},
   {'version': '1.1.337', 'build': '339', 'label': '1.1.337+339', 'date': '2026-11-23', 'notes': '修正管理員 PWA 發布工具在選取路徑沒有 Git 差異時錯誤中止；現在仍會自動追加版本、重新建置並發布,保留 push 失敗重試、既有 staged 修改拒絕與遠端領先保護，並新增無檔案變更重新發布的隔離測試'},
   {'version': '1.1.336', 'build': '338', 'label': '1.1.336+338', 'date': '2026-11-23', 'notes': '新增 Windows 系統管理員桌面發布工具，可選擇 PWA 路徑並以單一按鈕自動追加版本、驗證、建置、提交及推送至 GitHub,加入 Git 安全檢查、失敗重試與隔離煙霧測試，且不使用 reset 或 checkout；修正升版腳本寫入 pubspec 時的尾端空行與 UTF-8 BOM 問題'},
   {'version': '1.1.335', 'build': '337', 'label': '1.1.335+337', 'date': '2026-11-23', 'notes': '新增服裝提示詞部位隱藏控制：保留已選服裝、顏色、細節、材質與穿脫狀態，取消隱藏後立即恢復原輸出; 套裝與角色專屬服裝支援按小節隱藏，並在收合摘要、大項已選標籤、中文記憶欄與 JSON 匯入匯出完整保存隱藏狀態'},
   {'version': '1.1.334', 'build': '336', 'label': '1.1.334+336', 'date': '2026-11-19', 'notes': '新增光速蒙面俠21的22位具名女性角色，提供中英文名稱與出處標籤，並保留可自行補充的角色特徵'},
-  {'version': '1.1.333', 'build': '335', 'label': '1.1.333+335', 'date': '2026-11-19', 'notes': '新增群體動物標籤：一群小貓、貓、企鵝、小狗、兔子與鳥群，集中於物件・動物／寵物分類'},
 ];
