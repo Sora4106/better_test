@@ -1252,6 +1252,20 @@ class _GeneratedOutputTag {
   final String? clothingBlockKey;
 }
 
+class _HiddenClothingPromptSummary {
+  const _HiddenClothingPromptSummary({
+    required this.personIndex,
+    required this.label,
+    required this.englishLabel,
+    required this.restore,
+  });
+
+  final int personIndex;
+  final String label;
+  final String englishLabel;
+  final VoidCallback restore;
+}
+
 class Preset {
   Preset({required this.name, required this.payload});
 
@@ -10012,6 +10026,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   final Map<int, Map<String, Set<String>>>
       _outfitReferenceHiddenSectionsByPerson =
       <int, Map<String, Set<String>>>{};
+  // Prompt visibility is deliberately separate from selection. Hiding a part
+  // never removes its garment, colours, details, materials, wear state, or
+  // applied outfit reference, so restoring it can reproduce the exact prompt.
+  final Map<int, Set<String>> _hiddenClothingPromptPartsByPerson =
+      <int, Set<String>>{};
   // The full-outfit-scattered kit keeps the user's clothing selection intact.
   // This map only records the garment blocks explicitly restored to being worn.
   // An absent/empty entry means every selected garment remains scattered.
@@ -10375,6 +10394,43 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (byPreset != null && byPreset.isEmpty) {
       _outfitReferenceHiddenSectionsByPerson.remove(personIndex);
     }
+  }
+
+  Set<String> _hiddenClothingPromptParts(int personIndex) =>
+      _hiddenClothingPromptPartsByPerson[personIndex] ?? const <String>{};
+
+  void _setClothingPromptPartVisible(
+    int personIndex,
+    String partKey,
+    bool visible,
+  ) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    final normalized = partKey.trim();
+    if (normalized.isEmpty) return;
+    setState(() {
+      final hidden = _hiddenClothingPromptPartsByPerson.putIfAbsent(
+        personIndex,
+        () => <String>{},
+      );
+      if (visible) {
+        hidden.remove(normalized);
+      } else {
+        hidden.add(normalized);
+      }
+      if (hidden.isEmpty) {
+        _hiddenClothingPromptPartsByPerson.remove(personIndex);
+      }
+      _persist();
+    });
+  }
+
+  void _restoreAllClothingPromptParts(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) return;
+    setState(() {
+      _hiddenClothingPromptPartsByPerson.remove(personIndex);
+      _outfitReferenceHiddenSectionsByPerson.remove(personIndex);
+      _persist();
+    });
   }
 
   Set<String> _scatteredOutfitWornBlocksForPerson(int personIndex) =>
@@ -13110,11 +13166,74 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return result;
   }
 
-  List<_GeneratedOutputTag> _clothingOutputTagsForPerson(int personIndex) =>
+  List<_GeneratedOutputTag> _allClothingOutputTagsForPerson(int personIndex) =>
       _clothingOutputTagsFromSelection(
         _selectedTagsForPerson(personIndex),
         personIndex: personIndex,
       );
+
+  String? _clothingPromptPartKeyForOutput(_GeneratedOutputTag output) {
+    final sourceIds = <String>{
+      if (output.tagId != null) output.tagId!,
+      ...output.tagIds,
+    };
+    final sourceTags =
+        sourceIds.map((id) => _tagsById[id]).whereType<TagItem>().toList();
+
+    if (sourceTags.any(_isEquipmentWeaponTag)) return 'weapon';
+    if (sourceTags.any(_isEquipmentArmorTag)) return 'armor';
+
+    for (final tag in sourceTags) {
+      final scope = _clothingScopeForTag(tag);
+      if (scope != null && scope.isNotEmpty) return scope;
+    }
+
+    final blockKey = output.clothingBlockKey?.trim() ?? '';
+    if (blockKey.startsWith('accessory:')) return 'accessory';
+    if (blockKey == 'equipment') return 'equipment';
+    if (const <String>{
+      'top',
+      'sleeves',
+      'pants',
+      'shorts',
+      'skirt',
+      'onepiece',
+      'outerwear',
+      'costume',
+      'underwear',
+      'bra',
+      'panties',
+      'socks',
+      'shoes',
+      'accessory',
+      'weapon',
+      'armor',
+    }.contains(blockKey)) {
+      return blockKey;
+    }
+    return null;
+  }
+
+  Map<String, List<_GeneratedOutputTag>> _clothingPromptPartBlocksForPerson(
+      int personIndex) {
+    final result = <String, List<_GeneratedOutputTag>>{};
+    for (final output in _allClothingOutputTagsForPerson(personIndex)) {
+      final key = _clothingPromptPartKeyForOutput(output);
+      if (key == null) continue;
+      result.putIfAbsent(key, () => <_GeneratedOutputTag>[]).add(output);
+    }
+    return result;
+  }
+
+  List<_GeneratedOutputTag> _clothingOutputTagsForPerson(int personIndex) {
+    final output = _allClothingOutputTagsForPerson(personIndex);
+    final hidden = _hiddenClothingPromptParts(personIndex);
+    if (hidden.isEmpty) return output;
+    return output.where((tag) {
+      final partKey = _clothingPromptPartKeyForOutput(tag);
+      return partKey == null || !hidden.contains(partKey);
+    }).toList(growable: false);
+  }
 
   String? _hairColorWord(TagItem tag) {
     final color = _hairColorPhrase(tag.en);
@@ -14041,6 +14160,22 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return result;
   }
 
+  String _clothingStepHeaderSummaryZh() {
+    final hidden = _hiddenClothingPromptSummaries()
+        .map((summary) =>
+            '人物 ${summary.personIndex + 1}・${summary.label}（已隱藏於提示詞）')
+        .toList();
+    final selected = _personSelectedIds.values
+        .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
+        .where(_isClothingOrEquipmentTag)
+        .map((tag) => tag.zh)
+        .toSet()
+        .toList();
+    return <String>[...hidden, ...selected]
+        .join('、')
+        .ifEmpty('每位人物分別設定');
+  }
+
   bool _isFinalPersonOutputTag(int personIndex, _GeneratedOutputTag output) {
     // With a single character, even adult actions remain that character's
     // own action and should stay in its unweighted action block.
@@ -14300,6 +14435,111 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     if (tags.isEmpty) return scopeLabel;
     final preview = tags.first.zh.trim();
     return preview.isEmpty ? scopeLabel : '$scopeLabel・$preview';
+  }
+
+  String _clothingPromptPartLabelZh(String key) => switch (key) {
+        'top' => '上衣',
+        'sleeves' => '袖子',
+        'pants' => '褲子',
+        'shorts' => '短褲',
+        'skirt' => '裙子',
+        'onepiece' => '連身裝',
+        'outerwear' => '外套',
+        'costume' => '套裝／角色專屬服裝',
+        'underwear' => '內衣',
+        'bra' => '胸罩',
+        'panties' => '內褲',
+        'socks' => '襪子',
+        'shoes' => '鞋子',
+        'accessory' => '配件',
+        'weapon' => '武器',
+        'armor' => '防具',
+        'equipment' => '裝備',
+        _ => '服裝部位',
+      };
+
+  String _clothingPromptPartLabelEn(String key) => switch (key) {
+        'top' => 'Top',
+        'sleeves' => 'Sleeves',
+        'pants' => 'Pants',
+        'shorts' => 'Shorts',
+        'skirt' => 'Skirt',
+        'onepiece' => 'One-piece outfit',
+        'outerwear' => 'Outerwear',
+        'costume' => 'Outfit set / character outfit',
+        'underwear' => 'Underwear',
+        'bra' => 'Bra',
+        'panties' => 'Panties',
+        'socks' => 'Socks',
+        'shoes' => 'Shoes',
+        'accessory' => 'Accessories',
+        'weapon' => 'Weapons',
+        'armor' => 'Armor',
+        'equipment' => 'Equipment',
+        _ => 'Clothing part',
+      };
+
+  String _outfitReferenceSectionLabelEn(String id) => switch (id) {
+        'complete' => 'Complete outfit',
+        'silhouette' => 'Outfit silhouette',
+        'upper' => 'Upper body / outerwear',
+        'lower' => 'Lower body',
+        'head' || 'headwear' => 'Headwear',
+        'legwear' => 'Legwear',
+        'footwear' => 'Footwear',
+        'trim' => 'Colour / trim',
+        'accessory' => 'Accessories',
+        _ => 'Outfit part',
+      };
+
+  List<_HiddenClothingPromptSummary> _hiddenClothingPromptSummaries() {
+    final result = <_HiddenClothingPromptSummary>[];
+    for (var personIndex = 0;
+        personIndex < _personSlots.length;
+        personIndex++) {
+      final hiddenParts = _hiddenClothingPromptParts(personIndex);
+      final availableParts = _clothingPromptPartBlocksForPerson(personIndex);
+      for (final partKey in availableParts.keys) {
+        if (!hiddenParts.contains(partKey)) continue;
+        final preview = availableParts[partKey]!
+            .map((tag) => tag.zh.trim())
+            .where((value) => value.isNotEmpty)
+            .toSet()
+            .join('、');
+        final partLabel = _clothingPromptPartLabelZh(partKey);
+        result.add(_HiddenClothingPromptSummary(
+          personIndex: personIndex,
+          label: preview.isEmpty ? partLabel : '$partLabel：$preview',
+          englishLabel: _clothingPromptPartLabelEn(partKey),
+          restore: () =>
+              _setClothingPromptPartVisible(personIndex, partKey, true),
+        ));
+      }
+
+      for (final preset in outfitReferencePresets) {
+        if (!_isOutfitReferenceSelected(preset, personIndex) ||
+            _selectedOutfitReferenceVariant(preset, personIndex) != null) {
+          continue;
+        }
+        final hiddenSections =
+            _hiddenOutfitReferenceSections(preset, personIndex);
+        for (final section in _outfitReferenceSectionControls(preset)) {
+          if (!hiddenSections.contains(section.id)) continue;
+          result.add(_HiddenClothingPromptSummary(
+            personIndex: personIndex,
+            label: '${preset.name}・${section.zh}',
+            englishLabel: _outfitReferenceSectionLabelEn(section.id),
+            restore: () => _setOutfitReferenceSectionEnabled(
+              preset,
+              personIndex,
+              section.id,
+              true,
+            ),
+          ));
+        }
+      }
+    }
+    return result;
   }
 
   double? _clothingWeightForBlock(PersonSlot slot, String key) {
@@ -15057,6 +15297,21 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return result;
   }
 
+  Map<int, Set<String>> _decodeHiddenClothingPromptParts(dynamic raw) {
+    if (raw is! Map) return <int, Set<String>>{};
+    final result = <int, Set<String>>{};
+    for (final entry in raw.entries) {
+      final personIndex = int.tryParse('${entry.key}');
+      if (personIndex == null) continue;
+      final parts = (entry.value as List? ?? const <dynamic>[])
+          .map((value) => '$value'.trim())
+          .where((value) => value.isNotEmpty)
+          .toSet();
+      if (parts.isNotEmpty) result[personIndex] = parts;
+    }
+    return result;
+  }
+
   void _restore() {
     final raw = html.window.localStorage[_storageKey];
     if (raw == null) return;
@@ -15276,6 +15531,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..addAll(_decodeOutfitReferenceHiddenSections(
           data['outfitReferenceHiddenSectionsByPerson'],
         ));
+      _hiddenClothingPromptPartsByPerson
+        ..clear()
+        ..addAll(_decodeHiddenClothingPromptParts(
+          data['hiddenClothingPromptPartsByPerson'],
+        ));
       _scatteredOutfitWornBlocksByPerson
         ..clear()
         ..addAll(_decodeScatteredOutfitWornBlocks(
@@ -15416,6 +15676,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
           ),
         ),
+        'hiddenClothingPromptPartsByPerson':
+            _hiddenClothingPromptPartsByPerson.map(
+          (personIndex, partKeys) =>
+              MapEntry('$personIndex', partKeys.toList()),
+        ),
         'scatteredOutfitWornBlocksByPerson':
             _scatteredOutfitWornBlocksByPerson.map(
           (personIndex, blockKeys) =>
@@ -15452,7 +15717,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   /// needing to re-parse the generated English prompt during import.
   Map<String, dynamic> _fullStateBackup() => {
         'backupFormat': 'betterwaifu-full-state',
-        'schemaVersion': 2,
+        'schemaVersion': 3,
         'createdAt': DateTime.now().toIso8601String(),
         'state': _snapshot(),
       };
@@ -15480,6 +15745,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     _activeAdultPosePackagePersonTagIds.clear();
     _personCombinationIds.clear();
     _outfitReferenceHiddenSectionsByPerson.clear();
+    _hiddenClothingPromptPartsByPerson.clear();
     _scatteredOutfitWornBlocksByPerson.clear();
     _removedCharacterTags.clear();
     _autoFurryIdentityForPerson.clear();
@@ -17274,6 +17540,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String get _orderedPositiveZhForCopy {
     final ordered = _orderedOutputTagsForSummary(_generatedPositiveTags());
+    final hiddenClothing = _hiddenClothingPromptSummaries();
     final values = <String>[
       ...ordered
           .where((tag) => _summaryOutputOrder(tag) == 0)
@@ -17282,6 +17549,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       ...ordered
           .where((tag) => _summaryOutputOrder(tag) != 0)
           .map((tag) => tag.zh),
+      ...hiddenClothing.map((summary) =>
+          '人物 ${summary.personIndex + 1}・${summary.label}（已隱藏於提示詞）'),
     ].where((value) => value.trim().isNotEmpty).toList();
     return values.isEmpty ? _positiveZh : values.join('、');
   }
@@ -20246,6 +20515,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _autoFurryIdentityForPerson.clear();
       _personCombinationIds.clear();
       _outfitReferenceHiddenSectionsByPerson.clear();
+      _hiddenClothingPromptPartsByPerson.clear();
       _scatteredOutfitWornBlocksByPerson.clear();
       _removedCharacterTags.clear();
       _personTagQueries.clear();
@@ -20398,6 +20668,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         case 3:
           removePersonTagsWhere(_isClothingOrEquipmentTag);
           _outfitReferenceHiddenSectionsByPerson.clear();
+          _hiddenClothingPromptPartsByPerson.clear();
           _scatteredOutfitWornBlocksByPerson.clear();
           break;
         case 4:
@@ -20735,6 +21006,11 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ..addAll(_decodeOutfitReferenceHiddenSections(
           data['outfitReferenceHiddenSectionsByPerson'],
         ));
+      _hiddenClothingPromptPartsByPerson
+        ..clear()
+        ..addAll(_decodeHiddenClothingPromptParts(
+          data['hiddenClothingPromptPartsByPerson'],
+        ));
       _scatteredOutfitWornBlocksByPerson
         ..clear()
         ..addAll(_decodeScatteredOutfitWornBlocks(
@@ -20790,6 +21066,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       _personSelectedIds.removeWhere((index, _) => index >= count);
       _personCombinationIds.removeWhere((index, _) => index >= count);
       _outfitReferenceHiddenSectionsByPerson
+          .removeWhere((index, _) => index >= count);
+      _hiddenClothingPromptPartsByPerson
           .removeWhere((index, _) => index >= count);
       _scatteredOutfitWornBlocksByPerson
           .removeWhere((index, _) => index >= count);
@@ -20870,6 +21148,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       shiftIndexSet(_autoFurryIdentityForPerson);
       shiftMap(_personCombinationIds);
       shiftMap(_outfitReferenceHiddenSectionsByPerson);
+      shiftMap(_hiddenClothingPromptPartsByPerson);
       shiftMap(_scatteredOutfitWornBlocksByPerson);
       shiftMap(_removedCharacterTags);
       shiftMap(_personTagQueries);
@@ -25440,6 +25719,153 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _clothingPromptVisibilityControl(int personIndex) {
+    if (personIndex < 0 || personIndex >= _personSlots.length) {
+      return const SizedBox.shrink();
+    }
+    final partBlocks = _clothingPromptPartBlocksForPerson(personIndex);
+    final hiddenParts = _hiddenClothingPromptParts(personIndex);
+    final outfitSections = <({
+      OutfitReferencePresetData preset,
+      OutfitUnifiedPhraseSectionData section,
+    })>[];
+    var hasHiddenOutfitSection = false;
+    for (final preset in outfitReferencePresets) {
+      if (!_isOutfitReferenceSelected(preset, personIndex) ||
+          _selectedOutfitReferenceVariant(preset, personIndex) != null) {
+        continue;
+      }
+      final hidden = _hiddenOutfitReferenceSections(preset, personIndex);
+      for (final section in _outfitReferenceSectionControls(preset)) {
+        outfitSections.add((preset: preset, section: section));
+        hasHiddenOutfitSection =
+            hasHiddenOutfitSection || hidden.contains(section.id);
+      }
+    }
+    if (partBlocks.isEmpty && outfitSections.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final hasHidden =
+        hiddenParts.any(partBlocks.containsKey) || hasHiddenOutfitSection;
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      decoration: BoxDecoration(
+        color: const Color(0xff211b37),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: const Color(0xfff0abfc).withValues(alpha: .72),
+        ),
+      ),
+      child: ExpansionTile(
+        key: PageStorageKey<String>('clothing-prompt-visibility-$personIndex'),
+        initiallyExpanded: hasHidden,
+        leading: Icon(
+          hasHidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+          color: const Color(0xfff0abfc),
+        ),
+        title: const Text(
+          '服裝提示詞部位顯示 · Clothing prompt visibility',
+          style: TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: Text(
+          hasHidden
+              ? '目前有部位已隱藏於提示詞；所有選取與設定仍完整保留。'
+              : '只控制正向英文提示詞；不會刪除服裝、顏色、細節、材質、穿脫狀態或套裝。',
+          style: const TextStyle(fontSize: 12),
+        ),
+        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+        expandedCrossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '勾選＝輸出；取消勾選＝已隱藏於提示詞。重新勾選後會立即恢復原本的全部設定。',
+            style: TextStyle(fontSize: 12),
+          ),
+          if (partBlocks.isNotEmpty) ...[
+            const SizedBox(height: 9),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: partBlocks.entries.map((entry) {
+                final visible = !hiddenParts.contains(entry.key);
+                final zh = _clothingPromptPartLabelZh(entry.key);
+                final en = _clothingPromptPartLabelEn(entry.key);
+                return FilterChip(
+                  selected: visible,
+                  avatar: Icon(
+                    visible
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    size: 16,
+                  ),
+                  label: Text(
+                    visible ? '$zh · $en' : '$zh · $en（已隱藏於提示詞）',
+                  ),
+                  tooltip: entry.value.map((tag) => tag.en).join(', '),
+                  onSelected: (next) => _setClothingPromptPartVisible(
+                    personIndex,
+                    entry.key,
+                    next,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+          if (outfitSections.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            const Text(
+              '套裝／角色專屬服裝部位 · Outfit sections',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(height: 7),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: outfitSections.map((entry) {
+                final hidden = _hiddenOutfitReferenceSections(
+                  entry.preset,
+                  personIndex,
+                ).contains(entry.section.id);
+                final englishLabel =
+                    _outfitReferenceSectionLabelEn(entry.section.id);
+                return FilterChip(
+                  selected: !hidden,
+                  avatar: Icon(
+                    hidden
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
+                    size: 16,
+                  ),
+                  label: Text(
+                    hidden
+                        ? '${entry.preset.name}・${entry.section.zh} · $englishLabel（已隱藏於提示詞）'
+                        : '${entry.preset.name}・${entry.section.zh} · $englishLabel',
+                  ),
+                  tooltip: entry.section.en,
+                  onSelected: (next) => _setOutfitReferenceSectionEnabled(
+                    entry.preset,
+                    personIndex,
+                    entry.section.id,
+                    next,
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+          if (hasHidden) ...[
+            const SizedBox(height: 10),
+            OutlinedButton.icon(
+              onPressed: () => _restoreAllClothingPromptParts(personIndex),
+              icon: const Icon(Icons.restore, size: 17),
+              label: const Text('恢復全部部位輸出 · Restore all'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
   Widget _clothingPromptWeightControl(int personIndex) {
     if (personIndex < 0 || personIndex >= _personSlots.length) {
       return const SizedBox.shrink();
@@ -28768,12 +29194,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           if (outfitSelected && sectionControls.isNotEmpty) ...[
                             const SizedBox(height: 10),
                             const Text(
-                              '套裝部位（可單獨移除）',
+                              '套裝提示詞部位（可單獨隱藏）',
                               style: TextStyle(fontWeight: FontWeight.w800),
                             ),
                             const SizedBox(height: 4),
                             const Text(
-                              '取消勾選只會從此套裝的輸出移除該部位；職業設定、其他部位與武器不會受影響。',
+                              '取消勾選只會把該部位隱藏於正向英文提示詞；套裝選取、顏色、細節、職業設定、其他部位與武器都會保留。',
                               style: TextStyle(fontSize: 12),
                             ),
                             const SizedBox(height: 6),
@@ -28785,14 +29211,14 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                   FilterChip(
                                     avatar: Icon(
                                       hiddenSections.contains(section.id)
-                                          ? Icons.remove_circle_outline
-                                          : Icons.check_circle_outline,
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
                                       size: 16,
                                     ),
                                     label: Text(
                                       hiddenSections.contains(section.id)
-                                          ? '${section.zh}・已移除'
-                                          : '${section.zh}・使用中',
+                                          ? '${section.zh}・已隱藏於提示詞'
+                                          : '${section.zh}・提示詞使用中',
                                     ),
                                     selected:
                                         !hiddenSections.contains(section.id),
@@ -29150,6 +29576,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ),
                   ),
                   _clothingPromptWeightControl(index),
+                  _clothingPromptVisibilityControl(index),
                   if (adaptiveDetails.isNotEmpty)
                     _pickerStage(
                       icon: Icons.palette_outlined,
@@ -29702,8 +30129,33 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     return output.join(', ');
   }
 
+  Widget _hiddenClothingPromptSummaryChip(
+    _HiddenClothingPromptSummary summary, {
+    Color? tone,
+  }) {
+    final label =
+        '人物 ${summary.personIndex + 1} · ${summary.label} · ${summary.englishLabel}（已隱藏於提示詞）';
+    return Tooltip(
+      message: '此部位的所有選取仍保留。點一下即可恢復正向英文提示詞輸出。',
+      child: InputChip(
+        avatar: const Icon(Icons.visibility_off_outlined, size: 15),
+        label: Text(label),
+        onSelected: (_) => summary.restore(),
+        visualDensity: VisualDensity.compact,
+        backgroundColor: tone == null
+            ? _buttonSurface
+            : _pickerLayerSurface(tone, selected: false),
+        side: BorderSide(color: tone?.withValues(alpha: .9) ?? _buttonBorder),
+        labelStyle: tone == null ? const TextStyle(color: Colors.white) : null,
+      ),
+    );
+  }
+
   Widget _stepSelectionOutput(int stepIndex) {
     final tags = _stepOutputTags(stepIndex);
+    final hiddenClothing = stepIndex == 3
+        ? _hiddenClothingPromptSummaries()
+        : const <_HiddenClothingPromptSummary>[];
     final english = _stepEnglishOutput(stepIndex, tags);
     final tone = _pickerLayerTone(
       switch (stepIndex) {
@@ -29745,7 +30197,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 ),
               ),
             ),
-          if (tags.isEmpty)
+          if (tags.isEmpty && hiddenClothing.isEmpty)
             Text(
               '本大項目前沒有已選標籤。',
               style: TextStyle(
@@ -29757,30 +30209,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             Wrap(
               spacing: 6,
               runSpacing: 5,
-              children: tags.map((tag) {
-                final locked =
-                    stepIndex == 1 && _isMandatoryCharacterIdentityOutput(tag);
-                final personPrefix = tag.personIndex == null
-                    ? ''
-                    : '人物 ${tag.personIndex! + 1} · ';
-                return Tooltip(
-                  message: locked
-                      ? '${_moderationSafePromptTag(tag.en)}（角色名稱必定保留）'
-                      : _moderationSafePromptTag(tag.en),
-                  child: InputChip(
-                    avatar: locked
-                        ? const Icon(Icons.lock_outline, size: 15)
-                        : null,
-                    label: Text('$personPrefix${tag.zh}'),
-                    deleteIcon: const Icon(Icons.close, size: 16),
-                    onDeleted:
-                        locked ? null : () => _removeGeneratedOutputTag(tag),
-                    visualDensity: VisualDensity.compact,
-                    backgroundColor: _pickerLayerSurface(tone, selected: false),
-                    side: BorderSide(color: tone.withValues(alpha: .75)),
+              children: [
+                ...tags.map((tag) {
+                  final locked = stepIndex == 1 &&
+                      _isMandatoryCharacterIdentityOutput(tag);
+                  final personPrefix = tag.personIndex == null
+                      ? ''
+                      : '人物 ${tag.personIndex! + 1} · ';
+                  return Tooltip(
+                    message: locked
+                        ? '${_moderationSafePromptTag(tag.en)}（角色名稱必定保留）'
+                        : _moderationSafePromptTag(tag.en),
+                    child: InputChip(
+                      avatar: locked
+                          ? const Icon(Icons.lock_outline, size: 15)
+                          : null,
+                      label: Text('$personPrefix${tag.zh}'),
+                      deleteIcon: const Icon(Icons.close, size: 16),
+                      onDeleted:
+                          locked ? null : () => _removeGeneratedOutputTag(tag),
+                      visualDensity: VisualDensity.compact,
+                      backgroundColor:
+                          _pickerLayerSurface(tone, selected: false),
+                      side: BorderSide(color: tone.withValues(alpha: .75)),
+                    ),
+                  );
+                }),
+                ...hiddenClothing.map(
+                  (summary) => _hiddenClothingPromptSummaryChip(
+                    summary,
+                    tone: tone,
                   ),
-                );
-              }).toList(),
+                ),
+              ],
             ),
           const SizedBox(height: 12),
           Row(
@@ -32204,47 +32665,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       () => _stepCard(
           3,
           '服裝與穿脫狀態',
-          _personSelectedIds.values
-              .expand((ids) => _allTags.where((tag) => ids.contains(tag.id)))
-              .where((tag) =>
-                  [
-                    '上衣',
-                    '褲子',
-                    '短褲',
-                    '裙子',
-                    '內衣',
-                    '胸罩',
-                    '內褲',
-                    '襪子',
-                    '鞋子',
-                    '服裝',
-                    _cosplayGroup,
-                    '配件',
-                    '配件顏色',
-                    '帽子顏色',
-                    '眼鏡顏色',
-                    '上衣風格',
-                    '下身風格',
-                    '上衣顏色',
-                    '下身顏色',
-                    '褲子顏色',
-                    '短褲顏色',
-                    '裙子顏色',
-                    '服裝顏色',
-                    '褲子邊線色',
-                    '短褲邊線色',
-                    '裙子邊線色',
-                    '帽子邊線色',
-                    '眼鏡邊線色',
-                    '服裝細節',
-                    '服裝細節顏色',
-                    '服裝材質',
-                    '穿脫狀態'
-                  ].contains(tag.group) ||
-                  _isScopedClothingGroup(tag.group))
-              .map((tag) => tag.zh)
-              .join('、')
-              .ifEmpty('每位人物分別設定'),
+          _clothingStepHeaderSummaryZh(),
           Icons.checkroom_outlined,
           _stepClothing(),
           onClear: () => _clearStepTags(3)),
@@ -32592,6 +33013,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _chineseOutputField() {
     final generated = _generatedPositiveTags();
     final groupedGenerated = _chineseOutputSections(generated);
+    final hiddenClothing = _hiddenClothingPromptSummaries();
     final extra = _extraPositive.text.trim();
     final preprompt = _preprompt.text.trim();
     return Column(
@@ -32662,6 +33084,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ];
                   }),
                 ],
+                if (hiddenClothing.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  Text(
+                    '已選服裝（已隱藏於提示詞）',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Wrap(
+                    spacing: 7,
+                    runSpacing: 7,
+                    children: hiddenClothing
+                        .map(_hiddenClothingPromptSummaryChip)
+                        .toList(),
+                  ),
+                ],
                 if (extra.isNotEmpty) ...[
                   const SizedBox(height: 12),
                   Text(
@@ -32707,7 +33148,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                             ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                       Text(
-                        '已選 $selectedCount 個資料庫標籤 · 英文每個標籤以句點結尾',
+                        '已選 $selectedCount 個資料庫標籤 · 英文以逗號分隔，結尾不加句點',
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
@@ -32733,7 +33174,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
             const SizedBox(height: 6),
             Text(
-              '目前選擇 JSON 會保存各人物的已勾選標籤、服裝／姿勢欄位、權重與額外正向詞；匯入後會依原本欄位完整回填。',
+              '目前選擇 JSON 會保存各人物的已勾選標籤、服裝／姿勢欄位、權重、服裝提示詞隱藏狀態與額外正向詞；匯入後會依原本欄位完整回填。',
               style: TextStyle(
                 fontSize: 12,
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
@@ -32843,7 +33284,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ),
             const SizedBox(height: 4),
             Text(
-              '完整狀態 JSON 會分區保存已勾選標籤與各人物／服裝／姿勢的額外正向詞；匯入時會覆蓋並回填到原欄位。',
+              '完整狀態 JSON 會分區保存已勾選標籤、各人物／服裝／姿勢的額外正向詞，以及服裝提示詞部位隱藏狀態；匯入時會覆蓋並回填到原欄位。',
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 fontSize: 12,
