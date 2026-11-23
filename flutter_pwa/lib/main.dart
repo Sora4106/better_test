@@ -12,6 +12,7 @@ import 'package:flutter/services.dart';
 import 'app_version.dart';
 import 'attached_outfit_reference_data.dart'
     show attachedPosePackages, attachedPosePackagesByCategory;
+import 'attached_standalone_tag_data.dart';
 import 'catalog_data.dart';
 import 'clothing_taxonomy.dart';
 import 'elsword_job_outfit_data.dart';
@@ -9936,6 +9937,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     ...clothingTaxonomyTags,
     ...clothingDimensionTags,
     ...clothingOverallTags,
+    ...attachedStandaloneTags,
   ].map(_catalogTag).toList();
   late final List<TagItem> _scopedClothingTags = _createScopedClothingTags();
   // The corresponding picker entries were removed because BetterWaifu rejects
@@ -29576,7 +29578,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                     ),
                   ),
                   _clothingPromptWeightControl(index),
-                  _clothingPromptVisibilityControl(index),
                   if (adaptiveDetails.isNotEmpty)
                     _pickerStage(
                       icon: Icons.palette_outlined,
@@ -30132,9 +30133,12 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _hiddenClothingPromptSummaryChip(
     _HiddenClothingPromptSummary summary, {
     Color? tone,
+    bool includePersonPrefix = true,
   }) {
+    final personPrefix =
+        includePersonPrefix ? '人物 ${summary.personIndex + 1} · ' : '';
     final label =
-        '人物 ${summary.personIndex + 1} · ${summary.label} · ${summary.englishLabel}（已隱藏於提示詞）';
+        '$personPrefix${summary.label} · ${summary.englishLabel}（已隱藏於提示詞）';
     return Tooltip(
       message: '此部位的所有選取仍保留。點一下即可恢復正向英文提示詞輸出。',
       child: InputChip(
@@ -33014,6 +33018,28 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final generated = _generatedPositiveTags();
     final groupedGenerated = _chineseOutputSections(generated);
     final hiddenClothing = _hiddenClothingPromptSummaries();
+    final hiddenClothingByPerson = <int, List<_HiddenClothingPromptSummary>>{};
+    for (final summary in hiddenClothing) {
+      hiddenClothingByPerson
+          .putIfAbsent(summary.personIndex, () => <_HiddenClothingPromptSummary>[])
+          .add(summary);
+    }
+    final visibleClothingPersonIndexes = <int>{};
+    for (final section in groupedGenerated.entries) {
+      if (!section.key.endsWith('・服裝／裝備')) continue;
+      for (final output in section.value) {
+        final personIndex = output.personIndex;
+        if (personIndex != null) {
+          visibleClothingPersonIndexes.add(personIndex);
+          break;
+        }
+      }
+    }
+    final hiddenOnlyClothingPersonIndexes = hiddenClothingByPerson.keys
+        .where((personIndex) =>
+            !visibleClothingPersonIndexes.contains(personIndex))
+        .toList()
+      ..sort();
     final extra = _extraPositive.text.trim();
     final preprompt = _preprompt.text.trim();
     return Column(
@@ -33064,6 +33090,19 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ...groupedGenerated.entries.indexed.expand((entry) {
                     final index = entry.$1;
                     final section = entry.$2;
+                    int? clothingPersonIndex;
+                    if (section.key.endsWith('・服裝／裝備')) {
+                      for (final output in section.value) {
+                        if (output.personIndex != null) {
+                          clothingPersonIndex = output.personIndex;
+                          break;
+                        }
+                      }
+                    }
+                    final hiddenForPerson = clothingPersonIndex == null
+                        ? const <_HiddenClothingPromptSummary>[]
+                        : hiddenClothingByPerson[clothingPersonIndex] ??
+                            const <_HiddenClothingPromptSummary>[];
                     return <Widget>[
                       if (index > 0) const SizedBox(height: 16),
                       Text(
@@ -33078,30 +33117,61 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       Wrap(
                         spacing: 7,
                         runSpacing: 7,
-                        children:
-                            section.value.map(_chineseOutputTagChip).toList(),
+                        children: [
+                          ...section.value.map(_chineseOutputTagChip),
+                          ...hiddenForPerson.map(
+                            (summary) => _hiddenClothingPromptSummaryChip(
+                              summary,
+                              includePersonPrefix: false,
+                            ),
+                          ),
+                        ],
                       ),
+                      if (clothingPersonIndex != null)
+                        _clothingPromptVisibilityControl(
+                          clothingPersonIndex,
+                        ),
                     ];
                   }),
                 ],
-                if (hiddenClothing.isNotEmpty) ...[
-                  const SizedBox(height: 16),
-                  Text(
-                    '已選服裝（已隱藏於提示詞）',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.primary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 7,
-                    runSpacing: 7,
-                    children: hiddenClothing
-                        .map(_hiddenClothingPromptSummaryChip)
-                        .toList(),
-                  ),
+                if (hiddenOnlyClothingPersonIndexes.isNotEmpty) ...[
+                  if (groupedGenerated.isNotEmpty)
+                    const SizedBox(height: 16)
+                  else
+                    const SizedBox(height: 9),
+                  ...hiddenOnlyClothingPersonIndexes.indexed.expand((entry) {
+                    final index = entry.$1;
+                    final personIndex = entry.$2;
+                    final hiddenForPerson =
+                        hiddenClothingByPerson[personIndex] ??
+                            const <_HiddenClothingPromptSummary>[];
+                    return <Widget>[
+                      if (index > 0) const SizedBox(height: 16),
+                      Text(
+                        '人物 ${personIndex + 1}・服裝／裝備',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.primary,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Wrap(
+                        spacing: 7,
+                        runSpacing: 7,
+                        children: hiddenForPerson
+                            .map(
+                              (summary) =>
+                                  _hiddenClothingPromptSummaryChip(
+                                summary,
+                                includePersonPrefix: false,
+                              ),
+                            )
+                            .toList(),
+                      ),
+                      _clothingPromptVisibilityControl(personIndex),
+                    ];
+                  }),
                 ],
                 if (extra.isNotEmpty) ...[
                   const SizedBox(height: 12),
