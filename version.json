@@ -1,8 +1,15 @@
 ﻿{
-    "version":  "1.1.335",
-    "build":  337,
-    "label":  "1.1.335+337",
+    "version":  "1.1.336",
+    "build":  338,
+    "label":  "1.1.336+338",
     "history":  [
+                    {
+                        "version":  "1.1.336",
+                        "build":  338,
+                        "label":  "1.1.336+338",
+                        "date":  "2026-11-23",
+                        "notes":  "新增 Windows 系統管理員桌面發布工具，可選擇 PWA 路徑並以單一按鈕自動追加版本、驗證、建置、提交及推送至 GitHub,加入 Git 安全檢查、失敗重試與隔離煙霧測試，且不使用 reset 或 checkout；修正升版腳本寫入 pubspec 時的尾端空行與 UTF-8 BOM 問題"
+                    },
                     {
                         "version":  "1.1.335",
                         "build":  337,

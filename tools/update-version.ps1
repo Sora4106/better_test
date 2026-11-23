@@ -58,7 +58,9 @@ Set-Content -LiteralPath (Join-Path $projectRoot 'flutter_pwa/lib/app_version.da
 $pubspecPath = Join-Path $projectRoot 'flutter_pwa/pubspec.yaml'
 $pubspec = Get-Content -Raw -Encoding UTF8 $pubspecPath
 $pubspec = [regex]::Replace($pubspec, '(?m)^version:\s*.*$', "version: $label")
-Set-Content -LiteralPath $pubspecPath -Value $pubspec -Encoding UTF8
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+$pubspec = $pubspec.TrimEnd("`r", "`n") + "`n"
+[IO.File]::WriteAllText($pubspecPath, $pubspec, $utf8NoBom)
 
 $changelogPath = Join-Path $projectRoot 'CHANGELOG.md'
 $changelogLines = @(Get-Content -Encoding UTF8 $changelogPath)
