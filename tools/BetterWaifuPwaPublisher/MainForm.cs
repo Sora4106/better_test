@@ -156,7 +156,7 @@ namespace BetterWaifuPwaPublisher
             _pwaText = CreateTextBox();
             AddPathRow(table, 1, "PWA 專案目錄", _pwaText, BrowsePwaDirectory);
 
-            Label pathsLabel = CreateFieldLabel("要上傳的 PWA 路徑");
+            Label pathsLabel = CreateFieldLabel("發布範圍（選用）");
             pathsLabel.Padding = new Padding(0, 7, 0, 0);
             table.Controls.Add(pathsLabel, 0, 2);
 
@@ -181,17 +181,17 @@ namespace BetterWaifuPwaPublisher
                 WrapContents = true,
                 Margin = new Padding(0, 5, 0, 7)
             };
-            pathButtons.Controls.Add(CreateSmallButton("加入檔案", AddFiles));
-            pathButtons.Controls.Add(CreateSmallButton("加入資料夾", AddFolder));
+            pathButtons.Controls.Add(CreateSmallButton("只發布指定檔案", AddFiles));
+            pathButtons.Controls.Add(CreateSmallButton("只發布指定資料夾", AddFolder));
             pathButtons.Controls.Add(CreateSmallButton("移除選取", RemoveSelectedPaths));
-            pathButtons.Controls.Add(CreateSmallButton("清空＝整個 PWA", ClearSelectedPaths));
+            pathButtons.Controls.Add(CreateSmallButton("改用整個 PWA（建議）", ClearSelectedPaths));
             table.Controls.Add(pathButtons, 1, 3);
             table.SetColumnSpan(pathButtons, 2);
 
             Label pathHint = new Label
             {
                 AutoSize = true,
-                Text = "留空時會暫存整個 PWA 專案；所有路徑都必須位於 Git 專案與 PWA 目錄內。",
+                Text = "清單空白就是發布整個 PWA（建議）。只有要限制本次提交範圍時，才加入指定檔案或資料夾。",
                 ForeColor = _muted,
                 Margin = new Padding(3, 0, 3, 9)
             };

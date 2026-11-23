@@ -10,6 +10,7 @@ Windows 管理員桌面工具，用一個主要按鈕完成 BetterWaifu Flutter 
 - 自動執行 `tools/update-version.ps1` 追加版本與 CHANGELOG。
 - 可選擇執行 `flutter analyze`、`flutter build web --release` 與 PWA 快取更新。
 - 只暫存指定的 PWA 路徑與四個版本檔案，再自動 commit、push。
+- 選取的 PWA 路徑沒有 Git 差異時，仍可追加版本並重新建置、發布。
 - 使用既有 Git for Windows Credential Manager，不儲存 GitHub Token。
 - 不執行 `git reset`、`git checkout`，且偵測到既有 staged 檔案或遠端領先時會停止。
 - push 失敗時保留本地 commit；再次按發布按鈕可直接重試 push，不會重複升版。

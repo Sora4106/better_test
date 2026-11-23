@@ -113,6 +113,15 @@ namespace BetterWaifuPwaPublisher
             string remoteHead = RunGit(repository, "rev-parse", "origin/main").Output.Trim();
             Assert(localHead == remoteHead, "Push did not update the isolated remote.");
 
+            PublishResult cleanRepublish = new PublisherEngine().Publish(options, null, null);
+            Assert(!cleanRepublish.PushedExistingCommitOnly, "A clean repository should create a new release instead of being rejected.");
+            string republishedHead = RunGit(repository, "rev-parse", "HEAD").Output.Trim();
+            Assert(republishedHead != localHead, "Publishing without selected PWA changes did not create a release commit.");
+            string republishedRemoteHead = RunGit(repository, "rev-parse", "origin/main").Output.Trim();
+            Assert(republishedHead == republishedRemoteHead, "Clean republish did not update the isolated remote.");
+            status = RunGit(repository, "status", "--porcelain").Output;
+            Assert(string.IsNullOrWhiteSpace(status), "Repository is not clean after clean republish: " + status);
+
             File.AppendAllText(
                 Path.Combine(repository, "flutter_pwa", "lib", "main.dart"),
                 "// staged safety check\r\n");

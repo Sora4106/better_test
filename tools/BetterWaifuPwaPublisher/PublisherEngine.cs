@@ -149,8 +149,7 @@ namespace BetterWaifuPwaPublisher
                     };
                 }
 
-                throw new InvalidOperationException(
-                    "選取的 PWA 路徑目前沒有可上傳的修改。請先修改檔案，或重新選擇要發布的路徑。");
+                log("選取的 PWA 路徑目前沒有 Git 差異；仍會追加版本編號並重新建置、發布。");
             }
 
             Dictionary<string, byte[]> versionBackup = BackupVersionFiles(repository);
