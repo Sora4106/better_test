@@ -24,6 +24,7 @@ import 'outfit_reference_catalog.dart';
 import 'outfit_reference_data.dart' hide outfitReferencePresets;
 import 'object_catalog_data.dart';
 import 'package_keyword_search.dart';
+import 'prompt_punctuation.dart';
 import 'prompt_package_data.dart';
 
 enum _SearchScope {
@@ -13912,8 +13913,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         .toList();
   }
 
-  List<String> _poseExtraPrompts(String value) => value
-      .split(RegExp(r'[。.;\n\r]+'))
+  List<String> _poseExtraPrompts(String value) => splitPromptText(value)
       .map(_cleanTag)
       .where((item) => item.isNotEmpty)
       .toList();
@@ -16725,7 +16725,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
 
   String _cleanTag(String value) => value
       .trim()
-      .replaceAll(RegExp(r'^[,，。.;\s]+|[,，。.;\s]+$'), '')
+      .replaceAll(RegExp(r'^(?:[,，。;\s]|\.(?!\d))+|[,，。.;\s]+$'), '')
       .replaceAll(RegExp(r'\s+'), ' ');
 
   /// Canonical tag spellings used by the target Danbooru-style model.
@@ -16792,8 +16792,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final restore = <String, String>{
       for (final entry in protectedSymbols.entries) entry.value: entry.key,
     };
-    return normalized
-        .split(RegExp(r'[,，、。.;\n\r]+'))
+    return splitPromptText(normalized, splitCommas: true)
         .map(_cleanTag)
         .where((item) => item.isNotEmpty)
         .map((item) => restore[item] ?? item)
@@ -17183,7 +17182,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     // would turn `(oval face:1.15)` into literal text instead of a model
     // weight, which is especially harmful for canonical class-head profiles.
     final hasExplicitWeight =
-        RegExp(r'\([^()]+:\s*\d+(?:\.\d+)?\)').hasMatch(result);
+        RegExp(r'\([^()]+:\s*[+-]?(?:\d+(?:\.\d+)?|\.\d+)\)')
+            .hasMatch(result);
     return _canonicalModelTag(
       result,
       // Character/model labels such as `aisha (elsword)` are prompt tags rather
@@ -17724,6 +17724,9 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       oralFellatioPrimaryTerms.contains(_englishTagKey(tag.en));
 
   String? _conflictGroup(TagItem tag) {
+    // Indoor and outdoor scenes can be combined, including tags with legacy
+    // explicit scene conflict groups.
+    if (_isScenePickerGroup(tag.group)) return null;
     if (_isOnePieceStyleTag(tag)) return 'onepiece_style';
     if (_isLegacyClothingStyleTag(tag)) {
       final scope = _clothingScopeForTag(tag);
@@ -17777,7 +17780,6 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       return 'pose';
     }
     if (tag.group == '性姿勢') return 'sex_position';
-    if (_isScenePickerGroup(tag.group)) return 'scene';
     if (tag.group == _breastSizeGroup) return 'breast_size';
     if (tag.group == '胸部' &&
         [
@@ -32613,6 +32615,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
             ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 310),
               child: ListView.builder(
+                key: PageStorageKey<String>('package-search-results:$label'),
                 primary: false,
                 shrinkWrap: true,
                 padding: EdgeInsets.zero,
@@ -32708,6 +32711,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             TextField(
+              key: PageStorageKey<String>('package-lookup-field:$key'),
               controller: controller,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
