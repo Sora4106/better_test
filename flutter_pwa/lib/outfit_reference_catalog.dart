@@ -1,3 +1,4 @@
+import 'aeris_outfit_reference_data.dart' as aeris;
 import 'blue_outfit_reference_data.dart' as blue;
 import 'attached_outfit_reference_data.dart' as attached;
 import 'elsword_job_outfit_data.dart' as elsword;
@@ -14,4 +15,5 @@ final outfitReferencePresets = <base.OutfitReferencePresetData>[
   ...pink.pinkOutfitReferencePresets,
   ...elsword.elswordJobOutfitReferencePresets,
   ...attached.attachedOutfitReferencePresets,
+  ...aeris.aerisOutfitReferencePresets,
 ];
