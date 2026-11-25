@@ -14,6 +14,7 @@ import 'attached_outfit_reference_data.dart'
     show attachedPosePackages, attachedPosePackagesByCategory;
 import 'attached_standalone_tag_data.dart';
 import 'catalog_data.dart';
+import 'clothing_part_glyph.dart';
 import 'clothing_taxonomy.dart';
 import 'elsword_job_outfit_data.dart';
 import 'expanded_tag_data.dart';
@@ -22,7 +23,21 @@ import 'hair_style_package_data.dart';
 import 'outfit_reference_catalog.dart';
 import 'outfit_reference_data.dart' hide outfitReferencePresets;
 import 'object_catalog_data.dart';
+import 'package_keyword_search.dart';
 import 'prompt_package_data.dart';
+
+enum _SearchScope {
+  all('全部'),
+  tags('標籤'),
+  pose('姿勢套件'),
+  outfit('服裝套裝');
+
+  const _SearchScope(this.label);
+
+  final String label;
+}
+
+typedef _PoseSearchItem = ({PromptPackageData package, bool shared});
 
 const _storageKey = 'betterwaifu_prompt_builder_state_v1';
 const _lastSeenVersionKey = 'betterwaifu_prompt_builder_last_seen_version';
@@ -10086,6 +10101,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   static const double _basePageBottomPadding = 24;
   double _pageBottomPadding = _basePageBottomPadding;
   String _globalTagQuery = '';
+  _SearchScope _globalSearchScope = _SearchScope.all;
   bool _showAdult = false;
   bool _isPreparingCatalog = true;
   static const double _minimumPromptWeight = 0.50;
@@ -25723,17 +25739,40 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  String _outfitSectionGlyph(
+    OutfitReferencePresetData preset,
+    OutfitUnifiedPhraseSectionData section,
+  ) {
+    if (section.id != 'lower') return section.id;
+    final prompt = preset.unifiedPhraseSections
+        .where((fragment) => fragment.id == section.id)
+        .map((fragment) => fragment.en)
+        .join(' ')
+        .toLowerCase();
+    if (RegExp(r'\bshorts\b').hasMatch(prompt)) return 'shorts';
+    if (RegExp(r'\bskirts?\b').hasMatch(prompt)) return 'skirt';
+    return 'pants';
+  }
+
   Widget _clothingPromptVisibilityControl(int personIndex) {
     if (personIndex < 0 || personIndex >= _personSlots.length) {
       return const SizedBox.shrink();
     }
     final partBlocks = _clothingPromptPartBlocksForPerson(personIndex);
     final hiddenParts = _hiddenClothingPromptParts(personIndex);
-    final outfitSections = <({
-      OutfitReferencePresetData preset,
-      OutfitUnifiedPhraseSectionData section,
-    })>[];
-    var hasHiddenOutfitSection = false;
+    var hasHidden = hiddenParts.any(partBlocks.containsKey);
+    final buttons = <Widget>[
+      for (final part in partBlocks.keys)
+        ClothingVisibilityButton(
+          part: part,
+          label:
+              '${_clothingPromptPartLabelZh(part)} · ${_clothingPromptPartLabelEn(part)}',
+          visible: !hiddenParts.contains(part),
+          onPressed: () => _setClothingPromptPartVisible(
+              personIndex, part, hiddenParts.contains(part)),
+        ),
+    ];
+
     for (final preset in outfitReferencePresets) {
       if (!_isOutfitReferenceSelected(preset, personIndex) ||
           _selectedOutfitReferenceVariant(preset, personIndex) != null) {
@@ -25741,131 +25780,39 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       }
       final hidden = _hiddenOutfitReferenceSections(preset, personIndex);
       for (final section in _outfitReferenceSectionControls(preset)) {
-        outfitSections.add((preset: preset, section: section));
-        hasHiddenOutfitSection =
-            hasHiddenOutfitSection || hidden.contains(section.id);
+        final visible = !hidden.contains(section.id);
+        hasHidden = hasHidden || !visible;
+        buttons.add(ClothingVisibilityButton(
+          part: _outfitSectionGlyph(preset, section),
+          label:
+              '${preset.name}・${section.zh} · ${_outfitReferenceSectionLabelEn(section.id)}',
+          visible: visible,
+          onPressed: () => _setOutfitReferenceSectionEnabled(
+              preset, personIndex, section.id, !visible),
+        ));
       }
     }
-    if (partBlocks.isEmpty && outfitSections.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (buttons.isEmpty) return const SizedBox.shrink();
 
-    final hasHidden =
-        hiddenParts.any(partBlocks.containsKey) || hasHiddenOutfitSection;
-    return Container(
-      width: double.infinity,
-      margin: const EdgeInsets.only(top: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xff211b37),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: const Color(0xfff0abfc).withValues(alpha: .72),
-        ),
-      ),
-      child: ExpansionTile(
-        key: PageStorageKey<String>('clothing-prompt-visibility-$personIndex'),
-        initiallyExpanded: hasHidden,
-        leading: Icon(
-          hasHidden ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-          color: const Color(0xfff0abfc),
-        ),
-        title: const Text(
-          '服裝提示詞部位顯示 · Clothing prompt visibility',
-          style: TextStyle(fontWeight: FontWeight.w800),
-        ),
-        subtitle: Text(
-          hasHidden
-              ? '目前有部位已隱藏於提示詞；所有選取與設定仍完整保留。'
-              : '只控制正向英文提示詞；不會刪除服裝、顏色、細節、材質、穿脫狀態或套裝。',
-          style: const TextStyle(fontSize: 12),
-        ),
-        childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-        expandedCrossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '勾選＝輸出；取消勾選＝已隱藏於提示詞。重新勾選後會立即恢復原本的全部設定。',
-            style: TextStyle(fontSize: 12),
-          ),
-          if (partBlocks.isNotEmpty) ...[
-            const SizedBox(height: 9),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: partBlocks.entries.map((entry) {
-                final visible = !hiddenParts.contains(entry.key);
-                final zh = _clothingPromptPartLabelZh(entry.key);
-                final en = _clothingPromptPartLabelEn(entry.key);
-                return FilterChip(
-                  selected: visible,
-                  avatar: Icon(
-                    visible
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    size: 16,
-                  ),
-                  label: Text(
-                    visible ? '$zh · $en' : '$zh · $en（已隱藏於提示詞）',
-                  ),
-                  tooltip: entry.value.map((tag) => tag.en).join(', '),
-                  onSelected: (next) => _setClothingPromptPartVisible(
-                    personIndex,
-                    entry.key,
-                    next,
-                  ),
-                );
-              }).toList(),
-            ),
+    return Semantics(
+      container: true,
+      label: '服裝提示詞部位顯示',
+      child: Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Wrap(
+          spacing: 4,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            ...buttons,
+            if (hasHidden)
+              IconButton.outlined(
+                tooltip: '恢復全部部位輸出 · Restore all',
+                onPressed: () => _restoreAllClothingPromptParts(personIndex),
+                icon: const Icon(Icons.restore),
+              ),
           ],
-          if (outfitSections.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            const Text(
-              '套裝／角色專屬服裝部位 · Outfit sections',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 7),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: outfitSections.map((entry) {
-                final hidden = _hiddenOutfitReferenceSections(
-                  entry.preset,
-                  personIndex,
-                ).contains(entry.section.id);
-                final englishLabel =
-                    _outfitReferenceSectionLabelEn(entry.section.id);
-                return FilterChip(
-                  selected: !hidden,
-                  avatar: Icon(
-                    hidden
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    size: 16,
-                  ),
-                  label: Text(
-                    hidden
-                        ? '${entry.preset.name}・${entry.section.zh} · $englishLabel（已隱藏於提示詞）'
-                        : '${entry.preset.name}・${entry.section.zh} · $englishLabel',
-                  ),
-                  tooltip: entry.section.en,
-                  onSelected: (next) => _setOutfitReferenceSectionEnabled(
-                    entry.preset,
-                    personIndex,
-                    entry.section.id,
-                    next,
-                  ),
-                );
-              }).toList(),
-            ),
-          ],
-          if (hasHidden) ...[
-            const SizedBox(height: 10),
-            OutlinedButton.icon(
-              onPressed: () => _restoreAllClothingPromptParts(personIndex),
-              icon: const Icon(Icons.restore, size: 17),
-              label: const Text('恢復全部部位輸出 · Restore all'),
-            ),
-          ],
-        ],
+        ),
       ),
     );
   }
@@ -28414,6 +28361,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                           style: TextStyle(fontSize: 12)),
                       childrenPadding: const EdgeInsets.fromLTRB(10, 0, 10, 12),
                       children: [
+                        _packageLookupField(index, _SearchScope.pose),
                         _promptPackagePanel(
                           personIndex: index,
                           panelId: 'complete-attached-pose-library',
@@ -28998,6 +28946,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         ),
         childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 14),
         children: [
+          _packageLookupField(personIndex, _SearchScope.outfit),
           Align(
             alignment: Alignment.centerLeft,
             child: Wrap(
@@ -32375,6 +32324,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final hiddenIds = _hiddenTaxonomyDuplicateIdsCache ?? <String>{};
     final results = allTags.where((tag) {
       if (!_showAdult && tag.adult) return false;
+      if (_isUnifiedOutfitPhraseTag(tag)) return false;
       if (hiddenIds.contains(tag.id)) return false;
       final haystack = [
         tag.zh,
@@ -32475,12 +32425,318 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  PackageKeywordEntry<_PoseSearchItem> _poseSearchEntry(
+    PromptPackageData package,
+    String collection, {
+    bool shared = false,
+  }) =>
+      PackageKeywordEntry(
+        value: (package: package, shared: shared),
+        name: package.name,
+        category: package.category,
+        keywords: [
+          '姿勢套件 pose package',
+          collection,
+          shared ? '雙人互動 共享姿勢 shared interaction' : '個人姿勢 solo pose',
+          package.description,
+          package.naturalPrompt,
+          package.naturalPromptZh,
+          ...package.tags,
+        ],
+      );
+
+  late final _posePackageSearchIndex = <PackageKeywordEntry<_PoseSearchItem>>[
+    for (final package in attachedPosePackages)
+      _poseSearchEntry(package, '完整姿勢套件資料庫'),
+    for (final package in _dynamicMotionPackagesWithSides)
+      _poseSearchEntry(package, '動態強化 motion effects'),
+    for (final package in _pillowPosePackagesWithSides)
+      _poseSearchEntry(package, '枕頭互動 pillow'),
+    for (final package in _petCompanionPosePackagesWithSides)
+      _poseSearchEntry(package, '寵物互動 pet companion'),
+    for (final package in _felineSoloPosePackagesWithSides)
+      _poseSearchEntry(package, '貓咪單人 貓系 cat feline'),
+    for (final package in _lalaWolfGirlPosePackagesWithSides)
+      _poseSearchEntry(package, '狼耳少女 狼系 wolf'),
+    for (final package in _twoPersonInteractionPackagesWithSides)
+      _poseSearchEntry(package, '雙人互動 two person', shared: true),
+    for (final package in _felineInteractionPackagesWithSides)
+      _poseSearchEntry(package, '貓咪互動 貓系 cat feline', shared: true),
+  ];
+
+  late final _adultPackageSearchIndex = [
+    for (final package in _adultPosePackages)
+      PackageKeywordEntry(
+        value: package,
+        name: package.name,
+        category: package.displayCategory,
+        keywords: [
+          '成人姿勢套件',
+          package.category,
+          package.description,
+          ...package.personTags,
+          ...package.frameTags,
+        ],
+      ),
+  ];
+
+  late final _outfitPackageSearchIndex = [
+    for (final preset in outfitReferencePresets)
+      PackageKeywordEntry(
+        value: preset,
+        name: preset.name,
+        category: preset.category,
+        keywords: [
+          '服裝套裝 服裝套件 outfit set',
+          preset.description,
+          preset.palette,
+          preset.requiredCharacterLabel,
+          preset.unifiedPhraseEn ?? '',
+          preset.mainStyle ?? '',
+          preset.subStyle ?? '',
+          preset.mood ?? '',
+          preset.occasion ?? '',
+          for (final section in preset.unifiedPhraseSections) section.zh,
+          for (final variant in preset.variants)
+            '${variant.name} ${variant.palette} ${variant.description} ${variant.en}',
+          for (final piece in preset.pieces) ...[
+            _clothingPromptPartLabelZh(piece.scope),
+            piece.garment,
+            piece.mainColor ?? '',
+            piece.secondaryColor ?? '',
+            piece.detailColor ?? '',
+            piece.cut ?? '',
+            piece.fit ?? '',
+            piece.length ?? '',
+            ...piece.styles,
+            ...piece.materials,
+            ...piece.details,
+            ...piece.patterns,
+          ],
+        ],
+      ),
+  ];
+
+  Widget _packageSearchTile({
+    required String title,
+    required String description,
+    required IconData icon,
+    required bool selected,
+    required VoidCallback? onTap,
+    VoidCallback? onPreview,
+  }) =>
+      ListTile(
+        dense: true,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+        leading: Icon(selected ? Icons.check_circle : icon, size: 20),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(description),
+        selected: selected,
+        enabled: onTap != null,
+        onTap: onTap,
+        trailing: onPreview == null
+            ? null
+            : IconButton(
+                tooltip: '預覽套件',
+                icon: const Icon(Icons.visibility_outlined, size: 19),
+                onPressed: onPreview,
+              ),
+      );
+
+  Widget _poseSearchTile(_PoseSearchItem hit, int personIndex) {
+    final package = hit.package;
+    final selected = hit.shared
+        ? _sharedPromptPackageIsSelected(package)
+        : _promptPackageIsSelected(package, personIndex);
+    final destination = hit.shared ? '共享互動' : '人物 ${personIndex + 1}';
+    return _packageSearchTile(
+      title: package.name,
+      description: '$destination · ${package.category}',
+      icon: hit.shared ? Icons.people_alt_outlined : Icons.accessibility_new,
+      selected: selected,
+      onTap: () {
+        if (hit.shared) {
+          if (selected) {
+            _removeSharedPromptPackage(package);
+          } else {
+            _applySharedPromptPackage(package);
+          }
+        } else if (selected) {
+          _removePromptPackage(package, personIndex);
+        } else {
+          _applyPromptPackage(package, personIndex);
+        }
+      },
+      onPreview: hit.shared
+          ? null
+          : () => _showPromptPackagePreview(package, personIndex),
+    );
+  }
+
+  Widget _outfitSearchTile(OutfitReferencePresetData preset, int personIndex) {
+    final selected = preset.usesUnifiedPhrase
+        ? _isOutfitReferenceSelected(preset, personIndex)
+        : _personCombinationIds[personIndex]?.contains(preset.combinationId) ==
+            true;
+    final available = _resolveOutfitReference(preset).missing.isEmpty;
+    return _packageSearchTile(
+      title: preset.name,
+      description: '${preset.category} · ${preset.palette}',
+      icon: Icons.checkroom_outlined,
+      selected: selected,
+      onTap: selected
+          ? () => _removeOutfitReference(preset, personIndex)
+          : available
+              ? () => unawaited(_applyOutfitReference(preset, personIndex))
+              : null,
+      onPreview: () => _showOutfitReferencePreview(preset, personIndex),
+    );
+  }
+
+  Widget _packageSearchGroup({
+    required String label,
+    required int count,
+    required int limit,
+    required Widget Function(int) tile,
+  }) =>
+      Padding(
+        padding: const EdgeInsets.only(top: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              count > limit
+                  ? '$label · $count 組（顯示前 $limit 組）'
+                  : '$label · $count 組',
+              style: const TextStyle(fontWeight: FontWeight.w800),
+            ),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxHeight: 310),
+              child: ListView.builder(
+                primary: false,
+                shrinkWrap: true,
+                padding: EdgeInsets.zero,
+                itemCount: min(count, limit),
+                itemBuilder: (context, index) => tile(index),
+              ),
+            ),
+          ],
+        ),
+      );
+
+  Widget _packageSearchResults(
+    String value,
+    int personIndex,
+    _SearchScope scope,
+  ) {
+    final query = PackageKeywordQuery(value);
+    if (query.isEmpty || scope == _SearchScope.tags || _personSlots.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final showPoses = scope != _SearchScope.outfit;
+    final poses = showPoses
+        ? query.find(_posePackageSearchIndex)
+        : const <_PoseSearchItem>[];
+    final adultPoses = showPoses && _showAdult
+        ? query.find(_adultPackageSearchIndex,
+            available: _matchingAdultPosePackages().toSet().contains)
+        : const <_AdultPosePackage>[];
+    final outfits = scope != _SearchScope.pose
+        ? query.find(_outfitPackageSearchIndex,
+            available: (preset) =>
+                _isOutfitReferenceAvailableForPerson(preset, personIndex))
+        : const <OutfitReferencePresetData>[];
+    final count = poses.length + adultPoses.length;
+    final limit = scope == _SearchScope.all ? 10 : 60;
+    if (count == 0 && outfits.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 8),
+        child: Text(
+          scope == _SearchScope.all ? '沒有符合的套件。' : '找不到符合的${scope.label}。',
+          style: const TextStyle(fontSize: 12),
+        ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (count > 0)
+          _packageSearchGroup(
+            label: '姿勢套件',
+            count: count,
+            limit: limit,
+            tile: (index) {
+              if (index < poses.length) {
+                return _poseSearchTile(poses[index], personIndex);
+              }
+              final package = adultPoses[index - poses.length];
+              final selected =
+                  _adultPosePackageIsSelected(package, endPose: false);
+              return _packageSearchTile(
+                title: package.name,
+                description: '18+ · ${package.displayCategory}',
+                icon: Icons.eighteen_mp,
+                selected: selected,
+                onTap: () => unawaited(selected
+                    ? _clearAdultPosePackageTags()
+                    : _applyAdultPosePackage(package, endPose: false)),
+              );
+            },
+          ),
+        if (outfits.isNotEmpty)
+          _packageSearchGroup(
+            label: '服裝套裝',
+            count: outfits.length,
+            limit: limit,
+            tile: (index) => _outfitSearchTile(outfits[index], personIndex),
+          ),
+      ],
+    );
+  }
+
+  Widget _packageLookupField(int personIndex, _SearchScope scope) {
+    final key = '$personIndex:package-lookup:${scope.name}';
+    final controller = _personSearchControllers.putIfAbsent(
+      key,
+      TextEditingController.new,
+    );
+    return ValueListenableBuilder<TextEditingValue>(
+      valueListenable: controller,
+      builder: (context, input, child) => Padding(
+        padding: const EdgeInsets.only(bottom: 10),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TextField(
+              controller: controller,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.search),
+                hintText: '用中文或英文搜尋${scope.label}…',
+                suffixIcon: input.text.isEmpty
+                    ? null
+                    : IconButton(
+                        onPressed: controller.clear,
+                        tooltip: '清除搜尋文字',
+                        icon: const Icon(Icons.clear),
+                      ),
+              ),
+            ),
+            _packageSearchResults(input.text, personIndex, scope),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _globalTagSearchPanel() {
     final targetPersonIndex = min(
       max(0, _globalSearchPersonIndex),
       max(0, _personSlots.length - 1),
     );
-    final results = _globalTagSearchResults(_globalTagQuery);
+    final searchTags = _globalSearchScope == _SearchScope.all ||
+        _globalSearchScope == _SearchScope.tags;
+    final results =
+        searchTags ? _globalTagSearchResults(_globalTagQuery) : const <TagItem>[];
     const displayLimit = 160;
     final displayed = results.take(displayLimit).toList();
     return Card(
@@ -32496,7 +32752,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 const SizedBox(width: 8),
                 const Expanded(
                   child: Text(
-                    '全系統標籤搜尋',
+                    '全域搜尋',
                     style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800),
                   ),
                 ),
@@ -32528,7 +32784,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               controller: _globalTagSearch,
               decoration: InputDecoration(
                 prefixIcon: const Icon(Icons.search),
-                hintText: '搜尋所有中文、英文標籤或分類…',
+                hintText: '搜尋中英文標籤、姿勢套件、服裝套裝…',
                 suffixIcon: _globalTagQuery.isEmpty
                     ? null
                     : IconButton(
@@ -32545,6 +32801,20 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
               onChanged: _scheduleGlobalSearch,
             ),
             const SizedBox(height: 7),
+            Wrap(
+              spacing: 6,
+              runSpacing: 4,
+              children: [
+                for (final scope in _SearchScope.values)
+                  ChoiceChip(
+                    selected: _globalSearchScope == scope,
+                    label: Text(scope.label),
+                    onSelected: (_) => setState(() => _globalSearchScope = scope),
+                  ),
+              ],
+            ),
+            _packageSearchResults(
+                _globalTagQuery, targetPersonIndex, _globalSearchScope),
             if (_personSlots.length > 1)
               Padding(
                 padding: const EdgeInsets.only(bottom: 7),
@@ -32556,19 +32826,18 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                   ),
                 ),
               ),
-            Text(
-              _globalTagQuery.trim().isEmpty
-                  ? '輸入關鍵字後會搜尋整個系統；18+ 標籤會依最上方「顯示圖片 18+ 標籤」設定顯示。'
-                  : results.isEmpty
-                      ? '找不到符合的標籤。'
-                      : results.length > displayLimit
-                          ? '已搜尋全部 ${results.length} 個結果；為避免畫面延遲，先顯示最相符的 $displayLimit 個。'
-                          : '搜尋到 ${results.length} 個標籤；場景與多人動作會全局套用，其他標籤會套用到指定人物。',
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
+            if (searchTags && _globalTagQuery.trim().isNotEmpty)
+              Text(
+                results.isEmpty
+                    ? '找不到符合的單獨標籤。'
+                    : results.length > displayLimit
+                        ? '單獨標籤 · ${results.length} 個（顯示前 $displayLimit 個）'
+                        : '單獨標籤 · ${results.length} 個',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
-            ),
             if (displayed.isNotEmpty) ...[
               const SizedBox(height: 10),
               ConstrainedBox(
