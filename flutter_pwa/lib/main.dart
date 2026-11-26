@@ -7906,7 +7906,20 @@ List<TagItem> _expandedHairStyleTags() {
   }).toList();
 }
 
+const _adultEmotionStages = <({String id, String zh, String en, String detail, String prompt})>[
+  (id: 'adult_emotion_stage_shy', zh: '羞澀初期', en: 'Shy', detail: '害羞、臉紅', prompt: 'shy, blush'),
+  (id: 'adult_emotion_stage_building', zh: '情緒升溫', en: 'Building', detail: '臉紅、半瞇眼、微張嘴', prompt: 'blush, half-closed eyes, parted lips'),
+  (id: 'adult_emotion_stage_intense', zh: '強烈反應', en: 'Intense', detail: '滿臉通紅、閉眼、張嘴', prompt: 'heavy blush, closed eyes, open mouth'),
+  (id: 'adult_emotion_stage_afterglow', zh: '放鬆餘韻', en: 'Afterglow', detail: '放鬆表情、微笑', prompt: 'relaxed expression, soft smile'),
+];
+
+bool _isAdultEmotionStage(String id) =>
+    _adultEmotionStages.any((stage) => stage.id == id);
+
 List<TagItem> _seedTags() => [
+      ..._adultEmotionStages.map((stage) => _tag(
+          stage.id, '表情', '情緒階段・${stage.zh}', stage.prompt, 3,
+          adult: true, conflictGroup: 'adult_emotion_stage')),
       // Role and character basics.
       _tag('role_girl', '角色類型', '女性角色', '1girl', 0),
       _tag('role_boy', '角色類型', '男性角色', '1boy', 0),
@@ -8921,6 +8934,10 @@ List<TagItem> _seedTags() => [
           conflictGroup: 'hand_gesture'),
       _tag('pose_head_up', '頭部姿勢', '抬頭', 'looking up', 4,
           conflictGroup: 'head_vertical'),
+      _tag('pose_head_chin_raised', '頭部姿勢', '抬起下巴', 'chin raised', 4),
+      _tag('pose_head_tilted_upward', '頭部姿勢', '頭部向上仰', 'head tilted upward', 4),
+      _tag('pose_head_tilted_slightly_back', '頭部姿勢', '頭部微微後仰', 'head tilted slightly back', 4),
+      _tag('pose_head_looking_up_slightly', '頭部姿勢', '微微向上看', 'looking upward slightly', 4),
       _tag('pose_head_down', '頭部姿勢', '低頭', 'looking down', 4,
           conflictGroup: 'head_vertical'),
       _tag('pose_head_tilt_left', '頭部姿勢', '頭向左歪', 'head tilt left', 4,
@@ -17797,6 +17814,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   }
 
   bool _tagsConflict(TagItem first, TagItem second) {
+    if (first.id != second.id &&
+        _isAdultEmotionStage(first.id) && _isAdultEmotionStage(second.id)) {
+      return true;
+    }
     final firstGroup = _conflictGroup(first);
     final secondGroup = _conflictGroup(second);
     // Weapon presentation has exactly one target state: held or floating.
@@ -17898,10 +17919,10 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     final groupSet = groups.toSet();
     final current = _selectedTagsForPerson(personIndex);
     final protectedTags = current
-        .where((tag) => !_tagBelongsToRandomGroups(tag, groupSet))
+        .where((tag) => _isAdultEmotionStage(tag.id) || !_tagBelongsToRandomGroups(tag, groupSet))
         .toList();
     target.removeWhere((id) => _allTags.any(
-        (tag) => tag.id == id && _tagBelongsToRandomGroups(tag, groupSet)));
+        (tag) => tag.id == id && !_isAdultEmotionStage(id) && _tagBelongsToRandomGroups(tag, groupSet)));
     final added = <TagItem>[];
 
     bool add(TagItem? tag) {
@@ -17916,7 +17937,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     }
 
     List<TagItem> candidates(String group) => _tagsForPickerGroup(group)
-        .where((tag) => _showAdult || !tag.adult)
+        .where((tag) => !_isAdultEmotionStage(tag.id) && (_showAdult || !tag.adult))
         .toList()
       ..shuffle(random);
 
@@ -17939,6 +17960,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         {int min = 0, int max = 1}) {
       final pool = _allTags
           .where((tag) =>
+              !_isAdultEmotionStage(tag.id) &&
               _expressionSubgroupForTag(tag) == group &&
               (_showAdult || !tag.adult))
           .toList()
@@ -18180,6 +18202,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   /// randomly receive two unrelated hand gestures or two contradictory calf
   /// motions at the same time.
   String? _randomPoseLane(TagItem tag) {
+    if (_isAdultEmotionStage(tag.id)) return null;
     if (const <String>{
       '姿勢',
       '站立與蹲姿',
@@ -28207,6 +28230,52 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
     );
   }
 
+  Widget _adultEmotionStagePicker(int personIndex) {
+    final selected = _personTagIds(personIndex);
+    final active = _adultEmotionStages.where((stage) => selected.contains(stage.id));
+    return Card(
+      key: ValueKey('adult-emotion-stage:$personIndex'),
+      margin: const EdgeInsets.only(top: 10),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('18+ 情緒表情階段 · Expression stages',
+                style: TextStyle(fontWeight: FontWeight.w800)),
+            const SizedBox(height: 4),
+            const Text('可搭配已選的成人動作；每位人物獨立設定。再次點選可取消，不會更改其他動作或表情。\nPair with selected adult actions. Each character has an independent stage; tap again to clear it.',
+                style: TextStyle(fontSize: 12)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                for (final stage in _adultEmotionStages)
+                  ChoiceChip(
+                    key: ValueKey('adult-emotion-stage:$personIndex:${stage.id}'),
+                    label: Text('${stage.zh} · ${stage.en}'),
+                    tooltip: '${stage.detail} · ${stage.prompt}',
+                    selected: selected.contains(stage.id),
+                    onSelected: (value) => setState(() {
+                      selected.removeWhere(_isAdultEmotionStage);
+                      if (value) selected.add(stage.id);
+                      _persist();
+                    }),
+                  ),
+              ],
+            ),
+            if (active.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text('${active.first.detail} · ${active.first.prompt}',
+                  style: const TextStyle(fontSize: 12)),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _stepCategorizedPersonTagPicker(
     Map<String, List<String>> sections, {
     required String nextLabel,
@@ -28328,6 +28397,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                       ],
                     ),
                   ),
+                  if (_showAdult) _adultEmotionStagePicker(index),
                   if (!slot.detailed)
                     const Padding(
                       padding: EdgeInsets.only(top: 4),

@@ -1,5 +1,6 @@
 import 'outfit_reference_data.dart';
 import 'prompt_package_data.dart';
+import 'pose_plain_description.dart';
 
 class _AttachedOutfitSeed {
   const _AttachedOutfitSeed(
@@ -256,12 +257,7 @@ String _attachedPoseName(_AttachedPoseSeed seed) {
 }
 
 String _attachedPoseDescription(_AttachedPoseSeed seed) {
-  return seed.category +
-      '・' +
-      _attachedPoseBaseZh(seed.prompt) +
-      '，' +
-      _attachedPoseDetailZh(seed.prompt) +
-      '。';
+  return describeAttachedPose(seed.prompt);
 }
 
 String _attachedPoseBaseZh(String prompt) {
