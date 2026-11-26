@@ -174,14 +174,29 @@ const _adultPackageCameraAngleEnglish = <String>[
   'high-angle view',
   'low-angle view',
   'eye-level shot',
+  'pov',
+  'birds-eye',
+  'over-the-shoulder view',
 ];
 const _adultPackageCameraFramingEnglish = <String>[
+  'portrait',
   'close-up',
   'upper body',
   'cowboy shot',
   'lower body',
   'full body',
   'wide shot',
+  'very wide shot',
+  'feet out of frame',
+  'head out of frame',
+  'eyes out of frame',
+];
+const _adultPackageSharedMotionEnglish = <String>[
+  'motion lines', 'speed lines', 'emphasis lines', 'motion blur',
+  'afterimage', 'shaking', 'trembling', 'swaying hips', 'hip sway',
+  'bouncing breasts', 'swaying breasts', 'bouncing ass',
+  'irregular breast jiggle', 'irregular ass jiggle',
+  'breasts and ass jiggling',
 ];
 const _adultPackageCameraOnlyEnglish = <String>{
   'front view',
@@ -5727,6 +5742,7 @@ const _clothingWearPickerSlots = <String>[
   _clothingWearAllSlot,
   'outerwear',
   'top',
+  'sleeves',
   'onepiece',
   'costume',
   'pants',
@@ -5756,6 +5772,7 @@ String _clothingWearPickerLabel(String slot) => switch (slot) {
       _clothingWearAllSlot => '全套／散落狀態',
       'outerwear' => '外套穿脫／暴露',
       'top' => '上衣穿脫／暴露',
+      'sleeves' => '袖子穿脫',
       'onepiece' => '連身裝穿脫／暴露',
       'costume' => '特殊服裝穿脫／暴露',
       'pants' => '長褲穿脫／暴露',
@@ -6616,6 +6633,7 @@ List<TagItem> _createScopedClothingTags() {
     ['collar_pull', '\u624B\u62C9\u9818\u53E3', 'collar pull'],
     ['clothes_lift', '掀起衣物', 'clothes lift'],
     ['shirt_lift', '掀起上衣', 'shirt lift'],
+    ['removed', '脫下上衣', 'shirt removed'],
     ['open_clothes', '衣物敞開', 'open clothes'],
     ['unbuttoned', '鈕扣解開', 'unbuttoned'],
     ['unzipped', '拉鍊拉開', 'unzipped'],
@@ -6698,6 +6716,7 @@ List<TagItem> _createScopedClothingTags() {
       adult: true);
   addMany('skirt', 'wear', [
     ['wet_skirt', '濕裙子', 'wet skirt'],
+    ['removed', '脫下裙子', 'skirt removed'],
     ['lifted', '\u88D9\u5B50\u88AB\u63C0\u8D77', 'skirt lifted'],
     ['skirt_lift', '手掀裙子', 'skirt lift'],
     [
@@ -7020,6 +7039,9 @@ List<TagItem> _createScopedClothingTags() {
     ['holding', '\u624B\u62FF\u978B\u5B50', 'holding shoes'],
     ['untied', '\u978B\u5E36\u89E3\u958B', 'untied shoelaces'],
     ['one_foot_out', '\u55AE\u8173\u812B\u978B', 'one foot out'],
+  ]);
+  addMany('sleeves', 'wear', [
+    ['removed', '脫下袖子', 'sleeves removed'],
   ]);
   addMany('accessory', 'wear', [
     ['removed', '\u914D\u4EF6\u812B\u843D', 'accessory removed'],
@@ -13177,6 +13199,27 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
       for (final tag in selected.where((tag) =>
           wearGroups.contains(tag.group) && !consumed.contains(tag.id))) {
         consumed.add(tag.id);
+        if (personIndex != null && _isUnifiedOutfitPhraseTag(base)) {
+          final preset = _unifiedOutfitReferenceForTag(base);
+          if (preset?.id == 'eastern_fantasy_festival_red_white') {
+            final section = switch (_clothingScopeForTag(tag)) {
+              'top' => 'upper',
+              'sleeves' => 'sleeves',
+              'skirt' => 'lower',
+              'socks' => 'legwear',
+              'shoes' => 'footwear',
+              'accessory' => 'headwear',
+              _ => null,
+            };
+            final anotherBaseForScope = bases.any((other) =>
+                other.id != base.id &&
+                _clothingScopeForBase(other) == _clothingScopeForTag(tag));
+            if (section != null && !anotherBaseForScope &&
+                _hiddenOutfitReferenceSections(preset!, personIndex).contains(section)) {
+              continue;
+            }
+          }
+        }
         result.add(_GeneratedOutputTag(
           zh: tag.zh,
           en: tag.en,
@@ -14518,6 +14561,8 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
         'complete' => 'Complete outfit',
         'silhouette' => 'Outfit silhouette',
         'upper' => 'Upper body / outerwear',
+        'sleeves' => 'Sleeves',
+        'waist' => 'Waist sash and ornament',
         'outerwear' => 'Outerwear',
         'lower' => 'Lower body',
         'onepiece' => 'One-piece garment',
@@ -27263,15 +27308,16 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
   Widget _adultPosePackageEnhancementControls(
     List<_AdultPosePackage> packages,
   ) {
-    final motionTags = _adultPosePackageTags(
-      packages.expand(
+    final motionTags = _adultPosePackageTags([
+      ..._adultPackageSharedMotionEnglish,
+      ...packages.expand(
         (package) => <String>[
           ...package.motionOptionsFor(endPose: false),
           if (package.supportsEndPose)
             ...package.motionOptionsFor(endPose: true),
         ],
       ),
-    );
+    ]);
     final angleTags = _adultPosePackageTags(_adultPackageCameraAngleEnglish);
     final framingTags =
         _adultPosePackageTags(_adultPackageCameraFramingEnglish);
@@ -27601,8 +27647,7 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                 );
               },
             ),
-          if (packages.isNotEmpty)
-            _adultPosePackageEnhancementControls(packages),
+          _adultPosePackageEnhancementControls(packages),
         ],
       ),
     );
@@ -29266,6 +29311,25 @@ class _PromptBuilderAppState extends State<PromptBuilderApp> {
                                     label: const Text('恢復全部部位'),
                                   ),
                               ],
+                            ),
+                          ],
+                          if (outfitSelected && preset.id == 'eastern_fantasy_festival_red_white') ...[
+                            const SizedBox(height: 10),
+                            const Text('各部位穿脫狀態 · Clothing states',
+                                style: TextStyle(fontWeight: FontWeight.w800)),
+                            const Text('可複選並隨時取消；各部位圖示則控制提示詞顯示。',
+                                style: TextStyle(fontSize: 12)),
+                            const SizedBox(height: 6),
+                            _adultPosePackageOptionChips(
+                              _adultPosePackageTags(const [
+                                'clothes pull', 'clothes lift', 'shirt lift', 'shirt removed',
+                                'open clothes', 'off-shoulder', 'skirt lift',
+                                'sleeves removed', 'skirt lifted', 'skirt down', 'skirt removed', 'stockings pulled down',
+                                'socks down', 'socks removed', 'one shoe removed',
+                                'shoes removed', 'accessory removed',
+                              ]),
+                              personIndex: personIndex,
+                              personScoped: true,
                             ),
                           ],
                           if (equipment.isNotEmpty) ...[

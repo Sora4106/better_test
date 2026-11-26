@@ -238,6 +238,26 @@ class OutfitReferencePresetData {
 }
 
 const outfitReferencePresets = <OutfitReferencePresetData>[
+  OutfitReferencePresetData(
+    id: 'eastern_fantasy_festival_red_white',
+    category: '幻想／東方',
+    name: '紅白東方幻想祭典服 · Red and White Festival',
+    palette: '白色 × 深紅 × 金色',
+    description: '白色和風上衣搭配寬袖、紅色腰帶與層疊紅白裙，配有花飾、白襪和紅帶涼鞋。',
+    pieces: [],
+    unifiedPhraseZh: '紅白東方幻想祭典服',
+    unifiedPhraseEn: 'eastern fantasy outfit, red and white fantasy dress, festival-inspired costume, white kimono-style top, wide detached sleeves, red trim, gold embroidery, deep red waist sash, large decorative bow, gold waist ornament, layered red skirt, white inner skirt, asymmetrical hem, floral ornaments, red flower hair accessory, gold hair decoration, white stockings, red ribbon sandals, traditional-inspired shoes',
+    unifiedPhraseSections: [
+      OutfitUnifiedPhraseSectionData(id: 'silhouette', zh: '整體風格', en: 'eastern fantasy outfit, festival-inspired costume'),
+      OutfitUnifiedPhraseSectionData(id: 'upper', zh: '和風上衣', en: 'red and white fantasy dress, white kimono-style top, red trim, gold embroidery'),
+      OutfitUnifiedPhraseSectionData(id: 'sleeves', zh: '寬袖', en: 'wide detached sleeves'),
+      OutfitUnifiedPhraseSectionData(id: 'waist', zh: '腰帶與腰飾', en: 'deep red waist sash, large decorative bow, gold waist ornament'),
+      OutfitUnifiedPhraseSectionData(id: 'lower', zh: '紅白層疊裙', en: 'layered red skirt, white inner skirt, asymmetrical hem'),
+      OutfitUnifiedPhraseSectionData(id: 'headwear', zh: '花朵與頭飾', en: 'floral ornaments, red flower hair accessory, gold hair decoration'),
+      OutfitUnifiedPhraseSectionData(id: 'legwear', zh: '白色長襪', en: 'white stockings'),
+      OutfitUnifiedPhraseSectionData(id: 'footwear', zh: '紅帶涼鞋', en: 'red ribbon sandals, traditional-inspired shoes'),
+    ],
+  ),
   // 日常／正式 -------------------------------------------------------------
   OutfitReferencePresetData(
     id: 'romantic_summer_sundress',
